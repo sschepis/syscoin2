@@ -2164,7 +2164,7 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 	escrow.ClearEscrow();
 	escrow.op = OP_ESCROW_COMPLETE;
 	escrow.nHeight = chainActive.Tip()->nHeight;
-	escrow.nCreationHeight = chainActive.Tip()->nHeight;
+	escrow.nCreationHeight = vtxPos.back().nCreationHeight;
     CScript scriptPubKeyBuyer, scriptPubKeySeller,scriptPubKeyArbiter, scriptPubKeyBuyerDestination, scriptPubKeySellerDestination, scriptPubKeyArbiterDestination;
 	scriptPubKeyBuyerDestination= GetScriptForDestination(buyerKey.GetID());
     scriptPubKeyBuyer << CScript::EncodeOP_N(OP_ESCROW_REFUND) << vchEscrow << vchFromString("1") << OP_2DROP << OP_DROP;
@@ -2330,6 +2330,7 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
 	if (ExistsInMempool(vchEscrow, OP_ESCROW_ACTIVATE) || ExistsInMempool(vchEscrow, OP_ESCROW_RELEASE) || ExistsInMempool(vchEscrow, OP_ESCROW_REFUND) || ExistsInMempool(vchEscrow, OP_ESCROW_COMPLETE) ) {
 		throw runtime_error("there are pending operations on that escrow");
 	}
+	uint64_t nCreationHeight = escrow.nCreationHeight;
 	escrow.ClearEscrow();
 
 
@@ -2402,7 +2403,7 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
 	}
 	escrow.op = OP_ESCROW_COMPLETE;
 	escrow.nHeight = chainActive.Tip()->nHeight;
-	escrow.nCreationHeight = chainActive.Tip()->nHeight;
+	escrow.nCreationHeight = nCreationHeight;
 
 	const vector<unsigned char> &data = escrow.Serialize();
 	CScript scriptData;

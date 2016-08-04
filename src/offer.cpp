@@ -2171,10 +2171,11 @@ UniValue offeraddwhitelist(const UniValue& params, bool fHelp) {
 	COfferLinkWhitelistEntry entry;
 	entry.aliasLinkVchRand = vchAlias;
 	entry.nDiscountPct = nDiscountPctInteger;
+	uint64_t nCreationHeight = theOffer.nCreationHeight;
 	theOffer.ClearOffer();
 	theOffer.linkWhitelist.PutWhitelistEntry(entry);
 	theOffer.nHeight = chainActive.Tip()->nHeight;
-	theOffer.nCreationHeight = chainActive.Tip()->nHeight;
+	theOffer.nCreationHeight = nCreationHeight;
 	vector<CRecipient> vecSend;
 	CRecipient recipient;
 	CreateRecipient(scriptPubKey, recipient);
@@ -2247,9 +2248,10 @@ UniValue offerremovewhitelist(const UniValue& params, bool fHelp) {
 	}
 	if(!found)
 		throw runtime_error("this alias entry was not found on affiliate list");
+	uint64_t nCreationHeight = theOffer.nCreationHeight;
 	theOffer.ClearOffer();
 	theOffer.nHeight = chainActive.Tip()->nHeight;
-	theOffer.nCreationHeight = chainActive.Tip()->nHeight;
+	theOffer.nCreationHeight = nCreationHeight;
 	scriptPubKey << CScript::EncodeOP_N(OP_OFFER_UPDATE) << vchOffer << OP_2DROP;
 	scriptPubKey += scriptPubKeyOrig;
 
@@ -2312,10 +2314,10 @@ UniValue offerclearwhitelist(const UniValue& params, bool fHelp) {
 
 	if(theOffer.linkWhitelist.IsNull())
 		throw runtime_error("whitelist is already empty");
-
+	uint64_t nCreationHeight = theOffer.nCreationHeight;
 	theOffer.ClearOffer();
 	theOffer.nHeight = chainActive.Tip()->nHeight;
-	theOffer.nCreationHeight = chainActive.Tip()->nHeight;
+	theOffer.nCreationHeight = nCreationHeight;
 	// create OFFERUPDATE txn keys
 	CScript scriptPubKey;
 	scriptPubKey << CScript::EncodeOP_N(OP_OFFER_UPDATE) << vchOffer << OP_2DROP;
@@ -2530,7 +2532,7 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	COffer offerCopy = theOffer;
 	theOffer.ClearOffer();
 	theOffer.nHeight = chainActive.Tip()->nHeight;
-	theOffer.nCreationHeight = chainActive.Tip()->nHeight;
+	theOffer.nCreationHeight = offerCopy.nCreationHeight;
 	CAmount nRate;
 	vector<string> rateList;
 	// get precision & check for valid alias peg
@@ -2590,7 +2592,7 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	if(nQty != -1 && (nQty-memPoolQty) < 0)
 		throw runtime_error("not enough remaining quantity to fulfill this offerupdate");
 	theOffer.nHeight = chainActive.Tip()->nHeight;
-	theOffer.nCreationHeight = chainActive.Tip()->nHeight;
+	theOffer.nCreationHeight = offerCopy.nCreationHeight;
 	theOffer.SetPrice(price);
 	if(params.size() >= 12 && params[11].get_str().size() > 0)
 		theOffer.linkWhitelist.bExclusiveResell = bExclusiveResell;
@@ -2735,7 +2737,7 @@ UniValue offerupdate_nocheck(const UniValue& params, bool fHelp) {
 	COffer offerCopy = theOffer;
 	theOffer.ClearOffer();
 	theOffer.nHeight = chainActive.Tip()->nHeight;
-	theOffer.nCreationHeight = chainActive.Tip()->nHeight;
+	theOffer.nCreationHeight = offerCopy.nCreationHeight;
 	CAmount nRate;
 	vector<string> rateList;
 	// get precision & check for valid alias peg
@@ -3273,13 +3275,14 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	{
 		throw runtime_error("This offer must be paid with Bitcoins as per requirements of the seller");
 	}
+	uint64_t nCreationHeight = theOffer.nCreationHeight;
 	theOffer.ClearOffer();
 	theOffer.accept = txAccept;
 	// use the linkalias in offer for our whitelist alias inputs check
 	if(!vchWhitelistAlias.empty())
 		theOffer.vchLinkAlias = vchWhitelistAlias;
 	theOffer.nHeight = chainActive.Tip()->nHeight;
-	theOffer.nCreationHeight = chainActive.Tip()->nHeight;
+	theOffer.nCreationHeight = nCreationHeight;
 	const vector<unsigned char> &data = theOffer.Serialize();
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
@@ -3583,14 +3586,14 @@ UniValue offeraccept_nocheck(const UniValue& params, bool fHelp) {
 			vecSend.push_back(acceptRecipient);
 		}
 	}
-
+	uint64_t nCreationHeight = theOffer.nCreationHeight;
 	theOffer.ClearOffer();
 	theOffer.accept = txAccept;
 	// use the linkalias in offer for our whitelist alias inputs check
 	if(!vchWhitelistAlias.empty())
 		theOffer.vchLinkAlias = vchWhitelistAlias;
 	theOffer.nHeight = chainActive.Tip()->nHeight;
-	theOffer.nCreationHeight = chainActive.Tip()->nHeight;
+	theOffer.nCreationHeight = nCreationHeight.nCreationHeight;
 	const vector<unsigned char> &data = theOffer.Serialize();
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
@@ -3770,6 +3773,7 @@ UniValue offeracceptfeedback(const UniValue& params, bool fHelp) {
 	if (ExistsInMempool(vvch[0], OP_OFFER_ACCEPT)) {
 		throw runtime_error("there are pending operations on that offer");
 	}
+	uint64_t nCreationHeight = offer.nCreationHeight;
 	offer.ClearOffer();
 	offer.accept = theOfferAccept;
 
@@ -3812,7 +3816,7 @@ UniValue offeracceptfeedback(const UniValue& params, bool fHelp) {
 		throw runtime_error("You must be either the buyer or seller to leave feedback on this offer purchase");
 	}
 	offer.nHeight = chainActive.Tip()->nHeight;
-	offer.nCreationHeight = chainActive.Tip()->nHeight;
+	offer.nCreationHeight = nCreationHeight;
 
 	const vector<unsigned char> &data = offer.Serialize();
 	CScript scriptData;

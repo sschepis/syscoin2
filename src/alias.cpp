@@ -118,7 +118,7 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 			// have to check the first tx in the service because if it was created before the fork, the chain has hashed the data, so we can't prune it
 			if(IsSys21Fork(vtxPos.front().nCreationHeight))
 			{
-				
+				uint64_t nLastHeight = vtxPos.back().nCreationHeight;
 				nHeight = vtxPos.back().nCreationHeight + GetAliasExpirationDepth();
 				if(alias.nCreationHeight != vtxPos.back().nCreationHeight)
 				{
@@ -192,14 +192,24 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 			if(IsSys21Fork(vtxPos.front().nCreationHeight))
 			{
 				if(vtxPos.back().op != OP_ESCROW_COMPLETE)
-					nHeight = chainActive.Tip()->nHeight + GetEscrowExpirationDepth();
-				else
-					nHeight = vtxPos.back().nCreationHeight + GetEscrowExpirationDepth();
-				if(escrow.nCreationHeight != vtxPos.back().nCreationHeight)
 				{
-					escrow.nCreationHeight = vtxPos.back().nCreationHeight;
-					const vector<unsigned char> &data = escrow.Serialize();
-					scriptPubKey = CScript() << OP_RETURN << data;
+					nHeight = chainActive.Tip()->nHeight + GetEscrowExpirationDepth();
+					if(escrow.nCreationHeight != chainActive.Tip()->nHeight)
+					{
+						escrow.nCreationHeight = chainActive.Tip()->nHeight;
+						const vector<unsigned char> &data = escrow.Serialize();
+						scriptPubKey = CScript() << OP_RETURN << data;
+					}
+				}
+				else
+				{
+					nHeight = vtxPos.back().nCreationHeight + GetEscrowExpirationDepth();
+					if(escrow.nCreationHeight != vtxPos.back().nCreationHeight)
+					{
+						escrow.nCreationHeight = vtxPos.back().nCreationHeight;
+						const vector<unsigned char> &data = escrow.Serialize();
+						scriptPubKey = CScript() << OP_RETURN << data;
+					}
 				}
 				return true;	
 			}			
@@ -1596,7 +1606,7 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 
 	CAliasIndex copyAlias = theAlias;
 	theAlias.ClearAlias();
-	theAlias.nCreationHeight = chainActive.Tip()->nHeight;
+	theAlias.nCreationHeight = copyAlias.nCreationHeight;
 	theAlias.nHeight = chainActive.Tip()->nHeight;
 	if(copyAlias.vchPublicValue != vchPublicValue)
 		theAlias.vchPublicValue = vchPublicValue;
