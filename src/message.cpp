@@ -492,6 +492,7 @@ UniValue messagenew(const UniValue& params, bool fHelp) {
 	newMessage.vchPubKeyFrom = vchFromPubKey;
 	newMessage.vchPubKeyTo = vchToPubKey;
 	newMessage.nHeight = chainActive.Tip()->nHeight;
+	newMessage.nCreationHeight = chainActive.Tip()->nHeight;
 	// send the tranasction
 	vector<CRecipient> vecSend;
 	CRecipient recipient;

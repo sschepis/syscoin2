@@ -116,10 +116,10 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 		if (paliasdb->ReadAlias(alias.vchName, vtxPos))
 		{
 			// have to check the first tx in the service because if it was created before the fork, the chain has hashed the data, so we can't prune it
-			if(IsSys21Fork(vtxPos.front().nHeight))
+			if(IsSys21Fork(vtxPos.front().nCreationHeight))
 			{
 				
-				nHeight = vtxPos.back().nHeight + GetAliasExpirationDepth();
+				nHeight = vtxPos.back().nCreationHeight + GetAliasExpirationDepth();
 				if(alias.nCreationHeight != nHeight)
 				{
 					alias.nCreationHeight = nHeight;
@@ -141,9 +141,9 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 		if (pofferdb->ReadOffer(offer.vchOffer, vtxPos))
 		{
 			// have to check the first tx in the service because if it was created before the fork, the chain has hashed the data, so we can't prune it
-			if(IsSys21Fork(vtxPos.front().nHeight))
+			if(IsSys21Fork(vtxPos.front().nCreationHeight))
 			{
-				nHeight = vtxPos.back().nHeight + GetOfferExpirationDepth();
+				nHeight = vtxPos.back().nCreationHeight + GetOfferExpirationDepth();
 				if(offer.nCreationHeight != nHeight)
 				{
 					offer.nCreationHeight = nHeight;
@@ -165,9 +165,9 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 		if (pcertdb->ReadCert(cert.vchCert, vtxPos))
 		{
 			// have to check the first tx in the service because if it was created before the fork, the chain has hashed the data, so we can't prune it
-			if(IsSys21Fork(vtxPos.front().nHeight))
+			if(IsSys21Fork(vtxPos.front().nCreationHeight))
 			{
-				nHeight = vtxPos.back().nHeight + GetCertExpirationDepth();
+				nHeight = vtxPos.back().nCreationHeight + GetCertExpirationDepth();
 				if(cert.nCreationHeight != nHeight)
 				{
 					cert.nCreationHeight = nHeight;
@@ -189,12 +189,12 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 		if (pescrowdb->ReadEscrow(escrow.vchEscrow, vtxPos))
 		{
 			// if escrow is not refunded or complete don't prune otherwise escrow gets stuck (coins are still safe, just a GUI thing)
-			if(IsSys21Fork(vtxPos.front().nHeight))
+			if(IsSys21Fork(vtxPos.front().nCreationHeight))
 			{
 				if(vtxPos.back().op != OP_ESCROW_COMPLETE)
 					nHeight = chainActive.Tip()->nHeight + GetEscrowExpirationDepth();
 				else
-					nHeight = vtxPos.back().nHeight + GetEscrowExpirationDepth();
+					nHeight = vtxPos.back().nCreationHeight + GetEscrowExpirationDepth();
 				if(escrow.nCreationHeight != nHeight)
 				{
 					escrow.nCreationHeight = nHeight;
@@ -216,9 +216,9 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 		if (pmessagedb->ReadMessage(message.vchMessage, vtxPos))
 		{
 			// have to check the first tx in the service because if it was created before the fork, the chain has hashed the data, so we can't prune it
-			if(IsSys21Fork(vtxPos.front().nHeight))
+			if(IsSys21Fork(vtxPos.front().nCreationHeight))
 			{
-				nHeight = vtxPos.back().nHeight + GetMessageExpirationDepth();
+				nHeight = vtxPos.back().nCreationHeight + GetMessageExpirationDepth();
 				if(message.nCreationHeight != nHeight)
 				{
 					message.nCreationHeight = nHeight;
@@ -964,8 +964,6 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			theAlias.nRating = 0;
 			theAlias.nRatingCount = 0;
 		}
-		if(vvchArgs.size() > 1)
- 			theAlias.vchGUID = vvchArgs[1];
 		theAlias.nHeight = nHeight;
 		theAlias.txHash = tx.GetHash();
 		PutToAliasList(vtxPos, theAlias);
@@ -1486,6 +1484,7 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	newAlias.vchGUID = vchRandAlias;
 	newAlias.vchName = vchName;
 	newAlias.nHeight = chainActive.Tip()->nHeight;
+	newAlias.nCreationHeight = chainActive.Tip()->nHeight;
 	newAlias.vchPubKey = vchPubKey;
 	newAlias.vchPublicValue = vchPublicValue;
 	newAlias.vchPrivateValue = vchPrivateValue;
@@ -1591,6 +1590,7 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 
 	CAliasIndex copyAlias = theAlias;
 	theAlias.ClearAlias();
+	theAlias.nCreationHeight = chainActive.Tip()->nHeight;
 	theAlias.nHeight = chainActive.Tip()->nHeight;
 	if(copyAlias.vchPublicValue != vchPublicValue)
 		theAlias.vchPublicValue = vchPublicValue;
