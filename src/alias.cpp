@@ -123,6 +123,12 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 					nLastHeight = alias.nCreationHeight;
 
 				nHeight = nLastHeight + GetAliasExpirationDepth();
+				if(alias.nCreationHeight != nLastHeight)
+				{
+					alias.nCreationHeight = nLastHeight;
+					const vector<unsigned char> &data = alias.Serialize();
+					scriptPubKey = CScript() << OP_RETURN << data;
+				}
 				return true;	
 			}		
 		}
@@ -165,6 +171,12 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 			if(IsSys21Fork(vtxPos.front().nCreationHeight))
 			{
 				nHeight = vtxPos.back().nCreationHeight + GetCertExpirationDepth();
+				if(cert.nCreationHeight != vtxPos.back().nCreationHeight)
+				{
+					cert.nCreationHeight = vtxPos.back().nCreationHeight;
+					const vector<unsigned char> &data = cert.Serialize();
+					scriptPubKey = CScript() << OP_RETURN << data;
+				}
 				return true;	
 			}		
 		}
@@ -183,9 +195,16 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 			if(IsSys21Fork(vtxPos.front().nCreationHeight))
 			{
 				if(vtxPos.back().op != OP_ESCROW_COMPLETE)
-					nHeight = chainActive.Tip()->nHeight + GetEscrowExpirationDepth();
+					nLastHeight = chainActive.Tip()->nHeight;
 				else
-					nHeight = vtxPos.back().nCreationHeight + GetEscrowExpirationDepth();
+					nLastHeight = vtxPos.back().nCreationHeight;
+				nHeight = nLastHeight+ GetEscrowExpirationDepth();	
+				if(escrow.nCreationHeight != nLastHeight)
+				{
+					escrow.nCreationHeight = nLastHeight;
+					const vector<unsigned char> &data = escrow.Serialize();
+					scriptPubKey = CScript() << OP_RETURN << data;
+				}
 				return true;	
 			}			
 		}
