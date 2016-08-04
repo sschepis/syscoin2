@@ -121,18 +121,8 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 				uint64_t nLastHeight = vtxPos.back().nCreationHeight;
 				if(!alias.vchGUID.empty() && vtxPos.back().vchGUID != alias.vchGUID)
 					nLastHeight = alias.nCreationHeight;
-				else
-				{
-					if(alias.nCreationHeight > nLastHeight)
-						nLastHeight = alias.nCreationHeight;
-				}
+
 				nHeight = nLastHeight + GetAliasExpirationDepth();
-				if(alias.nCreationHeight != nLastHeight)
-				{
-					alias.nCreationHeight = nLastHeight;
-					const vector<unsigned char> &data = alias.Serialize();
-					scriptPubKey = CScript() << OP_RETURN << data;
-				}
 				return true;	
 			}		
 		}
@@ -150,16 +140,7 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 			// have to check the first tx in the service because if it was created before the fork, the chain has hashed the data, so we can't prune it
 			if(IsSys21Fork(vtxPos.front().nCreationHeight))
 			{
-				uint64_t nLastHeight = vtxPos.back().nCreationHeight;
-				if(offer.nCreationHeight > nLastHeight)
-					nLastHeight = offer.nCreationHeight;
-				nHeight = nLastHeight + GetOfferExpirationDepth();
-				if(offer.nCreationHeight != nLastHeight)
-				{
-					offer.nCreationHeight = nLastHeight;
-					const vector<unsigned char> &data = offer.Serialize();
-					scriptPubKey = CScript() << OP_RETURN << data;
-				}
+				nHeight = vtxPos.back().nCreationHeight + GetOfferExpirationDepth();
 				return true;	
 			}		
 		}
@@ -177,16 +158,7 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 			// have to check the first tx in the service because if it was created before the fork, the chain has hashed the data, so we can't prune it
 			if(IsSys21Fork(vtxPos.front().nCreationHeight))
 			{
-				uint64_t nLastHeight = vtxPos.back().nCreationHeight;
-				if(cert.nCreationHeight > nLastHeight)
-					nLastHeight = cert.nCreationHeight;
-				nHeight = nLastHeight + GetCertExpirationDepth();
-				if(cert.nCreationHeight != nLastHeight)
-				{
-					cert.nCreationHeight = nLastHeight;
-					const vector<unsigned char> &data = cert.Serialize();
-					scriptPubKey = CScript() << OP_RETURN << data;
-				}
+				nHeight = vtxPos.back().nCreationHeight + GetCertExpirationDepth();
 				return true;	
 			}		
 		}
@@ -204,36 +176,16 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 			// if escrow is not refunded or complete don't prune otherwise escrow gets stuck (coins are still safe, just a GUI thing)
 			if(IsSys21Fork(vtxPos.front().nCreationHeight))
 			{
-				uint64_t nLastHeight = vtxPos.back().nCreationHeight;
-				if(vtxPos.back().op != OP_ESCROW_COMPLETE)
-					nLastHeight = chainActive.Tip()->nHeight;
+				if(escrow.op != OP_ESCROW_COMPLETE)
+					nHeight = chainActive.Tip()->nHeight + GetEscrowExpirationDepth();
 				else
-				{
-					if(escrow.nCreationHeight > nLastHeight)
-						nLastHeight = escrow.nCreationHeight;
-				}
-				nHeight = nLastHeight + GetEscrowExpirationDepth();
-				if(escrow.nCreationHeight != nLastHeight)
-				{
-					escrow.nCreationHeight = nLastHeight;
-					const vector<unsigned char> &data = alias.Serialize();
-					scriptPubKey = CScript() << OP_RETURN << data;
-				}
+					nHeight = vtxPos.back().nCreationHeight + GetEscrowExpirationDepth();
 				return true;	
 			}			
 		}
 		else if(IsSys21Fork(escrow.nCreationHeight))
 		{
-			int64_t nLastHeight = escrow.nCreationHeight;
-			if(escrow.op != OP_ESCROW_COMPLETE)
-				nLastHeight = chainActive.Tip()->nHeight;
-			nHeight = nLastHeight + GetEscrowExpirationDepth();
-			if(escrow.nCreationHeight != nLastHeight)
-			{
-				escrow.nCreationHeight = nLastHeight;
-				const vector<unsigned char> &data = alias.Serialize();
-				scriptPubKey = CScript() << OP_RETURN << data;
-			}
+			nHeight = escrow.nCreationHeight + GetEscrowExpirationDepth();
 			return true;
 		}
 	}
@@ -245,22 +197,13 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 			// have to check the first tx in the service because if it was created before the fork, the chain has hashed the data, so we can't prune it
 			if(IsSys21Fork(vtxPos.front().nCreationHeight))
 			{
-				uint64_t nLastHeight = vtxPos.back().nCreationHeight;
-				if(message.nCreationHeight > nLastHeight)
-					nLastHeight = message.nCreationHeight;
-				nHeight = nLastHeight + GetMessageExpirationDepth();
-				if(message.nCreationHeight != nLastHeight)
-				{
-					message.nCreationHeight = nLastHeight;
-					const vector<unsigned char> &data = message.Serialize();
-					scriptPubKey = CScript() << OP_RETURN << data;
-				}
+				nHeight = vtxPos.back().nCreationHeight + GetMessageExpirationDepth();
 				return true;	
 			}		
 		}
 		else if(IsSys21Fork(message.nCreationHeight))
 		{
-			nHeight = message.nCreationHeight +  GetEscrowExpirationDepth();
+			nHeight = message.nCreationHeight +  GetMessageExpirationDepth();
 			return true;
 		}
 	}
