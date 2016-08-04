@@ -224,7 +224,10 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 		}
 		else if(IsSys21Fork(escrow.nCreationHeight))
 		{
-			nHeight = escrow.nCreationHeight + GetEscrowExpirationDepth();
+			if(escrow.op != OP_ESCROW_COMPLETE)
+				nHeight = chainActive.Tip()->nHeight + GetEscrowExpirationDepth();
+			else
+				nHeight = escrow.nCreationHeight + GetEscrowExpirationDepth();
 			return true;
 		}
 	}
