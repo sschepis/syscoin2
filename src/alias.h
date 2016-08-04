@@ -184,7 +184,7 @@ bool IsSyscoinDataOutput(const CTxOut& out);
 bool GetSyscoinData(const CTransaction &tx, std::vector<unsigned char> &vchData);
 bool GetSyscoinData(const CScript &scriptPubKey, std::vector<unsigned char> &vchData);
 bool IsSysServiceExpired(const uint64_t &nHeight);
-bool IsInSys21Fork(const CScript& scriptPubKey, uint64_t &nHeight);
+bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight);
 bool GetSyscoinTransaction(int nHeight, const uint256 &hash, CTransaction &txOut, const Consensus::Params& consensusParams);
 bool IsSyscoinScript(const CScript& scriptPubKey, int &op, std::vector<std::vector<unsigned char> > &vvchArgs);
 void RemoveSyscoinScript(const CScript& scriptPubKeyIn, CScript& scriptPubKeyOut);
