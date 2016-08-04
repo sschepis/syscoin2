@@ -880,8 +880,10 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				if (vvchPrevArgs[0] != vvchArgs[0])
 					return error("CheckAliasInputs() : OP_ALIAS_UPDATE alias mismatch");
 				// Check GUID
-				if (vvchArgs.size() > 1 && vvchPrevArgs[1] != vvchArgs[1] && theAlias.vchGUID == vvchArgs[1])
-					return error("CheckAliasInputs() : OP_ALIAS_UPDATE GUID mismatch");
+				if (vvchArgs.size() > 1 && vvchPrevArgs[1] != vvchArgs[1])
+					return error("CheckAliasInputs() : OP_ALIAS_UPDATE GUID input mismatch");
+				if (vvchArgs.size() > 1 && !theAlias.IsNull() && theAlias.vchGUID == vvchArgs[1])
+					return error("CheckAliasInputs() : OP_ALIAS_UPDATE alias field GUID mismatch");
 				break;
 		default:
 			return error(
@@ -952,14 +954,6 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						theAlias.vchPubKey = dbAlias.vchPubKey;
 						if(fDebug)
 							LogPrintf("CheckAliasInputs() : Warning, Cannot transfer an alias that points to another alias. Pubkey was not updated");
-					}
-				}
-				if(vvchArgs[0] != vchFromString("SYS_BAN") && vvchArgs[0] != vchFromString("SYS_RATES") && vvchArgs[0] != vchFromString("SYS_CATEGORY") && !theAlias.IsNull())
-				{
-					if(vvchArgs.size() > 1 && theAlias.vchGUID != vvchArgs[1])
-					{
-						LogPrintf("CheckAliasInputs() : aliasupdate vchGUID mismatch");
-						return true;
 					}
 				}
 			}
