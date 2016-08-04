@@ -3593,7 +3593,7 @@ UniValue offeraccept_nocheck(const UniValue& params, bool fHelp) {
 	if(!vchWhitelistAlias.empty())
 		theOffer.vchLinkAlias = vchWhitelistAlias;
 	theOffer.nHeight = chainActive.Tip()->nHeight;
-	theOffer.nCreationHeight = nCreationHeight.nCreationHeight;
+	theOffer.nCreationHeight = nCreationHeight;
 	const vector<unsigned char> &data = theOffer.Serialize();
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
