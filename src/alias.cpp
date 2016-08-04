@@ -120,9 +120,9 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 			{
 				
 				nHeight = vtxPos.back().nCreationHeight + GetAliasExpirationDepth();
-				if(alias.nCreationHeight != nHeight)
+				if(alias.nCreationHeight != vtxPos.back().nCreationHeight)
 				{
-					alias.nCreationHeight = nHeight;
+					alias.nCreationHeight = vtxPos.back().nCreationHeight;
 					const vector<unsigned char> &data = alias.Serialize();
 					scriptPubKey = CScript() << OP_RETURN << data;
 				}
@@ -144,9 +144,9 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 			if(IsSys21Fork(vtxPos.front().nCreationHeight))
 			{
 				nHeight = vtxPos.back().nCreationHeight + GetOfferExpirationDepth();
-				if(offer.nCreationHeight != nHeight)
+				if(offer.nCreationHeight != vtxPos.back().nCreationHeight)
 				{
-					offer.nCreationHeight = nHeight;
+					offer.nCreationHeight = vtxPos.back().nCreationHeight;
 					const vector<unsigned char> &data = offer.Serialize();
 					scriptPubKey = CScript() << OP_RETURN << data;
 				}
@@ -168,9 +168,9 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 			if(IsSys21Fork(vtxPos.front().nCreationHeight))
 			{
 				nHeight = vtxPos.back().nCreationHeight + GetCertExpirationDepth();
-				if(cert.nCreationHeight != nHeight)
+				if(cert.nCreationHeight != vtxPos.back().nCreationHeight)
 				{
-					cert.nCreationHeight = nHeight;
+					cert.nCreationHeight = vtxPos.back().nCreationHeight;
 					const vector<unsigned char> &data = cert.Serialize();
 					scriptPubKey = CScript() << OP_RETURN << data;
 				}
@@ -195,9 +195,9 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 					nHeight = chainActive.Tip()->nHeight + GetEscrowExpirationDepth();
 				else
 					nHeight = vtxPos.back().nCreationHeight + GetEscrowExpirationDepth();
-				if(escrow.nCreationHeight != nHeight)
+				if(escrow.nCreationHeight != vtxPos.back().nCreationHeight)
 				{
-					escrow.nCreationHeight = nHeight;
+					escrow.nCreationHeight = vtxPos.back().nCreationHeight;
 					const vector<unsigned char> &data = escrow.Serialize();
 					scriptPubKey = CScript() << OP_RETURN << data;
 				}
@@ -219,9 +219,9 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 			if(IsSys21Fork(vtxPos.front().nCreationHeight))
 			{
 				nHeight = vtxPos.back().nCreationHeight + GetMessageExpirationDepth();
-				if(message.nCreationHeight != nHeight)
+				if(message.nCreationHeight != vtxPos.back().nCreationHeight)
 				{
-					message.nCreationHeight = nHeight;
+					message.nCreationHeight = vtxPos.back().nCreationHeight;
 					const vector<unsigned char> &data = message.Serialize();
 					scriptPubKey = CScript() << OP_RETURN << data;
 				}
