@@ -451,12 +451,6 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 	}
 
     if (!fJustCheck ) {
-		if(!theCert.IsNull() && ((theCert.nHeight + GetCertExpirationDepth()) < nHeight)  || theCert.nHeight >= nHeight)
-		{
-			if(fDebug)
-				LogPrintf("CheckCertInputs(): Trying to make a cert transaction that is expired or too far in the future, skipping...");
-			return true;
-		}
 		if(op != OP_CERT_ACTIVATE) 
 		{
 			// if not an certnew, load the cert data from the DB
@@ -635,7 +629,6 @@ UniValue certnew(const UniValue& params, bool fHelp) {
     newCert.vchTitle = vchTitle;
 	newCert.vchData = vchData;
 	newCert.nHeight = chainActive.Tip()->nHeight;
-	newCert.nCreationHeight = chainActive.Tip()->nHeight;
 	newCert.vchPubKey = alias.vchPubKey;
 	newCert.bPrivate = bPrivate;
 	newCert.safetyLevel = 0;
@@ -744,7 +737,6 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
 	if(copyCert.vchData != vchData)
 		theCert.vchData = vchData;
 	theCert.nHeight = chainActive.Tip()->nHeight;
-	theCert.nCreationHeight = chainActive.Tip()->nHeight;
 	theCert.bPrivate = bPrivate;
 	theCert.safeSearch = strSafeSearch == "Yes"? true: false;
 
@@ -876,9 +868,7 @@ UniValue certtransfer(const UniValue& params, bool fHelp) {
     scriptPubKeyOrig= GetScriptForDestination(xferKey.GetID());
     CScript scriptPubKey;
     scriptPubKey << CScript::EncodeOP_N(OP_CERT_TRANSFER) << vchCert << OP_2DROP;
-    scriptPubKey += scriptPubKeyOrig;
-	theCert.nCreationHeight = chainActive.Tip()->nHeight;	
-	theCert.nHeight = chainActive.Tip()->nHeight;
+    scriptPubKey += scriptPubKeyOrig;	
 	theCert.vchPubKey = vchPubKeyByte;
 	if(copyCert.vchData != vchData)
 		theCert.vchData = vchData;

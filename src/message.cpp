@@ -348,12 +348,6 @@ bool CheckMessageInputs(const CTransaction &tx, int op, int nOut, const vector<v
 
 
     if (!fJustCheck ) {
-		if(((theMessage.nHeight + GetMessageExpirationDepth()) < nHeight) || theMessage.nHeight >= nHeight)
-		{
-			if(fDebug)
-				LogPrintf("CheckMessageInputs(): Trying to make a message transaction that is expired or too far in the future, skipping...");
-			return true;
-		}
 		vector<CMessage> vtxPos;
 		if (pmessagedb->ExistsMessage(vvchArgs[0])) {
 			if(fDebug)
@@ -498,7 +492,6 @@ UniValue messagenew(const UniValue& params, bool fHelp) {
 	newMessage.vchPubKeyFrom = vchFromPubKey;
 	newMessage.vchPubKeyTo = vchToPubKey;
 	newMessage.nHeight = chainActive.Tip()->nHeight;
-	newMessage.nCreationHeight = chainActive.Tip()->nHeight;
 	// send the tranasction
 	vector<CRecipient> vecSend;
 	CRecipient recipient;

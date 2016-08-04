@@ -547,12 +547,6 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 
 
     if (!fJustCheck ) {
-		if(op != OP_ESCROW_COMPLETE && ((theEscrow.nHeight + GetEscrowExpirationDepth()) < nHeight) || theEscrow.nHeight >= nHeight)
-		{
-			if(fDebug)
-				LogPrintf("CheckEscrowInputs(): Trying to make an escrow transaction that is expired or too far in the future, skipping...");
-			return true;
-		}
 		vector<CEscrow> vtxPos;
 		// make sure escrow settings don't change (besides rawTx) outside of activation
 		if(op != OP_ESCROW_ACTIVATE) 
@@ -1151,7 +1145,6 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	newEscrow.nQty = nQty;
 	newEscrow.escrowInputTxHash = escrowWtx.GetHash();
 	newEscrow.nPricePerUnit = nPricePerUnit;
-	newEscrow.nCreationHeight = chainActive.Tip()->nHeight;
 	newEscrow.nHeight = chainActive.Tip()->nHeight;
 	// send the tranasction
 	vector<CRecipient> vecSend;
@@ -1402,7 +1395,6 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	escrow.op = OP_ESCROW_RELEASE;
 	escrow.rawTx = ParseHex(hex_str);
 	escrow.nHeight = chainActive.Tip()->nHeight;
-	escrow.nCreationHeight = chainActive.Tip()->nHeight;
     CScript scriptPubKey, scriptPubKeySeller;
 	scriptPubKeySeller= GetScriptForDestination(sellerKey.GetID());
     scriptPubKey << CScript::EncodeOP_N(OP_ESCROW_RELEASE) << vchEscrow << OP_2DROP;
@@ -1943,7 +1935,6 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 	escrow.op = OP_ESCROW_REFUND;
 	escrow.rawTx = ParseHex(hex_str);
 	escrow.nHeight = chainActive.Tip()->nHeight;
-	escrow.nCreationHeight = chainActive.Tip()->nHeight;
 
     CScript scriptPubKey, scriptPubKeyBuyer;
 	scriptPubKeyBuyer= GetScriptForDestination(buyerKey.GetID());
@@ -2164,7 +2155,6 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 	escrow.ClearEscrow();
 	escrow.op = OP_ESCROW_COMPLETE;
 	escrow.nHeight = chainActive.Tip()->nHeight;
-	escrow.nCreationHeight = chainActive.Tip()->nHeight;
     CScript scriptPubKeyBuyer, scriptPubKeySeller,scriptPubKeyArbiter, scriptPubKeyBuyerDestination, scriptPubKeySellerDestination, scriptPubKeyArbiterDestination;
 	scriptPubKeyBuyerDestination= GetScriptForDestination(buyerKey.GetID());
     scriptPubKeyBuyer << CScript::EncodeOP_N(OP_ESCROW_REFUND) << vchEscrow << vchFromString("1") << OP_2DROP << OP_DROP;
@@ -2402,7 +2392,6 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
 	}
 	escrow.op = OP_ESCROW_COMPLETE;
 	escrow.nHeight = chainActive.Tip()->nHeight;
-	escrow.nCreationHeight = chainActive.Tip()->nHeight;
 
 	const vector<unsigned char> &data = escrow.Serialize();
 	CScript scriptData;

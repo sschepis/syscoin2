@@ -118,13 +118,14 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 			// have to check the first tx in the service because if it was created before the fork, the chain has hashed the data, so we can't prune it
 			if(IsSys21Fork(vtxPos.front().nCreationHeight))
 			{
-				if(!alias.vchGUID.empty() && vtxPos.back().vchGUID != alias.vchGUID)
-					nHeight = alias.nCreationHeight + GetAliasExpirationDepth();
-				else
-					nHeight = vtxPos.back().nCreationHeight + GetAliasExpirationDepth();
-				alias.nCreationHeight = nHeight;
-				const vector<unsigned char> &data = alias.Serialize();
-				scriptPubKey = CScript() << OP_RETURN << data;
+				
+				nHeight = vtxPos.back().nCreationHeight + GetAliasExpirationDepth();
+				if(alias.nCreationHeight != nHeight)
+				{
+					alias.nCreationHeight = nHeight;
+					const vector<unsigned char> &data = alias.Serialize();
+					scriptPubKey = CScript() << OP_RETURN << data;
+				}
 				return true;	
 			}		
 		}
@@ -143,9 +144,12 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 			if(IsSys21Fork(vtxPos.front().nCreationHeight))
 			{
 				nHeight = vtxPos.back().nCreationHeight + GetOfferExpirationDepth();
-				offer.nCreationHeight = nHeight;
-				const vector<unsigned char> &data = offer.Serialize();
-				scriptPubKey = CScript() << OP_RETURN << data;
+				if(offer.nCreationHeight != nHeight)
+				{
+					offer.nCreationHeight = nHeight;
+					const vector<unsigned char> &data = offer.Serialize();
+					scriptPubKey = CScript() << OP_RETURN << data;
+				}
 				return true;	
 			}		
 		}
@@ -164,9 +168,12 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 			if(IsSys21Fork(vtxPos.front().nCreationHeight))
 			{
 				nHeight = vtxPos.back().nCreationHeight + GetCertExpirationDepth();
-				cert.nCreationHeight = nHeight;
-				const vector<unsigned char> &data = cert.Serialize();
-				scriptPubKey = CScript() << OP_RETURN << data;
+				if(cert.nCreationHeight != nHeight)
+				{
+					cert.nCreationHeight = nHeight;
+					const vector<unsigned char> &data = cert.Serialize();
+					scriptPubKey = CScript() << OP_RETURN << data;
+				}
 				return true;	
 			}		
 		}
@@ -188,9 +195,12 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 					nHeight = chainActive.Tip()->nHeight + GetEscrowExpirationDepth();
 				else
 					nHeight = vtxPos.back().nCreationHeight + GetEscrowExpirationDepth();
-				escrow.nCreationHeight = nHeight;
-				const vector<unsigned char> &data = escrow.Serialize();
-				scriptPubKey = CScript() << OP_RETURN << data;
+				if(escrow.nCreationHeight != nHeight)
+				{
+					escrow.nCreationHeight = nHeight;
+					const vector<unsigned char> &data = escrow.Serialize();
+					scriptPubKey = CScript() << OP_RETURN << data;
+				}
 				return true;	
 			}			
 		}
@@ -209,9 +219,12 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 			if(IsSys21Fork(vtxPos.front().nCreationHeight))
 			{
 				nHeight = vtxPos.back().nCreationHeight + GetMessageExpirationDepth();
-				message.nCreationHeight = nHeight;
-				const vector<unsigned char> &data = message.Serialize();
-				scriptPubKey = CScript() << OP_RETURN << data;
+				if(message.nCreationHeight != nHeight)
+				{
+					message.nCreationHeight = nHeight;
+					const vector<unsigned char> &data = message.Serialize();
+					scriptPubKey = CScript() << OP_RETURN << data;
+				}
 				return true;	
 			}		
 		}
@@ -873,15 +886,6 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	}
 	
 	if (!fJustCheck ) {
-		if(vvchArgs[0] != vchFromString("SYS_RATES") && vvchArgs[0] != vchFromString("SYS_BAN") && vvchArgs[0] != vchFromString("SYS_CATEGORY"))
-		{
-			if(!theAlias.IsNull() && ((theAlias.nHeight + GetAliasExpirationDepth()) < nHeight) || theAlias.nHeight >= nHeight)
-			{
-				if(fDebug)
-					LogPrintf("CheckAliasInputs(): Trying to make an alias transaction that is expired or too far in the future, skipping...");
-				return true;
-			}
-		}
 		bool update = false;
 		CAliasIndex dbAlias;
 		CTransaction aliasTx;
@@ -1482,7 +1486,6 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	newAlias.vchGUID = vchRandAlias;
 	newAlias.vchName = vchName;
 	newAlias.nHeight = chainActive.Tip()->nHeight;
-	newAlias.nCreationHeight = chainActive.Tip()->nHeight;
 	newAlias.vchPubKey = vchPubKey;
 	newAlias.vchPublicValue = vchPublicValue;
 	newAlias.vchPrivateValue = vchPrivateValue;
@@ -1588,7 +1591,6 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 
 	CAliasIndex copyAlias = theAlias;
 	theAlias.ClearAlias();
-	theAlias.nCreationHeight = chainActive.Tip()->nHeight;
 	theAlias.nHeight = chainActive.Tip()->nHeight;
 	if(copyAlias.vchPublicValue != vchPublicValue)
 		theAlias.vchPublicValue = vchPublicValue;
