@@ -207,6 +207,11 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 				uint64_t nLastHeight = vtxPos.back().nCreationHeight;
 				if(vtxPos.back().op != OP_ESCROW_COMPLETE)
 					nLastHeight = chainActive.Tip()->nHeight;
+				else
+				{
+					if(escrow.nCreationHeight > nLastHeight)
+						nLastHeight = escrow.nCreationHeight;
+				}
 				nHeight = nLastHeight + GetEscrowExpirationDepth();
 				if(escrow.nCreationHeight != nLastHeight)
 				{
@@ -219,7 +224,16 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 		}
 		else if(IsSys21Fork(escrow.nCreationHeight))
 		{
-			nHeight = escrow.nCreationHeight + GetEscrowExpirationDepth();
+			int64_t nLastHeight = escrow.nCreationHeight;
+			if(escrow.op != OP_ESCROW_COMPLETE)
+				nLastHeight = chainActive.Tip()->nHeight;
+			nHeight = nLastHeight + GetEscrowExpirationDepth();
+			if(escrow.nCreationHeight != nLastHeight)
+			{
+				escrow.nCreationHeight = nLastHeight;
+				const vector<unsigned char> &data = alias.Serialize();
+				scriptPubKey = CScript() << OP_RETURN << data;
+			}
 			return true;
 		}
 	}
