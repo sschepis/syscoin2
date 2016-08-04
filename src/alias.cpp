@@ -116,10 +116,10 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 		if (paliasdb->ReadAlias(alias.vchName, vtxPos))
 		{
 			// have to check the first tx in the service because if it was created before the fork, the chain has hashed the data, so we can't prune it
-			if(IsSys21Fork(vtxPos.front().nCreationHeight))
+			if(IsSys21Fork(vtxPos.front().nHeight))
 			{
 				
-				nHeight = vtxPos.back().nCreationHeight + GetAliasExpirationDepth();
+				nHeight = vtxPos.back().nHeight + GetAliasExpirationDepth();
 				if(alias.nCreationHeight != nHeight)
 				{
 					alias.nCreationHeight = nHeight;
@@ -141,9 +141,9 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 		if (pofferdb->ReadOffer(offer.vchOffer, vtxPos))
 		{
 			// have to check the first tx in the service because if it was created before the fork, the chain has hashed the data, so we can't prune it
-			if(IsSys21Fork(vtxPos.front().nCreationHeight))
+			if(IsSys21Fork(vtxPos.front().nHeight))
 			{
-				nHeight = vtxPos.back().nCreationHeight + GetOfferExpirationDepth();
+				nHeight = vtxPos.back().nHeight + GetOfferExpirationDepth();
 				if(offer.nCreationHeight != nHeight)
 				{
 					offer.nCreationHeight = nHeight;
@@ -165,9 +165,9 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 		if (pcertdb->ReadCert(cert.vchCert, vtxPos))
 		{
 			// have to check the first tx in the service because if it was created before the fork, the chain has hashed the data, so we can't prune it
-			if(IsSys21Fork(vtxPos.front().nCreationHeight))
+			if(IsSys21Fork(vtxPos.front().nHeight))
 			{
-				nHeight = vtxPos.back().nCreationHeight + GetCertExpirationDepth();
+				nHeight = vtxPos.back().nHeight + GetCertExpirationDepth();
 				if(cert.nCreationHeight != nHeight)
 				{
 					cert.nCreationHeight = nHeight;
@@ -189,12 +189,12 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 		if (pescrowdb->ReadEscrow(escrow.vchEscrow, vtxPos))
 		{
 			// if escrow is not refunded or complete don't prune otherwise escrow gets stuck (coins are still safe, just a GUI thing)
-			if(IsSys21Fork(vtxPos.front().nCreationHeight))
+			if(IsSys21Fork(vtxPos.front().nHeight))
 			{
 				if(vtxPos.back().op != OP_ESCROW_COMPLETE)
 					nHeight = chainActive.Tip()->nHeight + GetEscrowExpirationDepth();
 				else
-					nHeight = vtxPos.back().nCreationHeight + GetEscrowExpirationDepth();
+					nHeight = vtxPos.back().nHeight + GetEscrowExpirationDepth();
 				if(escrow.nCreationHeight != nHeight)
 				{
 					escrow.nCreationHeight = nHeight;
@@ -216,9 +216,9 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 		if (pmessagedb->ReadMessage(message.vchMessage, vtxPos))
 		{
 			// have to check the first tx in the service because if it was created before the fork, the chain has hashed the data, so we can't prune it
-			if(IsSys21Fork(vtxPos.front().nCreationHeight))
+			if(IsSys21Fork(vtxPos.front().nHeight))
 			{
-				nHeight = vtxPos.back().nCreationHeight + GetMessageExpirationDepth();
+				nHeight = vtxPos.back().nHeight + GetMessageExpirationDepth();
 				if(message.nCreationHeight != nHeight)
 				{
 					message.nCreationHeight = nHeight;
