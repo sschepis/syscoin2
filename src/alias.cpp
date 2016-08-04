@@ -199,13 +199,7 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 					nLastHeight = chainActive.Tip()->nHeight;
 				else
 					nLastHeight = vtxPos.back().nCreationHeight;
-				nHeight = nLastHeight+ GetEscrowExpirationDepth();	
-				if(escrow.nCreationHeight != nLastHeight)
-				{
-					escrow.nCreationHeight = nLastHeight;
-					const vector<unsigned char> &data = escrow.Serialize();
-					scriptPubKey = CScript() << OP_RETURN << data;
-				}
+				nHeight = nLastHeight + GetEscrowExpirationDepth();	
 				return true;	
 			}			
 		}
