@@ -147,7 +147,7 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 			if(IsSys21Fork(vtxPos.front().nHeight))
 			{
 				nHeight = vtxPos.back().nHeight + GetOfferExpirationDepth();
-				if(offer.nCreationHeight != vtxPos.back().Height)
+				if(offer.nCreationHeight != vtxPos.back().nHeight)
 				{
 					offer.nCreationHeight = vtxPos.back().nHeight;
 					const vector<unsigned char> &data = offer.Serialize();
