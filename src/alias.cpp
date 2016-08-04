@@ -119,10 +119,12 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 			if(IsSys21Fork(vtxPos.front().nCreationHeight))
 			{
 				uint64_t nLastHeight = vtxPos.back().nCreationHeight;
-				nHeight = vtxPos.back().nCreationHeight + GetAliasExpirationDepth();
-				if(alias.nCreationHeight != vtxPos.back().nCreationHeight)
+				if(!alias.vchGUID.empty() && vtxPos.back().vchGUID != alias.vchGUID)
+					nLastHeight = alias.nCreationHeight;
+				nHeight = nLastHeight + GetAliasExpirationDepth();
+				if(alias.nCreationHeight != nLastHeight)
 				{
-					alias.nCreationHeight = vtxPos.back().nCreationHeight;
+					alias.nCreationHeight = nLastHeight;
 					const vector<unsigned char> &data = alias.Serialize();
 					scriptPubKey = CScript() << OP_RETURN << data;
 				}
@@ -191,25 +193,15 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 			// if escrow is not refunded or complete don't prune otherwise escrow gets stuck (coins are still safe, just a GUI thing)
 			if(IsSys21Fork(vtxPos.front().nCreationHeight))
 			{
-				if(vtxPos.back().op != OP_ESCROW_COMPLETE)
+				uint64_t nLastHeight = vtxPos.back().nCreationHeight;
+				if(vtxPos.back().op != OP_ESCROW_COMPLETED)
+					nLastHeight = chainActive.Tip()->nHeight;
+				nHeight = nLastHeight + GetEscrowExpirationDepth();
+				if(escrow.nCreationHeight != nLastHeight)
 				{
-					nHeight = chainActive.Tip()->nHeight + GetEscrowExpirationDepth();
-					if(escrow.nCreationHeight != chainActive.Tip()->nHeight)
-					{
-						escrow.nCreationHeight = chainActive.Tip()->nHeight;
-						const vector<unsigned char> &data = escrow.Serialize();
-						scriptPubKey = CScript() << OP_RETURN << data;
-					}
-				}
-				else
-				{
-					nHeight = vtxPos.back().nCreationHeight + GetEscrowExpirationDepth();
-					if(escrow.nCreationHeight != vtxPos.back().nCreationHeight)
-					{
-						escrow.nCreationHeight = vtxPos.back().nCreationHeight;
-						const vector<unsigned char> &data = escrow.Serialize();
-						scriptPubKey = CScript() << OP_RETURN << data;
-					}
+					escrow.nCreationHeight = nLastHeight;
+					const vector<unsigned char> &data = alias.Serialize();
+					scriptPubKey = CScript() << OP_RETURN << data;
 				}
 				return true;	
 			}			
@@ -877,16 +869,19 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	{
 		switch (op) {
 			case OP_ALIAS_ACTIVATE:
+				// Check GUID
+				if (vvchArgs.size() > 1 && theAlias.vchGUID == vvchArgs[1])
+					return error("CheckAliasInputs() : OP_ALIAS_ACTIVATE GUID mismatch");
 				break;
 			case OP_ALIAS_UPDATE:
 				if (!IsAliasOp(prevOp))
-					return error("aliasupdate previous tx not found");
+					return error("CheckAliasInputs() : OP_ALIAS_UPDATE previous tx not found");
 				// Check name
 				if (vvchPrevArgs[0] != vvchArgs[0])
-					return error("CheckAliasInputs() : aliasupdate alias mismatch");
+					return error("CheckAliasInputs() : OP_ALIAS_UPDATE alias mismatch");
 				// Check GUID
-				if (vvchArgs.size() > 1 && vvchPrevArgs[1] != vvchArgs[1])
-					return error("CheckAliasInputs() : aliasupdate GUID mismatch");
+				if (vvchArgs.size() > 1 && vvchPrevArgs[1] != vvchArgs[1] && theAlias.vchGUID == vvchArgs[1])
+					return error("CheckAliasInputs() : OP_ALIAS_UPDATE GUID mismatch");
 				break;
 		default:
 			return error(
@@ -980,6 +975,8 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			theAlias.nRating = 0;
 			theAlias.nRatingCount = 0;
 		}
+		if(vvchArgs.size() > 1)
+ 			theAlias.vchGUID = vvchArgs[1];
 		theAlias.nHeight = nHeight;
 		theAlias.txHash = tx.GetHash();
 		PutToAliasList(vtxPos, theAlias);
