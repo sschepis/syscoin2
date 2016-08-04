@@ -194,7 +194,7 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 			if(IsSys21Fork(vtxPos.front().nCreationHeight))
 			{
 				uint64_t nLastHeight = vtxPos.back().nCreationHeight;
-				if(vtxPos.back().op != OP_ESCROW_COMPLETED)
+				if(vtxPos.back().op != OP_ESCROW_COMPLETE)
 					nLastHeight = chainActive.Tip()->nHeight;
 				nHeight = nLastHeight + GetEscrowExpirationDepth();
 				if(escrow.nCreationHeight != nLastHeight)
