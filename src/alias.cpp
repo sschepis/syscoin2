@@ -886,6 +886,12 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	}
 	
 	if (!fJustCheck ) {
+		if(!theAlias.IsNull() && theAlias.nCreationHeight >= nHeight)
+		{
+			if(fDebug)
+				LogPrintf("CheckAliasInputs(): Trying to make an alias transaction that is too far in the future, skipping...");
+			return true;
+		}
 		bool update = false;
 		CAliasIndex dbAlias;
 		CTransaction aliasTx;

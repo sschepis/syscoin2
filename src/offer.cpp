@@ -796,6 +796,12 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	
 
 	if (!fJustCheck ) {
+		if(theOffer.nCreationHeight >= nHeight)
+		{
+			if(fDebug)
+				LogPrintf("CheckOfferInputs(): Trying to make an offer transaction that is too far in the future, skipping...");
+			return true;
+		}
 		COffer serializedOffer;
 		if(op != OP_OFFER_ACTIVATE) {
 			// save serialized offer for later use
