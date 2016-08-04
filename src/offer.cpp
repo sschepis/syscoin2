@@ -796,7 +796,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	
 
 	if (!fJustCheck ) {
-		if((theOffer.nHeight != theOffer.nCreationHeight || (theOffer.nHeight + GetOfferExpirationDepth()) < nHeight) || theOffer.nHeight >= nHeight)
+		if(((theOffer.nHeight + GetOfferExpirationDepth()) < nHeight) || theOffer.nHeight >= nHeight)
 		{
 			if(fDebug)
 				LogPrintf("CheckOfferInputs(): Trying to make an offer transaction that is expired or too far in the future, skipping...");

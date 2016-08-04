@@ -348,7 +348,7 @@ bool CheckMessageInputs(const CTransaction &tx, int op, int nOut, const vector<v
 
 
     if (!fJustCheck ) {
-		if((theMessage.nHeight != theMessage.nCreationHeight || (theMessage.nHeight + GetMessageExpirationDepth()) < nHeight) || theMessage.nHeight >= nHeight)
+		if(((theMessage.nHeight + GetMessageExpirationDepth()) < nHeight) || theMessage.nHeight >= nHeight)
 		{
 			if(fDebug)
 				LogPrintf("CheckMessageInputs(): Trying to make a message transaction that is expired or too far in the future, skipping...");

@@ -547,7 +547,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 
 
     if (!fJustCheck ) {
-		if(op != OP_ESCROW_COMPLETE && (theEscrow.nHeight != theEscrow.nCreationHeight || (theEscrow.nHeight + GetEscrowExpirationDepth()) < nHeight) || theEscrow.nHeight >= nHeight)
+		if(op != OP_ESCROW_COMPLETE && ((theEscrow.nHeight + GetEscrowExpirationDepth()) < nHeight) || theEscrow.nHeight >= nHeight)
 		{
 			if(fDebug)
 				LogPrintf("CheckEscrowInputs(): Trying to make an escrow transaction that is expired or too far in the future, skipping...");

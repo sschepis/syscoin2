@@ -875,7 +875,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	if (!fJustCheck ) {
 		if(vvchArgs[0] != vchFromString("SYS_RATES") && vvchArgs[0] != vchFromString("SYS_BAN") && vvchArgs[0] != vchFromString("SYS_CATEGORY"))
 		{
-			if(!theAlias.IsNull() && (theAlias.nHeight != theAlias.nCreationHeight || (theAlias.nHeight + GetAliasExpirationDepth()) < nHeight) || theAlias.nHeight >= nHeight)
+			if(!theAlias.IsNull() && ((theAlias.nHeight + GetAliasExpirationDepth()) < nHeight) || theAlias.nHeight >= nHeight)
 			{
 				if(fDebug)
 					LogPrintf("CheckAliasInputs(): Trying to make an alias transaction that is expired or too far in the future, skipping...");
