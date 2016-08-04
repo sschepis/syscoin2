@@ -194,6 +194,7 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 			// if escrow is not refunded or complete don't prune otherwise escrow gets stuck (coins are still safe, just a GUI thing)
 			if(IsSys21Fork(vtxPos.front().nCreationHeight))
 			{
+				uint64_t nLastHeight;
 				if(vtxPos.back().op != OP_ESCROW_COMPLETE)
 					nLastHeight = chainActive.Tip()->nHeight;
 				else
