@@ -744,7 +744,7 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
 	if(copyCert.vchData != vchData)
 		theCert.vchData = vchData;
 	theCert.nHeight = chainActive.Tip()->nHeight;
-	theCert.nCreationHeight = copyCert.nCreationHeight;
+	theCert.nCreationHeight = chainActive.Tip()->nHeight;
 	theCert.bPrivate = bPrivate;
 	theCert.safeSearch = strSafeSearch == "Yes"? true: false;
 
@@ -877,7 +877,7 @@ UniValue certtransfer(const UniValue& params, bool fHelp) {
     CScript scriptPubKey;
     scriptPubKey << CScript::EncodeOP_N(OP_CERT_TRANSFER) << vchCert << OP_2DROP;
     scriptPubKey += scriptPubKeyOrig;
-	theCert.nCreationHeight = copyCert.nCreationHeight;	
+	theCert.nCreationHeight = chainActive.Tip()->nHeight;
 	theCert.nHeight = chainActive.Tip()->nHeight;
 	theCert.vchPubKey = vchPubKeyByte;
 	if(copyCert.vchData != vchData)
