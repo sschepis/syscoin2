@@ -176,7 +176,7 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 			// if escrow is not refunded or complete don't prune otherwise escrow gets stuck (coins are still safe, just a GUI thing)
 			if(IsSys21Fork(vtxPos.front().nCreationHeight))
 			{
-				if(escrow.op != OP_ESCROW_COMPLETE)
+				if(vtxPos.back().op != OP_ESCROW_COMPLETE)
 					nHeight = chainActive.Tip()->nHeight + GetEscrowExpirationDepth();
 				else
 					nHeight = vtxPos.back().nCreationHeight + GetEscrowExpirationDepth();
@@ -191,17 +191,7 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 	}
 	else if(message.UnserializeFromData(vchData))
 	{
-		vector<CMessage> vtxPos;
-		if (pmessagedb->ReadMessage(message.vchMessage, vtxPos))
-		{
-			// have to check the first tx in the service because if it was created before the fork, the chain has hashed the data, so we can't prune it
-			if(IsSys21Fork(vtxPos.front().nCreationHeight))
-			{
-				nHeight = vtxPos.back().nCreationHeight + GetMessageExpirationDepth();
-				return true;	
-			}		
-		}
-		else if(IsSys21Fork(message.nCreationHeight))
+		if(IsSys21Fork(message.nCreationHeight))
 		{
 			nHeight = message.nCreationHeight +  GetMessageExpirationDepth();
 			return true;
