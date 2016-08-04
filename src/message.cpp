@@ -348,12 +348,6 @@ bool CheckMessageInputs(const CTransaction &tx, int op, int nOut, const vector<v
 
 
     if (!fJustCheck ) {
-		if(theMessage.nCreationHeight >= nHeight)
-		{
-			if(fDebug)
-				LogPrintf("CheckMessageInputs(): Trying to make a message transaction that is too far in the future, skipping...");
-			return true;
-		}
 		vector<CMessage> vtxPos;
 		if (pmessagedb->ExistsMessage(vvchArgs[0])) {
 			if(fDebug)

@@ -451,25 +451,19 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 	}
 
     if (!fJustCheck ) {
-		if(!theCert.IsNull() && theCert.nCreationHeight >= nHeight)
-		{
-			if(fDebug)
-				LogPrintf("CheckCertInputs(): Trying to make a cert transaction that is too far in the future, skipping...");
-			return true;
-		}
 		if(op != OP_CERT_ACTIVATE) 
 		{
 			// if not an certnew, load the cert data from the DB
 			CTransaction certTx;
 			CCert dbCert;
-			if (pcertdb->ExistsCert(vvchArgs[0])) {
-				if(!GetTxAndVtxOfCert(vvchArgs[0], dbCert, certTx, vtxPos))	
-				{
-					if(fDebug)
-						LogPrintf("CheckCertInputs() : failed to read from cert DB");
-					return true;
-				}
+
+			if(!GetTxAndVtxOfCert(vvchArgs[0], dbCert, certTx, vtxPos))	
+			{
+				if(fDebug)
+					LogPrintf("CheckCertInputs() : failed to read from cert DB");
+				return true;
 			}
+			
 
 			if(!vtxPos.empty())
 			{

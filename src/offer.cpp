@@ -796,28 +796,20 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	
 
 	if (!fJustCheck ) {
-		if(theOffer.nCreationHeight >= nHeight)
-		{
-			if(fDebug)
-				LogPrintf("CheckOfferInputs(): Trying to make an offer transaction that is too far in the future, skipping...");
-			return true;
-		}
 		COffer serializedOffer;
 		if(op != OP_OFFER_ACTIVATE) {
 			// save serialized offer for later use
 			serializedOffer = theOffer;
 			CTransaction offerTx;
 			// load the offer data from the DB
-			if (pofferdb->ExistsOffer(vvchArgs[0])) {
-				if(!GetTxAndVtxOfOffer(vvchArgs[0], theOffer, offerTx, vtxPos))	
-				{				
-					if(fDebug)
-						LogPrintf("CheckOfferInputs() : failed to read from offer DB");
-					return true;				
-				}
-			}			
+		
+			if(!GetTxAndVtxOfOffer(vvchArgs[0], theOffer, offerTx, vtxPos))	
+			{				
+				if(fDebug)
+					LogPrintf("CheckOfferInputs() : failed to read from offer DB");
+				return true;				
+			}						
 		}
-
 		// If update, we make the serialized offer the master
 		// but first we assign fields from the DB since
 		// they are not shipped in an update txn to keep size down

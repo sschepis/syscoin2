@@ -547,12 +547,6 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 
 
     if (!fJustCheck ) {
-		if(theEscrow.nCreationHeight >= nHeight)
-		{
-			if(fDebug)
-				LogPrintf("CheckEscrowInputs(): Trying to make an escrow transaction that is too far in the future, skipping...");
-			return true;
-		}
 		vector<CEscrow> vtxPos;
 		// make sure escrow settings don't change (besides rawTx) outside of activation
 		if(op != OP_ESCROW_ACTIVATE) 
@@ -560,14 +554,13 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 			// save serialized escrow for later use
 			CEscrow serializedEscrow = theEscrow;
 			CTransaction escrowTx;
-			if (pescrowdb->ExistsEscrow(vvchArgs[0])) {
-				if(!GetTxAndVtxOfEscrow(vvchArgs[0], theEscrow, escrowTx, vtxPos))	
-				{
-					if(fDebug)
-						LogPrintf("CheckEscrowInputs() : failed to read from escrow DB");
-					return true;
-				}
+			if(!GetTxAndVtxOfEscrow(vvchArgs[0], theEscrow, escrowTx, vtxPos))	
+			{
+				if(fDebug)
+					LogPrintf("CheckEscrowInputs() : failed to read from escrow DB");
+				return true;
 			}
+			
 			// make sure we have found this escrow in db
 			if(!vtxPos.empty())
 			{

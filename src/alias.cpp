@@ -116,11 +116,11 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 		if (paliasdb->ReadAlias(alias.vchName, vtxPos))
 		{
 			// have to check the first tx in the service because if it was created before the fork, the chain has hashed the data, so we can't prune it
-			if(IsSys21Fork(vtxPos.front().nCreationHeight))
+			if(IsSys21Fork(vtxPos.front().nHeight))
 			{
-				uint64_t nLastHeight = vtxPos.back().nCreationHeight;
+				uint64_t nLastHeight = vtxPos.back().nHeight;
 				if(!alias.vchGUID.empty() && vtxPos.back().vchGUID != alias.vchGUID)
-					nLastHeight = alias.nCreationHeight;
+					nLastHeight = alias.nHeight;
 
 				nHeight = nLastHeight + GetAliasExpirationDepth();
 				if(alias.nCreationHeight != nLastHeight)
@@ -144,12 +144,12 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 		if (pofferdb->ReadOffer(offer.vchOffer, vtxPos))
 		{
 			// have to check the first tx in the service because if it was created before the fork, the chain has hashed the data, so we can't prune it
-			if(IsSys21Fork(vtxPos.front().nCreationHeight))
+			if(IsSys21Fork(vtxPos.front().nHeight))
 			{
-				nHeight = vtxPos.back().nCreationHeight + GetOfferExpirationDepth();
-				if(offer.nCreationHeight != vtxPos.back().nCreationHeight)
+				nHeight = vtxPos.back().nHeight + GetOfferExpirationDepth();
+				if(offer.nCreationHeight != vtxPos.back().Height)
 				{
-					offer.nCreationHeight = vtxPos.back().nCreationHeight;
+					offer.nCreationHeight = vtxPos.back().nHeight;
 					const vector<unsigned char> &data = offer.Serialize();
 					scriptPubKey = CScript() << OP_RETURN << data;
 				}
@@ -168,12 +168,12 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 		if (pcertdb->ReadCert(cert.vchCert, vtxPos))
 		{
 			// have to check the first tx in the service because if it was created before the fork, the chain has hashed the data, so we can't prune it
-			if(IsSys21Fork(vtxPos.front().nCreationHeight))
+			if(IsSys21Fork(vtxPos.front().nHeight))
 			{
-				nHeight = vtxPos.back().nCreationHeight + GetCertExpirationDepth();
-				if(cert.nCreationHeight != vtxPos.back().nCreationHeight)
+				nHeight = vtxPos.back().nHeight + GetCertExpirationDepth();
+				if(cert.nCreationHeight != vtxPos.back().nHeight)
 				{
-					cert.nCreationHeight = vtxPos.back().nCreationHeight;
+					cert.nCreationHeight = vtxPos.back().nHeight;
 					const vector<unsigned char> &data = cert.Serialize();
 					scriptPubKey = CScript() << OP_RETURN << data;
 				}
@@ -192,13 +192,13 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 		if (pescrowdb->ReadEscrow(escrow.vchEscrow, vtxPos))
 		{
 			// if escrow is not refunded or complete don't prune otherwise escrow gets stuck (coins are still safe, just a GUI thing)
-			if(IsSys21Fork(vtxPos.front().nCreationHeight))
+			if(IsSys21Fork(vtxPos.front().nHeight))
 			{
 				uint64_t nLastHeight;
 				if(vtxPos.back().op != OP_ESCROW_COMPLETE)
 					nLastHeight = chainActive.Tip()->nHeight;
 				else
-					nLastHeight = vtxPos.back().nCreationHeight;
+					nLastHeight = vtxPos.back().nHeight;
 				nHeight = nLastHeight + GetEscrowExpirationDepth();	
 				return true;	
 			}			
@@ -872,36 +872,29 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	}
 	
 	if (!fJustCheck ) {
-		if(!theAlias.IsNull() && theAlias.nCreationHeight >= nHeight)
-		{
-			if(fDebug)
-				LogPrintf("CheckAliasInputs(): Trying to make an alias transaction that is too far in the future, skipping...");
-			return true;
-		}
 		bool update = false;
 		CAliasIndex dbAlias;
 		CTransaction aliasTx;
 		// get the alias from the DB
-		if (paliasdb->ExistsAlias(vvchArgs[0])) {
-			if(!GetTxAndVtxOfAlias(vvchArgs[0], dbAlias, aliasTx, vtxPos))	
+		if(!GetTxAndVtxOfAlias(vvchArgs[0], dbAlias, aliasTx, vtxPos))	
+		{
+			if(op == OP_ALIAS_ACTIVATE)
 			{
-				if(op == OP_ALIAS_ACTIVATE)
-				{
-					if(!vtxPos.empty())
-					{
-						if(fDebug)
-							LogPrintf("CheckAliasInputs(): Trying to renew an alias that isn't expired");
-						return true;
-					}
-				}
-				else
+				if(!vtxPos.empty())
 				{
 					if(fDebug)
-						LogPrintf("CheckAliasInputs() : failed to read from alias DB");
+						LogPrintf("CheckAliasInputs(): Trying to renew an alias that isn't expired");
 					return true;
 				}
 			}
+			else
+			{
+				if(fDebug)
+					LogPrintf("CheckAliasInputs() : failed to read from alias DB");
+				return true;
+			}
 		}
+		
 		if(op != OP_ALIAS_ACTIVATE)
 		{
 			if(!vtxPos.empty())
