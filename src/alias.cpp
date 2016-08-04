@@ -889,7 +889,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		switch (op) {
 			case OP_ALIAS_ACTIVATE:
 				// Check GUID
-				if (vvchArgs.size() > 1 && theAlias.vchGUID == vvchArgs[1])
+				if (vvchArgs.size() > 1 && theAlias.vchGUID != vvchArgs[1])
 					return error("CheckAliasInputs() : OP_ALIAS_ACTIVATE GUID mismatch");
 				break;
 			case OP_ALIAS_UPDATE:
@@ -901,7 +901,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				// Check GUID
 				if (vvchArgs.size() > 1 && vvchPrevArgs[1] != vvchArgs[1])
 					return error("CheckAliasInputs() : OP_ALIAS_UPDATE GUID input mismatch");
-				if (vvchArgs.size() > 1 && !theAlias.IsNull() && theAlias.vchGUID == vvchArgs[1])
+				if (vvchArgs.size() > 1 && !theAlias.IsNull() && theAlias.vchGUID != vvchArgs[1])
 					return error("CheckAliasInputs() : OP_ALIAS_UPDATE alias field GUID mismatch");
 				break;
 		default:
