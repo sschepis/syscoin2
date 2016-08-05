@@ -121,6 +121,8 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 				uint64_t nLastHeight = vtxPos.back().nHeight;
 				if(!alias.vchGUID.empty() && vtxPos.back().vchGUID != alias.vchGUID)
 					nLastHeight = alias.nHeight;
+				if(alias.nHeight > nLastHeight)
+					nLastHeight = alias.nHeight;
 				nHeight = nLastHeight + GetAliasExpirationDepth();
 				if(alias.nCreationHeight != nLastHeight)
 				{
@@ -146,6 +148,8 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 			if(IsSys21Fork(vtxPos.front().nHeight))
 			{
 				const uint64_t &nLastHeight = vtxPos.back().nHeight;
+				if(offer.nHeight > nLastHeight)
+					nLastHeight = offer.nHeight;
 				nHeight = nLastHeight + GetOfferExpirationDepth();
 				if(offer.nCreationHeight != nLastHeight)
 				{
@@ -171,6 +175,8 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 			if(IsSys21Fork(vtxPos.front().nHeight))
 			{
 				const uint64_t &nLastHeight = vtxPos.back().nHeight;
+				if(cert.nHeight > nLastHeight)
+					nLastHeight = cert.nHeight;
 				nHeight = nLastHeight + GetCertExpirationDepth();
 				if(cert.nCreationHeight != nLastHeight)
 				{
@@ -198,6 +204,8 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 				uint64_t nLastHeight = vtxPos.back().nHeight;
 				if(vtxPos.back().op != OP_ESCROW_COMPLETE)
 					nLastHeight = chainActive.Tip()->nHeight;
+				if(escrow.nHeight > nLastHeight)
+					nLastHeight = escrow.nHeight;
 				nHeight = nLastHeight + GetEscrowExpirationDepth();	
 				if(escrow.nCreationHeight != nLastHeight)
 				{
