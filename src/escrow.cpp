@@ -381,7 +381,11 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 	string retError = "";
 	// null usually when pruned or when accept is done (in which case we skip this return and continue on so future feedbacks can be done)
 	if(theEscrow.IsNull() && !(op == OP_ESCROW_COMPLETE && vvchArgs.size() == 1))
+	{
+		if(fDebug)
+			LogPrintf("CheckEscrowInputs() : Null escrow, skipping...\n");	
 		return true;
+	}
     if (vvchArgs[0].size() > MAX_NAME_LENGTH)
         return error("escrow tx GUID too big");
 	if(!theEscrow.vchBuyerKey.empty() && !IsSysCompressedOrUncompressedPubKey(theEscrow.vchBuyerKey))
