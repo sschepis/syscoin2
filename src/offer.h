@@ -303,7 +303,6 @@ public:
 	// clear everything but the necessary information for an offer to prepare it to go into a txn
 	void ClearOffer()
 	{
-		vchOffer.clear();
 		accept.SetNull();
 		linkWhitelist.SetNull();
 		offerLinks.clear();

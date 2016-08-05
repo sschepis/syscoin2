@@ -112,7 +112,6 @@ public:
 	int64_t nPricePerUnit;
 	void ClearEscrow()
 	{
-		vchEscrow.clear();
 		vchSellerKey.clear();
 		vchArbiterKey.clear();
 		vchRedeemScript.clear();

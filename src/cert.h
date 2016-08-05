@@ -44,7 +44,6 @@ public:
     }
 	void ClearCert()
 	{
-		vchCert.clear();
 		vchData.clear();
 		vchTitle.clear();
 	}

@@ -452,6 +452,8 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 					return error("CheckEscrowInputs() : escrow alias guid and alias input guid mismatch");
 				if(theEscrow.op != OP_ESCROW_ACTIVATE)
 					return error("CheckEscrowInputs():  OP_ESCROW_ACTIVATE invalid op, should be escrow activate");
+				if (theEscrow.vchEscrow != vvchArgs[0])
+					return error("CheckEscrowInputs() : OP_ESCROW_ACTIVATE guid mismatch");	
 				if(!theEscrow.buyerFeedback.IsNull() || !theEscrow.sellerFeedback.IsNull() || !theEscrow.arbiterFeedback.IsNull())
 				{
 					return error("CheckEscrowInputs() :cannot leave feedback in activate tx");
@@ -485,6 +487,8 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				}
 				if(theEscrow.op != OP_ESCROW_RELEASE)
 					return error("CheckEscrowInputs() : OP_ESCROW_RELEASE invalid op, should be escrow release");
+				if (theEscrow.vchEscrow != vvchArgs[0])
+					return error("CheckEscrowInputs() : OP_ESCROW_RELEASE guid mismatch");	
 				break;
 			case OP_ESCROW_COMPLETE:
 				// Check input
@@ -492,8 +496,10 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 					return error("CheckEscrowInputs() : escrow complete status too large");
 				if (vvchPrevArgs[0] != vvchArgs[0])
 					return error("CheckEscrowInputs() : escrow input guid mismatch");
-				if(!theEscrow.IsNull() && theEscrow.op != OP_ESCROW_COMPLETE)
+				if (!theEscrow.IsNull() && theEscrow.op != OP_ESCROW_COMPLETE)
 					return error("CheckEscrowInputs():  OP_ESCROW_COMPLETE invalid op, should be escrow complete");
+				if (!theEscrow.IsNull() && theEscrow.vchEscrow != vvchArgs[0])
+					return error("CheckEscrowInputs() : OP_ESCROW_COMPLETE guid mismatch");	
 				if(vvchArgs.size() > 1 && vvchArgs[1] == vchFromString("1"))
 				{
 					if(prevOp != OP_ESCROW_COMPLETE && prevOp != OP_ESCROW_REFUND)
@@ -523,6 +529,8 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 					return error("CheckEscrowInputs() : escrow refund status too large");
 				if (vvchPrevArgs[0] != vvchArgs[0])
 					return error("CheckEscrowInputs() : escrow input guid mismatch");
+				if (theEscrow.vchEscrow != vvchArgs[0])
+					return error("CheckEscrowInputs() : OP_ESCROW_REFUND guid mismatch");	
 				if(vvchArgs.size() > 1 && vvchArgs[1] == vchFromString("1"))
 				{
 					if(prevOp != OP_ESCROW_REFUND)

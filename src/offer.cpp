@@ -703,7 +703,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			if (IsCertOp(prevCertOp) && !theOffer.vchCert.empty() && theOffer.vchCert != vvchPrevCertArgs[0])
 				return error("CheckOfferInputs() : cert input and offer cert guid mismatch");	
 			if ( theOffer.vchOffer != vvchArgs[0])
-				return error("CheckOfferInputs() : offer input and offer guid mismatch");	
+				return error("CheckOfferInputs() : OP_OFFER_ACTIVATE offer input and offer guid mismatch");	
 			if(!theOffer.vchLinkOffer.empty())
 			{
 				if (theOffer.vchLinkAlias.empty() && IsSys21Fork(nHeight))
@@ -737,7 +737,8 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				return error("CheckOfferInputs() : cert input and offer cert guid mismatch");
 			if (!theOffer.vchCert.empty() && !IsCertOp(prevCertOp))
 				return error("CheckOfferInputs() : you must own the cert offer you wish to update");		
-			
+			if ( theOffer.vchOffer != vvchArgs[0])
+				return error("CheckOfferInputs() : OP_OFFER_UPDATE offer input and offer guid mismatch");				
 			break;
 		case OP_OFFER_ACCEPT:
 			// check for existence of offeraccept in txn offer obj
@@ -786,6 +787,8 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				return error("CheckOfferInputs() :OP_OFFER_ACCEPT message field too big");
 			if (IsEscrowOp(prevEscrowOp) && IsOfferOp(prevOp))
 				return error("CheckOfferInputs() :OP_OFFER_ACCEPT offer accept cannot attach both escrow and offer inputs at the same time");	
+			if (theOffer.vchOffer != vvchArgs[0])
+				return error("CheckOfferInputs() : OP_OFFER_ACCEPT offer input and offer guid mismatch");	
 			break;
 
 		default:

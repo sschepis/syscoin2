@@ -424,8 +424,9 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 		switch (op) {
 		case OP_CERT_ACTIVATE:
 			if (foundCert)
-				return error(
-						"CheckCertInputs() : certactivate tx pointing to previous syscoin tx");
+				return error("CheckCertInputs() : certactivate tx pointing to previous syscoin tx");
+			if (theCert.vchCert != vvchArgs[0])
+				return error("CheckAliasInputs() : OP_CERT_ACTIVATE cert mismatch");
 			break;
 
 		case OP_CERT_UPDATE:
@@ -434,6 +435,8 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 				return error("CheckCertInputs(): certupdate previous op is invalid");
 			if (vvchPrevArgs[0] != vvchArgs[0])
 				return error("CheckCertInputs(): certupdate prev cert mismatch vvchPrevArgs[0]: %s, vvchArgs[0] %s", stringFromVch(vvchPrevArgs[0]).c_str(), stringFromVch(vvchArgs[0]).c_str());	
+			if (!theCert.IsNull() && theCert.vchCert != vvchArgs[0])
+				return error("CheckAliasInputs() : OP_CERT_UPDATE cert mismatch");			
 			break;
 
 		case OP_CERT_TRANSFER:
@@ -442,6 +445,8 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 				return error("certtransfer previous op is invalid");
 			if (vvchPrevArgs[0] != vvchArgs[0])
 				return error("CheckCertInputs() : certtransfer cert mismatch");
+			if (theCert.vchCert != vvchArgs[0])
+				return error("CheckAliasInputs() : OP_CERT_TRANSFER cert mismatch");	
 			break;
 
 		default:
@@ -481,6 +486,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 						theCert.vchTitle = dbCert.vchTitle;
 					// user can't update safety level after creation
 					theCert.safetyLevel = dbCert.safetyLevel;
+					theCert.vchCert = dbCert.vchCert;
 
 					// ensure an expired tx for alias transfer doesn't actually do the transfer
 					if(op == OP_CERT_TRANSFER)

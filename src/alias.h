@@ -49,7 +49,6 @@ public:
     }
 	void ClearAlias()
 	{
-		vchName.clear();
 		vchPublicValue.clear();
 		vchPrivateValue.clear();
 		vchGUID.clear();

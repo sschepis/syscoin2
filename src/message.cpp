@@ -333,6 +333,8 @@ bool CheckMessageInputs(const CTransaction &tx, int op, int nOut, const vector<v
 				return error("CheckMessageInputs(): no alias result returned");
 			if(vtxPos.back().vchPubKey != theMessage.vchPubKeyFrom)
 				return error("CheckMessageInputs() OP_MESSAGE_ACTIVATE: alias and message from pubkey's must match");	
+			if (theMessage.vchMessage != vvchArgs[0])
+				return error("CheckMessageInputs(): OP_MESSAGE_ACTIVATE guid mismatch");	
 		}
 		else
 			return error( "CheckMessageInputs() : message transaction has unknown op");

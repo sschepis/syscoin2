@@ -118,23 +118,27 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 			// have to check the first tx in the service because if it was created before the fork, the chain has hashed the data, so we can't prune it
 			if(IsSys21Fork(vtxPos.front().nHeight))
 			{
+				// nLastHeight is largest height out of vtxPos.back().nHeight/nCreationHeight/nHeight
 				uint64_t nLastHeight = vtxPos.back().nHeight;
+				// if we are renewing alias just use the height at which renewal happened
 				if(!alias.vchGUID.empty() && vtxPos.back().vchGUID != alias.vchGUID)
 					nLastHeight = alias.nHeight;
 				if(alias.nHeight > nLastHeight)
 					nLastHeight = alias.nHeight;
 				nHeight = nLastHeight + GetAliasExpirationDepth();
-				if(alias.nCreationHeight != nLastHeight)
+				if(alias.nCreationHeight < nLastHeight)
 				{
 					alias.nCreationHeight = nLastHeight;
 					const vector<unsigned char> &data = alias.Serialize();
 					scriptPubKey = CScript() << OP_RETURN << data;
 				}
+				else
+					nHeight = alias.nCreationHeight + GetOfferExpirationDepth();
 				return true;	
 			}		
 		}
 		else if(IsSys21Fork(alias.nCreationHeight))
-		{
+		{		
 			nHeight = alias.nCreationHeight +  GetAliasExpirationDepth();
 			return true;
 		}
@@ -151,17 +155,20 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 				if(offer.nHeight > nLastHeight)
 					nLastHeight = offer.nHeight;
 				nHeight = nLastHeight + GetOfferExpirationDepth();
-				if(offer.nCreationHeight != nLastHeight)
+				if(offer.nCreationHeight < nLastHeight)
 				{
 					offer.nCreationHeight = nLastHeight;
 					const vector<unsigned char> &data = offer.Serialize();
 					scriptPubKey = CScript() << OP_RETURN << data;
 				}
+				else
+					nHeight = offer.nCreationHeight + GetOfferExpirationDepth();
 				return true;	
 			}		
 		}
 		else if(IsSys21Fork(offer.nCreationHeight))
 		{
+			
 			nHeight = offer.nCreationHeight +  GetOfferExpirationDepth();
 			return true;
 		}
@@ -178,17 +185,20 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 				if(cert.nHeight > nLastHeight)
 					nLastHeight = cert.nHeight;
 				nHeight = nLastHeight + GetCertExpirationDepth();
-				if(cert.nCreationHeight != nLastHeight)
+				if(cert.nCreationHeight < nLastHeight)
 				{
 					cert.nCreationHeight = nLastHeight;
 					const vector<unsigned char> &data = cert.Serialize();
 					scriptPubKey = CScript() << OP_RETURN << data;
 				}
+				else
+					nHeight = cert.nCreationHeight + GetCertExpirationDepth();
 				return true;	
 			}		
 		}
 		else if(IsSys21Fork(cert.nCreationHeight))
 		{
+			
 			nHeight = cert.nCreationHeight + GetCertExpirationDepth();
 			return true;
 		}
@@ -207,17 +217,20 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 				if(escrow.nHeight > nLastHeight)
 					nLastHeight = escrow.nHeight;
 				nHeight = nLastHeight + GetEscrowExpirationDepth();	
-				if(escrow.nCreationHeight != nLastHeight)
+				if(escrow.nCreationHeight < nLastHeight)
 				{
 					escrow.nCreationHeight = nLastHeight;
 					const vector<unsigned char> &data = escrow.Serialize();
 					scriptPubKey = CScript() << OP_RETURN << data;
 				}
+				else
+					nHeight = escrow.nCreationHeight + GetEscrowExpirationDepth();
 				return true;	
 			}			
 		}
 		else if(IsSys21Fork(escrow.nCreationHeight))
 		{
+			
 			nHeight = escrow.nCreationHeight + GetEscrowExpirationDepth();
 			return true;
 		}
@@ -235,7 +248,6 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 }
 bool IsSysServiceExpired(const uint64_t &nHeight)
 {
-	// if we don't have a chain or we are in txindex mode (no pruning or culling), the service never expires
 	if(!chainActive.Tip() || fTxIndex)
 		return false;
 	return (nHeight < chainActive.Tip()->nHeight);
@@ -869,6 +881,8 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				// Check GUID
 				if (vvchArgs.size() > 1 && theAlias.vchGUID != vvchArgs[1])
 					return error("CheckAliasInputs() : OP_ALIAS_ACTIVATE GUID mismatch");
+				if (theAlias.vchName != vvchArgs[0])
+					return error("CheckAliasInputs() : OP_ALIAS_ACTIVATE name mismatch");
 				break;
 			case OP_ALIAS_UPDATE:
 				if (!IsAliasOp(prevOp))
@@ -879,6 +893,8 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				// Check GUID
 				if (vvchArgs.size() > 1 && vvchPrevArgs[1] != vvchArgs[1])
 					return error("CheckAliasInputs() : OP_ALIAS_UPDATE GUID input mismatch");
+				if (!theAlias.IsNull() && theAlias.vchName != vvchArgs[0])
+					return error("CheckAliasInputs() : OP_ALIAS_UPDATE name mismatch");
 				break;
 		default:
 			return error(
@@ -929,6 +945,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					theAlias.nRating = dbAlias.nRating;
 					theAlias.nRatingCount = dbAlias.nRatingCount;
 					theAlias.vchGUID = dbAlias.vchGUID;
+					theAlias.vchName = dbAlias.vchName;
 				}
 				// if transfer
 				if(dbAlias.vchPubKey != theAlias.vchPubKey)
