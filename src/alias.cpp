@@ -113,6 +113,8 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 		if(alias.vchName == vchFromString("SYS_RATES") || alias.vchName == vchFromString("SYS_BAN") || alias.vchName == vchFromString("SYS_CATEGORY"))
 			return false;
 		vector<CAliasIndex> vtxPos;
+		// we only prune things that we have in our db and that we can verify the last tx is expired
+		// nHeight is set to the height at which data is pruned, if the tip is newer than nHeight it won't send data to other nodes
 		if (paliasdb->ReadAlias(alias.vchName, vtxPos))
 		{
 			// have to check the first tx in the service because if it was created before the fork, the chain has hashed the data, so we can't prune it
@@ -128,7 +130,8 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 		}
 		// this is a new service, either sent to us because it's not supposed to be expired yet or sent to ourselves as a new service, either way we keep the data and validate it into the service db
 		else
-		{		
+		{
+			// setting to the tip means we don't prune this data, we keep it
 			nHeight = chainActive.Tip()->nHeight +  GetAliasExpirationDepth();
 			return true;
 		}
@@ -194,7 +197,7 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 	else if(message.UnserializeFromData(vchData))
 	{
 		vector<CCert> vtxPos;
-		if (pcertdb->ReadCert(message.vchMessage, vtxPos))
+		if (pmessagedb->ReadMessage(message.vchMessage, vtxPos))
 		{
 			// have to check the first tx in the service because if it was created before the fork, the chain has hashed the data, so we can't prune it
 			if(IsSys21Fork(vtxPos.front().nHeight))
