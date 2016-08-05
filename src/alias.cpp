@@ -121,9 +121,9 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 			if(IsSys21Fork(vtxPos.front().nHeight))
 			{
 				uint64_t nLastHeight = vtxPos.back().nHeight;
-				// if we are renewing alias just use the height at which renewal happened
+				// if we are renewing alias don't prune
 				if(!alias.vchGUID.empty() && vtxPos.back().vchGUID != alias.vchGUID)
-					nLastHeight = alias.nHeight;
+					nLastHeight = chainActive.Tip()->nHeight;
 				nHeight = nLastHeight + GetAliasExpirationDepth();
 				return true;	
 			}		
