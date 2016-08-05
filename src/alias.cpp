@@ -118,28 +118,17 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 			// have to check the first tx in the service because if it was created before the fork, the chain has hashed the data, so we can't prune it
 			if(IsSys21Fork(vtxPos.front().nHeight))
 			{
-				// nLastHeight is largest height out of vtxPos.back().nHeight/nCreationHeight/nHeight
 				uint64_t nLastHeight = vtxPos.back().nHeight;
 				// if we are renewing alias just use the height at which renewal happened
 				if(!alias.vchGUID.empty() && vtxPos.back().vchGUID != alias.vchGUID)
 					nLastHeight = alias.nHeight;
-				if(alias.nHeight > nLastHeight)
-					nLastHeight = alias.nHeight;
 				nHeight = nLastHeight + GetAliasExpirationDepth();
-				if(alias.nCreationHeight < nLastHeight)
-				{
-					alias.nCreationHeight = nLastHeight;
-					const vector<unsigned char> &data = alias.Serialize();
-					scriptPubKey = CScript() << OP_RETURN << data;
-				}
-				else
-					nHeight = alias.nCreationHeight + GetOfferExpirationDepth();
 				return true;	
 			}		
 		}
-		else if(IsSys21Fork(alias.nCreationHeight))
+		else if(IsSys21Fork(alias.nHeight))
 		{		
-			nHeight = alias.nCreationHeight +  GetAliasExpirationDepth();
+			nHeight = alias.nHeight +  GetAliasExpirationDepth();
 			return true;
 		}
 	}
@@ -151,25 +140,13 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 			// have to check the first tx in the service because if it was created before the fork, the chain has hashed the data, so we can't prune it
 			if(IsSys21Fork(vtxPos.front().nHeight))
 			{
-				uint64_t nLastHeight = vtxPos.back().nHeight;
-				if(offer.nHeight > nLastHeight)
-					nLastHeight = offer.nHeight;
-				nHeight = nLastHeight + GetOfferExpirationDepth();
-				if(offer.nCreationHeight < nLastHeight)
-				{
-					offer.nCreationHeight = nLastHeight;
-					const vector<unsigned char> &data = offer.Serialize();
-					scriptPubKey = CScript() << OP_RETURN << data;
-				}
-				else
-					nHeight = offer.nCreationHeight + GetOfferExpirationDepth();
+				nHeight =  vtxPos.back().nHeight + GetOfferExpirationDepth();
 				return true;	
 			}		
 		}
-		else if(IsSys21Fork(offer.nCreationHeight))
+		else if(IsSys21Fork(offer.nHeight))
 		{
-			
-			nHeight = offer.nCreationHeight +  GetOfferExpirationDepth();
+			nHeight = offer.nHeight +  GetOfferExpirationDepth();
 			return true;
 		}
 	}
@@ -182,24 +159,13 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 			if(IsSys21Fork(vtxPos.front().nHeight))
 			{
 				uint64_t nLastHeight = vtxPos.back().nHeight;
-				if(cert.nHeight > nLastHeight)
-					nLastHeight = cert.nHeight;
-				nHeight = nLastHeight + GetCertExpirationDepth();
-				if(cert.nCreationHeight < nLastHeight)
-				{
-					cert.nCreationHeight = nLastHeight;
-					const vector<unsigned char> &data = cert.Serialize();
-					scriptPubKey = CScript() << OP_RETURN << data;
-				}
-				else
-					nHeight = cert.nCreationHeight + GetCertExpirationDepth();
+				nHeight = vtxPos.back().nHeight + GetCertExpirationDepth();
 				return true;	
 			}		
 		}
-		else if(IsSys21Fork(cert.nCreationHeight))
-		{
-			
-			nHeight = cert.nCreationHeight + GetCertExpirationDepth();
+		else if(IsSys21Fork(cert.nHeight))
+		{	
+			nHeight = cert.nHeight + GetCertExpirationDepth();
 			return true;
 		}
 	}
@@ -214,24 +180,13 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 				uint64_t nLastHeight = vtxPos.back().nHeight;
 				if(vtxPos.back().op != OP_ESCROW_COMPLETE)
 					nLastHeight = chainActive.Tip()->nHeight;
-				if(escrow.nHeight > nLastHeight)
-					nLastHeight = escrow.nHeight;
-				nHeight = nLastHeight + GetEscrowExpirationDepth();	
-				if(escrow.nCreationHeight < nLastHeight)
-				{
-					escrow.nCreationHeight = nLastHeight;
-					const vector<unsigned char> &data = escrow.Serialize();
-					scriptPubKey = CScript() << OP_RETURN << data;
-				}
-				else
-					nHeight = escrow.nCreationHeight + GetEscrowExpirationDepth();
+				nHeight = nLastHeight + GetEscrowExpirationDepth();
 				return true;	
 			}			
 		}
-		else if(IsSys21Fork(escrow.nCreationHeight))
-		{
-			
-			nHeight = escrow.nCreationHeight + GetEscrowExpirationDepth();
+		else if(IsSys21Fork(escrow.nHeight))
+		{		
+			nHeight = escrow.nHeight + GetEscrowExpirationDepth();
 			return true;
 		}
 	}
