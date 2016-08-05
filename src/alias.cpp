@@ -121,9 +121,6 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 			if(IsSys21Fork(vtxPos.front().nHeight))
 			{
 				uint64_t nLastHeight = vtxPos.back().nHeight;
-				// if we are renewing alias just use the height at which renewal happened
-				if(!alias.vchGUID.empty() && vtxPos.back().vchGUID != alias.vchGUID)
-					nLastHeight = alias.nHeight;
 				nHeight = nLastHeight + GetAliasExpirationDepth();
 				return true;	
 			}		
@@ -844,9 +841,6 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	{
 		switch (op) {
 			case OP_ALIAS_ACTIVATE:
-				// Check GUID
-				if (vvchArgs.size() > 1 && theAlias.vchGUID != vvchArgs[1])
-					return error("CheckAliasInputs() : OP_ALIAS_ACTIVATE GUID mismatch");
 				if (theAlias.vchName != vvchArgs[0])
 					return error("CheckAliasInputs() : OP_ALIAS_ACTIVATE name mismatch");
 				break;
@@ -910,7 +904,6 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					theAlias.safetyLevel = dbAlias.safetyLevel;
 					theAlias.nRating = dbAlias.nRating;
 					theAlias.nRatingCount = dbAlias.nRatingCount;
-					theAlias.vchGUID = dbAlias.vchGUID;
 					theAlias.vchName = dbAlias.vchName;
 				}
 				// if transfer
@@ -940,8 +933,6 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			theAlias.nRating = 0;
 			theAlias.nRatingCount = 0;
 		}
-		if(vvchArgs.size() > 1)
- 			theAlias.vchGUID = vvchArgs[1];
 		theAlias.nHeight = nHeight;
 		theAlias.txHash = tx.GetHash();
 		PutToAliasList(vtxPos, theAlias);
@@ -1345,8 +1336,8 @@ bool DecodeAliasScript(const CScript& script, int& op,
 
 	pc--;
 
-	if ((op == OP_ALIAS_ACTIVATE && vvch.size() <= 2 && vvch.size() >= 1)
-			|| (op == OP_ALIAS_UPDATE && vvch.size() <= 2 && vvch.size() >= 1))
+	if ((op == OP_ALIAS_ACTIVATE && vvch.size() == 1)
+			|| (op == OP_ALIAS_UPDATE && vvch.size() == 1))
 		return true;
 	return false;
 }
@@ -1432,16 +1423,12 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 		throw runtime_error("there are pending operations on that alias");
 	}
 	
-	int64_t rand = GetRand(std::numeric_limits<int64_t>::max());
- 	vector<unsigned char> vchRand = CScriptNum(rand).getvch();
-    vector<unsigned char> vchRandAlias = vchFromValue(HexStr(vchRand));
-
 	CPubKey newDefaultKey;
 	pwalletMain->GetKeyFromPool(newDefaultKey);
 	CScript scriptPubKeyOrig;
 	scriptPubKeyOrig = GetScriptForDestination(newDefaultKey.GetID());
 	CScript scriptPubKey;
-	scriptPubKey << CScript::EncodeOP_N(OP_ALIAS_ACTIVATE) << vchName << vchRandAlias << OP_2DROP << OP_DROP;
+	scriptPubKey << CScript::EncodeOP_N(OP_ALIAS_ACTIVATE) << vchName << OP_2DROP;
 	scriptPubKey += scriptPubKeyOrig;
 	std::vector<unsigned char> vchPubKey(newDefaultKey.begin(), newDefaultKey.end());
 
@@ -1459,7 +1446,6 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 
     // build alias
     CAliasIndex newAlias;
-	newAlias.vchGUID = vchRandAlias;
 	newAlias.vchName = vchName;
 	newAlias.nHeight = chainActive.Tip()->nHeight;
 	newAlias.vchPubKey = vchPubKey;
@@ -1578,7 +1564,7 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 	CPubKey currentKey(vchPubKeyByte);
 	scriptPubKeyOrig = GetScriptForDestination(currentKey.GetID());
 	CScript scriptPubKey;
-	scriptPubKey << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << vchName << copyAlias.vchGUID << OP_2DROP << OP_DROP;
+	scriptPubKey << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << vchName << OP_2DROP;
 	scriptPubKey += scriptPubKeyOrig;
 
     vector<CRecipient> vecSend;
