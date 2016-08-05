@@ -671,6 +671,10 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	{
 		return error("An offer that only accepts BTC must have BTC specified as its currency");
 	}
+	if(IsSys21Fork(nHeight) && (!IsSys21Fork(theOffer.nHeight) || theOffer.nHeight > nHeight))
+	{
+		return error("bad offer height");
+	}
 	vector<CAliasIndex> vtxAliasPos;
 	COffer linkOffer;
 	COffer myPriceOffer;

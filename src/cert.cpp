@@ -412,6 +412,10 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 	}
     if (vvchArgs[0].size() > MAX_NAME_LENGTH)
         return error("cert hex guid too long");
+	if(IsSys21Fork(nHeight) && (!IsSys21Fork(theCert.nHeight) || theCert.nHeight > nHeight))
+	{
+		return error("bad cert height");
+	}	
 	vector<CAliasIndex> vtxAliasPos;
 	vector<CCert> vtxPos;
 	string retError = "";

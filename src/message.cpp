@@ -291,6 +291,10 @@ bool CheckMessageInputs(const CTransaction &tx, int op, int nOut, const vector<v
         return true;
     if (vvchArgs[0].size() > MAX_NAME_LENGTH)
         return error("message tx GUID too big");
+	if(IsSys21Fork(nHeight) && (!IsSys21Fork(theMessage.nHeight) || theMessage.nHeight > nHeight))
+	{
+		return error("bad message height");
+	}
 	if(!IsSysCompressedOrUncompressedPubKey(theMessage.vchPubKeyTo))
 	{
 		return error("message public key to, invalid length");

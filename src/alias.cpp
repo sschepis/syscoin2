@@ -211,9 +211,9 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 	}
 	else if(message.UnserializeFromData(vchData))
 	{
-		if(IsSys21Fork(message.nCreationHeight))
+		if(IsSys21Fork(message.nHeight))
 		{
-			nHeight = message.nCreationHeight +  GetMessageExpirationDepth();
+			nHeight = message.nHeight +  GetMessageExpirationDepth();
 			return true;
 		}
 	}
@@ -843,7 +843,10 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	}
 	if (vvchArgs[0].size() > MAX_NAME_LENGTH)
 		return error("alias name too long");
-
+	if(IsSys21Fork(nHeight) && (!IsSys21Fork(theAlias.nHeight) || theAlias.nHeight > nHeight))
+	{
+		return error("bad alias height");
+	}
 	vector<CAliasIndex> vtxPos;
 	string retError = "";
 	if(fJustCheck)

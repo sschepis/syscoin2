@@ -432,6 +432,10 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 	{
 		return error("guid in data output doesn't match guid in tx");
 	}
+	if(IsSys21Fork(nHeight) && (!IsSys21Fork(theEscrow.nHeight) || theEscrow.nHeight > nHeight))
+	{
+		return error("bad escrow height");
+	}
 	CTransaction txOffer;
 	COffer dbOffer;
 	if(fJustCheck)
