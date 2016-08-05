@@ -118,7 +118,7 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 			// have to check the first tx in the service because if it was created before the fork, the chain has hashed the data, so we can't prune it
 			if(IsSys21Fork(vtxPos.front().nHeight))
 			{
-				const uint64_t &nLastHeight = vtxPos.back().nHeight;
+				uint64_t nLastHeight = vtxPos.back().nHeight;
 				if(!alias.vchGUID.empty() && vtxPos.back().vchGUID != alias.vchGUID)
 					nLastHeight = alias.nHeight;
 				nHeight = nLastHeight + GetAliasExpirationDepth();
@@ -195,7 +195,7 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 			// if escrow is not refunded or complete don't prune otherwise escrow gets stuck (coins are still safe, just a GUI thing)
 			if(IsSys21Fork(vtxPos.front().nHeight))
 			{
-				const uint64_t &nLastHeight = vtxPos.back().nHeight;
+				uint64_t nLastHeight = vtxPos.back().nHeight;
 				if(vtxPos.back().op != OP_ESCROW_COMPLETE)
 					nLastHeight = chainActive.Tip()->nHeight;
 				nHeight = nLastHeight + GetEscrowExpirationDepth();	
