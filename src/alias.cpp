@@ -126,9 +126,10 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 				return true;	
 			}		
 		}
-		else if(IsSys21Fork(alias.nHeight))
+		// this is a new service, either sent to us because it's not supposed to be expired yet or sent to ourselves as a new service, either way we keep the data and validate it into the service db
+		else
 		{		
-			nHeight = alias.nHeight +  GetAliasExpirationDepth();
+			nHeight = chainActive.Tip()->nHeight +  GetAliasExpirationDepth();
 			return true;
 		}
 	}
@@ -144,9 +145,9 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 				return true;	
 			}		
 		}
-		else if(IsSys21Fork(offer.nHeight))
+		else
 		{
-			nHeight = offer.nHeight +  GetOfferExpirationDepth();
+			nHeight = chainActive.Tip()->nHeight +  GetOfferExpirationDepth();
 			return true;
 		}
 	}
@@ -163,9 +164,9 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 				return true;	
 			}		
 		}
-		else if(IsSys21Fork(cert.nHeight))
+		else
 		{	
-			nHeight = cert.nHeight + GetCertExpirationDepth();
+			nHeight = chainActive.Tip()->nHeight + GetCertExpirationDepth();
 			return true;
 		}
 	}
@@ -184,17 +185,28 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 				return true;	
 			}			
 		}
-		else if(IsSys21Fork(escrow.nHeight))
+		else 
 		{		
-			nHeight = escrow.nHeight + GetEscrowExpirationDepth();
+			nHeight = chainActive.Tip()->nHeight + GetEscrowExpirationDepth();
 			return true;
 		}
 	}
 	else if(message.UnserializeFromData(vchData))
 	{
-		if(IsSys21Fork(message.nHeight))
+		vector<CCert> vtxPos;
+		if (pcertdb->ReadCert(message.vchMessage, vtxPos))
 		{
-			nHeight = message.nHeight +  GetMessageExpirationDepth();
+			// have to check the first tx in the service because if it was created before the fork, the chain has hashed the data, so we can't prune it
+			if(IsSys21Fork(vtxPos.front().nHeight))
+			{
+				uint64_t nLastHeight = vtxPos.back().nHeight;
+				nHeight = vtxPos.back().nHeight + GetMessageExpirationDepth();
+				return true;	
+			}		
+		}
+		else
+		{	
+			nHeight = chainActive.Tip()->nHeight + GetMessageExpirationDepth();
 			return true;
 		}
 	}
@@ -823,10 +835,6 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	}
 	if (vvchArgs[0].size() > MAX_NAME_LENGTH)
 		return error("alias name too long");
-	if(IsSys21Fork(nHeight) && (!IsSys21Fork(theAlias.nHeight) || theAlias.nHeight > nHeight))
-	{
-		return error("bad alias height");
-	}
 	vector<CAliasIndex> vtxPos;
 	string retError = "";
 	if(fJustCheck)
@@ -1451,7 +1459,6 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	newAlias.vchGUID = vchRandAlias;
 	newAlias.vchName = vchName;
 	newAlias.nHeight = chainActive.Tip()->nHeight;
-	newAlias.nCreationHeight = chainActive.Tip()->nHeight;
 	newAlias.vchPubKey = vchPubKey;
 	newAlias.vchPublicValue = vchPublicValue;
 	newAlias.vchPrivateValue = vchPrivateValue;
@@ -1557,7 +1564,6 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 
 	CAliasIndex copyAlias = theAlias;
 	theAlias.ClearAlias();
-	theAlias.nCreationHeight = chainActive.Tip()->nHeight;
 	theAlias.nHeight = chainActive.Tip()->nHeight;
 	if(copyAlias.vchPublicValue != vchPublicValue)
 		theAlias.vchPublicValue = vchPublicValue;

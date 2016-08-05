@@ -35,7 +35,6 @@ public:
 	std::vector<unsigned char> vchMessageFrom;
     uint256 txHash;
     uint64_t nHeight;
-	uint64_t nCreationHeight;
     CMessage() {
         SetNull();
     }
@@ -56,7 +55,6 @@ public:
 		if(IsSys21Fork(nHeight))
 		{
 			READWRITE(vchMessage);
-			READWRITE(VARINT(nCreationHeight));
 		}
 		
 	}
@@ -70,7 +68,6 @@ public:
 		&& a.vchMessageFrom == b.vchMessageFrom
 		&& a.txHash == b.txHash
 		&& a.nHeight == b.nHeight
-		&& a.nCreationHeight == b.nCreationHeight
 		&& a.vchMessage == b.vchMessage
         );
     }
@@ -83,7 +80,6 @@ public:
 		vchMessageFrom = b.vchMessageFrom;
 		txHash = b.txHash;
 		nHeight = b.nHeight;
-		nCreationHeight = b.nCreationHeight;
 		vchMessage = b.vchMessage;
         return *this;
     }
@@ -92,8 +88,8 @@ public:
         return !(a == b);
     }
 
-    void SetNull() { nCreationHeight = 0;vchMessage.clear(); txHash.SetNull(); nHeight = 0; vchPubKeyTo.clear(); vchPubKeyFrom.clear(); vchSubject.clear(); vchMessageTo.clear();vchMessageFrom.clear();}
-    bool IsNull() const { return (vchMessage.empty() && txHash.IsNull() && nHeight == 0 && nCreationHeight == 0 && vchPubKeyTo.empty() && vchPubKeyFrom.empty()); }
+    void SetNull() {vchMessage.clear(); txHash.SetNull(); nHeight = 0; vchPubKeyTo.clear(); vchPubKeyFrom.clear(); vchSubject.clear(); vchMessageTo.clear();vchMessageFrom.clear();}
+    bool IsNull() const { return (vchMessage.empty() && txHash.IsNull() && nHeight == 0 && vchPubKeyTo.empty() && vchPubKeyFrom.empty()); }
     bool UnserializeFromTx(const CTransaction &tx);
 	bool UnserializeFromData(const std::vector<unsigned char> &vchData);
 	const std::vector<unsigned char> Serialize();
