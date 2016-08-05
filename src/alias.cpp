@@ -147,7 +147,7 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 			// have to check the first tx in the service because if it was created before the fork, the chain has hashed the data, so we can't prune it
 			if(IsSys21Fork(vtxPos.front().nHeight))
 			{
-				const uint64_t &nLastHeight = vtxPos.back().nHeight;
+				uint64_t nLastHeight = vtxPos.back().nHeight;
 				if(offer.nHeight > nLastHeight)
 					nLastHeight = offer.nHeight;
 				nHeight = nLastHeight + GetOfferExpirationDepth();
@@ -174,7 +174,7 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 			// have to check the first tx in the service because if it was created before the fork, the chain has hashed the data, so we can't prune it
 			if(IsSys21Fork(vtxPos.front().nHeight))
 			{
-				const uint64_t &nLastHeight = vtxPos.back().nHeight;
+				uint64_t nLastHeight = vtxPos.back().nHeight;
 				if(cert.nHeight > nLastHeight)
 					nLastHeight = cert.nHeight;
 				nHeight = nLastHeight + GetCertExpirationDepth();
