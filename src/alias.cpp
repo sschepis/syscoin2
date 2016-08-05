@@ -193,7 +193,7 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 	}
 	else if(message.UnserializeFromData(vchData))
 	{
-		vector<CCert> vtxPos;
+		vector<CMessage> vtxPos;
 		if (pmessagedb->ReadMessage(message.vchMessage, vtxPos))
 		{
 			// have to check the first tx in the service because if it was created before the fork, the chain has hashed the data, so we can't prune it
