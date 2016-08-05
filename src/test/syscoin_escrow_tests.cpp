@@ -266,8 +266,9 @@ BOOST_AUTO_TEST_CASE (generate_escrowpruning)
 		MilliSleep(1000);
 		BOOST_CHECK_NO_THROW(CallRPC("node2", "generate 5"));
 		BOOST_CHECK_NO_THROW(CallRPC("node1", "offerupdate SYS_RATES selleraliasprune " + offerguid + " category title 100 0.05 description"));
+		MilliSleep(2500);
 		BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 5"));
-		MilliSleep(1000);
+		MilliSleep(2500);
 		BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 35"));
 		MilliSleep(2500);
 		// ensure dependent services don't expire
@@ -277,9 +278,9 @@ BOOST_AUTO_TEST_CASE (generate_escrowpruning)
 		MilliSleep(2500);
 		BOOST_CHECK_NO_THROW(CallRPC("node2", "generate 5"));
 		BOOST_CHECK_NO_THROW(CallRPC("node1", "offerupdate SYS_RATES selleraliasprune " + offerguid + " category title 100 0.05 description"));
-		MilliSleep(1000);
+		MilliSleep(2500);
 		BOOST_CHECK_NO_THROW(CallRPC("node2", "generate 5"));
-		MilliSleep(1000);
+		MilliSleep(2500);
 		BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 40"));
 		// give some time to propogate the new blocks across other 2 nodes
 		MilliSleep(2500);
@@ -294,9 +295,9 @@ BOOST_AUTO_TEST_CASE (generate_escrowpruning)
 		MilliSleep(1000);
 		BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 5"));
 		BOOST_CHECK_NO_THROW(CallRPC("node1", "offerupdate SYS_RATES selleraliasprune " + offerguid + " category title 100 0.05 description"));
-		MilliSleep(1000);
+		MilliSleep(2500);
 		BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 5"));
-		MilliSleep(1000);
+		MilliSleep(2500);
 		BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 30"));
 		MilliSleep(2500);
 		BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate selleraliasprune data"));
@@ -318,9 +319,10 @@ BOOST_AUTO_TEST_CASE (generate_escrowpruning)
 		MilliSleep(2500);
 		BOOST_CHECK_NO_THROW(CallRPC("node2", "generate 5"));
 		BOOST_CHECK_NO_THROW(CallRPC("node1", "offerupdate SYS_RATES selleraliasprune " + offerguid + " category title 100 0.05 description"));
-		MilliSleep(1000);
-		BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 5"));	
-		MilliSleep(1000);
+		BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 2"));
+		MilliSleep(2500);
+		BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 3"));	
+		MilliSleep(2500);
 		BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 40"));
 		MilliSleep(2500);
 		BOOST_CHECK_NO_THROW(CallRPC("node2", "generate 5"));
