@@ -884,6 +884,13 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						LogPrintf("CheckAliasInputs(): Trying to renew an alias that isn't expired");
 					return true;
 				}
+				// it is expired but guid's are the same
+				else if(theAlias.vchGUID == dbAlias.vchGUID)
+				{
+					if(fDebug)
+						LogPrintf("CheckAliasInputs(): Trying to renew an alias with the same GUID");
+					return true;
+				}
 			}
 			else
 			{
