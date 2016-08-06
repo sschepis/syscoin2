@@ -121,9 +121,9 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 			if(IsSys21Fork(vtxPos.front().nHeight))
 			{
 				uint64_t nLastHeight = vtxPos.back().nHeight;
-				// if we are renewing alias don't prune
+				// if we are renewing alias then prune based on nHeight of tx
 				if(!alias.vchGUID.empty() && vtxPos.back().vchGUID != alias.vchGUID)
-					nLastHeight = chainActive.Tip()->nHeight;
+					nLastHeight = alias.nHeight;
 				nHeight = nLastHeight + GetAliasExpirationDepth();
 				return true;	
 			}		
@@ -838,6 +838,10 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	}
 	if (vvchArgs[0].size() > MAX_NAME_LENGTH)
 		return error("alias name too long");
+	if(IsSys21Fork(nHeight) && (!IsSys21Fork(theAlias.nHeight) || theAlias.nHeight > nHeight))
+	{
+		return error("bad alias height");
+	}
 	vector<CAliasIndex> vtxPos;
 	string retError = "";
 	if(fJustCheck)
