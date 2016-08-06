@@ -580,6 +580,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				// these are the only settings allowed to change outside of activate
 				if(!serializedEscrow.rawTx.empty())
 					theEscrow.rawTx = serializedEscrow.rawTx;
+				theEscrow.op = serializedEscrow.op;
 				if(op == OP_ESCROW_REFUND && vvchArgs.size() == 1)
 				{
 					// make sure offer is still valid and then refund qty

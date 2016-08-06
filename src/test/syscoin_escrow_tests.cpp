@@ -331,16 +331,14 @@ BOOST_AUTO_TEST_CASE (generate_escrowpruning)
 		// and it should say its expired
 		BOOST_CHECK_NO_THROW(r = CallRPC("node2", "escrowinfo " + guid1));
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_int(), 1);	
-		BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 60"));
-		MilliSleep(2500);
-		BOOST_CHECK_NO_THROW(CallRPC("node2", "generate 60"))
+		BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 40"));
 		MilliSleep(2500);
 		StartNode("node3");
 		MilliSleep(2500);
 		BOOST_CHECK_NO_THROW(CallRPC("node3", "generate 5"));
 		MilliSleep(5000);
-		// node3 shouldn't find the service at all (meaning node3 doesn't sync the data)
-		BOOST_CHECK_THROW(CallRPC("node3", "escrowinfo " + guid1), runtime_error);
+		// node3 should find the service because the aliases aren't expired
+		BOOST_CHECK_NO_THROW(CallRPC("node3", "escrowinfo " + guid1));
 	#endif
 }
 
