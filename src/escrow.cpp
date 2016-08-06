@@ -2440,8 +2440,8 @@ UniValue escrowinfo(const UniValue& params, bool fHelp) {
 	CEscrow ca = vtxPos.back();
 	CTransaction offertx;
 	COffer offer;
-	if (!GetTxOfOffer(ca.vchOffer, offer, offertx, true))
-		throw runtime_error("failed to read from offer DB");
+	GetTxOfOffer(ca.vchOffer, offer, offertx, true);
+		
 	
     string sHeight = strprintf("%llu", ca.nHeight);
     oEscrow.push_back(Pair("escrow", stringFromVch(vchEscrow)));
@@ -2648,8 +2648,8 @@ UniValue escrowlist(const UniValue& params, bool fHelp) {
 		}
 		COffer offer;
 		CTransaction offertx;
-		if (!GetTxOfOffer(escrow.vchOffer, offer, offertx, true))
-			continue;
+		GetTxOfOffer(escrow.vchOffer, offer, offertx, true);
+			
 		// skip this escrow if it doesn't match the given filter value
 		if (vchNameUniq.size() > 0 && vchNameUniq != vchName)
 			continue;
@@ -2823,8 +2823,8 @@ UniValue escrowhistory(const UniValue& params, bool fHelp) {
 			}
 			COffer offer;
 			CTransaction offertx;
-			if (!GetTxOfOffer(txPos2.vchOffer, offer, offertx, true))
-				continue;
+			GetTxOfOffer(txPos2.vchOffer, offer, offertx, true);
+				
             // decode txn, skip non-alias txns
             vector<vector<unsigned char> > vvch;
             int op, nOut;

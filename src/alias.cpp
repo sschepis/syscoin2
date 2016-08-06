@@ -145,6 +145,12 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 			if(IsSys21Fork(vtxPos.front().nHeight))
 			{
 				nHeight =  vtxPos.back().nHeight + GetOfferExpirationDepth();
+				// if alises of offer is not expired then don't prune the offer yet
+				CPubKey sellerKey = CPubKey( vtxPos.back().vchPubKey);
+				CSyscoinAddress sellerAddress = CSyscoinAddress(sellerKey.GetID());
+				sellerAddress = CSyscoinAddress(sellerAddress.ToString());
+				if(sellerAddress.IsValid() && sellerAddress.isAlias)
+					nLastHeight = chainActive.Tip()->nHeight;
 				return true;	
 			}		
 		}
@@ -184,6 +190,29 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 				uint64_t nLastHeight = vtxPos.back().nHeight;
 				if(vtxPos.back().op != OP_ESCROW_COMPLETE)
 					nLastHeight = chainActive.Tip()->nHeight;
+				// if alises of escrow are not expired then don't prune the escrow yet
+				CPubKey buyerKey = CPubKey( vtxPos.back().vchBuyerKey);
+				CSyscoinAddress buyerAddress = CSyscoinAddress(buyerKey.GetID());
+				buyerAddress = CSyscoinAddress(buyerAddress.ToString());
+				if(buyerAddress.IsValid() && buyerAddress.isAlias)
+					nLastHeight = chainActive.Tip()->nHeight;
+				else
+				{
+					CPubKey sellerKey = CPubKey( vtxPos.back().vchSellerKey);
+					CSyscoinAddress sellerAddress = CSyscoinAddress(sellerKey.GetID());
+					sellerAddress = CSyscoinAddress(sellerAddress.ToString());
+					if(sellerAddress.IsValid() && sellerAddress.isAlias)
+						nLastHeight = chainActive.Tip()->nHeight;
+					else
+					{
+						CPubKey arbiterKey = CPubKey( vtxPos.back().vchArbiterKey);
+						CSyscoinAddress arbiterAddress = CSyscoinAddress(arbiterKey.GetID());
+						arbiterAddress = CSyscoinAddress(arbiterAddress.ToString());
+						if(arbiterAddress.IsValid() && arbiterAddress.isAlias)
+							nLastHeight = chainActive.Tip()->nHeight;
+					}
+				}
+			
 				nHeight = nLastHeight + GetEscrowExpirationDepth();
 				return true;	
 			}			
