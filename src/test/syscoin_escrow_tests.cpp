@@ -331,7 +331,7 @@ BOOST_AUTO_TEST_CASE (generate_escrowpruning)
 		// and it should say its expired
 		BOOST_CHECK_NO_THROW(r = CallRPC("node2", "escrowinfo " + guid1));
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_int(), 1);	
-		BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 40"));
+		BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 60"));
 		MilliSleep(2500);
 		StartNode("node3");
 		MilliSleep(2500);

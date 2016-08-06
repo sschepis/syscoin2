@@ -824,9 +824,9 @@ BOOST_AUTO_TEST_CASE (generate_offerpruning)
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "offerinfo " + guid));
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_int(), 1);	
 
-		// node2 shouldn't find the service at all (meaning node2 doesn't sync the data)
-		BOOST_CHECK_THROW(CallRPC("node2", "offerinfo " + guid), runtime_error);
-		BOOST_CHECK_EQUAL(OfferFilter("node2", guid, "Off"), false);
+		// shouldnt be pruned yet because alias pruneoffer isn't expired
+		BOOST_CHECK_NO_THROW(CallRPC("node2", "offerinfo " + guid));
+		BOOST_CHECK_EQUAL(OfferFilter("node3", guid1, "Off"), true);
 
 		// stop node3
 		StopNode("node3");
@@ -875,7 +875,8 @@ BOOST_AUTO_TEST_CASE (generate_offerpruning)
 		// and it should say its expired
 		BOOST_CHECK_NO_THROW(r = CallRPC("node2", "offerinfo " + guid1));
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_int(), 1);	
-
+		// expire the alias and offer now so it should be pruned
+		BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 50"));
 		StartNode("node3");
 		MilliSleep(2500);
 		BOOST_CHECK_NO_THROW(CallRPC("node3", "generate 5"));
