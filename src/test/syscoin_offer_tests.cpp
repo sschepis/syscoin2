@@ -826,7 +826,7 @@ BOOST_AUTO_TEST_CASE (generate_offerpruning)
 
 		// shouldnt be pruned yet because alias pruneoffer isn't expired
 		BOOST_CHECK_NO_THROW(CallRPC("node2", "offerinfo " + guid));
-		BOOST_CHECK_EQUAL(OfferFilter("node3", guid1, "Off"), true);
+		BOOST_CHECK_EQUAL(OfferFilter("node3", guid, "Off"), true);
 
 		// stop node3
 		StopNode("node3");
