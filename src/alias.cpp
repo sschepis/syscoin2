@@ -149,7 +149,7 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 				CPubKey sellerKey = CPubKey( vtxPos.back().vchPubKey);
 				CSyscoinAddress sellerAddress = CSyscoinAddress(sellerKey.GetID());
 				sellerAddress = CSyscoinAddress(sellerAddress.ToString());
-				if(sellerAddress.IsValid() && sellerAddress.isAlias)
+				if(sellerAddress.IsValid() && sellerAddress.isAlias && (sellerAddress.nHeight+GetOfferExpirationDepth()) >=  chainActive.Tip()->nHeight)
 					nLastHeight = chainActive.Tip()->nHeight;
 				nHeight = nLastHeight + GetOfferExpirationDepth();
 				return true;	
@@ -195,21 +195,21 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 				CPubKey buyerKey = CPubKey( vtxPos.back().vchBuyerKey);
 				CSyscoinAddress buyerAddress = CSyscoinAddress(buyerKey.GetID());
 				buyerAddress = CSyscoinAddress(buyerAddress.ToString());
-				if(buyerAddress.IsValid() && buyerAddress.isAlias)
+				if(buyerAddress.IsValid() && buyerAddress.isAlias && (buyerAddress.nHeight+GetEscrowExpirationDepth()) >=  chainActive.Tip()->nHeight)
 					nLastHeight = chainActive.Tip()->nHeight;
 				else
 				{
 					CPubKey sellerKey = CPubKey( vtxPos.back().vchSellerKey);
 					CSyscoinAddress sellerAddress = CSyscoinAddress(sellerKey.GetID());
 					sellerAddress = CSyscoinAddress(sellerAddress.ToString());
-					if(sellerAddress.IsValid() && sellerAddress.isAlias)
+					if(sellerAddress.IsValid() && sellerAddress.isAlias && (sellerAddress.nHeight+GetEscrowExpirationDepth()) >=  chainActive.Tip()->nHeight)
 						nLastHeight = chainActive.Tip()->nHeight;
 					else
 					{
 						CPubKey arbiterKey = CPubKey( vtxPos.back().vchArbiterKey);
 						CSyscoinAddress arbiterAddress = CSyscoinAddress(arbiterKey.GetID());
 						arbiterAddress = CSyscoinAddress(arbiterAddress.ToString());
-						if(arbiterAddress.IsValid() && arbiterAddress.isAlias)
+						if(arbiterAddress.IsValid() && arbiterAddress.isAlias  && (arbiterAddress.nHeight+GetEscrowExpirationDepth()) >=  chainActive.Tip()->nHeight)
 							nLastHeight = chainActive.Tip()->nHeight;
 					}
 				}
