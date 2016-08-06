@@ -144,13 +144,14 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 			// have to check the first tx in the service because if it was created before the fork, the chain has hashed the data, so we can't prune it
 			if(IsSys21Fork(vtxPos.front().nHeight))
 			{
-				nHeight =  vtxPos.back().nHeight + GetOfferExpirationDepth();
+				uint64_t nLastHeight =  vtxPos.back().nHeight;
 				// if alises of offer is not expired then don't prune the offer yet
 				CPubKey sellerKey = CPubKey( vtxPos.back().vchPubKey);
 				CSyscoinAddress sellerAddress = CSyscoinAddress(sellerKey.GetID());
 				sellerAddress = CSyscoinAddress(sellerAddress.ToString());
 				if(sellerAddress.IsValid() && sellerAddress.isAlias)
 					nLastHeight = chainActive.Tip()->nHeight;
+				nHeight = nLastHeight + GetOfferExpirationDepth();
 				return true;	
 			}		
 		}
