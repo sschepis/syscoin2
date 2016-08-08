@@ -826,7 +826,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	// unserialize alias from txn, check for valid
 	CAliasIndex theAlias;
 	vector<unsigned char> vchData;
-	if(!theAlias.GetSyscoinData(tx, vchData))
+	if(!GetSyscoinData(tx, vchData))
 	{
 		theAlias.SetNull();
 	}
@@ -837,7 +837,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 
 	if(fJustCheck)
 	{
-		if(IsInSys21Fork(nHeight))
+		if(IsSys21Fork(nHeight))
 		{
 			if(vvchArgs.size() != 3)
 				return error("sys 2.1 alias arguments wrong size");
