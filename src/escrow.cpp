@@ -2372,7 +2372,52 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
 	escrow.ClearEscrow();
 	escrow.op = OP_ESCROW_COMPLETE;
 	escrow.nHeight = chainActive.Tip()->nHeight;
-
+	// buyer
+	if(foundBuyerKey)
+	{
+		CEscrowFeedback sellerFeedback(BUYER);
+		sellerFeedback.vchFeedback = vchFeedbackPrimary;
+		sellerFeedback.nRating = nRatingPrimary;
+		sellerFeedback.nHeight = chainActive.Tip()->nHeight;
+		CEscrowFeedback arbiterFeedback(BUYER);
+		arbiterFeedback.vchFeedback = vchFeedbackSecondary;
+		arbiterFeedback.nRating = nRatingSecondary;
+		arbiterFeedback.nHeight = chainActive.Tip()->nHeight;
+		escrow.arbiterFeedback = arbiterFeedback;
+		escrow.sellerFeedback = sellerFeedback;
+	}
+	// seller
+	else if(foundSellerKey)
+	{
+		CEscrowFeedback buyerFeedback(SELLER);
+		buyerFeedback.vchFeedback = vchFeedbackPrimary;
+		buyerFeedback.nRating = nRatingPrimary;
+		buyerFeedback.nHeight = chainActive.Tip()->nHeight;
+		CEscrowFeedback arbiterFeedback(SELLER);
+		arbiterFeedback.vchFeedback = vchFeedbackSecondary;
+		arbiterFeedback.nRating = nRatingSecondary;
+		arbiterFeedback.nHeight = chainActive.Tip()->nHeight;
+		escrow.buyerFeedback = buyerFeedback;
+		escrow.arbiterFeedback = arbiterFeedback;
+	}
+	// arbiter
+	else if(foundArbiterKey)
+	{
+		CEscrowFeedback buyerFeedback(ARBITER);
+		buyerFeedback.vchFeedback = vchFeedbackPrimary;
+		buyerFeedback.nRating = nRatingPrimary;
+		buyerFeedback.nHeight = chainActive.Tip()->nHeight;
+		CEscrowFeedback sellerFeedback(ARBITER);
+		sellerFeedback.vchFeedback = vchFeedbackSecondary;
+		sellerFeedback.nRating = nRatingSecondary;
+		sellerFeedback.nHeight = chainActive.Tip()->nHeight;
+		escrow.buyerFeedback = buyerFeedback;
+		escrow.sellerFeedback = sellerFeedback;
+	}
+	else
+	{
+		throw runtime_error("You must be either the arbiter, buyer or seller to leave feedback on this escrow");
+	}
 	const vector<unsigned char> &data = escrow.Serialize();
     uint256 hash = Hash(data.begin(), data.end());
  	vector<unsigned char> vchHash = CScriptNum(hash.GetCheapHash()).getvch();
@@ -2395,54 +2440,20 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
 	// buyer
 	if(foundBuyerKey)
 	{
-		CEscrowFeedback sellerFeedback(BUYER);
-		sellerFeedback.vchFeedback = vchFeedbackPrimary;
-		sellerFeedback.nRating = nRatingPrimary;
-		sellerFeedback.nHeight = chainActive.Tip()->nHeight;
-		CEscrowFeedback arbiterFeedback(BUYER);
-		arbiterFeedback.vchFeedback = vchFeedbackSecondary;
-		arbiterFeedback.nRating = nRatingSecondary;
-		arbiterFeedback.nHeight = chainActive.Tip()->nHeight;
-		escrow.arbiterFeedback = arbiterFeedback;
-		escrow.sellerFeedback = sellerFeedback;
 		vecSend.push_back(recipientSeller);
 		vecSend.push_back(recipientArbiter);
 	}
 	// seller
 	else if(foundSellerKey)
 	{
-		CEscrowFeedback buyerFeedback(SELLER);
-		buyerFeedback.vchFeedback = vchFeedbackPrimary;
-		buyerFeedback.nRating = nRatingPrimary;
-		buyerFeedback.nHeight = chainActive.Tip()->nHeight;
-		CEscrowFeedback arbiterFeedback(SELLER);
-		arbiterFeedback.vchFeedback = vchFeedbackSecondary;
-		arbiterFeedback.nRating = nRatingSecondary;
-		arbiterFeedback.nHeight = chainActive.Tip()->nHeight;
-		escrow.buyerFeedback = buyerFeedback;
-		escrow.arbiterFeedback = arbiterFeedback;
 		vecSend.push_back(recipientBuyer);
 		vecSend.push_back(recipientArbiter);
 	}
 	// arbiter
 	else if(foundArbiterKey)
 	{
-		CEscrowFeedback buyerFeedback(ARBITER);
-		buyerFeedback.vchFeedback = vchFeedbackPrimary;
-		buyerFeedback.nRating = nRatingPrimary;
-		buyerFeedback.nHeight = chainActive.Tip()->nHeight;
-		CEscrowFeedback sellerFeedback(ARBITER);
-		sellerFeedback.vchFeedback = vchFeedbackSecondary;
-		sellerFeedback.nRating = nRatingSecondary;
-		sellerFeedback.nHeight = chainActive.Tip()->nHeight;
-		escrow.buyerFeedback = buyerFeedback;
-		escrow.sellerFeedback = sellerFeedback;
 		vecSend.push_back(recipientBuyer);
 		vecSend.push_back(recipientSeller);
-	}
-	else
-	{
-		throw runtime_error("You must be either the arbiter, buyer or seller to leave feedback on this escrow");
 	}
 
 	CScript scriptData;

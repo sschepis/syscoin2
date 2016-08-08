@@ -17,7 +17,7 @@ class CCoins;
 class CBlock;
 struct CRecipient;
 class CSyscoinAddress;
-static const unsigned int MAX_GUID_LENGTH = 255;
+static const unsigned int MAX_GUID_LENGTH = 63;
 static const unsigned int MAX_NAME_LENGTH = 255;
 static const unsigned int MAX_VALUE_LENGTH = 1023;
 static const unsigned int MAX_ID_LENGTH = 20;

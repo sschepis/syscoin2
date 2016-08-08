@@ -368,7 +368,7 @@ int IndexOfOfferOutput(const CTransaction& tx, bool skipAcceptBuyerSpecialOutput
 		const CTxOut& out = tx.vout[i];
 		// find an output you own
 		if (pwalletMain->IsMine(out) && DecodeOfferScript(out.scriptPubKey, op, vvch)) {
-			if(skipAcceptBuyerSpecialOutput && op == OP_OFFER_ACCEPT && vvch[5] == vchFromString("1"))
+			if(skipAcceptBuyerSpecialOutput && op == OP_OFFER_ACCEPT && vvch[4] == vchFromString("1"))
 				continue;
 			return i;
 		}
@@ -469,7 +469,7 @@ bool DecodeOfferTx(const CTransaction& tx, int& op, int& nOut,
 		const CTxOut& out = tx.vout[i];
 		// skip the special buyer feedback output (we should have the normal offer accept output also)
 		if (DecodeOfferScript(out.scriptPubKey, op, vvch)) {
-			if(op == OP_OFFER_ACCEPT && vvch[5] == vchFromString("1"))
+			if(op == OP_OFFER_ACCEPT && vvch[4] == vchFromString("1"))
 				continue;
 			nOut = i; found = true;
 			break;
@@ -1059,7 +1059,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					theOffer.vchCert.clear();	
 				}
 			}			
-			if(vvchArgs[5] == vchFromString("1"))
+			if(vvchArgs[4] == vchFromString("1"))
 			{
 				if(fDebug)
 					LogPrintf( "CheckOfferInputs() : Buyer special accept output... skipping\n");
@@ -4043,7 +4043,7 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 				continue;
 			if(op != OP_OFFER_ACCEPT)
 				continue;
-			if(vvch[5] == vchFromString("1"))
+			if(vvch[4] == vchFromString("1"))
 				continue;
 			if(ca.vchAcceptRand == vvch[1])
 				break;
@@ -4298,7 +4298,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 				if(op != OP_OFFER_ACCEPT)
 					continue;
 				// dont show feedback outputs as accepts
-				if(vvch[5] == vchFromString("1"))
+				if(vvch[4] == vchFromString("1"))
 					continue;
 
 				if(vvch[0] != vchOfferToFind && !vchOfferToFind.empty())
