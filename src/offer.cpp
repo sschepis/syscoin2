@@ -1014,7 +1014,13 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						theOffer.vchAliasPeg = linkOffer.vchAliasPeg;
 						theOffer.sCategory = linkOffer.sCategory;
 						theOffer.sTitle = linkOffer.sTitle;
-						linkOffer.offerLinks.push_back(vvchArgs[0]);							
+						linkOffer.offerLinks.push_back(vvchArgs[0]);	
+						if(linkOffer.offerLinks.size() > 100)
+						{
+							if(fDebug)
+								LogPrintf("CheckOfferInputs() OP_OFFER_ACTIVATE: parent offer affiliate table exceeded 100 entries");
+							return true;
+						}
 						linkOffer.PutToOfferList(myVtxPos);
 						// write parent offer
 				
@@ -1298,6 +1304,10 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				{
 					theOffer.nQty = linkOffer.nQty;	
 					theOffer.vchAliasPeg = linkOffer.vchAliasPeg;	
+					theOffer.linkWhitelist.bExclusiveResell = true;
+					theOffer.sCurrencyCode = linkOffer.sCurrencyCode;
+					theOffer.vchCert = linkOffer.vchCert;
+					theOffer.offerLinks.clear();
 					theOffer.SetPrice(linkOffer.nPrice);				
 				}
 				else
@@ -1318,7 +1328,12 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 
 						linkOffer.nQty = theOffer.nQty;	
 						linkOffer.vchAliasPeg = theOffer.vchAliasPeg;	
+						linkOffer.sCurrencyCode = theOffer.sCurrencyCode;	
 						linkOffer.SetPrice(theOffer.nPrice);
+						linkOffer.linkWhitelist.bExclusiveResell = true;
+						linkOffer.sCurrencyCode = theOffer.sCurrencyCode;
+						linkOffer.vchCert = theOffer.vchCert;
+						linkOffer.offerLinks.clear();
 						linkOffer.PutToOfferList(myVtxPos);
 						// write offer
 					
@@ -1916,6 +1931,10 @@ UniValue offerlink(const UniValue& params, bool fHelp) {
 	if(linkOffer.bOnlyAcceptBTC)
 	{
 		throw runtime_error("Cannot link to an offer that only accepts Bitcoins as payment");
+	}
+	if(linkOffer.offerLinks.size() > 100)
+	{
+		throw runtime_error("This link would exceed the number of allowable affiliates(100) for that offer");
 	}
 	// this is a syscoin transaction
 	CWalletTx wtx;
