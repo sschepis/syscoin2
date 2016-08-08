@@ -227,14 +227,14 @@ CSyscoinAddress::CSyscoinAddress() {
 	aliasName = "";
 	safeSearch = false;
 	safetyLevel = 0;
-	nExpiryHeight = 0;
+	nExpireHeight = 0;
 }
 // SYSCOIN support old sys
 CSyscoinAddress::CSyscoinAddress(const CTxDestination &dest, bool oldSys) { 
 	isAlias = false;
 	safeSearch = false;
 	safetyLevel = 0;
-	nExpiryHeight = 0;
+	nExpireHeight = 0;
 	aliasName = "";
     Set(dest, oldSys);
 }
@@ -248,7 +248,7 @@ CSyscoinAddress::CSyscoinAddress(const std::string& strAddress) {
 		try 
 		{
 			std::string strAliasAddress;
-			GetAddressFromAlias(strAddress, strAliasAddress, safetyLevel, safeSearch, nExpiryHeight);
+			GetAddressFromAlias(strAddress, strAliasAddress, safetyLevel, safeSearch, nExpireHeight);
 			SetString(strAliasAddress);
 			aliasName = strAddress;
 			isAlias = true;
@@ -263,7 +263,7 @@ CSyscoinAddress::CSyscoinAddress(const std::string& strAddress) {
 		try 
 		{
 			std::string strAlias;
-			GetAliasFromAddress(strAddress, strAlias, safetyLevel, safeSearch, nExpiryHeight);
+			GetAliasFromAddress(strAddress, strAlias, safetyLevel, safeSearch, nExpireHeight);
 			aliasName = strAlias;
 			isAlias = true;
 		}
@@ -282,7 +282,7 @@ CSyscoinAddress::CSyscoinAddress(const char* pszAddress) {
 		try 
 		{
 			std::string strAliasAddress;
-			GetAddressFromAlias(std::string(pszAddress), strAliasAddress, safetyLevel, safeSearch, nExpiryHeight);
+			GetAddressFromAlias(std::string(pszAddress), strAliasAddress, safetyLevel, safeSearch, nExpireHeight);
 			SetString(strAliasAddress);
 			aliasName = std::string(pszAddress);
 			isAlias = true;
@@ -297,7 +297,7 @@ CSyscoinAddress::CSyscoinAddress(const char* pszAddress) {
 		try 
 		{
 			std::string strAlias;
-			GetAliasFromAddress(std::string(pszAddress), strAlias, safetyLevel, safeSearch, nExpiryHeight);
+			GetAliasFromAddress(std::string(pszAddress), strAlias, safetyLevel, safeSearch, nExpireHeight);
 			aliasName = strAlias;
 			isAlias = true;
 		}
