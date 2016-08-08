@@ -319,12 +319,7 @@ bool DecodeCertScript(const CScript& script, int& op,
     }
 
     pc--;
-
-    if ((op == OP_CERT_ACTIVATE && vvch.size() == 1)
-        || (op == OP_CERT_UPDATE && vvch.size() == 1)
-        || (op == OP_CERT_TRANSFER && vvch.size() == 1))
-        return true;
-    return false;
+    return IsCertOp(op);
 }
 bool DecodeCertScript(const CScript& script, int& op,
         vector<vector<unsigned char> > &vvch) {
@@ -357,10 +352,46 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
     CCoins prevCoins;
 
     int prevOp = 0;
-	
-    vector<vector<unsigned char> > vvchPrevArgs, vvchPrevAliasArgs;
+    // Make sure cert outputs are not spent by a regular transaction, or the cert would be lost
+    if (tx.nVersion != SYSCOIN_TX_VERSION) {
+        if (foundCert)
+            return error(
+                    "CheckCertInputs() : a non-syscoin transaction with a syscoin input");
+        return true;
+    }
+	vector<vector<unsigned char> > vvchPrevArgs, vvchPrevAliasArgs;
+	// unserialize cert from txn, check for valid
+	CCert theCert;
+	vector<unsigned char> vchData;
+	if(!GetSyscoinData(tx, vchData))
+	{
+		theCert.SetNull();
+	}
+	else if(!theCert.UnserializeFromData(vchData))
+	{
+		theCert.SetNull();
+	}
 	if(fJustCheck)
 	{
+		if(IsSys21Fork(nHeight))
+		{
+			if(vvchArgs.size() != 2)
+				return error("sys 2.1 cert arguments wrong size");
+
+			if(!theAlias.IsNull())
+			{
+				uint256 calculatedHash = Hash(vchData.begin(), vchData.end());
+ 				vector<unsigned char> vchRand = CScriptNum(calculatedHash.GetCheapHash()).getvch();
+				vector<unsigned char> vchRandAlias = vchFromValue(HexStr(vchRand));
+				if(vchRandAlias != vvchArgs[1])
+				{
+					return error("Hash provided doesn't match the calculated hash the data");
+				}
+			}
+		}
+		else if(vvchArgs.size() != 1)
+			return error("sys 2.0 cert arguments wrong size");
+
 		// Strict check - bug disallowed
 		for (unsigned int i = 0; i < tx.vin.size(); i++) {
 			vector<vector<unsigned char> > vvch;
@@ -382,15 +413,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 			}
 		}
 	}
-    // Make sure cert outputs are not spent by a regular transaction, or the cert would be lost
-    if (tx.nVersion != SYSCOIN_TX_VERSION) {
-        if (foundCert)
-            return error(
-                    "CheckCertInputs() : a non-syscoin transaction with a syscoin input");
-        return true;
-    }
-    // unserialize cert object from txn, check for valid
-    CCert theCert(tx);
+
 	// we need to check for cert update specially because a cert update without data is sent along with offers linked with the cert
     if (theCert.IsNull() && op != OP_CERT_UPDATE)
         return true;
@@ -640,9 +663,14 @@ UniValue certnew(const UniValue& params, bool fHelp) {
 	newCert.safetyLevel = 0;
 	newCert.safeSearch = strSafeSearch == "Yes"? true: false;
 
-    scriptPubKey << CScript::EncodeOP_N(OP_CERT_ACTIVATE) << vchCert << OP_2DROP;
-    scriptPubKey += scriptPubKeyOrig;
 
+	const vector<unsigned char> &data = newCert.Serialize();
+    uint256 hash = Hash(data.begin(), data.end());
+ 	vector<unsigned char> vchHash = CScriptNum(hash.GetCheapHash()).getvch();
+    vector<unsigned char> vchHashCert = vchFromValue(HexStr(vchHash));
+
+    scriptPubKey << CScript::EncodeOP_N(OP_CERT_ACTIVATE) << vchCert << vchHashCert << OP_2DROP << OP_DROP;
+    scriptPubKey += scriptPubKeyOrig;
 
 	// use the script pub key to create the vecsend which sendmoney takes and puts it into vout
 	vector<CRecipient> vecSend;
@@ -650,7 +678,6 @@ UniValue certnew(const UniValue& params, bool fHelp) {
 	CreateRecipient(scriptPubKey, recipient);
 	vecSend.push_back(recipient);
 
-	const vector<unsigned char> &data = newCert.Serialize();
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
 	CRecipient fee;
@@ -723,8 +750,6 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
 	scriptPubKeyOrig = GetScriptForDestination(currentKey.GetID());
     // create CERTUPDATE txn keys
     CScript scriptPubKey;
-    scriptPubKey << CScript::EncodeOP_N(OP_CERT_UPDATE) << vchCert << OP_2DROP;
-    scriptPubKey += scriptPubKeyOrig;
 	// if we want to make data private, encrypt it
 	if(bPrivate)
 	{
@@ -746,12 +771,17 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
 	theCert.bPrivate = bPrivate;
 	theCert.safeSearch = strSafeSearch == "Yes"? true: false;
 
+	const vector<unsigned char> &data = theCert.Serialize();
+    uint256 hash = Hash(data.begin(), data.end());
+ 	vector<unsigned char> vchHash = CScriptNum(hash.GetCheapHash()).getvch();
+    vector<unsigned char> vchHashCert = vchFromValue(HexStr(vchHash));
+    scriptPubKey << CScript::EncodeOP_N(OP_CERT_UPDATE) << vchCert << vchHashCert << OP_2DROP << OP_DROP;
+    scriptPubKey += scriptPubKeyOrig;
 
 	vector<CRecipient> vecSend;
 	CRecipient recipient;
 	CreateRecipient(scriptPubKey, recipient);
 	vecSend.push_back(recipient);
-	const vector<unsigned char> &data = theCert.Serialize();
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
 	CRecipient fee;
@@ -873,19 +903,23 @@ UniValue certtransfer(const UniValue& params, bool fHelp) {
 	theCert.ClearCert();
     scriptPubKeyOrig= GetScriptForDestination(xferKey.GetID());
     CScript scriptPubKey;
-    scriptPubKey << CScript::EncodeOP_N(OP_CERT_TRANSFER) << vchCert << OP_2DROP;
-    scriptPubKey += scriptPubKeyOrig;
 	theCert.nHeight = chainActive.Tip()->nHeight;
 	theCert.vchPubKey = vchPubKeyByte;
 	if(copyCert.vchData != vchData)
 		theCert.vchData = vchData;
+
+	const vector<unsigned char> &data = theCert.Serialize();
+    uint256 hash = Hash(data.begin(), data.end());
+ 	vector<unsigned char> vchHash = CScriptNum(hash.GetCheapHash()).getvch();
+    vector<unsigned char> vchHashCert = vchFromValue(HexStr(vchHash));
+    scriptPubKey << CScript::EncodeOP_N(OP_CERT_TRANSFER) << vchCert << vchHashCert << OP_2DROP << OP_DROP;
+	scriptPubKey += scriptPubKeyOrig;
     // send the cert pay txn
 	vector<CRecipient> vecSend;
 	CRecipient recipient;
 	CreateRecipient(scriptPubKey, recipient);
 	vecSend.push_back(recipient);
 
-	const vector<unsigned char> &data = theCert.Serialize();
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
 	CRecipient fee;
