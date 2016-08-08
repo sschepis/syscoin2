@@ -238,7 +238,8 @@ CScript RemoveMessageScriptPrefix(const CScript& scriptIn) {
 }
 
 bool CheckMessageInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, const CBlock* block) {
-	
+	if(!IsSys21Fork(nHeight))
+		return true;	
 	if (tx.IsCoinBase())
 		return true;
 	if (fDebug)
@@ -268,24 +269,22 @@ bool CheckMessageInputs(const CTransaction &tx, int op, int nOut, const vector<v
     vector<vector<unsigned char> > vvchPrevAliasArgs;
 	if(fJustCheck)
 	{
-		if(IsSys21Fork(nHeight))
-		{
-			if(vvchArgs.size() != 2)
-				return error("sys 2.1 msg arguments wrong size");
+		
+		if(vvchArgs.size() != 2)
+			return error("sys 2.1 msg arguments wrong size");
 
-			if(!theMessage.IsNull())
+		if(!theMessage.IsNull())
+		{
+			uint256 calculatedHash = Hash(vchData.begin(), vchData.end());
+			vector<unsigned char> vchRand = CScriptNum(calculatedHash.GetCheapHash()).getvch();
+			vector<unsigned char> vchRandMsg = vchFromValue(HexStr(vchRand));
+			if(vchRandMsg != vvchArgs[1])
 			{
-				uint256 calculatedHash = Hash(vchData.begin(), vchData.end());
- 				vector<unsigned char> vchRand = CScriptNum(calculatedHash.GetCheapHash()).getvch();
-				vector<unsigned char> vchRandMsg = vchFromValue(HexStr(vchRand));
-				if(vchRandMsg != vvchArgs[1])
-				{
-					return error("Hash provided doesn't match the calculated hash the data");
-				}
+				return error("Hash provided doesn't match the calculated hash the data");
 			}
 		}
-		else if(vvchArgs.size() != 1)
-			return error("sys 2.0 msg arguments wrong size");
+		
+
 		// Strict check - bug disallowed
 		for (unsigned int i = 0; i < tx.vin.size(); i++) {
 			vector<vector<unsigned char> > vvch;
@@ -312,7 +311,7 @@ bool CheckMessageInputs(const CTransaction &tx, int op, int nOut, const vector<v
 	string retError = "";
 	if(fJustCheck)
 	{
-		if (vvchArgs[0].size() > MAX_NAME_LENGTH)
+		if (vvchArgs[0].size() > MAX_GUID_LENGTH)
 			return error("message tx GUID too big");
 		if(!IsSysCompressedOrUncompressedPubKey(theMessage.vchPubKeyTo))
 		{

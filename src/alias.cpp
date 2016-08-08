@@ -810,7 +810,7 @@ void updateBans(const vector<unsigned char> &banData)
 }
 bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, const CBlock* block) {
 	
-	if (tx.IsCoinBase())
+	if (tx.IsCoinBase() || vvchArgs[0] > MAX_GUID_LENGTH)
 		return true;
 	if (fDebug)
 		LogPrintf("*** ALIAS %d %d %s %s\n", nHeight, chainActive.Tip()->nHeight, tx.GetHash().ToString().c_str(), fJustCheck ? "JUSTCHECK" : "BLOCK");
@@ -901,9 +901,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		{
 			return error("guid in data output doesn't match guid in tx");
 		}
-		if (vvchArgs[0].size() > MAX_NAME_LENGTH)
-			return error("alias name too long");
-		if(IsSys21Fork(nHeight) && (!IsSys21Fork(theAlias.nHeight) || theAlias.nHeight > nHeight))
+		if((!IsSys21Fork(theAlias.nHeight) || theAlias.nHeight > nHeight))
 		{
 			return error("bad alias height");
 		}
@@ -1460,8 +1458,8 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 		throw runtime_error("alias public value cannot exceed 1023 bytes!");
 	if (vchPrivateValue.size() > MAX_VALUE_LENGTH)
 		throw runtime_error("alias private value cannot exceed 1023 bytes!");
-	if (vchName.size() > MAX_NAME_LENGTH)
-		throw runtime_error("alias name cannot exceed 255 bytes!");
+	if (vchName.size() > MAX_GUID_LENGTH)
+		throw runtime_error("alias name cannot exceed 63 bytes!");
 
 
 	CSyscoinAddress myAddress = CSyscoinAddress(stringFromVch(vchName));

@@ -340,7 +340,8 @@ CScript RemoveCertScriptPrefix(const CScript& scriptIn) {
 
 bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs,
         const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, const CBlock* block) {
-	
+	if(!IsSys21Fork(nHeight))
+		return true;	
 	if (tx.IsCoinBase())
 		return true;
 	if (fDebug)
@@ -372,25 +373,22 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 	}
 	if(fJustCheck)
 	{
-		if(IsSys21Fork(nHeight))
-		{
-			if(vvchArgs.size() != 2)
-				return error("sys 2.1 cert arguments wrong size");
+		
+		if(vvchArgs.size() != 2)
+			return error("sys 2.1 cert arguments wrong size");
 
-			if(!theCert.IsNull())
+		if(!theCert.IsNull())
+		{
+			uint256 calculatedHash = Hash(vchData.begin(), vchData.end());
+			vector<unsigned char> vchRand = CScriptNum(calculatedHash.GetCheapHash()).getvch();
+			vector<unsigned char> vchRandCert = vchFromValue(HexStr(vchRand));
+			if(vchRandCert != vvchArgs[1])
 			{
-				uint256 calculatedHash = Hash(vchData.begin(), vchData.end());
- 				vector<unsigned char> vchRand = CScriptNum(calculatedHash.GetCheapHash()).getvch();
-				vector<unsigned char> vchRandCert = vchFromValue(HexStr(vchRand));
-				if(vchRandCert != vvchArgs[1])
-				{
-					return error("Hash provided doesn't match the calculated hash the data");
-				}
+				return error("Hash provided doesn't match the calculated hash the data");
 			}
 		}
-		else if(vvchArgs.size() != 1)
-			return error("sys 2.0 cert arguments wrong size");
-
+		
+	
 		// Strict check - bug disallowed
 		for (unsigned int i = 0; i < tx.vin.size(); i++) {
 			vector<vector<unsigned char> > vvch;
@@ -438,7 +436,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 		{
 			return error("guid in data output doesn't match guid in tx");
 		}
-		if (vvchArgs[0].size() > MAX_NAME_LENGTH)
+		if (vvchArgs[0].size() > MAX_GUID_LENGTH)
 			return error("cert hex guid too long");
 		switch (op) {
 		case OP_CERT_ACTIVATE:

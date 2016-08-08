@@ -535,6 +535,8 @@ CScript RemoveOfferScriptPrefix(const CScript& scriptIn) {
 
 bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, const CBlock* block) {
 		
+	if(!IsSys21Fork(nHeight))
+		return true;
 	if (tx.IsCoinBase())
 		return true;
 	if (fDebug)
@@ -572,40 +574,31 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	}
 	if(fJustCheck)
 	{
-		if(IsSys21Fork(nHeight))
+		
+		if(op != OP_OFFER_ACCEPT && vvchArgs.size() != 2)
+			return error("sys 2.1 offer arguments wrong size");
+		else if(op == OP_OFFER_ACCEPT && vvchArgs.size() != 6)
+			return error("sys 2.1 offer accept arguments wrong size");
+		if(!theOffer.IsNull())
 		{
-			if(op != OP_OFFER_ACCEPT && vvchArgs.size() != 2)
-				return error("sys 2.1 offer arguments wrong size");
-			else if(op == OP_OFFER_ACCEPT && vvchArgs.size() != 6)
-				return error("sys 2.1 offer accept arguments wrong size");
-			if(!theOffer.IsNull())
+			uint256 calculatedHash = Hash(vchData.begin(), vchData.end());
+			vector<unsigned char> vchRand = CScriptNum(calculatedHash.GetCheapHash()).getvch();
+			vector<unsigned char> vchRandOffer = vchFromValue(HexStr(vchRand));
+			if(op == OP_OFFER_ACCEPT)
 			{
-				uint256 calculatedHash = Hash(vchData.begin(), vchData.end());
- 				vector<unsigned char> vchRand = CScriptNum(calculatedHash.GetCheapHash()).getvch();
-				vector<unsigned char> vchRandOffer = vchFromValue(HexStr(vchRand));
-				if(op == OP_OFFER_ACCEPT)
+				if(vchRandOffer != vvchArgs[5])
 				{
-					if(vchRandOffer != vvchArgs[5])
-					{
-						return error("Hash provided doesn't match the calculated hash the data");
-					}
+					return error("Hash provided doesn't match the calculated hash the data");
 				}
-				else
+			}
+			else
+			{
+				if(vchRandOffer != vvchArgs[1])
 				{
-					if(vchRandOffer != vvchArgs[1])
-					{
-						return error("Hash provided doesn't match the calculated hash the data");
-					}
+					return error("Hash provided doesn't match the calculated hash the data");
 				}
 			}
 		}
-		else {
-			if(op != OP_OFFER_ACCEPT && vvchArgs.size() != 1)
-				return error("sys 2.0 offer arguments wrong size");
-			else if(op == OP_OFFER_ACCEPT && vvchArgs.size() != 6)
-				return error("sys 2.0 offer accept arguments wrong size");
-		}
-
 			
 
 		// Strict check - bug disallowed
@@ -689,7 +682,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		{
 			return error("offer category too big");
 		}
-		if(theOffer.vchLinkOffer.size() > MAX_NAME_LENGTH)
+		if(theOffer.vchLinkOffer.size() > MAX_GUID_LENGTH)
 		{
 			return error("offer link guid too big");
 		}
@@ -697,11 +690,11 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		{
 			return error("offer pub key too invalid length");
 		}
-		if(theOffer.sCurrencyCode.size() > MAX_NAME_LENGTH)
+		if(theOffer.sCurrencyCode.size() > MAX_GUID_LENGTH)
 		{
 			return error("offer currency code too big");
 		}
-		if(theOffer.vchAliasPeg.size() > MAX_NAME_LENGTH)
+		if(theOffer.vchAliasPeg.size() > MAX_GUID_LENGTH)
 		{
 			return error("offer alias peg too big");
 		}
@@ -721,7 +714,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		{
 			return error("guid in data output doesn't match guid in tx");
 		}
-		if (vvchArgs[0].size() > MAX_NAME_LENGTH)
+		if (vvchArgs[0].size() > MAX_GUID_LENGTH)
 			return error("offer hex guid too long");
 
 		if(stringFromVch(theOffer.sCurrencyCode) != "BTC" && theOffer.bOnlyAcceptBTC)
@@ -800,7 +793,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				return error("CheckOfferInputs() :OP_OFFER_ACCEPT escrow guid mismatch");	
 			if (IsAliasOp(prevAliasOp) && theOffer.vchLinkAlias != vvchPrevAliasArgs[0])
 				return error("CheckOfferInputs() :OP_OFFER_ACCEPT whitelist alias guid mismatch");
-			if (vvchArgs[1].size() > MAX_NAME_LENGTH)
+			if (vvchArgs[1].size() > MAX_GUID_LENGTH)
 				return error("CheckOfferInputs() :OP_OFFER_ACCEPT offeraccept tx with guid too big");
 			if(prevOp == OP_OFFER_ACCEPT)
 			{
@@ -809,11 +802,11 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			}
 
 
-			if (theOfferAccept.vchAcceptRand.size() > MAX_NAME_LENGTH)
-				return error("OCheckOfferInputs() :P_OFFER_ACCEPT offer accept hex guid too long");
-			if (theOfferAccept.vchLinkAccept.size() > MAX_NAME_LENGTH)
+			if (theOfferAccept.vchAcceptRand.size() > MAX_GUID_LENGTH)
+				return error("OCheckOfferInputs() :OP_OFFER_ACCEPT offer accept hex guid too long");
+			if (theOfferAccept.vchLinkAccept.size() > MAX_GUID_LENGTH)
 				return error("CheckOfferInputs() :OP_OFFER_ACCEPT offer link accept hex guid too long");
-			if (theOfferAccept.vchLinkOffer.size() > MAX_NAME_LENGTH)
+			if (theOfferAccept.vchLinkOffer.size() > MAX_GUID_LENGTH)
 				return error("CheckOfferInputs() :OP_OFFER_ACCEPT offer link hex guid too long");
 			if (vvchArgs[2].size() > MAX_ENCRYPTED_VALUE_LENGTH)
 				return error("CheckOfferInputs() :OP_OFFER_ACCEPT message field too big");

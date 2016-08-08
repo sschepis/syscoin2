@@ -316,7 +316,8 @@ CScript RemoveEscrowScriptPrefix(const CScript& scriptIn) {
     return CScript(pc, scriptIn.end());
 }
 bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, const CBlock* block) {
-		
+	if(!IsSys21Fork(nHeight))
+		return true;	
 	if (tx.IsCoinBase())
 		return true;
 	const COutPoint *prevOutput = NULL;
@@ -351,24 +352,21 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 	vector<vector<unsigned char> > vvchPrevArgs, vvchPrevAliasArgs;
 	if(fJustCheck)
 	{
-		if(IsSys21Fork(nHeight))
-		{
-			if(vvchArgs.size() != 3)
-				return error("sys 2.1 escrow arguments wrong size");
+		
+		if(vvchArgs.size() != 3)
+			return error("sys 2.1 escrow arguments wrong size");
 
-			if(!theEscrow.IsNull())
+		if(!theEscrow.IsNull())
+		{
+			uint256 calculatedHash = Hash(vchData.begin(), vchData.end());
+			vector<unsigned char> vchRand = CScriptNum(calculatedHash.GetCheapHash()).getvch();
+			vector<unsigned char> vchRandEscrow = vchFromValue(HexStr(vchRand));
+			if(vchRandEscrow != vvchArgs[2])
 			{
-				uint256 calculatedHash = Hash(vchData.begin(), vchData.end());
- 				vector<unsigned char> vchRand = CScriptNum(calculatedHash.GetCheapHash()).getvch();
-				vector<unsigned char> vchRandEscrow = vchFromValue(HexStr(vchRand));
-				if(vchRandEscrow != vvchArgs[2])
-				{
-					return error("Hash provided doesn't match the calculated hash the data");
-				}
+				return error("Hash provided doesn't match the calculated hash the data");
 			}
 		}
-		else if(vvchArgs.size() != 2)
-			return error("sys 2.0 escrow arguments wrong size");
+
 
 		// Strict check - bug disallowed
 		for (unsigned int i = 0; i < tx.vin.size(); i++) {
@@ -414,7 +412,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 	COffer dbOffer;
 	if(fJustCheck)
 	{
-		if (vvchArgs[0].size() > MAX_NAME_LENGTH)
+		if (vvchArgs[0].size() > MAX_GUID_LENGTH)
 			return error("escrow tx GUID too big");
 		if(!theEscrow.vchBuyerKey.empty() && !IsSysCompressedOrUncompressedPubKey(theEscrow.vchBuyerKey))
 		{
