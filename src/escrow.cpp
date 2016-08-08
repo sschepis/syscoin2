@@ -295,14 +295,7 @@ bool DecodeEscrowScript(const CScript& script, int& op,
     }
 	
     pc--;
-
-    if ((op == OP_ESCROW_ACTIVATE && vvch.size() == 1)
-        || (op == OP_ESCROW_RELEASE && vvch.size() == 1)
-        || (op == OP_ESCROW_REFUND && vvch.size() <= 2)
-		|| (op == OP_ESCROW_COMPLETE && vvch.size() <= 2))
-        return true;
-
-    return false;
+    return IsEscrowOp(op);
 }
 bool DecodeEscrowScript(const CScript& script, int& op,
         vector<vector<unsigned char> > &vvch) {
@@ -332,9 +325,51 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 	int prevAliasOp = 0;
 	bool foundAlias = false;
 	bool foundEscrow = false;
+	if (fDebug)
+		LogPrintf("*** ESCROW %d %d %s %s\n", nHeight,
+			chainActive.Tip()->nHeight, tx.GetHash().ToString().c_str(),
+			fJustCheck ? "JUSTCHECK" : "BLOCK");
+
+    // Make sure escrow outputs are not spent by a regular transaction, or the escrow would be lost
+    if (tx.nVersion != SYSCOIN_TX_VERSION) {
+		if(fDebug)
+			LogPrintf("CheckEscrowInputs() : non-syscoin transaction\n");
+        return true;
+    }
+	 // unserialize escrow UniValue from txn, check for valid
+    CEscrow theEscrow;
+	vector<unsigned char> vchData;
+	if(!GetSyscoinData(tx, vchData))
+	{
+		theEscrow.SetNull();
+	}
+	else if(!theEscrow.UnserializeFromData(vchData))
+	{
+		theEscrow.SetNull();
+	}
+
 	vector<vector<unsigned char> > vvchPrevArgs, vvchPrevAliasArgs;
 	if(fJustCheck)
 	{
+		if(IsSys21Fork(nHeight))
+		{
+			if(vvchArgs.size() != 3)
+				return error("sys 2.1 escrow arguments wrong size");
+
+			if(!theEscrow.IsNull())
+			{
+				uint256 calculatedHash = Hash(vchData.begin(), vchData.end());
+ 				vector<unsigned char> vchRand = CScriptNum(calculatedHash.GetCheapHash()).getvch();
+				vector<unsigned char> vchRandEscrow = vchFromValue(HexStr(vchRand));
+				if(vchRandEscrow != vvchArgs[2])
+				{
+					return error("Hash provided doesn't match the calculated hash the data");
+				}
+			}
+		}
+		else if(vvchArgs.size() != 2)
+			return error("sys 2.0 escrow arguments wrong size");
+
 		// Strict check - bug disallowed
 		for (unsigned int i = 0; i < tx.vin.size(); i++) {
 			vector<vector<unsigned char> > vvch;
@@ -363,83 +398,72 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 			}
 		}
 	}
-	if (fDebug)
-		LogPrintf("*** ESCROW %d %d %s %s\n", nHeight,
-			chainActive.Tip()->nHeight, tx.GetHash().ToString().c_str(),
-			fJustCheck ? "JUSTCHECK" : "BLOCK");
-    // Make sure escrow outputs are not spent by a regular transaction, or the escrow would be lost
-    if (tx.nVersion != SYSCOIN_TX_VERSION) {
-		LogPrintf("CheckEscrowInputs() : non-syscoin transaction\n");
-        return true;
-    }
 
-    // unserialize escrow UniValue from txn, check for valid
-    CEscrow theEscrow;
 	vector<COffer> myVtxPos;
-    theEscrow.UnserializeFromTx(tx);
     COffer theOffer;
 	string retError = "";
 	// null usually when pruned or when accept is done (in which case we skip this return and continue on so future feedbacks can be done)
-	if(theEscrow.IsNull() && !(op == OP_ESCROW_COMPLETE && vvchArgs.size() == 1))
+	if(theEscrow.IsNull() && !(op == OP_ESCROW_COMPLETE && vvch[1] == vchFromString("0")))
 	{
 		if(fDebug)
 			LogPrintf("CheckEscrowInputs() : Null escrow, skipping...\n");	
 		return true;
 	}
-    if (vvchArgs[0].size() > MAX_NAME_LENGTH)
-        return error("escrow tx GUID too big");
-	if(!theEscrow.vchBuyerKey.empty() && !IsSysCompressedOrUncompressedPubKey(theEscrow.vchBuyerKey))
-	{
-		return error("escrow buyer pub key invalid length");
-	}
-	if(!theEscrow.vchSellerKey.empty() && !IsSysCompressedOrUncompressedPubKey(theEscrow.vchSellerKey))
-	{
-		return error("escrow seller pub key invalid length");
-	}
-	if(!theEscrow.vchArbiterKey.empty() && !IsSysCompressedOrUncompressedPubKey(theEscrow.vchArbiterKey))
-	{
-		return error("escrow arbiter pub key invalid length");
-	}
-	if(theEscrow.vchRedeemScript.size() > MAX_SCRIPT_ELEMENT_SIZE)
-	{
-		return error("escrow redeem script too long");
-	}
-	if(theEscrow.buyerFeedback.vchFeedback.size() > MAX_VALUE_LENGTH)
-	{
-		return error("buyer feedback too long");
-	}
-	if(theEscrow.sellerFeedback.vchFeedback.size() > MAX_VALUE_LENGTH)
-	{
-		return error("seller feedback too long");
-	}
-	if(theEscrow.arbiterFeedback.vchFeedback.size() > MAX_VALUE_LENGTH)
-	{
-		return error("arbiter feedback too long");
-	}
-	if(theEscrow.vchOffer.size() > MAX_ID_LENGTH)
-	{
-		return error("escrow offer guid too long");
-	}
-	if(theEscrow.vchWhitelistAlias.size() > MAX_ID_LENGTH)
-	{
-		return error("escrow alias guid too long");
-	}
-	if(theEscrow.rawTx.size() > MAX_STANDARD_TX_SIZE)
-	{
-		return error("escrow message tx too long");
-	}
-	if(theEscrow.vchOfferAcceptLink.size() > 0)
-	{
-		return error("escrow offeraccept guid not allowed");
-	}
-	if(!theEscrow.vchEscrow.empty() && theEscrow.vchEscrow != vvchArgs[0])
-	{
-		return error("guid in data output doesn't match guid in tx");
-	}
+ 
 	CTransaction txOffer;
 	COffer dbOffer;
 	if(fJustCheck)
 	{
+		if (vvchArgs[0].size() > MAX_NAME_LENGTH)
+			return error("escrow tx GUID too big");
+		if(!theEscrow.vchBuyerKey.empty() && !IsSysCompressedOrUncompressedPubKey(theEscrow.vchBuyerKey))
+		{
+			return error("escrow buyer pub key invalid length");
+		}
+		if(!theEscrow.vchSellerKey.empty() && !IsSysCompressedOrUncompressedPubKey(theEscrow.vchSellerKey))
+		{
+			return error("escrow seller pub key invalid length");
+		}
+		if(!theEscrow.vchArbiterKey.empty() && !IsSysCompressedOrUncompressedPubKey(theEscrow.vchArbiterKey))
+		{
+			return error("escrow arbiter pub key invalid length");
+		}
+		if(theEscrow.vchRedeemScript.size() > MAX_SCRIPT_ELEMENT_SIZE)
+		{
+			return error("escrow redeem script too long");
+		}
+		if(theEscrow.buyerFeedback.vchFeedback.size() > MAX_VALUE_LENGTH)
+		{
+			return error("buyer feedback too long");
+		}
+		if(theEscrow.sellerFeedback.vchFeedback.size() > MAX_VALUE_LENGTH)
+		{
+			return error("seller feedback too long");
+		}
+		if(theEscrow.arbiterFeedback.vchFeedback.size() > MAX_VALUE_LENGTH)
+		{
+			return error("arbiter feedback too long");
+		}
+		if(theEscrow.vchOffer.size() > MAX_ID_LENGTH)
+		{
+			return error("escrow offer guid too long");
+		}
+		if(theEscrow.vchWhitelistAlias.size() > MAX_ID_LENGTH)
+		{
+			return error("escrow alias guid too long");
+		}
+		if(theEscrow.rawTx.size() > MAX_STANDARD_TX_SIZE)
+		{
+			return error("escrow message tx too long");
+		}
+		if(theEscrow.vchOfferAcceptLink.size() > 0)
+		{
+			return error("escrow offeraccept guid not allowed");
+		}
+		if(!theEscrow.vchEscrow.empty() && theEscrow.vchEscrow != vvchArgs[0])
+		{
+			return error("guid in data output doesn't match guid in tx");
+		}
 		switch (op) {
 			case OP_ESCROW_ACTIVATE:
 				if(!theEscrow.vchWhitelistAlias.empty() && !IsAliasOp(prevAliasOp))
@@ -488,7 +512,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				break;
 			case OP_ESCROW_COMPLETE:
 				// Check input
-				if (vvchArgs.size() > 1 && vvchArgs[1].size() > 1)
+				if (vvchArgs[1].size() > 1)
 					return error("CheckEscrowInputs() : escrow complete status too large");
 				if (vvchPrevArgs[0] != vvchArgs[0])
 					return error("CheckEscrowInputs() : escrow input guid mismatch");
@@ -496,7 +520,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 					return error("CheckEscrowInputs():  OP_ESCROW_COMPLETE invalid op, should be escrow complete");
 				if (!theEscrow.IsNull() && theEscrow.vchEscrow != vvchArgs[0])
 					return error("CheckEscrowInputs() : OP_ESCROW_COMPLETE guid mismatch");	
-				if(vvchArgs.size() > 1 && vvchArgs[1] == vchFromString("1"))
+				if(vvchArgs[1] == vchFromString("1"))
 				{
 					if(prevOp != OP_ESCROW_COMPLETE && prevOp != OP_ESCROW_REFUND)
 						return error("CheckEscrowInputs() : can only leave feedback for a completed escrow");
@@ -504,7 +528,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 					{
 						return error("CheckEscrowInputs() :cannot leave empty feedback");
 					}
-					if(prevOp == OP_ESCROW_COMPLETE && vvchPrevArgs.size() > 1 && vvchPrevArgs[1] == vchFromString("1") && theEscrow.buyerFeedback.vchFeedback.size() <= 0 && theEscrow.sellerFeedback.vchFeedback.size() <= 0 && theEscrow.arbiterFeedback.vchFeedback.size() <= 0)
+					if(prevOp == OP_ESCROW_COMPLETE && vvchPrevArgs[1] == vchFromString("1") && theEscrow.buyerFeedback.vchFeedback.size() <= 0 && theEscrow.sellerFeedback.vchFeedback.size() <= 0 && theEscrow.arbiterFeedback.vchFeedback.size() <= 0)
 					{
 						return error("CheckEscrowInputs() :feedback reply must leave a message, rating is not used.");
 					}
@@ -521,13 +545,13 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				}
 				break;			
 			case OP_ESCROW_REFUND:
-				if (vvchArgs.size() > 1 && vvchArgs[1].size() > 1)
+				if (vvchArgs[1].size() > 1)
 					return error("CheckEscrowInputs() : escrow refund status too large");
 				if (vvchPrevArgs[0] != vvchArgs[0])
 					return error("CheckEscrowInputs() : escrow input guid mismatch");
 				if (theEscrow.vchEscrow != vvchArgs[0])
 					return error("CheckEscrowInputs() : OP_ESCROW_REFUND guid mismatch");	
-				if(vvchArgs.size() > 1 && vvchArgs[1] == vchFromString("1"))
+				if(vvchArgs[1] == vchFromString("1"))
 				{
 					if(prevOp != OP_ESCROW_REFUND)
 						return error("CheckEscrowInputs() :  can only complete refund on a refunded escrow");
@@ -581,7 +605,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				if(!serializedEscrow.rawTx.empty())
 					theEscrow.rawTx = serializedEscrow.rawTx;
 				theEscrow.op = serializedEscrow.op;
-				if(op == OP_ESCROW_REFUND && vvchArgs.size() == 1)
+				if(op == OP_ESCROW_REFUND && vvchArgs[1] == vchFromString("0"))
 				{
 					// make sure offer is still valid and then refund qty
 					if (GetTxAndVtxOfOffer( theEscrow.vchOffer, dbOffer, txOffer, myVtxPos))
@@ -617,7 +641,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 
 				if(op == OP_ESCROW_COMPLETE)
 				{
-					if(vvchArgs.size() > 1 && vvchArgs[1] == vchFromString("1"))
+					if(vvchArgs[1] == vchFromString("1"))
 					{
 						int count = 0;
 						// ensure we don't add same feedback twice (feedback in db should be older than current height)
@@ -1086,13 +1110,6 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	scriptArbiter= GetScriptForDestination(ArbiterPubKey.GetID());
 	scriptSeller= GetScriptForDestination(SellerPubKey.GetID());
 	scriptBuyer= GetScriptForDestination(BuyerPubKey.GetID());
-	scriptPubKeyBuyer << CScript::EncodeOP_N(OP_ESCROW_ACTIVATE) << vchEscrow << OP_2DROP;
-	scriptPubKeySeller << CScript::EncodeOP_N(OP_ESCROW_ACTIVATE) << vchEscrow  << OP_2DROP;
-	scriptPubKeyArbiter << CScript::EncodeOP_N(OP_ESCROW_ACTIVATE) << vchEscrow << OP_2DROP;
-	scriptPubKeySeller += scriptSeller;
-	scriptPubKeyArbiter += scriptArbiter;
-	scriptPubKeyBuyer += scriptBuyer;
-
 	UniValue arrayParams(UniValue::VARR);
 	UniValue arrayOfKeys(UniValue::VARR);
 
@@ -1157,6 +1174,19 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	newEscrow.escrowInputTxHash = escrowWtx.GetHash();
 	newEscrow.nPricePerUnit = nPricePerUnit;
 	newEscrow.nHeight = chainActive.Tip()->nHeight;
+
+	const vector<unsigned char> &data = newEscrow.Serialize();
+    uint256 hash = Hash(data.begin(), data.end());
+ 	vector<unsigned char> vchHash = CScriptNum(hash.GetCheapHash()).getvch();
+    vector<unsigned char> vchHashEscrow = vchFromValue(HexStr(vchHash));
+	scriptPubKeyBuyer << CScript::EncodeOP_N(OP_ESCROW_ACTIVATE) << vchEscrow << vchFromString("0") << vchHashEscrow << OP_2DROP << OP_2DROP;
+	scriptPubKeySeller << CScript::EncodeOP_N(OP_ESCROW_ACTIVATE) << vchEscrow  << vchFromString("0") << vchHashEscrow << OP_2DROP << OP_2DROP;
+	scriptPubKeyArbiter << CScript::EncodeOP_N(OP_ESCROW_ACTIVATE) << vchEscrow << vchFromString("0") << vchHashEscrow << OP_2DROP << OP_2DROP;
+	scriptPubKeySeller += scriptSeller;
+	scriptPubKeyArbiter += scriptArbiter;
+	scriptPubKeyBuyer += scriptBuyer;
+
+
 	// send the tranasction
 	vector<CRecipient> vecSend;
 	CRecipient recipientArbiter;
@@ -1176,7 +1206,6 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	CreateRecipient(scriptPubKeyBuyer, recipientBuyer);
 	vecSend.push_back(recipientBuyer);
 
-	const vector<unsigned char> &data = newEscrow.Serialize();
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
 	CRecipient fee;
@@ -1408,7 +1437,12 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	escrow.nHeight = chainActive.Tip()->nHeight;
     CScript scriptPubKey, scriptPubKeySeller;
 	scriptPubKeySeller= GetScriptForDestination(sellerKey.GetID());
-    scriptPubKey << CScript::EncodeOP_N(OP_ESCROW_RELEASE) << vchEscrow << OP_2DROP;
+
+	const vector<unsigned char> &data = escrow.Serialize();
+    uint256 hash = Hash(data.begin(), data.end());
+ 	vector<unsigned char> vchHash = CScriptNum(hash.GetCheapHash()).getvch();
+    vector<unsigned char> vchHashEscrow = vchFromValue(HexStr(vchHash));
+    scriptPubKey << CScript::EncodeOP_N(OP_ESCROW_RELEASE) << vchEscrow << vchFromString("0") << vchHashEscrow << OP_2DROP << OP_2DROP;
     scriptPubKey += scriptPubKeySeller;
 
 	vector<CRecipient> vecSend;
@@ -1416,7 +1450,6 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	CreateRecipient(scriptPubKey, recipient);
 	vecSend.push_back(recipient);
 
-	const vector<unsigned char> &data = escrow.Serialize();
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
 	CRecipient fee;
@@ -1949,14 +1982,17 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 
     CScript scriptPubKey, scriptPubKeyBuyer;
 	scriptPubKeyBuyer= GetScriptForDestination(buyerKey.GetID());
-    scriptPubKey << CScript::EncodeOP_N(OP_ESCROW_REFUND) << vchEscrow << OP_2DROP;
+	const vector<unsigned char> &data = escrow.Serialize();
+    uint256 hash = Hash(data.begin(), data.end());
+ 	vector<unsigned char> vchHash = CScriptNum(hash.GetCheapHash()).getvch();
+    vector<unsigned char> vchHashEscrow = vchFromValue(HexStr(vchHash));
+    scriptPubKey << CScript::EncodeOP_N(OP_ESCROW_REFUND) << vchEscrow << vchFromString("0") << vchHashEscrow << OP_2DROP << OP_2DROP;
     scriptPubKey += scriptPubKeyBuyer;
 	vector<CRecipient> vecSend;
 	CRecipient recipient;
 	CreateRecipient(scriptPubKey, recipient);
 	vecSend.push_back(recipient);
 
-	const vector<unsigned char> &data = escrow.Serialize();
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
 	CRecipient fee;
@@ -2168,15 +2204,20 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 	escrow.nHeight = chainActive.Tip()->nHeight;
     CScript scriptPubKeyBuyer, scriptPubKeySeller,scriptPubKeyArbiter, scriptPubKeyBuyerDestination, scriptPubKeySellerDestination, scriptPubKeyArbiterDestination;
 	scriptPubKeyBuyerDestination= GetScriptForDestination(buyerKey.GetID());
-    scriptPubKeyBuyer << CScript::EncodeOP_N(OP_ESCROW_REFUND) << vchEscrow << vchFromString("1") << OP_2DROP << OP_DROP;
+
+	const vector<unsigned char> &data = escrow.Serialize();
+    uint256 hash = Hash(data.begin(), data.end());
+ 	vector<unsigned char> vchHash = CScriptNum(hash.GetCheapHash()).getvch();
+    vector<unsigned char> vchHashEscrow = vchFromValue(HexStr(vchHash));
+    scriptPubKeyBuyer << CScript::EncodeOP_N(OP_ESCROW_REFUND) << vchEscrow << vchFromString("1") << vchHashEscrow << OP_2DROP << OP_2DROP;
     scriptPubKeyBuyer += scriptPubKeyBuyerDestination;
  
 	scriptPubKeySellerDestination= GetScriptForDestination(sellerKey.GetID());
-    scriptPubKeySeller << CScript::EncodeOP_N(OP_ESCROW_REFUND) << vchEscrow << vchFromString("1") << OP_2DROP << OP_DROP;
+    scriptPubKeySeller << CScript::EncodeOP_N(OP_ESCROW_REFUND) << vchEscrow << vchFromString("1") << vchHashEscrow << OP_2DROP << OP_2DROP;
     scriptPubKeySeller += scriptPubKeySellerDestination;
 
 	scriptPubKeyArbiterDestination= GetScriptForDestination(arbiterKey.GetID());
-    scriptPubKeyArbiter << CScript::EncodeOP_N(OP_ESCROW_REFUND) << vchEscrow << vchFromString("1") << OP_2DROP << OP_DROP;
+    scriptPubKeyArbiter << CScript::EncodeOP_N(OP_ESCROW_REFUND) << vchEscrow << vchFromString("1") << vchHashEscrow << OP_2DROP << OP_2DROP;
     scriptPubKeyArbiter += scriptPubKeyArbiterDestination;
 
 	vector<CRecipient> vecSend;
@@ -2190,7 +2231,6 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 	CreateRecipient(scriptPubKeyArbiter, recipientArbiter);
 	vecSend.push_back(recipientArbiter);
 
-	const vector<unsigned char> &data = escrow.Serialize();
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
 	CRecipient fee;
@@ -2266,7 +2306,7 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
 	const CWalletTx *wtxIn = pwalletMain->GetWalletTx(tx.GetHash());
 	if (wtxIn == NULL)
 		throw runtime_error("this escrow is not in your wallet");
-	if(vvch.size() > 1 && vvch[1] == vchFromString("1") && vchFeedbackPrimary.size() <= 0 && vchFeedbackSecondary.size() <= 0)
+	if(vvch[1] == vchFromString("1") && vchFeedbackPrimary.size() <= 0 && vchFeedbackSecondary.size() <= 0)
 		throw runtime_error("Feedback reply cannot be empty");
 	CPubKey arbiterKey(escrow.vchArbiterKey);
 	CSyscoinAddress arbiterAddress(arbiterKey.GetID());
@@ -2332,19 +2372,24 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
 		throw runtime_error("there are pending operations on that escrow");
 	}
 	escrow.ClearEscrow();
+	escrow.op = OP_ESCROW_COMPLETE;
+	escrow.nHeight = chainActive.Tip()->nHeight;
 
-
+	const vector<unsigned char> &data = escrow.Serialize();
+    uint256 hash = Hash(data.begin(), data.end());
+ 	vector<unsigned char> vchHash = CScriptNum(hash.GetCheapHash()).getvch();
+    vector<unsigned char> vchHashEscrow = vchFromValue(HexStr(vchHash));
 	CScript scriptPubKeyBuyer, scriptPubKeySeller,scriptPubKeyArbiter, scriptPubKeyBuyerDestination, scriptPubKeySellerDestination, scriptPubKeyArbiterDestination;
 	scriptPubKeyBuyerDestination= GetScriptForDestination(buyerKey.GetID());
 	scriptPubKeySellerDestination= GetScriptForDestination(sellerKey.GetID());
 	scriptPubKeyArbiterDestination= GetScriptForDestination(arbiterKey.GetID());
 	vector<CRecipient> vecSend;
 	CRecipient recipientBuyer, recipientSeller, recipientArbiter;
-	scriptPubKeyBuyer << CScript::EncodeOP_N(OP_ESCROW_COMPLETE) << vchEscrow << vchFromString("1") << OP_2DROP << OP_DROP;
+	scriptPubKeyBuyer << CScript::EncodeOP_N(OP_ESCROW_COMPLETE) << vchEscrow << vchFromString("1") << vchHashEscrow << OP_2DROP << OP_2DROP;
 	scriptPubKeyBuyer += scriptPubKeyBuyerDestination;
-	scriptPubKeyArbiter << CScript::EncodeOP_N(OP_ESCROW_COMPLETE) << vchEscrow << vchFromString("1") << OP_2DROP << OP_DROP;
+	scriptPubKeyArbiter << CScript::EncodeOP_N(OP_ESCROW_COMPLETE) << vchEscrow << vchFromString("1") << vchHashEscrow << OP_2DROP << OP_2DROP;
 	scriptPubKeyArbiter += scriptPubKeyArbiterDestination; 
-	scriptPubKeySeller << CScript::EncodeOP_N(OP_ESCROW_COMPLETE) << vchEscrow << vchFromString("1") << OP_2DROP << OP_DROP;
+	scriptPubKeySeller << CScript::EncodeOP_N(OP_ESCROW_COMPLETE) << vchEscrow << vchFromString("1") << vchHashEscrow << OP_2DROP << OP_2DROP;
 	scriptPubKeySeller += scriptPubKeySellerDestination;
 	CreateRecipient(scriptPubKeySeller, recipientSeller);		
 	CreateRecipient(scriptPubKeyBuyer, recipientBuyer);
@@ -2401,10 +2446,7 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
 	{
 		throw runtime_error("You must be either the arbiter, buyer or seller to leave feedback on this escrow");
 	}
-	escrow.op = OP_ESCROW_COMPLETE;
-	escrow.nHeight = chainActive.Tip()->nHeight;
 
-	const vector<unsigned char> &data = escrow.Serialize();
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
 	CRecipient fee;
@@ -2710,9 +2752,9 @@ UniValue escrowlist(const UniValue& params, bool fHelp) {
 				status = "in escrow";
 			else if(op == OP_ESCROW_RELEASE)
 				status = "escrow released";
-			else if(op == OP_ESCROW_REFUND && vvch.size() == 1)
+			else if(op == OP_ESCROW_REFUND && vvch[1] == vchFromString("0"))
 				status = "escrow refunded";
-			else if(op == OP_ESCROW_REFUND && vvch.size() == 2 && vvch[1] == vchFromString("1"))
+			else if(op == OP_ESCROW_REFUND && vvch[1] == vchFromString("1"))
 				status = "escrow refund complete";
 			else if(op == OP_ESCROW_COMPLETE )
 				status = "complete";
@@ -2874,9 +2916,9 @@ UniValue escrowhistory(const UniValue& params, bool fHelp) {
 				status = "in escrow";
 			else if(op == OP_ESCROW_RELEASE)
 				status = "escrow released";
-			else if(op == OP_ESCROW_REFUND && vvch.size() == 1)
+			else if(op == OP_ESCROW_REFUND && vvch[1] == vchFromString("0"))
 				status = "escrow refunded";
-			else if(op == OP_ESCROW_REFUND && vvch.size() == 2 && vvch[1] == vchFromString("1"))
+			else if(op == OP_ESCROW_REFUND && vvch[1] == vchFromString("1"))
 				status = "escrow refund complete";
 			else if(op == OP_ESCROW_COMPLETE)
 				status = "complete";
@@ -2986,9 +3028,9 @@ UniValue escrowfilter(const UniValue& params, bool fHelp) {
 			status = "in escrow";
 		else if(op == OP_ESCROW_RELEASE)
 			status = "escrow released";
-		else if(op == OP_ESCROW_REFUND && vvch.size() == 1)
+		else if(op == OP_ESCROW_REFUND && vvch[1] == vchFromString("0"))
 			status = "escrow refunded";
-		else if(op == OP_ESCROW_REFUND && vvch.size() == 2 && vvch[1] == vchFromString("1"))
+		else if(op == OP_ESCROW_REFUND && vvch[1] == vchFromString("1"))
 			status = "escrow refund complete";
 		else if(op == OP_ESCROW_COMPLETE)
 			status = "complete";

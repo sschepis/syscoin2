@@ -377,12 +377,12 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 			if(vvchArgs.size() != 2)
 				return error("sys 2.1 cert arguments wrong size");
 
-			if(!theAlias.IsNull())
+			if(!theCert.IsNull())
 			{
 				uint256 calculatedHash = Hash(vchData.begin(), vchData.end());
  				vector<unsigned char> vchRand = CScriptNum(calculatedHash.GetCheapHash()).getvch();
-				vector<unsigned char> vchRandAlias = vchFromValue(HexStr(vchRand));
-				if(vchRandAlias != vvchArgs[1])
+				vector<unsigned char> vchRandCert = vchFromValue(HexStr(vchRand));
+				if(vchRandCert != vvchArgs[1])
 				{
 					return error("Hash provided doesn't match the calculated hash the data");
 				}

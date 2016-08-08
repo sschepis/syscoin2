@@ -368,7 +368,7 @@ int IndexOfOfferOutput(const CTransaction& tx, bool skipAcceptBuyerSpecialOutput
 		const CTxOut& out = tx.vout[i];
 		// find an output you own
 		if (pwalletMain->IsMine(out) && DecodeOfferScript(out.scriptPubKey, op, vvch)) {
-			if(skipAcceptBuyerSpecialOutput && vvch.size() >= 5)
+			if(skipAcceptBuyerSpecialOutput && vvch.size() >= 6)
 				continue;
 			return i;
 		}
@@ -467,8 +467,8 @@ bool DecodeOfferTx(const CTransaction& tx, int& op, int& nOut,
 	// Strict check - bug disallowed
 	for (unsigned int i = 0; i < tx.vout.size(); i++) {
 		const CTxOut& out = tx.vout[i];
-		// skip the special buyer feedback output which has the size of 5 (we should have another one in this tx which is of size 4, the normal offer accept output)
-		if (DecodeOfferScript(out.scriptPubKey, op, vvch) && vvch.size() < 5) {
+		// skip the special buyer feedback output which has the size of 6 (we should have another one in this tx which is of size 5, the normal offer accept output)
+		if (DecodeOfferScript(out.scriptPubKey, op, vvch) && vvch.size() < 6) {
 			nOut = i; found = true;
 			break;
 		}
@@ -513,7 +513,7 @@ bool DecodeOfferScript(const CScript& script, int& op,
 
 	if ((op == OP_OFFER_ACTIVATE && vvch.size() == 1)
 		|| (op == OP_OFFER_UPDATE && vvch.size() == 1)
-		|| (op == OP_OFFER_ACCEPT && vvch.size() <= 5))
+		|| (op == OP_OFFER_ACCEPT && vvch.size() <= 6))
 		return true;
 	return false;
 }
@@ -1024,7 +1024,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					theOffer.vchCert.clear();	
 				}
 			}			
-			if(vvchArgs.size() >= 5)
+			if(vvchArgs.size() >= 6)
 			{
 				if(fDebug)
 					LogPrintf( "CheckOfferInputs() : Buyer special accept output... skipping\n");
@@ -3887,7 +3887,7 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 		{
 			if (!IsSyscoinScript(txA.vout[j].scriptPubKey, op, vvch))
 				continue;
-			if(vvch.size() >= 5)
+			if(vvch.size() >= 6)
 				continue;
 			if(op != OP_OFFER_ACCEPT)
 				continue;
@@ -4144,7 +4144,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 				if(op != OP_OFFER_ACCEPT)
 					continue;
 				// dont show feedback outputs as accepts
-				if(vvch.size() >= 5)
+				if(vvch.size() >= 6)
 					continue;
 
 				if(vvch[0] != vchOfferToFind && !vchOfferToFind.empty())

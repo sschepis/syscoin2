@@ -910,7 +910,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		switch (op) {
 			case OP_ALIAS_ACTIVATE:
 				// Check GUID
-				if (vvchArgs.size() > 1 && theAlias.vchGUID != vvchArgs[1])
+				if (theAlias.vchGUID != vvchArgs[1])
 					return error("CheckAliasInputs() : OP_ALIAS_ACTIVATE GUID mismatch");
 				if (theAlias.vchName != vvchArgs[0])
 					return error("CheckAliasInputs() : OP_ALIAS_ACTIVATE name mismatch");
@@ -922,7 +922,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				if (vvchPrevArgs[0] != vvchArgs[0])
 					return error("CheckAliasInputs() : OP_ALIAS_UPDATE alias mismatch");
 				// Check GUID
-				if (vvchArgs.size() > 1 && vvchPrevArgs[1] != vvchArgs[1])
+				if (vvchPrevArgs[1] != vvchArgs[1])
 					return error("CheckAliasInputs() : OP_ALIAS_UPDATE GUID input mismatch");
 				if (!theAlias.IsNull() && theAlias.vchName != vvchArgs[0])
 					return error("CheckAliasInputs() : OP_ALIAS_UPDATE name mismatch");
@@ -1005,8 +1005,6 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			theAlias.nRating = 0;
 			theAlias.nRatingCount = 0;
 		}
-		if(vvchArgs.size() > 1)
- 			theAlias.vchGUID = vvchArgs[1];
 		theAlias.nHeight = nHeight;
 		theAlias.txHash = tx.GetHash();
 		PutToAliasList(vtxPos, theAlias);
