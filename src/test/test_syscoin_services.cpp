@@ -281,7 +281,7 @@ void CreateSysBanIfNotExist()
 }
 void CreateSysCategoryIfNotExist()
 {
-	string data = "{\\\"categories\\\":[{\\\"cat\\\":\\\"certificates\\\"},{\\\"cat\\\":\\\"wanted\\\"},{\\\"cat\\\":\\\"for sale > general\\\"},{\\\"cat\\\":\\\"for sale > wanted\\\"},{\\\"cat\\\":\\\"services\\\"}]}";
+	string data = "\"{\\\"categories\\\":[{\\\"cat\\\":\\\"certificates\\\"},{\\\"cat\\\":\\\"wanted\\\"},{\\\"cat\\\":\\\"for sale > general\\\"},{\\\"cat\\\":\\\"for sale > wanted\\\"},{\\\"cat\\\":\\\"services\\\"}]}\"";
 	
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasnew SYS_CATEGORY " + data));
 	GenerateBlocks(5);
