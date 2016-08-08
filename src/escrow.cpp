@@ -149,9 +149,6 @@ bool CEscrowDB::ScanEscrows(const std::vector<unsigned char>& vchEscrow, const s
 				string buyerAliasLower = buyeraddy.aliasName;
 				string sellerAliasLower = selleraddy.aliasName;
 				string arbiterAliasLower = arbiteraddy.aliasName;
-				boost::algorithm::to_lower(buyerAliasLower);
-				boost::algorithm::to_lower(sellerAliasLower);
-				boost::algorithm::to_lower(arbiterAliasLower);
 
 				if (strRegexp != "" && strRegexp != offerstr && strRegexp != escrow && strSearchLower != buyerAliasLower && strSearchLower != sellerAliasLower && strSearchLower != arbiterAliasLower)
 				{

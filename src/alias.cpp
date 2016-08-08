@@ -124,7 +124,7 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 				// if we are renewing alias then prune based on nHeight of tx
 				if(!alias.vchGUID.empty() && vtxPos.back().vchGUID != alias.vchGUID)
 					nLastHeight = alias.nHeight;
-				nHeight = nLastHeight + GetAliasExpirationDepth();
+				nHeight = nLastHeight + (vtxPos.back().nRenewal*GetAliasExpirationDepth());
 				return true;	
 			}		
 		}
@@ -810,7 +810,7 @@ void updateBans(const vector<unsigned char> &banData)
 }
 bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, const CBlock* block) {
 	
-	if (tx.IsCoinBase() || vvchArgs[0].size() > MAX_GUID_LENGTH)
+	if (tx.IsCoinBase() || vvchArgs[0].size() > MAX_GUID_LENGTH || vvchArgs[0].size() < 3)
 		return true;
 	if (fDebug)
 		LogPrintf("*** ALIAS %d %d %s %s\n", nHeight, chainActive.Tip()->nHeight, tx.GetHash().ToString().c_str(), fJustCheck ? "JUSTCHECK" : "BLOCK");
@@ -827,6 +827,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	// unserialize alias from txn, check for valid
 	CAliasIndex theAlias;
 	vector<unsigned char> vchData;
+	vector<unsigned char> vchName;
 	if(!GetSyscoinData(tx, vchData))
 	{
 		theAlias.SetNull();
@@ -936,12 +937,16 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		bool update = false;
 		CAliasIndex dbAlias;
 		CTransaction aliasTx;
+		if(op == OP_ALIAS_ACTIVATE && vvchArgs[0] != vchFromString("SYS_RATES") && vvchArgs[0] != vchFromString("SYS_BAN") && vvchArgs[0] != vchFromString("SYS_CATEGORY"))
+			vchName = vchFromString(boost::algorithm::to_lower(stringFromVch(vvchArgs[0])));
+		else
+			vchName = vvchArgs[0];
 		// get the alias from the DB
-		if(!GetTxAndVtxOfAlias(vvchArgs[0], dbAlias, aliasTx, vtxPos))	
+		if(!GetTxAndVtxOfAlias(vchName, dbAlias, aliasTx, vtxPos))	
 		{
 			if(op == OP_ALIAS_ACTIVATE)
 			{
-				if(!vtxPos.empty())
+				if(!dbAlias.IsNull())
 				{
 					if(fDebug)
 						LogPrintf("CheckAliasInputs(): Trying to renew an alias that isn't expired");
@@ -975,6 +980,8 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					theAlias.nRatingCount = dbAlias.nRatingCount;
 					theAlias.vchGUID = dbAlias.vchGUID;
 					theAlias.vchName = dbAlias.vchName;
+					if(theAlias.nRenewal > 5)
+						theAlias.nRenewal = 5;
 				}
 				// if transfer
 				if(dbAlias.vchPubKey != theAlias.vchPubKey)
@@ -1002,22 +1009,24 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		{
 			theAlias.nRating = 0;
 			theAlias.nRatingCount = 0;
+			if(theAlias.nRenewal > 5)
+				theAlias.nRenewal = 5;
 		}
 		theAlias.nHeight = nHeight;
 		theAlias.txHash = tx.GetHash();
 		PutToAliasList(vtxPos, theAlias);
 		CPubKey PubKey(theAlias.vchPubKey);
 		CSyscoinAddress address(PubKey.GetID());
-		if (!paliasdb->WriteAlias(vvchArgs[0], vchFromString(address.ToString()), vtxPos))
+		if (!paliasdb->WriteAlias(vchName, vchFromString(address.ToString()), vtxPos))
 			return error( "CheckAliasInputs() :  failed to write to alias DB");
-		if(update && vvchArgs[0] == vchFromString("SYS_BAN"))
+		if(update && vchName == vchFromString("SYS_BAN"))
 		{
 			updateBans(theAlias.vchPublicValue);
 		}		
 		if(fDebug)
 			LogPrintf(
 				"CONNECTED ALIAS: name=%s  op=%s  hash=%s  height=%d\n",
-				stringFromVch(vvchArgs[0]).c_str(),
+				stringFromVch(vchName).c_str(),
 				aliasFromOp(op).c_str(),
 				tx.GetHash().ToString().c_str(), nHeight);
 	}
@@ -1135,7 +1144,7 @@ bool CAliasDB::ScanNames(const std::vector<unsigned char>& vchName, const string
 					continue;
 				}
 				const CAliasIndex &txPos = vtxPos.back();
-  				if ((chainActive.Tip()->nHeight - txPos.nHeight) >= nMaxAge)
+  				if ((chainActive.Tip()->nHeight - txPos.nHeight) >= (txPos.nRenewal*nMaxAge))
 				{
 					pcursor->Next();
 					continue;
@@ -1159,7 +1168,6 @@ bool CAliasDB::ScanNames(const std::vector<unsigned char>& vchName, const string
 					continue;
 				}
 				string name = stringFromVch(vchName);
-				boost::algorithm::to_lower(name);
 				if (strRegexp != "" && !regex_search(name, nameparts, cregex) && strRegexp != name)
 				{
 					pcursor->Next();
@@ -1194,7 +1202,7 @@ bool GetTxOfAlias(const vector<unsigned char> &vchName,
 	int nHeight = txPos.nHeight;
 	if(vchName != vchFromString("SYS_RATES") && vchName != vchFromString("SYS_BAN") && vchName != vchFromString("SYS_CATEGORY"))
 	{
-		if (!skipExpiresCheck && (nHeight + GetAliasExpirationDepth()
+		if (!skipExpiresCheck && (nHeight + (txPos.nRenewal*GetAliasExpirationDepth())
 				< chainActive.Tip()->nHeight)) {
 			string name = stringFromVch(vchName);
 			LogPrintf("GetTxOfAlias(%s) : expired", name.c_str());
@@ -1215,7 +1223,7 @@ bool GetTxAndVtxOfAlias(const vector<unsigned char> &vchName,
 	int nHeight = txPos.nHeight;
 	if(vchName != vchFromString("SYS_RATES") && vchName != vchFromString("SYS_BAN") && vchName != vchFromString("SYS_CATEGORY"))
 	{
-		if (!skipExpiresCheck && (nHeight + GetAliasExpirationDepth()
+		if (!skipExpiresCheck && (nHeight + (txPos.nRenewal*GetAliasExpirationDepth())
 				< chainActive.Tip()->nHeight)) {
 			string name = stringFromVch(vchName);
 			LogPrintf("GetTxOfAlias(%s) : expired", name.c_str());
@@ -1229,7 +1237,7 @@ bool GetTxAndVtxOfAlias(const vector<unsigned char> &vchName,
 
 	return true;
 }
-void GetAddressFromAlias(const std::string& strAlias, std::string& strAddress, unsigned char& safetyLevel, bool& safeSearch, int64_t& nHeight) {
+void GetAddressFromAlias(const std::string& strAlias, std::string& strAddress, unsigned char& safetyLevel, bool& safeSearch, int64_t& nExpireHeight) {
 	try
 	{
 		const vector<unsigned char> &vchAlias = vchFromValue(strAlias);
@@ -1257,7 +1265,7 @@ void GetAddressFromAlias(const std::string& strAlias, std::string& strAddress, u
 		strAddress = address.ToString();
 		safetyLevel = alias.safetyLevel;
 		safeSearch = alias.safeSearch;
-		nHeight = alias.nHeight;
+		nExpireHeight = alias.nHeight + alias.nRenewal*GetAliasExpirationDepth();
 	}
 	catch(...)
 	{
@@ -1265,7 +1273,7 @@ void GetAddressFromAlias(const std::string& strAlias, std::string& strAddress, u
 	}
 }
 
-void GetAliasFromAddress(const std::string& strAddress, std::string& strAlias, unsigned char& safetyLevel, bool& safeSearch, int64_t& nHeight) {
+void GetAliasFromAddress(const std::string& strAddress, std::string& strAlias, unsigned char& safetyLevel, bool& safeSearch, int64_t& nExpireHeight) {
 	try
 	{
 		const vector<unsigned char> &vchAddress = vchFromValue(strAddress);
@@ -1287,7 +1295,7 @@ void GetAliasFromAddress(const std::string& strAddress, std::string& strAlias, u
 		strAlias = stringFromVch(vchAlias);
 		safetyLevel = alias.safetyLevel;
 		safeSearch = alias.safeSearch;
-		nHeight = alias.nHeight;
+		nExpireHeight = alias.nHeight + alias.nRenewal*GetAliasExpirationDepth();
 	}
 	catch(...)
 	{
@@ -1432,16 +1440,19 @@ void CreateFeeRecipient(const CScript& scriptPubKey, const vector<unsigned char>
 	recipient.nAmount = fee > 0.02*COIN? fee: 0.02*COIN;
 }
 UniValue aliasnew(const UniValue& params, bool fHelp) {
-	if (fHelp || 2 > params.size() || 4 < params.size())
+	if (fHelp || 2 > params.size() || 5 < params.size())
 		throw runtime_error(
-		"aliasnew <aliasname> <public value> [private value] [safe search=Yes]\n"
+		"aliasnew <aliasname> <public value> [private value] [safe search=Yes] [expire=1]\n"
 						"<aliasname> alias name.\n"
 						"<public value> alias public profile data, 1023 chars max.\n"
 						"<private value> alias private profile data, 1023 chars max. Will be private and readable by owner only.\n"
-						"<safe search> set to No if this alias should only show in the search when safe search is not selected. Defaults to Yes (alias shows with or without safe search selected in search lists).\n"										
+						"<safe search> set to No if this alias should only show in the search when safe search is not selected. Defaults to Yes (alias shows with or without safe search selected in search lists).\n"	
+						"<expire> Number of years before expiry. It affects the fees you pay, the cheapest being 1 year. The more years you specify the more fees you pay. Max is 5 years, Min is 1 year. Defaults to 1 year.\n"	
 						+ HelpRequiringPassphrase());
 
 	vector<unsigned char> vchName = vchFromString(params[0].get_str());
+	if(vchName != vchFromString("SYS_RATES") && vchName != vchFromString("SYS_BAN") && vchName != vchFromString("SYS_CATEGORY"))
+		vchName = vchFromString(boost::algorithm::to_lower(stringFromVch(vchName)));
 	vector<unsigned char> vchPublicValue;
 	vector<unsigned char> vchPrivateValue;
 	string strPublicValue = params[1].get_str();
@@ -1449,9 +1460,16 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 
 	string strPrivateValue = params.size()>=3?params[2].get_str():"";
 	string strSafeSearch = "Yes";
+	unsigned char nRenewal = 1;
 	if(params.size() >= 4)
 	{
 		strSafeSearch = params[3].get_str();
+	}
+	if(params.size() >= 5)
+	{
+		nRenewal = atoi(params[4].get_str());
+		if(nRenewal < 1 || nRenewal > 5)
+			throw runtime_error("Expiration must be within 1 to 5 years!");
 	}
 	vchPrivateValue = vchFromString(strPrivateValue);
 	if (vchPublicValue.size() > MAX_VALUE_LENGTH)
@@ -1459,7 +1477,9 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	if (vchPrivateValue.size() > MAX_VALUE_LENGTH)
 		throw runtime_error("alias private value cannot exceed 1023 bytes!");
 	if (vchName.size() > MAX_GUID_LENGTH)
-		throw runtime_error("alias name cannot exceed 63 bytes!");
+		throw runtime_error("alias name cannot exceed 63 characters!");
+	if (vchName.size() < 3)
+		throw runtime_error("alias name cannot be less than 3 characters!");
 
 
 	CSyscoinAddress myAddress = CSyscoinAddress(stringFromVch(vchName));
@@ -1510,6 +1530,7 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	newAlias.vchPubKey = vchPubKey;
 	newAlias.vchPublicValue = vchPublicValue;
 	newAlias.vchPrivateValue = vchPrivateValue;
+	newAlias.nRenewal = nRenewal;
 	newAlias.safetyLevel = 0;
 	newAlias.safeSearch = strSafeSearch == "Yes"? true: false;
 	const vector<unsigned char> &data = newAlias.Serialize();
@@ -1530,6 +1551,13 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	scriptData << OP_RETURN << data;
 	CRecipient fee;
 	CreateFeeRecipient(scriptData, data, fee);
+	// calculate a fee if renewal is larger than default.. based on how many years you extend for it will be exponentially more expensive
+	if(nRenewal > 1)
+	{
+		// number of years left to expire based on this renewal value
+		int yearsleft = nRenewal;
+		fee.nAmount +=  0.02*COIN*yearsleft*yearsleft;
+	}
 	vecSend.push_back(fee);
 	// send the tranasction
 	SendMoneySyscoin(vecSend, recipient.nAmount + fee.nAmount, false, wtx);
@@ -1541,13 +1569,14 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 UniValue aliasupdate(const UniValue& params, bool fHelp) {
 	if (fHelp || 2 > params.size() || 5 < params.size())
 		throw runtime_error(
-		"aliasupdate <aliasname> <public value> [private value=''] [safesearch=Yes] [toalias_pubkey='']\n"
+		"aliasupdate <aliasname> <public value> [private value=''] [safesearch=Yes] [toalias_pubkey=''] [expire=1]\n"
 						"Update and possibly transfer an alias.\n"
 						"<aliasname> alias name.\n"
 						"<public value> alias public profile data, 1023 chars max.\n"
 						"<private value> alias private profile data, 1023 chars max. Will be private and readable by owner only.\n"				
 						"<safesearch> is this alias safe to search. Defaults to Yes, No for not safe and to hide in GUI search queries\n"
 						"<toalias_pubkey> receiver syscoin alias pub key, if transferring alias.\n"
+						"<expire> Number of years before expiry. It affects the fees you pay, the cheapest being 1 year. The more years you specify the more fees you pay. Max is 5 years, Min is 1 year. Defaults to 1 year.\n"	
 						+ HelpRequiringPassphrase());
 
 	vector<unsigned char> vchName = vchFromString(params[0].get_str());
@@ -1562,7 +1591,7 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 	if (vchPrivateValue.size() > MAX_VALUE_LENGTH)
 		throw runtime_error("alias public value cannot exceed 1023 bytes!");
 	vector<unsigned char> vchPubKeyByte;
-
+	unsigned char nRenewal = 1;
 	CWalletTx wtx;
 	CAliasIndex updateAlias;
 	const CWalletTx* wtxIn;
@@ -1585,11 +1614,22 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 	{
 		strSafeSearch = params[3].get_str();
 	}
+	if(params.size() >= 5)
+	{
+		nRenewal = atoi(params[4].get_str());
+		if(nRenewal < 1 || nRenewal > 5)
+			throw runtime_error("Expiration must be within 1 to 5 years!");
+	}
 	EnsureWalletIsUnlocked();
 	CTransaction tx;
 	CAliasIndex theAlias;
 	if (!GetTxOfAlias(vchName, theAlias, tx))
 		throw runtime_error("could not find an alias with this name");
+
+	if(theAlias.nHeight + (nRenewal*GetAliasExpirationDepth())  < chainActive.Tip()->nHeight)
+		throw runtime_error("Cannot modify the expiration time to this value because doing so would cause this alias to expire.");
+	if(nRenewal < theAlias.nRenewal)
+		throw runtime_error("Expiration must be set to something greator than what it is currently set to.");
 
     if(!IsSyscoinTxMine(tx, "alias")) {
 		throw runtime_error("This alias is not yours, you cannot update it.");
@@ -1627,6 +1667,7 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 		theAlias.vchPrivateValue = vchPrivateValue;
 	
 	theAlias.vchPubKey = vchPubKeyByte;
+	theAlias.nRenewal = nRenewal;
 	theAlias.safeSearch = strSafeSearch == "Yes"? true: false;
 	CPubKey currentKey(vchPubKeyByte);
 	scriptPubKeyOrig = GetScriptForDestination(currentKey.GetID());
@@ -1648,6 +1689,13 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 	scriptData << OP_RETURN << data;
 	CRecipient fee;
 	CreateFeeRecipient(scriptData, data, fee);
+	// calculate a fee if renewal is larger than default.. based on how many years you extend for it will be exponentially more expensive
+	if(nRenewal != theAlias.nRenewal)
+	{
+		// number of years left to expire based on this renewal setting
+		int yearsleft = (nRenewal-theAlias.nRenewal);
+		fee.nAmount +=  0.02*COIN*yearsleft*yearsleft;
+	}
 	vecSend.push_back(fee);
 	const CWalletTx * wtxInOffer=NULL;
 	const CWalletTx * wtxInCert=NULL;
@@ -1754,7 +1802,7 @@ UniValue aliaslist(const UniValue& params, bool fHelp) {
 				rating = roundf(alias.nRating/(float)alias.nRatingCount);
 			oName.push_back(Pair("rating", (int)rating));
 			oName.push_back(Pair("ratingcount", alias.nRatingCount));
-			expired_block = nHeight + GetAliasExpirationDepth();
+			expired_block = nHeight + (alias.nRenewal*GetAliasExpirationDepth());
 			if(vchName != vchFromString("SYS_RATES") && vchName != vchFromString("SYS_BAN") && vchName != vchFromString("SYS_CATEGORY"))
 			{
 				if(expired_block < chainActive.Tip()->nHeight)
@@ -1846,9 +1894,9 @@ UniValue aliasaffiliates(const UniValue& params, bool fHelp) {
 					oList.push_back(Pair("offer", stringFromVch(vchOffer)));
 					oList.push_back(Pair("alias", stringFromVch(entry.aliasLinkVchRand)));
 					int expires_in = 0;
-					if(nHeight + GetAliasExpirationDepth() - chainActive.Tip()->nHeight > 0)
+					if(nHeight + (theAlias.nRenewal*GetAliasExpirationDepth()) - chainActive.Tip()->nHeight > 0)
 					{
-						expires_in = nHeight + GetAliasExpirationDepth() - chainActive.Tip()->nHeight;
+						expires_in = nHeight + (theAlias.nRenewal*GetAliasExpirationDepth())  - chainActive.Tip()->nHeight;
 					}  
 					oList.push_back(Pair("expiresin",expires_in));
 					oList.push_back(Pair("offer_discount_percentage", strprintf("%d%%", entry.nDiscountPct)));
@@ -1926,7 +1974,7 @@ UniValue aliasinfo(const UniValue& params, bool fHelp) {
 		oName.push_back(Pair("rating", (int)rating));
 		oName.push_back(Pair("ratingcount", alias.nRatingCount));
         oName.push_back(Pair("lastupdate_height", nHeight));
-		expired_block = nHeight + GetAliasExpirationDepth();
+		expired_block = nHeight + (alias.nRenewal*GetAliasExpirationDepth());
 		if(vchName != vchFromString("SYS_RATES") && vchName != vchFromString("SYS_BAN") && vchName != vchFromString("SYS_CATEGORY"))
 		{
 			if(expired_block < chainActive.Tip()->nHeight)
@@ -2005,7 +2053,7 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 				rating = roundf(txPos2.nRating/(float)txPos2.nRatingCount);
 			oName.push_back(Pair("rating", (int)rating));
 			oName.push_back(Pair("ratingcount", txPos2.nRatingCount));
-			expired_block = nHeight + GetAliasExpirationDepth();
+			expired_block = nHeight + (txPos2.nRenewal*GetAliasExpirationDepth()) ;
 			if(vchName != vchFromString("SYS_RATES") && vchName != vchFromString("SYS_BAN") && vchName != vchFromString("SYS_CATEGORY"))
 			{
 				if(expired_block < chainActive.Tip()->nHeight)
@@ -2068,6 +2116,7 @@ UniValue aliasfilter(const UniValue& params, bool fHelp) {
 
 	
 	vector<pair<vector<unsigned char>, CAliasIndex> > nameScan;
+	vchName = vchFromString(boost::algorithm::to_lower(stringFromVch(name)));
 	if (!paliasdb->ScanNames(vchName, strRegexp, safeSearch, 25, nameScan))
 		throw runtime_error("scan failed");
 
@@ -2097,7 +2146,7 @@ UniValue aliasfilter(const UniValue& params, bool fHelp) {
 			rating = roundf(alias.nRating/(float)alias.nRatingCount);
 		oName.push_back(Pair("rating", (int)rating));
 		oName.push_back(Pair("ratingcount", alias.nRatingCount));
-		expired_block = nHeight + GetAliasExpirationDepth();
+		expired_block = nHeight + (alias.nRenewal*GetAliasExpirationDepth());
         if(expired_block < chainActive.Tip()->nHeight)
 		{
 			expired = 1;
@@ -2129,7 +2178,7 @@ string CheckForAliasExpiry(const vector<unsigned char> &vchPubKey, const int nHe
 			return string("alias address is invalid");
 		if(alias.isAlias)
 		{
-			if((alias.nHeight + GetAliasExpirationDepth()) < nHeight)
+			if(alias.nExpireHeight < nHeight)
 			{
 				return string("alias is expired");
 			}

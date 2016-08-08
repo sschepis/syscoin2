@@ -176,7 +176,7 @@ bool CCertDB::ScanCerts(const std::vector<unsigned char>& vchCert, const string 
 					pcursor->Next();
 					continue;
 				}
-				if((owneraddy.nHeight + GetAliasExpirationDepth()) < chainActive.Tip()->nHeight)
+				if(owneraddy.nExpireHeight < chainActive.Tip()->nHeight)
 				{
 					pcursor->Next();
 					continue;

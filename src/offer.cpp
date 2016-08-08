@@ -311,7 +311,7 @@ bool COfferDB::ScanOffers(const std::vector<unsigned char>& vchOffer, const stri
 					pcursor->Next();
 					continue;
 				}
-				if((selleraddy.nHeight + GetAliasExpirationDepth()) < chainActive.Tip()->nHeight)
+				if(selleraddy.nExpireHeight < chainActive.Tip()->nHeight)
 				{
 					pcursor->Next();
 					continue;
@@ -327,7 +327,6 @@ bool COfferDB::ScanOffers(const std::vector<unsigned char>& vchOffer, const stri
 					continue;
 				}
 				string alias = selleraddy.aliasName;
-				boost::algorithm::to_lower(alias);
 				if (strRegexp != "" && !regex_search(title, offerparts, cregex) && !regex_search(description, offerparts, cregex) && strRegexp != offer && strRegexpLower != alias)
 				{
 					pcursor->Next();
@@ -1379,7 +1378,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				if (!GetTxOfOffer( theOffer.vchLinkOffer, linkOffer, txOffer))
 				{
 					if(fDebug)
-						LogPrintf("CheckOfferInputs(): OP_OFFER_UPDATE Linked offer is expired");
+						LogPrintf("CheckOfferInputs(): OP_OFFER_ACCEPT Linked offer is expired");
 					theOffer.vchLinkOffer.clear();
 				}
 			}
@@ -2431,9 +2430,9 @@ UniValue offerwhitelist(const UniValue& params, bool fHelp) {
 			if (!GetSyscoinTransaction(nHeight, txAlias.GetHash(), txAlias, Params().GetConsensus()))
 				continue;
 			
-            if(nHeight + GetAliasExpirationDepth() - chainActive.Tip()->nHeight > 0)
+            if(nHeight + (theAlias.nRenewal*GetAliasExpirationDepth()) - chainActive.Tip()->nHeight > 0)
 			{
-				expires_in = nHeight + GetAliasExpirationDepth() - chainActive.Tip()->nHeight;
+				expires_in = nHeight + (theAlias.nRenewal*GetAliasExpirationDepth()) - chainActive.Tip()->nHeight;
 			}  
 			oList.push_back(Pair("expiresin",expires_in));
 			oList.push_back(Pair("offer_discount_percentage", strprintf("%d%%", entry.nDiscountPct)));
@@ -3272,7 +3271,12 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 		throw runtime_error("Buyer address is invalid!");
 	scriptPubKeyBuyerDestination= GetScriptForDestination(buyerKey.GetID());
 	CRecipient recipientBuyer;
-
+	if(!vchBTCTxId.empty() && stringFromVch(theOffer.sCurrencyCode) == "BTC")
+	{
+		uint256 txBTCId(uint256S(stringFromVch(vchBTCTxId)));
+		txAccept.txBTCId = txBTCId;
+	}
+	COffer copyOffer = theOffer;
 	theOffer.ClearOffer();
 	theOffer.accept = txAccept;
 	// use the linkalias in offer for our whitelist alias inputs check
@@ -3295,7 +3299,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 
 
     CScript scriptPayment;
-	CPubKey currentKey(theOffer.vchPubKey);
+	CPubKey currentKey(copyOffer.vchPubKey);
 	scriptPayment = GetScriptForDestination(currentKey.GetID());
 	scriptPubKeyAccept += scriptPayment;
 	scriptPubKeyPayment += scriptPayment;
@@ -3318,7 +3322,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	CreateRecipient(scriptPubKeyEscrowArbiter, escrowArbiterRecipient);
 
 	// send back to yourself always for feedback unless its escrow or its a non linked offer (you get the feedback output when the linked accept occurs)
-	if(vchEscrowTxHash.empty() && theOffer.vchLinkOffer.empty())
+	if(vchEscrowTxHash.empty() && copyOffer.vchLinkOffer.empty())
 		vecSend.push_back(recipientBuyer);
 	// if we are accepting an escrow transaction then create another escrow utxo for escrowcomplete to be able to do its thing
 	if (wtxEscrowIn != NULL) 
@@ -3335,12 +3339,12 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	}
 
 	// check for Bitcoin payment on the bitcoin network, otherwise pay in syscoin
-	if(!vchBTCTxId.empty() && stringFromVch(theOffer.sCurrencyCode) == "BTC")
+	if(!vchBTCTxId.empty() && stringFromVch(copyOffer.sCurrencyCode) == "BTC")
 	{
 		uint256 txBTCId(uint256S(stringFromVch(vchBTCTxId)));
 		txAccept.txBTCId = txBTCId;
 	}
-	else if(!theOffer.bOnlyAcceptBTC)
+	else if(!copyOffer.bOnlyAcceptBTC)
 	{
 		// linked accept will go through the linkedAcceptBlock and find all linked accepts to same offer and group them together into vecSend so it can go into one tx (inputs can be shared, mainly the whitelist alias inputs)
 		if(!CreateLinkedOfferAcceptRecipients(vecSend, nPrice, wtxOfferIn, vchOffer, scriptPayment, vchHashOffer))
@@ -3632,7 +3636,12 @@ UniValue offeraccept_nocheck(const UniValue& params, bool fHelp) {
 		throw runtime_error("Buyer address is invalid!");
 	scriptPubKeyBuyerDestination= GetScriptForDestination(buyerKey.GetID());
 	CRecipient recipientBuyer;
-
+	if(!vchBTCTxId.empty() && stringFromVch(theOffer.sCurrencyCode) == "BTC")
+	{
+		uint256 txBTCId(uint256S(stringFromVch(vchBTCTxId)));
+		txAccept.txBTCId = txBTCId;
+	}
+	COffer copyOffer = theOffer;
 	theOffer.ClearOffer();
 	theOffer.accept = txAccept;
 	// use the linkalias in offer for our whitelist alias inputs check
@@ -3655,7 +3664,7 @@ UniValue offeraccept_nocheck(const UniValue& params, bool fHelp) {
 
 
     CScript scriptPayment;
-	CPubKey currentKey(theOffer.vchPubKey);
+	CPubKey currentKey(copyOffer.vchPubKey);
 	scriptPayment = GetScriptForDestination(currentKey.GetID());
 	scriptPubKeyAccept += scriptPayment;
 	scriptPubKeyPayment += scriptPayment;
@@ -3678,7 +3687,7 @@ UniValue offeraccept_nocheck(const UniValue& params, bool fHelp) {
 	CreateRecipient(scriptPubKeyEscrowArbiter, escrowArbiterRecipient);
 
 	// send back to yourself always for feedback unless its escrow or its a non linked offer (you get the feedback output when the linked accept occurs)
-	if(vchEscrowTxHash.empty() && theOffer.vchLinkOffer.empty())
+	if(vchEscrowTxHash.empty() && copyOffer.vchLinkOffer.empty())
 		vecSend.push_back(recipientBuyer);
 	// if we are accepting an escrow transaction then create another escrow utxo for escrowcomplete to be able to do its thing
 	if (wtxEscrowIn != NULL) 
@@ -3695,12 +3704,12 @@ UniValue offeraccept_nocheck(const UniValue& params, bool fHelp) {
 	}
 
 	// check for Bitcoin payment on the bitcoin network, otherwise pay in syscoin
-	if(!vchBTCTxId.empty() && stringFromVch(theOffer.sCurrencyCode) == "BTC")
+	if(!vchBTCTxId.empty() && stringFromVch(copyOffer.sCurrencyCode) == "BTC")
 	{
 		uint256 txBTCId(uint256S(stringFromVch(vchBTCTxId)));
 		txAccept.txBTCId = txBTCId;
 	}
-	else if(!theOffer.bOnlyAcceptBTC)
+	else if(!copyOffer.bOnlyAcceptBTC)
 	{
 		// linked accept will go through the linkedAcceptBlock and find all linked accepts to same offer and group them together into vecSend so it can go into one tx (inputs can be shared, mainly the whitelist alias inputs)
 		if(!CreateLinkedOfferAcceptRecipients(vecSend, nPrice, wtxOfferIn, vchOffer, scriptPayment, vchHashOffer))
