@@ -1560,11 +1560,8 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	CreateFeeRecipient(scriptData, data, fee);
 	// calculate a fee if renewal is larger than default.. based on how many years you extend for it will be exponentially more expensive
 	if(nRenewal > 1)
-	{
-		// number of years left to expire based on this renewal value
-		int yearsleft = nRenewal;
-		fee.nAmount +=  0.02*COIN*yearsleft*yearsleft;
-	}
+		fee.nAmount += 0.02*COIN*nRenewal*nRenewal;
+	
 	vecSend.push_back(fee);
 	// send the tranasction
 	SendMoneySyscoin(vecSend, recipient.nAmount + fee.nAmount, false, wtx);
@@ -1625,18 +1622,13 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 	{
 		nRenewal = atoi(params[4].get_str());
 		if(nRenewal < 1 || nRenewal > 5)
-			throw runtime_error("Expiration must be within 1 to 5 years!");
+			throw runtime_error("Expiration must within 1 to 5 years!");
 	}
 	EnsureWalletIsUnlocked();
 	CTransaction tx;
 	CAliasIndex theAlias;
 	if (!GetTxOfAlias(vchName, theAlias, tx))
 		throw runtime_error("could not find an alias with this name");
-
-	if(theAlias.nHeight + (nRenewal*GetAliasExpirationDepth())  < chainActive.Tip()->nHeight)
-		throw runtime_error("Cannot modify the expiration time to this value because doing so would cause this alias to expire.");
-	if(nRenewal < theAlias.nRenewal)
-		throw runtime_error("Expiration must be set to something greator than what it is currently set to.");
 
     if(!IsSyscoinTxMine(tx, "alias")) {
 		throw runtime_error("This alias is not yours, you cannot update it.");
@@ -1697,12 +1689,9 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 	CRecipient fee;
 	CreateFeeRecipient(scriptData, data, fee);
 	// calculate a fee if renewal is larger than default.. based on how many years you extend for it will be exponentially more expensive
-	if(nRenewal != theAlias.nRenewal)
-	{
-		// number of years left to expire based on this renewal setting
-		int yearsleft = (nRenewal-theAlias.nRenewal);
-		fee.nAmount +=  0.02*COIN*yearsleft*yearsleft;
-	}
+	if(nRenewal > 1)
+		fee.nAmount +=  0.02*COIN*nRenewal*nRenewal;
+	
 	vecSend.push_back(fee);
 	const CWalletTx * wtxInOffer=NULL;
 	const CWalletTx * wtxInCert=NULL;
