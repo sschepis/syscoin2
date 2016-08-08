@@ -1457,7 +1457,7 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	string strName = params[0].get_str();
 	if(vchName != vchFromString("SYS_RATES") && vchName != vchFromString("SYS_BAN") && vchName != vchFromString("SYS_CATEGORY"))
 	{
-		boost::algorithm::to_lower(strName)
+		boost::algorithm::to_lower(strName);
 		vchName = vchFromString(strName);
 	}
 	vector<unsigned char> vchPublicValue;
@@ -2126,7 +2126,7 @@ UniValue aliasfilter(const UniValue& params, bool fHelp) {
 
 	
 	vector<pair<vector<unsigned char>, CAliasIndex> > nameScan;
-	boost::algorithm::to_lower(strName)
+	boost::algorithm::to_lower(strName);
 	vchName = vchFromString(strName);
 	if (!paliasdb->ScanNames(vchName, strRegexp, safeSearch, 25, nameScan))
 		throw runtime_error("scan failed");
