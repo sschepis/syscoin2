@@ -1571,7 +1571,7 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	return res;
 }
 UniValue aliasupdate(const UniValue& params, bool fHelp) {
-	if (fHelp || 2 > params.size() || 5 < params.size())
+	if (fHelp || 2 > params.size() || 6 < params.size())
 		throw runtime_error(
 		"aliasupdate <aliasname> <public value> [private value=''] [safesearch=Yes] [toalias_pubkey=''] [expire=1]\n"
 						"Update and possibly transfer an alias.\n"
@@ -1618,9 +1618,9 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 	{
 		strSafeSearch = params[3].get_str();
 	}
-	if(params.size() >= 5)
+	if(params.size() >= 6)
 	{
-		nRenewal = atoi(params[4].get_str());
+		nRenewal = atoi(params[5].get_str());
 		if(nRenewal < 1 || nRenewal > 5)
 			throw runtime_error("Expiration must within 1 to 5 years!");
 	}
