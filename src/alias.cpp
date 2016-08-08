@@ -837,17 +837,26 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 
 	if(fJustCheck)
 	{
-		if(IsInSys21Fork(nHeight) && !theAlias.IsNull())
+		if(IsInSys21Fork(nHeight))
 		{
-			uint256 calculatedHash = Hash(vchData.begin(), vchData.end());
- 			vector<unsigned char> vchRand = CScriptNum(calculatedHash.GetCheapHash()).getvch();
-			vector<unsigned char> vchRandAlias = vchFromValue(HexStr(vchRand));
-			if(vchRandAlias != vvchArgs[2])
+			if(vvchArgs.size() != 3)
+				return error("sys 2.1 alias arguments wrong size");
+
+			if(!theAlias.IsNull())
 			{
-				return error("Hash provided doesn't match the calculated hash the data");
+				uint256 calculatedHash = Hash(vchData.begin(), vchData.end());
+ 				vector<unsigned char> vchRand = CScriptNum(calculatedHash.GetCheapHash()).getvch();
+				vector<unsigned char> vchRandAlias = vchFromValue(HexStr(vchRand));
+				if(vchRandAlias != vvchArgs[2])
+				{
+					return error("Hash provided doesn't match the calculated hash the data");
+				}
 			}
 		}
-		
+		else if(vvchArgs.size() != 1)
+			return error("sys 2.0 alias arguments wrong size");
+
+			
 		// Strict check - bug disallowed
 		for (unsigned int i = 0; i < tx.vin.size(); i++) {
 			vector<vector<unsigned char> > vvch;
@@ -1391,11 +1400,7 @@ bool DecodeAliasScript(const CScript& script, int& op,
 	}
 
 	pc--;
-
-	if ((op == OP_ALIAS_ACTIVATE && vvch.size() <= 3 && vvch.size() >= 1)
-			|| (op == OP_ALIAS_UPDATE && vvch.size() <= 3 && vvch.size() >= 1))
-		return true;
-	return false;
+	return IsAliasOp(op);
 }
 bool DecodeAliasScript(const CScript& script, int& op,
 		vector<vector<unsigned char> > &vvch) {
