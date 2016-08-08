@@ -368,7 +368,7 @@ int IndexOfOfferOutput(const CTransaction& tx, bool skipAcceptBuyerSpecialOutput
 		const CTxOut& out = tx.vout[i];
 		// find an output you own
 		if (pwalletMain->IsMine(out) && DecodeOfferScript(out.scriptPubKey, op, vvch)) {
-			if(skipAcceptBuyerSpecialOutput && vvch.size() >= 6)
+			if(skipAcceptBuyerSpecialOutput && op == OP_OFFER_ACCEPT && vvch[5] == vchFromString("1"))
 				continue;
 			return i;
 		}
@@ -467,8 +467,10 @@ bool DecodeOfferTx(const CTransaction& tx, int& op, int& nOut,
 	// Strict check - bug disallowed
 	for (unsigned int i = 0; i < tx.vout.size(); i++) {
 		const CTxOut& out = tx.vout[i];
-		// skip the special buyer feedback output which has the size of 6 (we should have another one in this tx which is of size 5, the normal offer accept output)
-		if (DecodeOfferScript(out.scriptPubKey, op, vvch) && vvch.size() < 6) {
+		// skip the special buyer feedback output (we should have the normal offer accept output also)
+		if (DecodeOfferScript(out.scriptPubKey, op, vvch)) {
+			if(op = OP_OFFER_ACCEPT && vvch[5] == vchFromString("1"))
+				continue;
 			nOut = i; found = true;
 			break;
 		}
@@ -510,12 +512,7 @@ bool DecodeOfferScript(const CScript& script, int& op,
 	}
 
 	pc--;
-
-	if ((op == OP_OFFER_ACTIVATE && vvch.size() == 1)
-		|| (op == OP_OFFER_UPDATE && vvch.size() == 1)
-		|| (op == OP_OFFER_ACCEPT && vvch.size() <= 6))
-		return true;
-	return false;
+	return IsOfferOp(op);
 }
 bool DecodeOfferScript(const CScript& script, int& op,
 		vector<vector<unsigned char> > &vvch) {
@@ -556,8 +553,61 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	int prevOp, prevCertOp, prevEscrowOp, prevAliasOp;
 	prevOp = prevCertOp = prevEscrowOp = prevAliasOp = 0;
 	vector<vector<unsigned char> > vvchPrevArgs, vvchPrevCertArgs, vvchPrevEscrowArgs, vvchPrevAliasArgs;
+	// unserialize msg from txn, check for valid
+	COffer theOffer;
+	vector<unsigned char> vchData;
+	if(!GetSyscoinData(tx, vchData))
+	{
+		return true;
+	}
+	else if(!theOffer.UnserializeFromData(vchData))
+	{
+		return true;
+	}
+	// Make sure offer outputs are not spent by a regular transaction, or the offer would be lost
+	if (tx.nVersion != SYSCOIN_TX_VERSION) {
+		if(fDebug)
+			LogPrintf("CheckOfferInputs() : non-syscoin transaction\n");		
+		return true;
+	}
 	if(fJustCheck)
 	{
+		if(IsSys21Fork(nHeight))
+		{
+			if(op != OP_OFFER_ACCCEPT && vvch.size() != 2)
+				return error("sys 2.1 offer arguments wrong size");
+			else if(op == OP_OFFER_ACCCEPT && vvch.size() != 6)
+				return error("sys 2.1 offer accept arguments wrong size");
+			if(!theOffer.IsNull())
+			{
+				uint256 calculatedHash = Hash(vchData.begin(), vchData.end());
+ 				vector<unsigned char> vchRand = CScriptNum(calculatedHash.GetCheapHash()).getvch();
+				vector<unsigned char> vchRandOffer = vchFromValue(HexStr(vchRand));
+				if(op == OP_OFFER_ACCEPT)
+				{
+					if(vchRandOffer != vvchArgs[5])
+					{
+						return error("Hash provided doesn't match the calculated hash the data");
+					}
+				}
+				else
+				{
+					if(vchRandOffer != vvchArgs[1])
+					{
+						return error("Hash provided doesn't match the calculated hash the data");
+					}
+				}
+			}
+		}
+		else {
+			if(op != OP_OFFER_ACCCEPT && vvch.size() != 1)
+				return error("sys 2.0 offer arguments wrong size");
+			else if(op == OP_OFFER_ACCCEPT && vvch.size() != 6)
+				return error("sys 2.0 offer accept arguments wrong size");
+		}
+
+			
+
 		// Strict check - bug disallowed
 		for (unsigned int i = 0; i < tx.vin.size(); i++) {
 			vector<vector<unsigned char> > vvch;
@@ -603,74 +653,9 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	
 	}
 
-	// Make sure offer outputs are not spent by a regular transaction, or the offer would be lost
-	if (tx.nVersion != SYSCOIN_TX_VERSION) {
-		if (foundOffer)
-			return error(
-					"CheckOfferInputs() : a non-syscoin transaction with a syscoin input");
-		return true;
-	}
 
 	// unserialize offer from txn, check for valid
-	COffer theOffer(tx);
 	COfferAccept theOfferAccept;
-	if (theOffer.IsNull())
-	{
-		if(fDebug)
-			LogPrintf("CheckOfferInputs() : Null offer, skipping...\n");	
-		return true;
-	}
-	if(theOffer.sDescription.size() > MAX_VALUE_LENGTH)
-	{
-		return error("offer description too big");
-	}
-	if(theOffer.sTitle.size() > MAX_NAME_LENGTH)
-	{
-		return error("offer title too big");
-	}
-	if(theOffer.sCategory.size() > MAX_NAME_LENGTH)
-	{
-		return error("offer category too big");
-	}
-	if(theOffer.vchLinkOffer.size() > MAX_NAME_LENGTH)
-	{
-		return error("offer link guid too big");
-	}
-	if(!IsSysCompressedOrUncompressedPubKey(theOffer.vchPubKey))
-	{
-		return error("offer pub key too invalid length");
-	}
-	if(theOffer.sCurrencyCode.size() > MAX_NAME_LENGTH)
-	{
-		return error("offer currency code too big");
-	}
-	if(theOffer.vchAliasPeg.size() > MAX_NAME_LENGTH)
-	{
-		return error("offer alias peg too big");
-	}
-	if(theOffer.vchGeoLocation.size() > MAX_NAME_LENGTH)
-	{
-		return error("offer geolocation too big");
-	}
-	if(theOffer.offerLinks.size() > 0)
-	{
-		return error("offer links are not allowed in tx data");
-	}
-	if(theOffer.linkWhitelist.entries.size() > 1)
-	{
-		return error("offer has too many affiliate entries, only one allowed per tx");
-	}
-	if(!theOffer.vchOffer.empty() && theOffer.vchOffer != vvchArgs[0])
-	{
-		return error("guid in data output doesn't match guid in tx");
-	}
-	if (vvchArgs[0].size() > MAX_NAME_LENGTH)
-		return error("offer hex guid too long");
-
-	if(stringFromVch(theOffer.sCurrencyCode) != "BTC" && theOffer.bOnlyAcceptBTC)
-	{
-		return error("An offer that only accepts BTC must have BTC specified as its currency");
-	}
 	vector<CAliasIndex> vtxAliasPos;
 	COffer linkOffer;
 	COffer myPriceOffer;
@@ -692,6 +677,57 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	// just check is for the memory pool inclusion, here we can stop bad transactions from entering before we get to include them in a block	
 	if(fJustCheck)
 	{
+		if(theOffer.sDescription.size() > MAX_VALUE_LENGTH)
+		{
+			return error("offer description too big");
+		}
+		if(theOffer.sTitle.size() > MAX_NAME_LENGTH)
+		{
+			return error("offer title too big");
+		}
+		if(theOffer.sCategory.size() > MAX_NAME_LENGTH)
+		{
+			return error("offer category too big");
+		}
+		if(theOffer.vchLinkOffer.size() > MAX_NAME_LENGTH)
+		{
+			return error("offer link guid too big");
+		}
+		if(!IsSysCompressedOrUncompressedPubKey(theOffer.vchPubKey))
+		{
+			return error("offer pub key too invalid length");
+		}
+		if(theOffer.sCurrencyCode.size() > MAX_NAME_LENGTH)
+		{
+			return error("offer currency code too big");
+		}
+		if(theOffer.vchAliasPeg.size() > MAX_NAME_LENGTH)
+		{
+			return error("offer alias peg too big");
+		}
+		if(theOffer.vchGeoLocation.size() > MAX_NAME_LENGTH)
+		{
+			return error("offer geolocation too big");
+		}
+		if(theOffer.offerLinks.size() > 0)
+		{
+			return error("offer links are not allowed in tx data");
+		}
+		if(theOffer.linkWhitelist.entries.size() > 1)
+		{
+			return error("offer has too many affiliate entries, only one allowed per tx");
+		}
+		if(!theOffer.vchOffer.empty() && theOffer.vchOffer != vvchArgs[0])
+		{
+			return error("guid in data output doesn't match guid in tx");
+		}
+		if (vvchArgs[0].size() > MAX_NAME_LENGTH)
+			return error("offer hex guid too long");
+
+		if(stringFromVch(theOffer.sCurrencyCode) != "BTC" && theOffer.bOnlyAcceptBTC)
+		{
+			return error("An offer that only accepts BTC must have BTC specified as its currency");
+		}
 		switch (op) {
 		case OP_OFFER_ACTIVATE:
 			if (!theOffer.vchCert.empty() && !IsCertOp(prevCertOp))
@@ -1024,7 +1060,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					theOffer.vchCert.clear();	
 				}
 			}			
-			if(vvchArgs.size() >= 6)
+			if(vvchArgs[5] == vchFromString("1"))
 			{
 				if(fDebug)
 					LogPrintf( "CheckOfferInputs() : Buyer special accept output... skipping\n");
@@ -1554,9 +1590,13 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 	newOffer.safeSearch = strSafeSearch == "Yes"? true: false;
 	newOffer.vchGeoLocation = vchFromString(strGeoLocation);
 
+	const vector<unsigned char> &data = newOffer.Serialize();
+    uint256 hash = Hash(data.begin(), data.end());
+ 	vector<unsigned char> vchHash = CScriptNum(hash.GetCheapHash()).getvch();
+    vector<unsigned char> vchHashOffer = vchFromValue(HexStr(vchHash));
 	CPubKey currentOfferKey(newOffer.vchPubKey);
 	scriptPubKeyOrig= GetScriptForDestination(currentOfferKey.GetID());
-	scriptPubKey << CScript::EncodeOP_N(OP_OFFER_ACTIVATE) << vchOffer << OP_2DROP;
+	scriptPubKey << CScript::EncodeOP_N(OP_OFFER_ACTIVATE) << vchOffer << vchHashOffer << OP_2DROP << OP_DROP;
 	scriptPubKey += scriptPubKeyOrig;
 
 	vector<CRecipient> vecSend;
@@ -1742,9 +1782,13 @@ UniValue offernew_nocheck(const UniValue& params, bool fHelp) {
 	newOffer.safeSearch = strSafeSearch == "Yes"? true: false;
 	newOffer.vchGeoLocation = vchFromString(strGeoLocation);
 
+	const vector<unsigned char> &data = newOffer.Serialize();
+    uint256 hash = Hash(data.begin(), data.end());
+ 	vector<unsigned char> vchHash = CScriptNum(hash.GetCheapHash()).getvch();
+    vector<unsigned char> vchHashOffer = vchFromValue(HexStr(vchHash));
 	CPubKey currentOfferKey(newOffer.vchPubKey);
 	scriptPubKeyOrig= GetScriptForDestination(currentOfferKey.GetID());
-	scriptPubKey << CScript::EncodeOP_N(OP_OFFER_ACTIVATE) << vchOffer << OP_2DROP;
+	scriptPubKey << CScript::EncodeOP_N(OP_OFFER_ACTIVATE) << vchOffer << vchHashOffer << OP_2DROP << OP_DROP;
 	scriptPubKey += scriptPubKeyOrig;
 
 	vector<CRecipient> vecSend;
@@ -1759,7 +1803,6 @@ UniValue offernew_nocheck(const UniValue& params, bool fHelp) {
 		vecSend.push_back(certRecipient);
 
 
-	const vector<unsigned char> &data = newOffer.Serialize();
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
 	CRecipient fee;
@@ -1914,9 +1957,14 @@ UniValue offerlink(const UniValue& params, bool fHelp) {
 	newOffer.vchLinkAlias = vchAlias;
 	newOffer.nHeight = chainActive.Tip()->nHeight;
 	//create offeractivate txn keys
+
+	const vector<unsigned char> &data = newOffer.Serialize();
+    uint256 hash = Hash(data.begin(), data.end());
+ 	vector<unsigned char> vchHash = CScriptNum(hash.GetCheapHash()).getvch();
+    vector<unsigned char> vchHashOffer = vchFromValue(HexStr(vchHash));
 	CPubKey aliasKey(alias.vchPubKey);
 	scriptPubKeyOrig = GetScriptForDestination(aliasKey.GetID());
-	scriptPubKey << CScript::EncodeOP_N(OP_OFFER_ACTIVATE) << vchOffer << OP_2DROP;
+	scriptPubKey << CScript::EncodeOP_N(OP_OFFER_ACTIVATE) << vchOffer << vchHashOffer << OP_2DROP << OP_DROP;
 	scriptPubKey += scriptPubKeyOrig;
 
 
@@ -1933,7 +1981,6 @@ UniValue offerlink(const UniValue& params, bool fHelp) {
 		vecSend.push_back(aliasRecipient);
 
 
-	const vector<unsigned char> &data = newOffer.Serialize();
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
 	CRecipient fee;
@@ -2058,9 +2105,14 @@ UniValue offerlink_nocheck(const UniValue& params, bool fHelp) {
 	newOffer.vchLinkAlias = vchAlias;
 	newOffer.nHeight = chainActive.Tip()->nHeight;
 	//create offeractivate txn keys
+
+	const vector<unsigned char> &data = newOffer.Serialize();
+    uint256 hash = Hash(data.begin(), data.end());
+ 	vector<unsigned char> vchHash = CScriptNum(hash.GetCheapHash()).getvch();
+    vector<unsigned char> vchHashOffer = vchFromValue(HexStr(vchHash));
 	CPubKey aliasKey(alias.vchPubKey);
 	scriptPubKeyOrig = GetScriptForDestination(aliasKey.GetID());
-	scriptPubKey << CScript::EncodeOP_N(OP_OFFER_ACTIVATE) << vchOffer << OP_2DROP;
+	scriptPubKey << CScript::EncodeOP_N(OP_OFFER_ACTIVATE) << vchOffer << vchHashOffer << OP_2DROP << OP_DROP;
 	scriptPubKey += scriptPubKeyOrig;
 
 
@@ -2077,7 +2129,6 @@ UniValue offerlink_nocheck(const UniValue& params, bool fHelp) {
 		vecSend.push_back(aliasRecipient);
 
 
-	const vector<unsigned char> &data = newOffer.Serialize();
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
 	CRecipient fee;
@@ -2156,8 +2207,6 @@ UniValue offeraddwhitelist(const UniValue& params, bool fHelp) {
 		}
 
 	}
-	scriptPubKey << CScript::EncodeOP_N(OP_OFFER_UPDATE) << vchOffer << OP_2DROP;
-	scriptPubKey += scriptPubKeyOrig;
 
 	COfferLinkWhitelistEntry entry;
 	entry.aliasLinkVchRand = vchAlias;
@@ -2165,13 +2214,20 @@ UniValue offeraddwhitelist(const UniValue& params, bool fHelp) {
 	theOffer.ClearOffer();
 	theOffer.linkWhitelist.PutWhitelistEntry(entry);
 	theOffer.nHeight = chainActive.Tip()->nHeight;
+
+	
+	const vector<unsigned char> &data = theOffer.Serialize();
+    uint256 hash = Hash(data.begin(), data.end());
+ 	vector<unsigned char> vchHash = CScriptNum(hash.GetCheapHash()).getvch();
+    vector<unsigned char> vchHashOffer = vchFromValue(HexStr(vchHash));
+	scriptPubKey << CScript::EncodeOP_N(OP_OFFER_UPDATE) << vchOffer << vchHashOffer << OP_2DROP << OP_DROP;
+	scriptPubKey += scriptPubKeyOrig;
+
 	vector<CRecipient> vecSend;
 	CRecipient recipient;
 	CreateRecipient(scriptPubKey, recipient);
 	vecSend.push_back(recipient);
 
-	
-	const vector<unsigned char> &data = theOffer.Serialize();
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
 	CRecipient fee;
@@ -2239,19 +2295,22 @@ UniValue offerremovewhitelist(const UniValue& params, bool fHelp) {
 		throw runtime_error("this alias entry was not found on affiliate list");
 	theOffer.ClearOffer();
 	theOffer.nHeight = chainActive.Tip()->nHeight;
-	scriptPubKey << CScript::EncodeOP_N(OP_OFFER_UPDATE) << vchOffer << OP_2DROP;
-	scriptPubKey += scriptPubKeyOrig;
-
 	COfferLinkWhitelistEntry entry;
 	entry.aliasLinkVchRand = vchAlias;
 	theOffer.linkWhitelist.PutWhitelistEntry(entry);
+
+	const vector<unsigned char> &data = theOffer.Serialize();
+    uint256 hash = Hash(data.begin(), data.end());
+ 	vector<unsigned char> vchHash = CScriptNum(hash.GetCheapHash()).getvch();
+    vector<unsigned char> vchHashOffer = vchFromValue(HexStr(vchHash));
+	scriptPubKey << CScript::EncodeOP_N(OP_OFFER_UPDATE) << vchOffer << vchHashOffer << OP_2DROP << OP_DROP;
+	scriptPubKey += scriptPubKeyOrig;
 
 	vector<CRecipient> vecSend;
 	CRecipient recipient;
 	CreateRecipient(scriptPubKey, recipient);
 	vecSend.push_back(recipient);
 
-	const vector<unsigned char> &data = theOffer.Serialize();
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
 	CRecipient fee;
@@ -2305,19 +2364,23 @@ UniValue offerclearwhitelist(const UniValue& params, bool fHelp) {
 	theOffer.nHeight = chainActive.Tip()->nHeight;
 	// create OFFERUPDATE txn keys
 	CScript scriptPubKey;
-	scriptPubKey << CScript::EncodeOP_N(OP_OFFER_UPDATE) << vchOffer << OP_2DROP;
-	scriptPubKey += scriptPubKeyOrig;
 
 	COfferLinkWhitelistEntry entry;
 	// special case to clear all entries for this offer
 	entry.nDiscountPct = 127;
 	theOffer.linkWhitelist.PutWhitelistEntry(entry);
 
+	const vector<unsigned char> &data = theOffer.Serialize();
+    uint256 hash = Hash(data.begin(), data.end());
+ 	vector<unsigned char> vchHash = CScriptNum(hash.GetCheapHash()).getvch();
+    vector<unsigned char> vchHashOffer = vchFromValue(HexStr(vchHash));
+	scriptPubKey << CScript::EncodeOP_N(OP_OFFER_UPDATE) << vchOffer << vchHashOffer << OP_2DROP << OP_DROP;
+	scriptPubKey += scriptPubKeyOrig;
+
 	vector<CRecipient> vecSend;
 	CRecipient recipient;
 	CreateRecipient(scriptPubKey, recipient);
 	vecSend.push_back(recipient);
-	const vector<unsigned char> &data = theOffer.Serialize();
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
 	CRecipient fee;
@@ -2469,8 +2532,6 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 
 	// create OFFERUPDATE, CERTUPDATE, ALIASUPDATE txn keys
 	CScript scriptPubKey, scriptPubKeyCert;
-	scriptPubKey << CScript::EncodeOP_N(OP_OFFER_UPDATE) << vchOffer << OP_2DROP;
-	scriptPubKey += scriptPubKeyOrig;
 
 	wtxIn = pwalletMain->GetWalletTx(tx.GetHash());
 	if (wtxIn == NULL)
@@ -2581,6 +2642,14 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 		theOffer.linkWhitelist.bExclusiveResell = bExclusiveResell;
 
 
+
+	const vector<unsigned char> &data = theOffer.Serialize();
+    uint256 hash = Hash(data.begin(), data.end());
+ 	vector<unsigned char> vchHash = CScriptNum(hash.GetCheapHash()).getvch();
+    vector<unsigned char> vchHashOffer = vchFromValue(HexStr(vchHash));
+	scriptPubKey << CScript::EncodeOP_N(OP_OFFER_UPDATE) << vchOffer << vchHashOffer << OP_2DROP << OP_DROP;
+	scriptPubKey += scriptPubKeyOrig;
+
 	vector<CRecipient> vecSend;
 	CRecipient recipient;
 	CreateRecipient(scriptPubKey, recipient);
@@ -2592,7 +2661,6 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	if(wtxCertIn != NULL)
 		vecSend.push_back(certRecipient);
 
-	const vector<unsigned char> &data = theOffer.Serialize();
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
 	CRecipient fee;
@@ -2685,8 +2753,6 @@ UniValue offerupdate_nocheck(const UniValue& params, bool fHelp) {
 
 	// create OFFERUPDATE, CERTUPDATE, ALIASUPDATE txn keys
 	CScript scriptPubKey, scriptPubKeyCert;
-	scriptPubKey << CScript::EncodeOP_N(OP_OFFER_UPDATE) << vchOffer << OP_2DROP;
-	scriptPubKey += scriptPubKeyOrig;
 
 	wtxIn = pwalletMain->GetWalletTx(tx.GetHash());
 
@@ -2776,6 +2842,13 @@ UniValue offerupdate_nocheck(const UniValue& params, bool fHelp) {
 		theOffer.linkWhitelist.bExclusiveResell = bExclusiveResell;
 
 
+	const vector<unsigned char> &data = theOffer.Serialize();
+    uint256 hash = Hash(data.begin(), data.end());
+ 	vector<unsigned char> vchHash = CScriptNum(hash.GetCheapHash()).getvch();
+    vector<unsigned char> vchHashOffer = vchFromValue(HexStr(vchHash));
+	scriptPubKey << CScript::EncodeOP_N(OP_OFFER_UPDATE) << vchOffer << vchHashOffer << OP_2DROP << OP_DROP;
+	scriptPubKey += scriptPubKeyOrig;
+
 	vector<CRecipient> vecSend;
 	CRecipient recipient;
 	CreateRecipient(scriptPubKey, recipient);
@@ -2802,7 +2875,7 @@ UniValue offerupdate_nocheck(const UniValue& params, bool fHelp) {
 	return res;
 }
 
-bool CreateLinkedOfferAcceptRecipients(vector<CRecipient> &vecSend, const CAmount &nPrice, const CWalletTx* acceptTx, const vector<unsigned char>& linkedOfferGUID, const CScript& scriptPubKeyDestination)
+bool CreateLinkedOfferAcceptRecipients(vector<CRecipient> &vecSend, const CAmount &nPrice, const CWalletTx* acceptTx, const vector<unsigned char>& linkedOfferGUID, const CScript& scriptPubKeyDestination, const vector<unsigned char>& vchHashOffer)
 {
 	unsigned int size = vecSend.size();
 	vector<unsigned char> offerGUID;
@@ -2834,7 +2907,7 @@ bool CreateLinkedOfferAcceptRecipients(vector<CRecipient> &vecSend, const CAmoun
 			continue;
 		unsigned int nQty = boost::lexical_cast<unsigned int>(stringFromVch(vvchOffer[3]));
 		CAmount nTotalValue = ( nPrice * nQty );
-		scriptPubKeyAccept << CScript::EncodeOP_N(OP_OFFER_ACCEPT) << linkedOfferGUID << vvchOffer[1] << vvchOffer[2] << vvchOffer[3] << OP_2DROP << OP_2DROP << OP_DROP; 
+		scriptPubKeyAccept << CScript::EncodeOP_N(OP_OFFER_ACCEPT) << linkedOfferGUID << vvchOffer[1] << vvchOffer[2] << vvchOffer[3] << vvchOffer[4] << vchHashOffer << OP_2DROP << OP_2DROP << OP_2DROP << OP_DROP; 
 		scriptPubKeyAccept += scriptPubKeyDestination;
 		scriptPubKeyPayment += scriptPubKeyDestination;
 		CRecipient acceptRecipient;
@@ -2988,11 +3061,11 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 			scriptPubKeyEscrowBuyerDestination = GetScriptForDestination(buyerEscrowKey.GetID());
 			CPubKey arbiterEscrowKey(fundingEscrow.vchArbiterKey);
 			scriptPubKeyEscrowArbiterDestination = GetScriptForDestination(arbiterEscrowKey.GetID());
-			scriptPubKeyEscrowBuyer << CScript::EncodeOP_N(OP_ESCROW_COMPLETE) << escrowVvch[0] << OP_2DROP;
+			scriptPubKeyEscrowBuyer << CScript::EncodeOP_N(OP_ESCROW_COMPLETE) << escrowVvch[0] << vchFromString("0") << OP_2DROP << OP_DROP;
 			scriptPubKeyEscrowBuyer += scriptPubKeyEscrowBuyerDestination;
-			scriptPubKeyEscrowSeller << CScript::EncodeOP_N(OP_ESCROW_COMPLETE) << escrowVvch[0] << OP_2DROP;
+			scriptPubKeyEscrowSeller << CScript::EncodeOP_N(OP_ESCROW_COMPLETE) << escrowVvch[0] << vchFromString("0") << OP_2DROP << OP_DROP;
 			scriptPubKeyEscrowSeller += scriptPubKeyEscrowSellerDestination;
-			scriptPubKeyEscrowArbiter << CScript::EncodeOP_N(OP_ESCROW_COMPLETE) << escrowVvch[0] << OP_2DROP;
+			scriptPubKeyEscrowArbiter << CScript::EncodeOP_N(OP_ESCROW_COMPLETE) << escrowVvch[0] << vchFromString("0") << OP_2DROP << OP_DROP;
 			scriptPubKeyEscrowArbiter += scriptPubKeyEscrowArbiterDestination;
 			txAccept.vchEscrow = escrowVvch[0]; 		
 		}	
@@ -3134,7 +3207,6 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 		vchPaymentMessage = vchFromString(strCipherText);
 	else
 		vchPaymentMessage = vchMessage;
-	scriptPubKeyAccept << CScript::EncodeOP_N(OP_OFFER_ACCEPT) << vchOffer << vchAccept << vchPaymentMessage << vchFromString(boost::lexical_cast<std::string>(nQty)) << OP_2DROP << OP_2DROP << OP_DROP;
 	if(wtxOfferIn != NULL && !vchBTCTxId.empty())
 		throw runtime_error("Cannot accept a linked offer by paying in Bitcoins");
 
@@ -3191,8 +3263,22 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 		throw runtime_error("Buyer address is invalid!");
 	scriptPubKeyBuyerDestination= GetScriptForDestination(buyerKey.GetID());
 	CRecipient recipientBuyer;
+
+	theOffer.ClearOffer();
+	theOffer.accept = txAccept;
+	// use the linkalias in offer for our whitelist alias inputs check
+	if(!vchWhitelistAlias.empty())
+		theOffer.vchLinkAlias = vchWhitelistAlias;
+	theOffer.nHeight = chainActive.Tip()->nHeight;
+
+	const vector<unsigned char> &data = theOffer.Serialize();
+    uint256 hash = Hash(data.begin(), data.end());
+ 	vector<unsigned char> vchHash = CScriptNum(hash.GetCheapHash()).getvch();
+    vector<unsigned char> vchHashOffer = vchFromValue(HexStr(vchHash));
 	// if this is a linked accept then we create output for feedback for the reseller since the normal accept from buyer is used here by the linked accept
-	scriptPubKeyBuyer << CScript::EncodeOP_N(OP_OFFER_ACCEPT) << vchOffer << vchAccept << vchFromString("NA") << vchFromString(boost::lexical_cast<std::string>(nQty)) << vchFromString("1") << OP_2DROP << OP_2DROP << OP_2DROP;
+	scriptPubKeyBuyer  << CScript::EncodeOP_N(OP_OFFER_ACCEPT) << vchOffer << vchAccept << vchFromString("NA") << vchFromString(boost::lexical_cast<std::string>(nQty)) << vchFromString("1") << vchHashOffer << OP_2DROP << OP_2DROP << OP_2DROP << OP_DROP;
+	// normal accept sig
+	scriptPubKeyAccept << CScript::EncodeOP_N(OP_OFFER_ACCEPT) << vchOffer << vchAccept << vchPaymentMessage   << vchFromString(boost::lexical_cast<std::string>(nQty)) << vchFromString("0") << vchHashOffer << OP_2DROP << OP_2DROP << OP_2DROP << OP_DROP;
 	
 
 	scriptPubKeyBuyer += scriptPubKeyBuyerDestination;
@@ -3221,6 +3307,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	CreateRecipient(scriptPubKeyEscrowSeller, escrowSellerRecipient);
 	CRecipient escrowArbiterRecipient;
 	CreateRecipient(scriptPubKeyEscrowArbiter, escrowArbiterRecipient);
+
 	// send back to yourself always for feedback unless its escrow or its a non linked offer (you get the feedback output when the linked accept occurs)
 	if(vchEscrowTxHash.empty() && theOffer.vchLinkOffer.empty())
 		vecSend.push_back(recipientBuyer);
@@ -3247,7 +3334,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	else if(!theOffer.bOnlyAcceptBTC)
 	{
 		// linked accept will go through the linkedAcceptBlock and find all linked accepts to same offer and group them together into vecSend so it can go into one tx (inputs can be shared, mainly the whitelist alias inputs)
-		if(!CreateLinkedOfferAcceptRecipients(vecSend, nPrice, wtxOfferIn, vchOffer, scriptPayment))
+		if(!CreateLinkedOfferAcceptRecipients(vecSend, nPrice, wtxOfferIn, vchOffer, scriptPayment, vchHashOffer))
 		{
 			vecSend.push_back(paymentRecipient);
 			vecSend.push_back(acceptRecipient);
@@ -3257,13 +3344,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	{
 		throw runtime_error("This offer must be paid with Bitcoins as per requirements of the seller");
 	}
-	theOffer.ClearOffer();
-	theOffer.accept = txAccept;
-	// use the linkalias in offer for our whitelist alias inputs check
-	if(!vchWhitelistAlias.empty())
-		theOffer.vchLinkAlias = vchWhitelistAlias;
-	theOffer.nHeight = chainActive.Tip()->nHeight;
-	const vector<unsigned char> &data = theOffer.Serialize();
+
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
 	CRecipient fee;
@@ -3303,6 +3384,7 @@ UniValue offeraccept_nocheck(const UniValue& params, bool fHelp) {
 	vector<unsigned char> vchLinkOfferAcceptTxHash = vchFromValue(params.size()>= 6? params[5]:"");
 	vector<unsigned char> vchMessage = vchFromValue(params.size()>=4?params[3]:"");
 	vector<unsigned char> vchEscrowTxHash = vchFromValue(params.size()>=7?params[6]:"");
+	string justCheck = params.size()>=8?params[7].get_str():"0";
 	int64_t nHeight = chainActive.Tip()->nHeight;
 	unsigned int nQty = 1;
 	if (params.size() >= 3) {
@@ -3321,6 +3403,7 @@ UniValue offeraccept_nocheck(const UniValue& params, bool fHelp) {
 	CAliasIndex alias;
 	CTransaction aliastx;
 	GetTxOfAlias(vchAlias, alias, aliastx);
+		
 	vchPubKey = alias.vchPubKey;
 	// this is a syscoin txn
 	CWalletTx wtx;
@@ -3339,9 +3422,11 @@ UniValue offeraccept_nocheck(const UniValue& params, bool fHelp) {
 	const CWalletTx *wtxOfferIn = NULL;
 	// if this is a linked offer accept, set the height to the first height so sys_rates price will match what it was at the time of the original accept
 	CTransaction tx;
+	vector<COffer> vtxPos;
+	GetTxAndVtxOfOffer( vchOffer, theOffer, tx, vtxPos, true);
+	
 	// create accept
 	COfferAccept txAccept;
-	GetTxOfOffer( vchOffer, theOffer, tx, true);
 	if (!vchLinkOfferAcceptTxHash.empty())
 	{
 		uint256 linkTxHash(uint256S(stringFromVch(vchLinkOfferAcceptTxHash)));
@@ -3351,7 +3436,7 @@ UniValue offeraccept_nocheck(const UniValue& params, bool fHelp) {
 		COffer linkOffer(*wtxOfferIn);
 		int op, nOut;
 		vector<vector<unsigned char> > vvch;
-		DecodeOfferTx(*wtxOfferIn, op, nOut, vvch);
+		DecodeOfferTx(*wtxOfferIn, op, nOut, vvch) ;
     		
 		// ensure both accepts have the escrow information
 		txAccept.vchEscrow = linkOffer.accept.vchEscrow;
@@ -3368,26 +3453,29 @@ UniValue offeraccept_nocheck(const UniValue& params, bool fHelp) {
 	vector<unsigned char> vchEscrowWhitelistAlias;
 	if(!vchEscrowTxHash.empty())
 	{
-
 		uint256 escrowTxHash(uint256S(stringFromVch(vchEscrowTxHash)));
 		// make sure escrow is in wallet
 		wtxEscrowIn = pwalletMain->GetWalletTx(escrowTxHash);
 		if (wtxEscrowIn == NULL) 
 			throw runtime_error("release escrow transaction is not in your wallet");;
 		escrow.UnserializeFromTx(*wtxEscrowIn);
+			
+		
 		int op, nOut;
 		DecodeEscrowTx(*wtxEscrowIn, op, nOut, escrowVvch);
+			
+		
 		// if we want to accept an escrow release or we are accepting a linked offer from an escrow release. Override heightToCheckAgainst if using escrow since escrow can take a long time.
 		// get escrow activation
 		vector<CEscrow> escrowVtxPos;
 		CTransaction escrowTx;
 		if (GetTxAndVtxOfEscrow( escrowVvch[0], escrow, escrowTx, escrowVtxPos))
-		{	
+		{
 			CScript scriptPubKeyEscrowBuyerDestination, scriptPubKeyEscrowSellerDestination, scriptPubKeyEscrowArbiterDestination;
 			// we want the initial funding escrow transaction height as when to calculate this offer accept price from convertCurrencyCodeToSyscoin()
 			CEscrow fundingEscrow = escrowVtxPos.front();
 			vchEscrowWhitelistAlias = fundingEscrow.vchWhitelistAlias;
-			// update height if it is bigger than escrow creation height, we want earlier of two, linked heifht or escrow creation to index into sysrates check
+			// update height if it is bigger than escrow creation height, we want earlier of two, linked height or escrow creation to index into sysrates check
 			if(nHeight > fundingEscrow.nHeight)
 				nHeight = fundingEscrow.nHeight;
 			CPubKey sellerEscrowKey(fundingEscrow.vchSellerKey);
@@ -3396,21 +3484,16 @@ UniValue offeraccept_nocheck(const UniValue& params, bool fHelp) {
 			scriptPubKeyEscrowBuyerDestination = GetScriptForDestination(buyerEscrowKey.GetID());
 			CPubKey arbiterEscrowKey(fundingEscrow.vchArbiterKey);
 			scriptPubKeyEscrowArbiterDestination = GetScriptForDestination(arbiterEscrowKey.GetID());
-			scriptPubKeyEscrowBuyer << CScript::EncodeOP_N(OP_ESCROW_COMPLETE) << escrowVvch[0] << OP_2DROP;
+			scriptPubKeyEscrowBuyer << CScript::EncodeOP_N(OP_ESCROW_COMPLETE) << escrowVvch[0] << vchFromString("0") << OP_2DROP << OP_DROP;
 			scriptPubKeyEscrowBuyer += scriptPubKeyEscrowBuyerDestination;
-			scriptPubKeyEscrowSeller << CScript::EncodeOP_N(OP_ESCROW_COMPLETE) << escrowVvch[0] << OP_2DROP;
+			scriptPubKeyEscrowSeller << CScript::EncodeOP_N(OP_ESCROW_COMPLETE) << escrowVvch[0] << vchFromString("0") << OP_2DROP << OP_DROP;
 			scriptPubKeyEscrowSeller += scriptPubKeyEscrowSellerDestination;
-			scriptPubKeyEscrowArbiter << CScript::EncodeOP_N(OP_ESCROW_COMPLETE) << escrowVvch[0] << OP_2DROP;
-			scriptPubKeyEscrowArbiter += scriptPubKeyEscrowArbiterDestination;	
-			txAccept.vchEscrow = escrowVvch[0]; 
+			scriptPubKeyEscrowArbiter << CScript::EncodeOP_N(OP_ESCROW_COMPLETE) << escrowVvch[0] << vchFromString("0") << OP_2DROP << OP_DROP;
+			scriptPubKeyEscrowArbiter += scriptPubKeyEscrowArbiterDestination;
+			txAccept.vchEscrow = escrowVvch[0]; 		
 		}	
 	}
 
-	// load the offer data from the DB
-	vector<COffer> vtxPos;
-	if (pofferdb->ExistsOffer(vchOffer)) {
-		pofferdb->ReadOffer(vchOffer, vtxPos);
-	}
 	// get offer price at the time of accept from buyer
 	theOffer.nHeight = nHeight;
 	theOffer.GetOfferFromList(vtxPos);
@@ -3420,14 +3503,42 @@ UniValue offeraccept_nocheck(const UniValue& params, bool fHelp) {
 	// check if parent to linked offer is still valid
 	if (!theOffer.vchLinkOffer.empty())
 	{
-		if(pofferdb->ExistsOffer(theOffer.vchLinkOffer))
+		GetTxOfOffer( theOffer.vchLinkOffer, linkedOffer, tmpTx, true);
+
+
+		if(linkedOffer.linkWhitelist.bExclusiveResell)
 		{
-			GetTxOfOffer( theOffer.vchLinkOffer, linkedOffer, tmpTx, true);
+			bool foundLinkedAffiliate = false;
+			CAliasIndex linkedAlias;
+			// if offer is a linked offer get the root offer and ensure that the linked offer can accept the root offer (is still an affiliate of the root offer, remember affiliates can be removed by the root offer owner)
+			// go through the whitelist of root offer 
+			for(unsigned int i=0;i<linkedOffer.linkWhitelist.entries.size();i++) {
+				CTransaction txAlias;
+				
+				
+				vector<vector<unsigned char> > vvch;
+				COfferLinkWhitelistEntry& entry = linkedOffer.linkWhitelist.entries[i];
+				// make sure this alias is still valid
+				if (GetTxOfAlias(entry.aliasLinkVchRand, linkedAlias, txAlias, true))
+				{
+					// the alias used by the linked offer should be the same one on the root offer affiliate list
+					if (linkedAlias.vchPubKey == theOffer.vchPubKey) 
+					{
+						
+						foundLinkedAffiliate = true;
+						break;
+										
+					}		
+				}
+			}
+			
+			
 		}
 	}
+
 	COfferLinkWhitelistEntry foundAlias;
-	const CWalletTx *wtxAliasIn = NULL;
 	CAliasIndex theAlias;
+	const CWalletTx *wtxAliasIn = NULL;
 	vector<unsigned char> vchWhitelistAlias;
 	// go through the whitelist and see if you own any of the aliases to apply to this offer for a discount
 	for(unsigned int i=0;i<theOffer.linkWhitelist.entries.size();i++) {
@@ -3440,18 +3551,16 @@ UniValue offeraccept_nocheck(const UniValue& params, bool fHelp) {
 		if (GetTxOfAlias(entry.aliasLinkVchRand, theAlias, txAlias, true))
 		{
 			// make sure its in your wallet (you control this alias)
-			// if escrow has a whitelist alias attached, use that to get the offerlinkwhitelist entry, else check the seller's whitelist to see if we own any aliases from his whitelist
+			// if escrow has a whitelist alias attached (the alias used to buy with escrow), use that to get the offerlinkwhitelist entry, else check the seller's whitelist to see if we own any aliases from his whitelist
+			// if not escrow then ensure the discount applies to the alias thats passed in
 			if (IsSyscoinTxMine(txAlias, "alias") && ((theAlias.vchPubKey == alias.vchPubKey && vchEscrowWhitelistAlias.empty()) || vchEscrowWhitelistAlias == entry.aliasLinkVchRand)) 
-			{
-				// find the entry with the biggest discount, for buyers convenience
-				if(entry.nDiscountPct >= foundAlias.nDiscountPct || foundAlias.nDiscountPct == 0)
-				{
-					wtxAliasIn = pwalletMain->GetWalletTx(txAlias.GetHash());		
-					foundAlias = entry;		
-					vchWhitelistAlias = entry.aliasLinkVchRand;
-					CPubKey currentKey(theAlias.vchPubKey);
-					scriptPubKeyAliasOrig = GetScriptForDestination(currentKey.GetID());
-				}				
+			{		
+				wtxAliasIn = pwalletMain->GetWalletTx(txAlias.GetHash());		
+				foundAlias = entry;		
+				vchWhitelistAlias = entry.aliasLinkVchRand;
+				CPubKey currentKey(theAlias.vchPubKey);
+				scriptPubKeyAliasOrig = GetScriptForDestination(currentKey.GetID());
+				break;
 			}		
 		}
 	}
@@ -3464,20 +3573,21 @@ UniValue offeraccept_nocheck(const UniValue& params, bool fHelp) {
 
 	int precision = 2;
 	CAmount nPrice = convertCurrencyCodeToSyscoin(theOffer.vchAliasPeg, theOffer.sCurrencyCode, theOffer.GetPrice(foundAlias), nHeight, precision);
-
 	string strCipherText = "";
 	// encryption should only happen once even when not a resell or not an escrow accept. It is already encrypted in both cases.
-	if(wtxOfferIn == NULL && vchEscrowTxHash.empty())
+	if(vchLinkOfferAcceptTxHash.empty() && vchEscrowTxHash.empty())
 	{
 		if(!theOffer.vchLinkOffer.empty())
 		{
 			// encrypt to root offer owner if this is a linked offer you are accepting
 			EncryptMessage(linkedOffer.vchPubKey, vchMessage, strCipherText);
+			
 		}
 		else
 		{
 			// encrypt to offer owner
 			EncryptMessage(theOffer.vchPubKey, vchMessage, strCipherText);
+				
 		}
 	}
 	vector<unsigned char> vchPaymentMessage;
@@ -3485,8 +3595,6 @@ UniValue offeraccept_nocheck(const UniValue& params, bool fHelp) {
 		vchPaymentMessage = vchFromString(strCipherText);
 	else
 		vchPaymentMessage = vchMessage;
-	scriptPubKeyAccept << CScript::EncodeOP_N(OP_OFFER_ACCEPT) << vchOffer << vchAccept << vchPaymentMessage << vchFromString(boost::lexical_cast<std::string>(nQty)) << OP_2DROP << OP_2DROP << OP_DROP;
-
 
 	if(!theOffer.vchCert.empty())
 	{
@@ -3494,7 +3602,9 @@ UniValue offeraccept_nocheck(const UniValue& params, bool fHelp) {
 		CCert theCert;
 		// make sure this cert is still valid
 		GetTxOfCert( theOffer.vchCert, theCert, txCert, true);
+
 	}
+
 
 	txAccept.vchAcceptRand = vchAccept;
 	txAccept.nQty = nQty;
@@ -3505,6 +3615,7 @@ UniValue offeraccept_nocheck(const UniValue& params, bool fHelp) {
 	txAccept.vchBuyerKey = vchPubKey;
     CAmount nTotalValue = ( nPrice * nQty );
     
+	// send one to ourselves to we can leave feedback (notice the last opcode is 1 to denote its a special feedback output for the buyer to be able to leave feedback first and not a normal accept output)
 	CScript scriptPubKeyBuyer, scriptPubKeyBuyerDestination;
 	CPubKey buyerKey(txAccept.vchBuyerKey);
 	CSyscoinAddress buyerAddress(buyerKey.GetID());
@@ -3512,10 +3623,27 @@ UniValue offeraccept_nocheck(const UniValue& params, bool fHelp) {
 		throw runtime_error("Buyer address is invalid!");
 	scriptPubKeyBuyerDestination= GetScriptForDestination(buyerKey.GetID());
 	CRecipient recipientBuyer;
+
+	theOffer.ClearOffer();
+	theOffer.accept = txAccept;
+	// use the linkalias in offer for our whitelist alias inputs check
+	if(!vchWhitelistAlias.empty())
+		theOffer.vchLinkAlias = vchWhitelistAlias;
+	theOffer.nHeight = chainActive.Tip()->nHeight;
+
+	const vector<unsigned char> &data = theOffer.Serialize();
+    uint256 hash = Hash(data.begin(), data.end());
+ 	vector<unsigned char> vchHash = CScriptNum(hash.GetCheapHash()).getvch();
+    vector<unsigned char> vchHashOffer = vchFromValue(HexStr(vchHash));
 	// if this is a linked accept then we create output for feedback for the reseller since the normal accept from buyer is used here by the linked accept
-	scriptPubKeyBuyer << CScript::EncodeOP_N(OP_OFFER_ACCEPT) << vchOffer << vchAccept << vchFromString("NA") << vchFromString(boost::lexical_cast<std::string>(nQty)) << vchFromString("1") << OP_2DROP << OP_2DROP << OP_2DROP;
+	scriptPubKeyBuyer  << CScript::EncodeOP_N(OP_OFFER_ACCEPT) << vchOffer << vchAccept << vchFromString("NA") << vchFromString(boost::lexical_cast<std::string>(nQty)) << vchFromString("1") << vchHashOffer << OP_2DROP << OP_2DROP << OP_2DROP << OP_DROP;
+	// normal accept sig
+	scriptPubKeyAccept << CScript::EncodeOP_N(OP_OFFER_ACCEPT) << vchOffer << vchAccept << vchPaymentMessage   << vchFromString(boost::lexical_cast<std::string>(nQty)) << vchFromString("0") << vchHashOffer << OP_2DROP << OP_2DROP << OP_2DROP << OP_DROP;
+	
+
 	scriptPubKeyBuyer += scriptPubKeyBuyerDestination;
 	CreateRecipient(scriptPubKeyBuyer, recipientBuyer);
+
 
     CScript scriptPayment;
 	CPubKey currentKey(theOffer.vchPubKey);
@@ -3523,7 +3651,11 @@ UniValue offeraccept_nocheck(const UniValue& params, bool fHelp) {
 	scriptPubKeyAccept += scriptPayment;
 	scriptPubKeyPayment += scriptPayment;
 
+
+
 	vector<CRecipient> vecSend;
+
+
 	CRecipient acceptRecipient;
 	CreateRecipient(scriptPubKeyAccept, acceptRecipient);
 	CRecipient paymentRecipient = {scriptPubKeyPayment, nTotalValue, false};
@@ -3535,6 +3667,7 @@ UniValue offeraccept_nocheck(const UniValue& params, bool fHelp) {
 	CreateRecipient(scriptPubKeyEscrowSeller, escrowSellerRecipient);
 	CRecipient escrowArbiterRecipient;
 	CreateRecipient(scriptPubKeyEscrowArbiter, escrowArbiterRecipient);
+
 	// send back to yourself always for feedback unless its escrow or its a non linked offer (you get the feedback output when the linked accept occurs)
 	if(vchEscrowTxHash.empty() && theOffer.vchLinkOffer.empty())
 		vecSend.push_back(recipientBuyer);
@@ -3551,6 +3684,7 @@ UniValue offeraccept_nocheck(const UniValue& params, bool fHelp) {
 	{
 		vecSend.push_back(aliasRecipient);
 	}
+
 	// check for Bitcoin payment on the bitcoin network, otherwise pay in syscoin
 	if(!vchBTCTxId.empty() && stringFromVch(theOffer.sCurrencyCode) == "BTC")
 	{
@@ -3560,25 +3694,21 @@ UniValue offeraccept_nocheck(const UniValue& params, bool fHelp) {
 	else if(!theOffer.bOnlyAcceptBTC)
 	{
 		// linked accept will go through the linkedAcceptBlock and find all linked accepts to same offer and group them together into vecSend so it can go into one tx (inputs can be shared, mainly the whitelist alias inputs)
-		if(!CreateLinkedOfferAcceptRecipients(vecSend, nPrice, wtxOfferIn, vchOffer, scriptPayment))
+		if(!CreateLinkedOfferAcceptRecipients(vecSend, nPrice, wtxOfferIn, vchOffer, scriptPayment, vchHashOffer))
 		{
 			vecSend.push_back(paymentRecipient);
 			vecSend.push_back(acceptRecipient);
 		}
 	}
-	theOffer.ClearOffer();
-	theOffer.accept = txAccept;
-	// use the linkalias in offer for our whitelist alias inputs check
-	if(!vchWhitelistAlias.empty())
-		theOffer.vchLinkAlias = vchWhitelistAlias;
-	theOffer.nHeight = chainActive.Tip()->nHeight;
-	const vector<unsigned char> &data = theOffer.Serialize();
+
+
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
 	CRecipient fee;
 	CreateFeeRecipient(scriptData, data, fee);
 	vecSend.push_back(fee);
 	const CWalletTx * wtxInCert=NULL;
+	
 	// if making a purchase and we are using an alias from the whitelist of the offer, we may need to prove that we own that alias so in that case we attach an input from the alias
 	// if purchasing an escrow, we adjust the height to figure out pricing of the accept so we may also attach escrow inputs to the tx
 	SendMoneySyscoin(vecSend, recipientBuyer.nAmount+acceptRecipient.nAmount+paymentRecipient.nAmount+fee.nAmount+escrowBuyerRecipient.nAmount+escrowArbiterRecipient.nAmount+escrowSellerRecipient.nAmount+aliasRecipient.nAmount, false, wtx, wtxOfferIn, wtxInCert, wtxAliasIn, wtxEscrowIn);
@@ -3753,19 +3883,7 @@ UniValue offeracceptfeedback(const UniValue& params, bool fHelp) {
 	}
 	offer.ClearOffer();
 	offer.accept = theOfferAccept;
-
-
-	CScript scriptPubKeyBuyer, scriptPubKeySeller,scriptPubKeyBuyerDestination, scriptPubKeySellerDestination;
-	scriptPubKeyBuyerDestination= GetScriptForDestination(buyerKey.GetID());
-	scriptPubKeySellerDestination= GetScriptForDestination(sellerKey.GetID());
-	vector<CRecipient> vecSend;
-	CRecipient recipientBuyer, recipientSeller;
-	scriptPubKeyBuyer << CScript::EncodeOP_N(OP_OFFER_ACCEPT) << vvch[0] << vvch[1] << vvch[2] << vvch[3] << OP_2DROP << OP_2DROP << OP_DROP;
-	scriptPubKeyBuyer += scriptPubKeyBuyerDestination;
-	CreateRecipient(scriptPubKeyBuyer, recipientBuyer);
-	scriptPubKeySeller << CScript::EncodeOP_N(OP_OFFER_ACCEPT) << vvch[0] << vvch[1] << vvch[2] << vvch[3] << OP_2DROP << OP_2DROP << OP_DROP;
-	scriptPubKeySeller += scriptPubKeySellerDestination;
-	CreateRecipient(scriptPubKeySeller, recipientSeller);
+	offer.nHeight = chainActive.Tip()->nHeight;
 	// buyer
 	if(foundBuyerKey)
 	{
@@ -3774,7 +3892,7 @@ UniValue offeracceptfeedback(const UniValue& params, bool fHelp) {
 		sellerFeedback.nRating = nRating;
 		sellerFeedback.nHeight = chainActive.Tip()->nHeight;
 		offer.accept.feedback = sellerFeedback;
-		vecSend.push_back(recipientSeller);
+
 
 	}
 	// seller
@@ -3785,16 +3903,43 @@ UniValue offeracceptfeedback(const UniValue& params, bool fHelp) {
 		buyerFeedback.nRating = nRating;
 		buyerFeedback.nHeight = chainActive.Tip()->nHeight;
 		offer.accept.feedback = buyerFeedback;	
-		vecSend.push_back(recipientBuyer);
+
 
 	}
 	else
 	{
 		throw runtime_error("You must be either the buyer or seller to leave feedback on this offer purchase");
 	}
-	offer.nHeight = chainActive.Tip()->nHeight;
 
-	const vector<unsigned char> &data = offer.Serialize();
+	const vector<unsigned char> &data = theOffer.Serialize();
+    uint256 hash = Hash(data.begin(), data.end());
+ 	vector<unsigned char> vchHash = CScriptNum(hash.GetCheapHash()).getvch();
+    vector<unsigned char> vchHashOffer = vchFromValue(HexStr(vchHash));
+
+	CScript scriptPubKeyBuyer, scriptPubKeySeller,scriptPubKeyBuyerDestination, scriptPubKeySellerDestination;
+	scriptPubKeyBuyerDestination= GetScriptForDestination(buyerKey.GetID());
+	scriptPubKeySellerDestination= GetScriptForDestination(sellerKey.GetID());
+	vector<CRecipient> vecSend;
+	CRecipient recipientBuyer, recipientSeller;
+	scriptPubKeyBuyer << CScript::EncodeOP_N(OP_OFFER_ACCEPT) << vvch[0] << vvch[1] << vvch[2] << vvch[3] << vvch[4] << vchHashOffer << OP_2DROP << OP_2DROP << OP_2DROP << OP_DROP;
+	scriptPubKeyBuyer += scriptPubKeyBuyerDestination;
+	CreateRecipient(scriptPubKeyBuyer, recipientBuyer);
+	scriptPubKeySeller << CScript::EncodeOP_N(OP_OFFER_ACCEPT) << vvch[0] << vvch[1] << vvch[2] << vvch[3] << vvch[4] << vchHashOffer << OP_2DROP << OP_2DROP << OP_2DROP << OP_DROP;
+	scriptPubKeySeller += scriptPubKeySellerDestination;
+	CreateRecipient(scriptPubKeySeller, recipientSeller);
+	// buyer
+	if(foundBuyerKey)
+	{
+		vecSend.push_back(recipientSeller);
+
+	}
+	// seller
+	else if(foundSellerKey)
+	{
+		vecSend.push_back(recipientBuyer);
+
+	}
+	
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
 	CRecipient fee;
@@ -3887,9 +4032,9 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 		{
 			if (!IsSyscoinScript(txA.vout[j].scriptPubKey, op, vvch))
 				continue;
-			if(vvch.size() >= 6)
-				continue;
 			if(op != OP_OFFER_ACCEPT)
+				continue;
+			if(vvch[5] == vchFromString("1"))
 				continue;
 			if(ca.vchAcceptRand == vvch[1])
 				break;
@@ -4144,7 +4289,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 				if(op != OP_OFFER_ACCEPT)
 					continue;
 				// dont show feedback outputs as accepts
-				if(vvch.size() >= 6)
+				if(vvch[5] == vchFromString("1"))
 					continue;
 
 				if(vvch[0] != vchOfferToFind && !vchOfferToFind.empty())

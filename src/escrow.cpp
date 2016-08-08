@@ -403,7 +403,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
     COffer theOffer;
 	string retError = "";
 	// null usually when pruned or when accept is done (in which case we skip this return and continue on so future feedbacks can be done)
-	if(theEscrow.IsNull() && !(op == OP_ESCROW_COMPLETE && vvch[1] == vchFromString("0")))
+	if(theEscrow.IsNull() && !(op == OP_ESCROW_COMPLETE && vvchArgs[1] == vchFromString("0")))
 	{
 		if(fDebug)
 			LogPrintf("CheckEscrowInputs() : Null escrow, skipping...\n");	
