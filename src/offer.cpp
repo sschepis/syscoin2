@@ -574,9 +574,9 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	{
 		if(IsSys21Fork(nHeight))
 		{
-			if(op != OP_OFFER_ACCCEPT && vvch.size() != 2)
+			if(op != OP_OFFER_ACCEPT && vvch.size() != 2)
 				return error("sys 2.1 offer arguments wrong size");
-			else if(op == OP_OFFER_ACCCEPT && vvch.size() != 6)
+			else if(op == OP_OFFER_ACCEPT && vvch.size() != 6)
 				return error("sys 2.1 offer accept arguments wrong size");
 			if(!theOffer.IsNull())
 			{
@@ -600,9 +600,9 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			}
 		}
 		else {
-			if(op != OP_OFFER_ACCCEPT && vvch.size() != 1)
+			if(op != OP_OFFER_ACCEPT && vvch.size() != 1)
 				return error("sys 2.0 offer arguments wrong size");
-			else if(op == OP_OFFER_ACCCEPT && vvch.size() != 6)
+			else if(op == OP_OFFER_ACCEPT && vvch.size() != 6)
 				return error("sys 2.0 offer accept arguments wrong size");
 		}
 
@@ -1610,8 +1610,6 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 	if(wtxCertIn != NULL)
 		vecSend.push_back(certRecipient);
 
-
-	const vector<unsigned char> &data = newOffer.Serialize();
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
 	CRecipient fee;
@@ -2860,7 +2858,6 @@ UniValue offerupdate_nocheck(const UniValue& params, bool fHelp) {
 	if(wtxCertIn != NULL)
 		vecSend.push_back(certRecipient);
 
-	const vector<unsigned char> &data = theOffer.Serialize();
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
 	CRecipient fee;
@@ -3911,7 +3908,7 @@ UniValue offeracceptfeedback(const UniValue& params, bool fHelp) {
 		throw runtime_error("You must be either the buyer or seller to leave feedback on this offer purchase");
 	}
 
-	const vector<unsigned char> &data = theOffer.Serialize();
+	const vector<unsigned char> &data = offer.Serialize();
     uint256 hash = Hash(data.begin(), data.end());
  	vector<unsigned char> vchHash = CScriptNum(hash.GetCheapHash()).getvch();
     vector<unsigned char> vchHashOffer = vchFromValue(HexStr(vchHash));
