@@ -810,7 +810,7 @@ void updateBans(const vector<unsigned char> &banData)
 }
 bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, const CBlock* block) {
 	
-	if (tx.IsCoinBase() || vvchArgs[0] > MAX_GUID_LENGTH)
+	if (tx.IsCoinBase() || vvchArgs[0].size() > MAX_GUID_LENGTH)
 		return true;
 	if (fDebug)
 		LogPrintf("*** ALIAS %d %d %s %s\n", nHeight, chainActive.Tip()->nHeight, tx.GetHash().ToString().c_str(), fJustCheck ? "JUSTCHECK" : "BLOCK");
