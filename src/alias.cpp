@@ -149,7 +149,7 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 				CPubKey sellerKey = CPubKey( vtxPos.back().vchPubKey);
 				CSyscoinAddress sellerAddress = CSyscoinAddress(sellerKey.GetID());
 				sellerAddress = CSyscoinAddress(sellerAddress.ToString());
-				if(sellerAddress.IsValid() && sellerAddress.isAlias && (sellerAddress.nHeight+GetOfferExpirationDepth()) >=  chainActive.Tip()->nHeight)
+				if(sellerAddress.IsValid() && sellerAddress.isAlias && sellerAddress.nExpireHeight >=  chainActive.Tip()->nHeight)
 					nLastHeight = chainActive.Tip()->nHeight;
 				nHeight = nLastHeight + GetOfferExpirationDepth();
 				return true;	
@@ -195,21 +195,21 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 				CPubKey buyerKey = CPubKey( vtxPos.back().vchBuyerKey);
 				CSyscoinAddress buyerAddress = CSyscoinAddress(buyerKey.GetID());
 				buyerAddress = CSyscoinAddress(buyerAddress.ToString());
-				if(buyerAddress.IsValid() && buyerAddress.isAlias && (buyerAddress.nHeight+GetEscrowExpirationDepth()) >=  chainActive.Tip()->nHeight)
+				if(buyerAddress.IsValid() && buyerAddress.isAlias && buyerAddress.nExpireHeight >=  chainActive.Tip()->nHeight)
 					nLastHeight = chainActive.Tip()->nHeight;
 				else
 				{
 					CPubKey sellerKey = CPubKey( vtxPos.back().vchSellerKey);
 					CSyscoinAddress sellerAddress = CSyscoinAddress(sellerKey.GetID());
 					sellerAddress = CSyscoinAddress(sellerAddress.ToString());
-					if(sellerAddress.IsValid() && sellerAddress.isAlias && (sellerAddress.nHeight+GetEscrowExpirationDepth()) >=  chainActive.Tip()->nHeight)
+					if(sellerAddress.IsValid() && sellerAddress.isAlias && sellerAddress.nExpireHeight >=  chainActive.Tip()->nHeight)
 						nLastHeight = chainActive.Tip()->nHeight;
 					else
 					{
 						CPubKey arbiterKey = CPubKey( vtxPos.back().vchArbiterKey);
 						CSyscoinAddress arbiterAddress = CSyscoinAddress(arbiterKey.GetID());
 						arbiterAddress = CSyscoinAddress(arbiterAddress.ToString());
-						if(arbiterAddress.IsValid() && arbiterAddress.isAlias  && (arbiterAddress.nHeight+GetEscrowExpirationDepth()) >=  chainActive.Tip()->nHeight)
+						if(arbiterAddress.IsValid() && arbiterAddress.isAlias  && arbiterAddress.nExpireHeight >=  chainActive.Tip()->nHeight)
 							nLastHeight = chainActive.Tip()->nHeight;
 					}
 				}
@@ -937,10 +937,9 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		bool update = false;
 		CAliasIndex dbAlias;
 		CTransaction aliasTx;
+		vchName = vvchArgs[0];
 		if(op == OP_ALIAS_ACTIVATE && vvchArgs[0] != vchFromString("SYS_RATES") && vvchArgs[0] != vchFromString("SYS_BAN") && vvchArgs[0] != vchFromString("SYS_CATEGORY"))
-			vchName = vchFromString(boost::algorithm::to_lower(stringFromVch(vvchArgs[0])));
-		else
-			vchName = vvchArgs[0];
+			vchName = vchFromString(boost::algorithm::to_lower(stringFromVch(vchName)));
 		// get the alias from the DB
 		if(!GetTxAndVtxOfAlias(vchName, dbAlias, aliasTx, vtxPos))	
 		{
@@ -1451,8 +1450,9 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 						+ HelpRequiringPassphrase());
 
 	vector<unsigned char> vchName = vchFromString(params[0].get_str());
+	string strName = params[0].get_str();
 	if(vchName != vchFromString("SYS_RATES") && vchName != vchFromString("SYS_BAN") && vchName != vchFromString("SYS_CATEGORY"))
-		vchName = vchFromString(boost::algorithm::to_lower(stringFromVch(vchName)));
+		vchName = vchFromString(boost::algorithm::to_lower(strName));
 	vector<unsigned char> vchPublicValue;
 	vector<unsigned char> vchPrivateValue;
 	string strPublicValue = params[1].get_str();
@@ -2099,7 +2099,7 @@ UniValue aliasfilter(const UniValue& params, bool fHelp) {
 
 	vector<unsigned char> vchName;
 	string strRegexp;
-
+	string strName;
 	bool safeSearch = true;
 
 
@@ -2107,7 +2107,10 @@ UniValue aliasfilter(const UniValue& params, bool fHelp) {
 		strRegexp = params[0].get_str();
 
 	if (params.size() > 1)
+	{
 		vchName = vchFromValue(params[1]);
+		strName = params[1].get_str();
+	}
 
 	if (params.size() > 2)
 		safeSearch = params[2].get_str()=="On"? true: false;
@@ -2116,7 +2119,7 @@ UniValue aliasfilter(const UniValue& params, bool fHelp) {
 
 	
 	vector<pair<vector<unsigned char>, CAliasIndex> > nameScan;
-	vchName = vchFromString(boost::algorithm::to_lower(stringFromVch(name)));
+	vchName = vchFromString(boost::algorithm::to_lower(strName));
 	if (!paliasdb->ScanNames(vchName, strRegexp, safeSearch, 25, nameScan))
 		throw runtime_error("scan failed");
 
