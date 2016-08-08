@@ -354,9 +354,8 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
     int prevOp = 0;
     // Make sure cert outputs are not spent by a regular transaction, or the cert would be lost
     if (tx.nVersion != SYSCOIN_TX_VERSION) {
-        if (foundCert)
-            return error(
-                    "CheckCertInputs() : a non-syscoin transaction with a syscoin input");
+		if(fDebug)
+			LogPrintf("CheckCertInputs() : non-syscoin transaction\n");
         return true;
     }
 	vector<vector<unsigned char> > vvchPrevArgs, vvchPrevAliasArgs;
@@ -417,29 +416,30 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 	// we need to check for cert update specially because a cert update without data is sent along with offers linked with the cert
     if (theCert.IsNull() && op != OP_CERT_UPDATE)
         return true;
-	if(theCert.vchData.size() > MAX_ENCRYPTED_VALUE_LENGTH)
-	{
-		return error("cert data too big");
-	}
-	if(theCert.vchTitle.size() > MAX_NAME_LENGTH)
-	{
-		return error("cert title too big");
-	}
-	if(!theCert.vchPubKey.empty() && !IsSysCompressedOrUncompressedPubKey(theCert.vchPubKey))
-	{
-		return error("cert pub key invalid length");
-	}
-	if(!theCert.vchCert.empty() && theCert.vchCert != vvchArgs[0])
-	{
-		return error("guid in data output doesn't match guid in tx");
-	}
-    if (vvchArgs[0].size() > MAX_NAME_LENGTH)
-        return error("cert hex guid too long");	
+	
 	vector<CAliasIndex> vtxAliasPos;
 	vector<CCert> vtxPos;
 	string retError = "";
 	if(fJustCheck)
 	{
+		if(theCert.vchData.size() > MAX_ENCRYPTED_VALUE_LENGTH)
+		{
+			return error("cert data too big");
+		}
+		if(theCert.vchTitle.size() > MAX_NAME_LENGTH)
+		{
+			return error("cert title too big");
+		}
+		if(!theCert.vchPubKey.empty() && !IsSysCompressedOrUncompressedPubKey(theCert.vchPubKey))
+		{
+			return error("cert pub key invalid length");
+		}
+		if(!theCert.vchCert.empty() && theCert.vchCert != vvchArgs[0])
+		{
+			return error("guid in data output doesn't match guid in tx");
+		}
+		if (vvchArgs[0].size() > MAX_NAME_LENGTH)
+			return error("cert hex guid too long");
 		switch (op) {
 		case OP_CERT_ACTIVATE:
 			if (foundCert)

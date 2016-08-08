@@ -215,11 +215,7 @@ bool DecodeMessageScript(const CScript& script, int& op,
     }
 	
     pc--;
-
-    if ((op == OP_MESSAGE_ACTIVATE && vvch.size() == 1))
-        return true;
-
-    return false;
+    return IsMessageOp(op);
 }
 
 bool DecodeMessageScript(const CScript& script, int& op,
@@ -253,10 +249,43 @@ bool CheckMessageInputs(const CTransaction &tx, int op, int nOut, const vector<v
     CCoins prevCoins;
 
 	int prevAliasOp = 0;
-	
+	if (tx.nVersion != SYSCOIN_TX_VERSION) {
+		if(fDebug)
+			LogPrintf("CheckMessageInputs() : non-syscoin transaction\n");
+		return true;
+	}
+	// unserialize msg from txn, check for valid
+	CMessage theMessage;
+	vector<unsigned char> vchData;
+	if(!GetSyscoinData(tx, vchData))
+	{
+		return true;
+	}
+	else if(!theMessage.UnserializeFromData(vchData))
+	{
+		return true;
+	}
     vector<vector<unsigned char> > vvchPrevAliasArgs;
 	if(fJustCheck)
 	{
+		if(IsSys21Fork(nHeight))
+		{
+			if(vvchArgs.size() != 2)
+				return error("sys 2.1 msg arguments wrong size");
+
+			if(!theMessage.IsNull())
+			{
+				uint256 calculatedHash = Hash(vchData.begin(), vchData.end());
+ 				vector<unsigned char> vchRand = CScriptNum(calculatedHash.GetCheapHash()).getvch();
+				vector<unsigned char> vchRandMsg = vchFromValue(HexStr(vchRand));
+				if(vchRandMsg != vvchArgs[1])
+				{
+					return error("Hash provided doesn't match the calculated hash the data");
+				}
+			}
+		}
+		else if(vvchArgs.size() != 1)
+			return error("sys 2.0 msg arguments wrong size");
 		// Strict check - bug disallowed
 		for (unsigned int i = 0; i < tx.vin.size(); i++) {
 			vector<vector<unsigned char> > vvch;
@@ -277,47 +306,38 @@ bool CheckMessageInputs(const CTransaction &tx, int op, int nOut, const vector<v
 			}
 		}	
 	}
-    // Make sure message outputs are not spent by a regular transaction, or the message would be lost
-    if (tx.nVersion != SYSCOIN_TX_VERSION) {
-		LogPrintf("CheckMessageInputs() : non-syscoin transaction\n");
-        return true;
-    }
 
     // unserialize message UniValue from txn, check for valid
-    CMessage theMessage;
+   
 	string retError = "";
-    theMessage.UnserializeFromTx(tx);
-    if (theMessage.IsNull())
-        return true;
-    if (vvchArgs[0].size() > MAX_NAME_LENGTH)
-        return error("message tx GUID too big");
-	if(!IsSysCompressedOrUncompressedPubKey(theMessage.vchPubKeyTo))
-	{
-		return error("message public key to, invalid length");
-	}
-	if(!IsSysCompressedOrUncompressedPubKey(theMessage.vchPubKeyFrom))
-	{
-		return error("message public key from, invalid length");
-	}
-	if(theMessage.vchSubject.size() > MAX_NAME_LENGTH)
-	{
-		return error("message subject too big");
-	}
-	if(theMessage.vchMessageTo.size() > MAX_ENCRYPTED_VALUE_LENGTH)
-	{
-		return error("message data to too big");
-	}
-	if(theMessage.vchMessageFrom.size() > MAX_ENCRYPTED_VALUE_LENGTH)
-	{
-		return error("message data from too big");
-	}
-	if(!theMessage.vchMessage.empty() && theMessage.vchMessage != vvchArgs[0])
-	{
-		return error("guid in data output doesn't match guid in tx");
-	}
 	if(fJustCheck)
 	{
-
+		if (vvchArgs[0].size() > MAX_NAME_LENGTH)
+			return error("message tx GUID too big");
+		if(!IsSysCompressedOrUncompressedPubKey(theMessage.vchPubKeyTo))
+		{
+			return error("message public key to, invalid length");
+		}
+		if(!IsSysCompressedOrUncompressedPubKey(theMessage.vchPubKeyFrom))
+		{
+			return error("message public key from, invalid length");
+		}
+		if(theMessage.vchSubject.size() > MAX_NAME_LENGTH)
+		{
+			return error("message subject too big");
+		}
+		if(theMessage.vchMessageTo.size() > MAX_ENCRYPTED_VALUE_LENGTH)
+		{
+			return error("message data to too big");
+		}
+		if(theMessage.vchMessageFrom.size() > MAX_ENCRYPTED_VALUE_LENGTH)
+		{
+			return error("message data from too big");
+		}
+		if(!theMessage.vchMessage.empty() && theMessage.vchMessage != vvchArgs[0])
+		{
+			return error("guid in data output doesn't match guid in tx");
+		}
 		if(op == OP_MESSAGE_ACTIVATE)
 		{
 			if(!IsAliasOp(prevAliasOp))
@@ -429,7 +449,7 @@ UniValue messagenew(const UniValue& params, bool fHelp) {
 		throw runtime_error("Invalid sending public key");
 	}
 	scriptPubKeyAliasOrig = GetScriptForDestination(FromPubKey.GetID());
-	scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << vchFromString(strFromAddress) <<  alias.vchGUID << OP_2DROP << OP_DROP;
+	scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << vchFromString(strFromAddress) <<  alias.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
 	scriptPubKeyAlias += scriptPubKeyAliasOrig;		
 
 
@@ -465,8 +485,6 @@ UniValue messagenew(const UniValue& params, bool fHelp) {
     // this is a syscoin transaction
     CWalletTx wtx;
 	scriptPubKeyOrig= GetScriptForDestination(ToPubKey.GetID());
-	scriptPubKey << CScript::EncodeOP_N(OP_MESSAGE_ACTIVATE) << vchMessage << OP_2DROP;
-	scriptPubKey += scriptPubKeyOrig;
 
 
 	string strCipherTextTo;
@@ -494,6 +512,14 @@ UniValue messagenew(const UniValue& params, bool fHelp) {
 	newMessage.vchPubKeyFrom = vchFromPubKey;
 	newMessage.vchPubKeyTo = vchToPubKey;
 	newMessage.nHeight = chainActive.Tip()->nHeight;
+
+	const vector<unsigned char> &data = newMessage.Serialize();
+    uint256 hash = Hash(data.begin(), data.end());
+ 	vector<unsigned char> vchHash = CScriptNum(hash.GetCheapHash()).getvch();
+    vector<unsigned char> vchHashMessage = vchFromValue(HexStr(vchHash));
+	scriptPubKey << CScript::EncodeOP_N(OP_MESSAGE_ACTIVATE) << vchMessage << vchHashMessage << OP_2DROP << OP_DROP;
+	scriptPubKey += scriptPubKeyOrig;
+
 	// send the tranasction
 	vector<CRecipient> vecSend;
 	CRecipient recipient;
@@ -505,7 +531,6 @@ UniValue messagenew(const UniValue& params, bool fHelp) {
 	if(wtxAliasIn != NULL)
 		vecSend.push_back(aliasRecipient);
 
-	const vector<unsigned char> &data = newMessage.Serialize();
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
 	CRecipient fee;

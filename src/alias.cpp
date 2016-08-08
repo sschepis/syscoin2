@@ -820,7 +820,8 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	vector<vector<unsigned char> > vvchPrevArgs;
 	// Make sure alias outputs are not spent by a regular transaction, or the alias would be lost
 	if (tx.nVersion != SYSCOIN_TX_VERSION) {
-		LogPrintf("CheckAliasInputs() : non-syscoin transaction\n");
+		if(fDebug)
+			LogPrintf("CheckAliasInputs() : non-syscoin transaction\n");
 		return true;
 	}
 	// unserialize alias from txn, check for valid
