@@ -469,7 +469,7 @@ bool DecodeOfferTx(const CTransaction& tx, int& op, int& nOut,
 		const CTxOut& out = tx.vout[i];
 		// skip the special buyer feedback output (we should have the normal offer accept output also)
 		if (DecodeOfferScript(out.scriptPubKey, op, vvch)) {
-			if(op = OP_OFFER_ACCEPT && vvch[5] == vchFromString("1"))
+			if(op == OP_OFFER_ACCEPT && vvch[5] == vchFromString("1"))
 				continue;
 			nOut = i; found = true;
 			break;
