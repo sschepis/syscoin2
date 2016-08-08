@@ -842,7 +842,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			uint256 calculatedHash = Hash(vchData.begin(), vchData.end());
  			vector<unsigned char> vchRand = CScriptNum(calculatedHash.GetCheapHash()).getvch();
 			vector<unsigned char> vchRandAlias = vchFromValue(HexStr(vchRand));
-			if(vchRandAlias != vvchArgs[1])
+			if(vchRandAlias != vvchArgs[2])
 			{
 				return error("Hash provided doesn't match the calculated hash the data");
 			}
@@ -1392,8 +1392,8 @@ bool DecodeAliasScript(const CScript& script, int& op,
 
 	pc--;
 
-	if ((op == OP_ALIAS_ACTIVATE && vvch.size() <= 2 && vvch.size() >= 1)
-			|| (op == OP_ALIAS_UPDATE && vvch.size() <= 2 && vvch.size() >= 1))
+	if ((op == OP_ALIAS_ACTIVATE && vvch.size() <= 3 && vvch.size() >= 1)
+			|| (op == OP_ALIAS_UPDATE && vvch.size() <= 3 && vvch.size() >= 1))
 		return true;
 	return false;
 }
@@ -1497,7 +1497,9 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 			throw runtime_error("private data length cannot exceed 1023 bytes!");
 		vchPrivateValue = vchFromString(strCipherText);
 	}
-
+	int64_t rand = GetRand(std::numeric_limits<int64_t>::max());
+ 	vector<unsigned char> vchRand = CScriptNum(rand).getvch();
+    vector<unsigned char> vchRandAlias = vchFromValue(HexStr(vchRand));
     // build alias
     CAliasIndex newAlias;
 	newAlias.vchGUID = vchRandAlias;
@@ -1510,11 +1512,11 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	newAlias.safeSearch = strSafeSearch == "Yes"? true: false;
 	const vector<unsigned char> &data = newAlias.Serialize();
     uint256 hash = Hash(data.begin(), data.end());
- 	vector<unsigned char> vchRand = CScriptNum(hash.GetCheapHash()).getvch();
-    vector<unsigned char> vchRandAlias = vchFromValue(HexStr(vchRand));
+ 	vector<unsigned char> vchHash = CScriptNum(hash.GetCheapHash()).getvch();
+    vector<unsigned char> vchHashAlias = vchFromValue(HexStr(vchRand));
 
 	CScript scriptPubKey;
-	scriptPubKey << CScript::EncodeOP_N(OP_ALIAS_ACTIVATE) << vchName << vchRandAlias << OP_2DROP << OP_DROP;
+	scriptPubKey << CScript::EncodeOP_N(OP_ALIAS_ACTIVATE) << vchName << vchRandAlias << vchHashAlias << OP_2DROP << OP_2DROP;
 	scriptPubKey += scriptPubKeyOrig;
 
     vector<CRecipient> vecSend;
@@ -1626,15 +1628,20 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 	theAlias.safeSearch = strSafeSearch == "Yes"? true: false;
 	CPubKey currentKey(vchPubKeyByte);
 	scriptPubKeyOrig = GetScriptForDestination(currentKey.GetID());
+
+	const vector<unsigned char> &data = theAlias.Serialize();
+    uint256 hash = Hash(data.begin(), data.end());
+ 	vector<unsigned char> vchHash = CScriptNum(hash.GetCheapHash()).getvch();
+    vector<unsigned char> vchHashAlias = vchFromValue(HexStr(vchRand));
+
 	CScript scriptPubKey;
-	scriptPubKey << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << vchName << copyAlias.vchGUID << OP_2DROP << OP_DROP;
+	scriptPubKey << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << vchName << copyAlias.vchGUID << vchHashAlias << OP_2DROP << OP_2DROP;
 	scriptPubKey += scriptPubKeyOrig;
 
     vector<CRecipient> vecSend;
 	CRecipient recipient;
 	CreateRecipient(scriptPubKey, recipient);
 	vecSend.push_back(recipient);
-	const vector<unsigned char> &data = theAlias.Serialize();
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
 	CRecipient fee;
