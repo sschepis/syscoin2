@@ -939,7 +939,11 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		CTransaction aliasTx;
 		vchName = vvchArgs[0];
 		if(op == OP_ALIAS_ACTIVATE && vvchArgs[0] != vchFromString("SYS_RATES") && vvchArgs[0] != vchFromString("SYS_BAN") && vvchArgs[0] != vchFromString("SYS_CATEGORY"))
-			vchName = vchFromString(boost::algorithm::to_lower(stringFromVch(vchName)));
+		{
+			string strName = stringFromVch(vchName);
+			boost::algorithm::to_lower(strName);
+			vchName = vchFromString(strName);
+		}
 		// get the alias from the DB
 		if(!GetTxAndVtxOfAlias(vchName, dbAlias, aliasTx, vtxPos))	
 		{
@@ -1452,7 +1456,10 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	vector<unsigned char> vchName = vchFromString(params[0].get_str());
 	string strName = params[0].get_str();
 	if(vchName != vchFromString("SYS_RATES") && vchName != vchFromString("SYS_BAN") && vchName != vchFromString("SYS_CATEGORY"))
-		vchName = vchFromString(boost::algorithm::to_lower(strName));
+	{
+		boost::algorithm::to_lower(strName)
+		vchName = vchFromString(strName);
+	}
 	vector<unsigned char> vchPublicValue;
 	vector<unsigned char> vchPrivateValue;
 	string strPublicValue = params[1].get_str();
@@ -2119,7 +2126,8 @@ UniValue aliasfilter(const UniValue& params, bool fHelp) {
 
 	
 	vector<pair<vector<unsigned char>, CAliasIndex> > nameScan;
-	vchName = vchFromString(boost::algorithm::to_lower(strName));
+	boost::algorithm::to_lower(strName)
+	vchName = vchFromString(strName);
 	if (!paliasdb->ScanNames(vchName, strRegexp, safeSearch, 25, nameScan))
 		throw runtime_error("scan failed");
 
