@@ -3070,11 +3070,11 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 			scriptPubKeyEscrowBuyerDestination = GetScriptForDestination(buyerEscrowKey.GetID());
 			CPubKey arbiterEscrowKey(fundingEscrow.vchArbiterKey);
 			scriptPubKeyEscrowArbiterDestination = GetScriptForDestination(arbiterEscrowKey.GetID());
-			scriptPubKeyEscrowBuyer << CScript::EncodeOP_N(OP_ESCROW_COMPLETE) << escrowVvch[0] << vchFromString("0") << OP_2DROP << OP_DROP;
+			scriptPubKeyEscrowBuyer << CScript::EncodeOP_N(OP_ESCROW_COMPLETE) << escrowVvch[0] << vchFromString("0") << vchFromString("") << OP_2DROP << OP_2DROP;
 			scriptPubKeyEscrowBuyer += scriptPubKeyEscrowBuyerDestination;
-			scriptPubKeyEscrowSeller << CScript::EncodeOP_N(OP_ESCROW_COMPLETE) << escrowVvch[0] << vchFromString("0") << OP_2DROP << OP_DROP;
+			scriptPubKeyEscrowSeller << CScript::EncodeOP_N(OP_ESCROW_COMPLETE) << escrowVvch[0] << vchFromString("0") << vchFromString("") << OP_2DROP << OP_2DROP;
 			scriptPubKeyEscrowSeller += scriptPubKeyEscrowSellerDestination;
-			scriptPubKeyEscrowArbiter << CScript::EncodeOP_N(OP_ESCROW_COMPLETE) << escrowVvch[0] << vchFromString("0") << OP_2DROP << OP_DROP;
+			scriptPubKeyEscrowArbiter << CScript::EncodeOP_N(OP_ESCROW_COMPLETE) << escrowVvch[0] << vchFromString("0") << vchFromString("") << OP_2DROP << OP_2DROP;
 			scriptPubKeyEscrowArbiter += scriptPubKeyEscrowArbiterDestination;
 			txAccept.vchEscrow = escrowVvch[0]; 		
 		}	
@@ -3493,11 +3493,11 @@ UniValue offeraccept_nocheck(const UniValue& params, bool fHelp) {
 			scriptPubKeyEscrowBuyerDestination = GetScriptForDestination(buyerEscrowKey.GetID());
 			CPubKey arbiterEscrowKey(fundingEscrow.vchArbiterKey);
 			scriptPubKeyEscrowArbiterDestination = GetScriptForDestination(arbiterEscrowKey.GetID());
-			scriptPubKeyEscrowBuyer << CScript::EncodeOP_N(OP_ESCROW_COMPLETE) << escrowVvch[0] << vchFromString("0") << OP_2DROP << OP_DROP;
+			scriptPubKeyEscrowBuyer << CScript::EncodeOP_N(OP_ESCROW_COMPLETE) << escrowVvch[0] << vchFromString("0") << vchFromString("") << OP_2DROP << OP_2DROP;
 			scriptPubKeyEscrowBuyer += scriptPubKeyEscrowBuyerDestination;
-			scriptPubKeyEscrowSeller << CScript::EncodeOP_N(OP_ESCROW_COMPLETE) << escrowVvch[0] << vchFromString("0") << OP_2DROP << OP_DROP;
+			scriptPubKeyEscrowSeller << CScript::EncodeOP_N(OP_ESCROW_COMPLETE) << escrowVvch[0] << vchFromString("0") << vchFromString("") << OP_2DROP << OP_2DROP;
 			scriptPubKeyEscrowSeller += scriptPubKeyEscrowSellerDestination;
-			scriptPubKeyEscrowArbiter << CScript::EncodeOP_N(OP_ESCROW_COMPLETE) << escrowVvch[0] << vchFromString("0") << OP_2DROP << OP_DROP;
+			scriptPubKeyEscrowArbiter << CScript::EncodeOP_N(OP_ESCROW_COMPLETE) << escrowVvch[0] << vchFromString("0") << vchFromString("") << OP_2DROP << OP_2DROP;
 			scriptPubKeyEscrowArbiter += scriptPubKeyEscrowArbiterDestination;
 			txAccept.vchEscrow = escrowVvch[0]; 		
 		}	
