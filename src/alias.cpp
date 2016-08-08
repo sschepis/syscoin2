@@ -818,8 +818,36 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	CCoins prevCoins;
 	int prevOp = 0;
 	vector<vector<unsigned char> > vvchPrevArgs;
+	// Make sure alias outputs are not spent by a regular transaction, or the alias would be lost
+	if (tx.nVersion != SYSCOIN_TX_VERSION) {
+		LogPrintf("CheckAliasInputs() : non-syscoin transaction\n");
+		return true;
+	}
+	// unserialize alias from txn, check for valid
+	CAliasIndex theAlias;
+	vector<unsigned char> vchData;
+	if(!theAlias.GetSyscoinData(tx, vchData))
+	{
+		theAlias.SetNull();
+	}
+	else if(!theAlias.UnserializeFromData(vchData))
+	{
+		theAlias.SetNull();
+	}
+
 	if(fJustCheck)
 	{
+		if(IsInSys21Fork(nHeight) && !theAlias.IsNull())
+		{
+			uint256 calculatedHash = Hash(vchData.begin(), vchData.end());
+ 			vector<unsigned char> vchRand = CScriptNum(calculatedHash.GetCheapHash()).getvch();
+			vector<unsigned char> vchRandAlias = vchFromValue(HexStr(vchRand));
+			if(vchRandAlias != vvchArgs[1])
+			{
+				return error("Hash provided doesn't match the calculated hash the data");
+			}
+		}
+		
 		// Strict check - bug disallowed
 		for (unsigned int i = 0; i < tx.vin.size(); i++) {
 			vector<vector<unsigned char> > vvch;
@@ -840,42 +868,35 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			}
 		}
 	}
-	// Make sure alias outputs are not spent by a regular transaction, or the alias would be lost
-	if (tx.nVersion != SYSCOIN_TX_VERSION) {
-		LogPrintf("CheckAliasInputs() : non-syscoin transaction\n");
-		return true;
-	}
-	// unserialize alias from txn, check for valid
-	CAliasIndex theAlias(tx);
 	// we need to check for cert update specially because an alias update without data is sent along with offers linked with the alias
 	if (theAlias.IsNull() && op != OP_ALIAS_UPDATE)
 		return true;
-	if(theAlias.vchPublicValue.size() > MAX_VALUE_LENGTH && vvchArgs[0] != vchFromString("SYS_RATES"))
-	{
-		return error("alias pub value too big");
-	}
-	if(theAlias.vchPrivateValue.size() > MAX_ENCRYPTED_VALUE_LENGTH)
-	{
-		return error("alias priv value too big");
-	}
-	if(!theAlias.vchPubKey.empty() && !IsSysCompressedOrUncompressedPubKey(theAlias.vchPubKey))
-	{
-		return error("alias pub key invalid length");
-	}
-	if(!theAlias.vchName.empty() && theAlias.vchName != vvchArgs[0])
-	{
-		return error("guid in data output doesn't match guid in tx");
-	}
-	if (vvchArgs[0].size() > MAX_NAME_LENGTH)
-		return error("alias name too long");
-	if(IsSys21Fork(nHeight) && (!IsSys21Fork(theAlias.nHeight) || theAlias.nHeight > nHeight))
-	{
-		return error("bad alias height");
-	}
 	vector<CAliasIndex> vtxPos;
 	string retError = "";
 	if(fJustCheck)
 	{
+		if(theAlias.vchPublicValue.size() > MAX_VALUE_LENGTH && vvchArgs[0] != vchFromString("SYS_RATES"))
+		{
+			return error("alias pub value too big");
+		}
+		if(theAlias.vchPrivateValue.size() > MAX_ENCRYPTED_VALUE_LENGTH)
+		{
+			return error("alias priv value too big");
+		}
+		if(!theAlias.vchPubKey.empty() && !IsSysCompressedOrUncompressedPubKey(theAlias.vchPubKey))
+		{
+			return error("alias pub key invalid length");
+		}
+		if(!theAlias.vchName.empty() && theAlias.vchName != vvchArgs[0])
+		{
+			return error("guid in data output doesn't match guid in tx");
+		}
+		if (vvchArgs[0].size() > MAX_NAME_LENGTH)
+			return error("alias name too long");
+		if(IsSys21Fork(nHeight) && (!IsSys21Fork(theAlias.nHeight) || theAlias.nHeight > nHeight))
+		{
+			return error("bad alias height");
+		}
 		switch (op) {
 			case OP_ALIAS_ACTIVATE:
 				// Check GUID
@@ -1030,15 +1051,7 @@ bool GetSyscoinData(const CTransaction &tx, vector<unsigned char> &vchData)
 	   return false;
 
 	const CScript &scriptPubKey = tx.vout[nOut].scriptPubKey;
-	CScript::const_iterator pc = scriptPubKey.begin();
-	opcodetype opcode;
-	if (!scriptPubKey.GetOp(pc, opcode))
-		return false;
-	if(opcode != OP_RETURN)
-		return false;
-	if (!scriptPubKey.GetOp(pc, opcode, vchData))
-		return false;
-	return true;
+	return GetSyscoinData(scriptPubKey, vchData);
 }
 bool GetSyscoinData(const CScript &scriptPubKey, vector<unsigned char> &vchData)
 {
@@ -1466,17 +1479,11 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 		throw runtime_error("there are pending operations on that alias");
 	}
 	
-	int64_t rand = GetRand(std::numeric_limits<int64_t>::max());
- 	vector<unsigned char> vchRand = CScriptNum(rand).getvch();
-    vector<unsigned char> vchRandAlias = vchFromValue(HexStr(vchRand));
 
 	CPubKey newDefaultKey;
 	pwalletMain->GetKeyFromPool(newDefaultKey);
 	CScript scriptPubKeyOrig;
 	scriptPubKeyOrig = GetScriptForDestination(newDefaultKey.GetID());
-	CScript scriptPubKey;
-	scriptPubKey << CScript::EncodeOP_N(OP_ALIAS_ACTIVATE) << vchName << vchRandAlias << OP_2DROP << OP_DROP;
-	scriptPubKey += scriptPubKeyOrig;
 	std::vector<unsigned char> vchPubKey(newDefaultKey.begin(), newDefaultKey.end());
 
 	if(vchPrivateValue.size() > 0)
@@ -1501,13 +1508,21 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	newAlias.vchPrivateValue = vchPrivateValue;
 	newAlias.safetyLevel = 0;
 	newAlias.safeSearch = strSafeSearch == "Yes"? true: false;
+	const vector<unsigned char> &data = newAlias.Serialize();
+    uint256 hash = Hash(data.begin(), data.end());
+ 	vector<unsigned char> vchRand = CScriptNum(hash.GetCheapHash()).getvch();
+    vector<unsigned char> vchRandAlias = vchFromValue(HexStr(vchRand));
+
+	CScript scriptPubKey;
+	scriptPubKey << CScript::EncodeOP_N(OP_ALIAS_ACTIVATE) << vchName << vchRandAlias << OP_2DROP << OP_DROP;
+	scriptPubKey += scriptPubKeyOrig;
 
     vector<CRecipient> vecSend;
 	CRecipient recipient;
 	CreateRecipient(scriptPubKey, recipient);
 	vecSend.push_back(recipient);
 	CScript scriptData;
-	const vector<unsigned char> &data = newAlias.Serialize();
+	
 	scriptData << OP_RETURN << data;
 	CRecipient fee;
 	CreateFeeRecipient(scriptData, data, fee);

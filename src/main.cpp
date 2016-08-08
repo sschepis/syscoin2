@@ -803,21 +803,8 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state)
     int nOut;
 	string err = "";
 	bool found = false;
-    if(DecodeOfferTx(tx, op, nOut, vvch)) {
-		found = true;
-		switch (op) {		
-			case OP_OFFER_ACCEPT: 
-				if (vvch[1].size() > MAX_NAME_LENGTH)
-					err = error("offeraccept tx with accept GUID too big");
-				if (vvch[2].size() > MAX_ENCRYPTED_VALUE_LENGTH)
-					return error("offeraccept message field too big");
-				break;
-			default:
-				break;
-		
-        }
-    }
-   if(DecodeCertTx(tx, op, nOut, vvch)
+   if(DecodeOfferTx(tx, op, nOut, vvch)
+	|| DecodeCertTx(tx, op, nOut, vvch)
 	|| DecodeAliasTx(tx, op, nOut, vvch)
 	|| DecodeMessageTx(tx, op, nOut, vvch)
 	|| DecodeEscrowTx(tx, op, nOut, vvch)) 
@@ -828,8 +815,6 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state)
    {
 	   err = error("Unknown syscoin transaction type!");
    }
-	if (vvch.size() > 0 && vvch[0].size() > MAX_NAME_LENGTH)
-		err = error("sys tx with GUID too big");
     if(err != "")
 	{
 		return state.DoS(10,error(err.c_str()));
