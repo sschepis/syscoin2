@@ -1518,7 +1518,7 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	const vector<unsigned char> &data = newAlias.Serialize();
     uint256 hash = Hash(data.begin(), data.end());
  	vector<unsigned char> vchHash = CScriptNum(hash.GetCheapHash()).getvch();
-    vector<unsigned char> vchHashAlias = vchFromValue(HexStr(vchRand));
+    vector<unsigned char> vchHashAlias = vchFromValue(HexStr(vchHash));
 
 	CScript scriptPubKey;
 	scriptPubKey << CScript::EncodeOP_N(OP_ALIAS_ACTIVATE) << vchName << vchRandAlias << vchHashAlias << OP_2DROP << OP_2DROP;
@@ -1637,7 +1637,7 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 	const vector<unsigned char> &data = theAlias.Serialize();
     uint256 hash = Hash(data.begin(), data.end());
  	vector<unsigned char> vchHash = CScriptNum(hash.GetCheapHash()).getvch();
-    vector<unsigned char> vchHashAlias = vchFromValue(HexStr(vchRand));
+    vector<unsigned char> vchHashAlias = vchFromValue(HexStr(vchHash));
 
 	CScript scriptPubKey;
 	scriptPubKey << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << vchName << copyAlias.vchGUID << vchHashAlias << OP_2DROP << OP_2DROP;
