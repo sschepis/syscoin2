@@ -574,9 +574,9 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	{
 		if(IsSys21Fork(nHeight))
 		{
-			if(op != OP_OFFER_ACCEPT && vvch.size() != 2)
+			if(op != OP_OFFER_ACCEPT && vvchArgs.size() != 2)
 				return error("sys 2.1 offer arguments wrong size");
-			else if(op == OP_OFFER_ACCEPT && vvch.size() != 6)
+			else if(op == OP_OFFER_ACCEPT && vvchArgs.size() != 6)
 				return error("sys 2.1 offer accept arguments wrong size");
 			if(!theOffer.IsNull())
 			{
@@ -600,9 +600,9 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			}
 		}
 		else {
-			if(op != OP_OFFER_ACCEPT && vvch.size() != 1)
+			if(op != OP_OFFER_ACCEPT && vvchArgs.size() != 1)
 				return error("sys 2.0 offer arguments wrong size");
-			else if(op == OP_OFFER_ACCEPT && vvch.size() != 6)
+			else if(op == OP_OFFER_ACCEPT && vvchArgs.size() != 6)
 				return error("sys 2.0 offer accept arguments wrong size");
 		}
 
