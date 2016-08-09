@@ -887,7 +887,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	if(fJustCheck)
 	{
 		
-		if(theAlias.vchPublicValue.size() > MAX_VALUE_LENGTH && vvchArgs[0] != vchFromString("sys_rates") && vvchArgs[0] != vchFromString("sys_category))
+		if(theAlias.vchPublicValue.size() > MAX_VALUE_LENGTH && vvchArgs[0] != vchFromString("sys_rates") && vvchArgs[0] != vchFromString("sys_category"))
 		{
 			return error("alias pub value too big");
 		}
