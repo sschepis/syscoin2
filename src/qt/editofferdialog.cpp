@@ -90,9 +90,9 @@ EditOfferDialog::EditOfferDialog(Mode mode, const QString &strCert,  const QStri
 		ui->qtyEdit->setEnabled(false);
 		
 		ui->currencyDisclaimer->setText(tr("<font color='blue'>You will receive payment in Syscoin equivalent to the Market-value of the currency you have selected.</font>"));
-		int index = ui->categoryEdit->findText(strCategory, Qt::UserRole);
+		int index = ui->categoryEdit->findText(strCategory);
 		if(index == -1)
-			index = ui->categoryEdit->findText(tr("certificates"), Qt::UserRole);
+			index = ui->categoryEdit->findText(tr("certificates"));
 		if(index >= 0)
 			ui->categoryEdit->setCurrentIndex(index);
         break;
