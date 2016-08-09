@@ -313,14 +313,15 @@ BOOST_AUTO_TEST_CASE (generate_escrowpruning)
 		BOOST_CHECK_NO_THROW(CallRPC("node1",  "escrowfeedback " + guid1 + " 1 2 3 4"));
 		BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 5"));
 		MilliSleep(1000);
-		BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 45"));
+		BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 40"));
+		MilliSleep(2500);
+		BOOST_CHECK_NO_THROW(CallRPC("node2", "generate 5"));
 		MilliSleep(2500);
 		// ensure dependent services don't expire
 		BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate selleraliasprune data"));
 		BOOST_CHECK_NO_THROW(CallRPC("node2", "aliasupdate buyeraliasprune data"));
 		BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 5"));
 		MilliSleep(2500);
-		BOOST_CHECK_NO_THROW(CallRPC("node2", "generate 5"));
 		BOOST_CHECK_NO_THROW(CallRPC("node1", "offerupdate sys_rates selleraliasprune " + offerguid + " category title 100 0.05 description"));
 		BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 2"));
 		MilliSleep(2500);
