@@ -1303,10 +1303,8 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				{
 					theOffer.nQty = linkOffer.nQty;	
 					theOffer.vchAliasPeg = linkOffer.vchAliasPeg;	
-					theOffer.linkWhitelist.bExclusiveResell = true;
 					theOffer.sCurrencyCode = linkOffer.sCurrencyCode;
 					theOffer.vchCert = linkOffer.vchCert;
-					theOffer.offerLinks.clear();
 					theOffer.SetPrice(linkOffer.nPrice);				
 				}
 				else
@@ -1329,10 +1327,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						linkOffer.vchAliasPeg = theOffer.vchAliasPeg;	
 						linkOffer.sCurrencyCode = theOffer.sCurrencyCode;	
 						linkOffer.SetPrice(theOffer.nPrice);
-						linkOffer.linkWhitelist.bExclusiveResell = true;
-						linkOffer.sCurrencyCode = theOffer.sCurrencyCode;
 						linkOffer.vchCert = theOffer.vchCert;
-						linkOffer.offerLinks.clear();
 						linkOffer.PutToOfferList(myVtxPos);
 						// write offer
 					
@@ -3341,8 +3336,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	// check for Bitcoin payment on the bitcoin network, otherwise pay in syscoin
 	if(!vchBTCTxId.empty() && stringFromVch(copyOffer.sCurrencyCode) == "BTC")
 	{
-		uint256 txBTCId(uint256S(stringFromVch(vchBTCTxId)));
-		txAccept.txBTCId = txBTCId;
+
 	}
 	else if(!copyOffer.bOnlyAcceptBTC)
 	{
@@ -3706,8 +3700,7 @@ UniValue offeraccept_nocheck(const UniValue& params, bool fHelp) {
 	// check for Bitcoin payment on the bitcoin network, otherwise pay in syscoin
 	if(!vchBTCTxId.empty() && stringFromVch(copyOffer.sCurrencyCode) == "BTC")
 	{
-		uint256 txBTCId(uint256S(stringFromVch(vchBTCTxId)));
-		txAccept.txBTCId = txBTCId;
+
 	}
 	else if(!copyOffer.bOnlyAcceptBTC)
 	{
