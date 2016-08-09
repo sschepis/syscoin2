@@ -53,12 +53,10 @@ bool foundOfferLinkInWallet(const vector<unsigned char> &vchOffer, const vector<
 						const COutPoint *prevOutput = &wtx.vin[i].prevout;
 						if(!GetPreviousInput(prevOutput, opIn, vvchIn))
 							continue;
-						if(vvchIn.size() >= 5)
-							continue;
 						if(foundOffer)
 							break;
 
-						if (!foundOffer && opIn == OP_OFFER_ACCEPT) {
+						if (!foundOffer && opIn == OP_OFFER_ACCEPT && vvchIn[4] != vchFromString("1")) {
 							foundOffer = true; 
 							vchOfferAcceptLink = vvchIn[1];
 						}
@@ -4099,9 +4097,7 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 				break;
 
 			if (!foundOffer && IsOfferOp(opIn)) {
-				if(vvchIn.size() >= 5)
-					continue;
-				if(opIn == OP_OFFER_ACCEPT)
+				if(opIn == OP_OFFER_ACCEPT && vvchIn[4] != vchFromString("1"))
 				{
 					vchOfferAcceptLink = vvchIn[1];
 					foundOffer = true; 
@@ -4369,9 +4365,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 						break;
 
 					if (!foundOffer && IsOfferOp(opIn)) {
-						if(vvchIn.size() >= 5)
-							continue;
-						if(opIn == OP_OFFER_ACCEPT)
+						if(opIn == OP_OFFER_ACCEPT && vvchIn[4] != vchFromString("1"))
 						{
 							vchOfferAcceptLink = vvchIn[1];
 							foundOffer = true; 
