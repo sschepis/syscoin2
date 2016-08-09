@@ -21,7 +21,13 @@ EditAliasDialog::EditAliasDialog(Mode mode, QWidget *parent) :
 	ui->transferEdit->setVisible(false);
 	ui->transferLabel->setVisible(false);
 	ui->safeSearchDisclaimer->setText(tr("<font color='blue'>Is this alias safe to search? Anything that can be considered offensive to someone should be set to <b>No</b> here. If you do create an alias that is offensive and do not set this option to <b>No</b> your alias will be banned!</font>"));
-	
+	ui->expiryEdit->clear();
+	ui->expiryEdit->addItem(tr("1 Year"),"1");
+	ui->expiryEdit->addItem(tr("2 Years"),"2");
+	ui->expiryEdit->addItem(tr("3 Years"),"3");
+	ui->expiryEdit->addItem(tr("4 Years"),"4");
+	ui->expiryEdit->addItem(tr("5 Years"),"5");
+	ui->expiryDisclaimer->setText(tr("<font color='blue'>Set the length of time to keep your alias from expiring. The longer you wish to keep it alive the more fees you will pay to create or update this alias. The formula for the fee is 0.2 SYS * years * years.</font>"));
     switch(mode)
     {
     case NewDataAlias:
@@ -111,6 +117,7 @@ bool EditAliasDialog::saveCurrentRow()
 		params.push_back(ui->nameEdit->text().toStdString());
 		params.push_back("");
 		params.push_back(ui->safeSearchEdit->currentText().toStdString());
+		params.push_back(ui->expiryEdit->itemData(ui->expiryEdit->currentIndex()).toString().toStdString());
 		try {
             UniValue result = tableRPC.execute(strMethod, params);
 			if (result.type() != UniValue::VNULL)
@@ -144,7 +151,8 @@ bool EditAliasDialog::saveCurrentRow()
 			params.push_back(ui->aliasEdit->text().toStdString());
 			params.push_back(ui->nameEdit->text().toStdString());
 			params.push_back("");
-			params.push_back(ui->safeSearchEdit->currentText().toStdString());			
+			params.push_back(ui->safeSearchEdit->currentText().toStdString());	
+			params.push_back(ui->expiryEdit->itemData(ui->expiryEdit->currentIndex()).toString().toStdString());
 			try {
 				UniValue result = tableRPC.execute(strMethod, params);
 				if (result.type() != UniValue::VNULL)
@@ -180,6 +188,7 @@ bool EditAliasDialog::saveCurrentRow()
 			params.push_back("");
 			params.push_back(ui->safeSearchEdit->currentText().toStdString());
 			params.push_back(ui->transferEdit->text().toStdString());
+			params.push_back(ui->expiryEdit->itemData(ui->expiryEdit->currentIndex()).toString().toStdString());
 			try {
 				UniValue result = tableRPC.execute(strMethod, params);
 				if (result.type() != UniValue::VNULL)
