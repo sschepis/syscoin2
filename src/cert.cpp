@@ -15,6 +15,7 @@
 #include <boost/xpressive/xpressive_dynamic.hpp>
 #include <boost/foreach.hpp>
 #include <boost/thread.hpp>
+#include <boost/algorithm/string/predicate.hpp>
 using namespace std;
 extern void SendMoneySyscoin(const vector<CRecipient> &vecSend, CAmount nValue, bool fSubtractFeeFromAmount, CWalletTx& wtxNew, const CWalletTx* wtxInOffer=NULL, const CWalletTx* wtxInCert=NULL, const CWalletTx* wtxInAlias=NULL, const CWalletTx* wtxInEscrow=NULL, bool syscoinTx=true);
 bool EncryptMessage(const vector<unsigned char> &vchPubKey, const vector<unsigned char> &vchMessage, string &strCipherText)
@@ -1246,7 +1247,7 @@ UniValue certfilter(const UniValue& params, bool fHelp) {
 
 	vector<unsigned char> vchCert;
 	string strRegexp;
-
+	string strCategory;
 	bool safeSearch = true;
 
 

@@ -299,8 +299,6 @@ bool COfferDB::ScanOffers(const std::vector<unsigned char>& vchOffer, const stri
 				boost::algorithm::to_lower(title);
 				string description = stringFromVch(txPos.sDescription);
 				boost::algorithm::to_lower(description);
-				string category = stringFromVch(txPos.sCategory);
-				boost::algorithm::to_lower(category);
 				CPubKey SellerPubKey(txPos.vchPubKey);
 				CSyscoinAddress selleraddy(SellerPubKey.GetID());
 				selleraddy = CSyscoinAddress(selleraddy.ToString());
