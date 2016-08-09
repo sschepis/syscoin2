@@ -98,6 +98,7 @@ void MyCertListPage::on_sellCertButton_clicked()
 
 	QString certGUID = indexes.at(0).data(CertTableModel::NameRole).toString();
 	QString status = indexes.at(0).data(CertTableModel::ExpiredRole).toString();
+	QString category = indexes.at(0).data(CertTableModel::CategoryRole).toString();
 	if(status == QString("pending"))
 	{
            QMessageBox::information(this, windowTitle(),
@@ -112,7 +113,7 @@ void MyCertListPage::on_sellCertButton_clicked()
                QMessageBox::Ok, QMessageBox::Ok);
 		   return;
 	}
-    EditOfferDialog dlg(EditOfferDialog::NewCertOffer, certGUID);
+    EditOfferDialog dlg(EditOfferDialog::NewCertOffer, certGUID, category);
     dlg.setModel(walletModel,0);
     dlg.exec();
 }

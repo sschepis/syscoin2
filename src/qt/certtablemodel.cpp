@@ -421,7 +421,7 @@ bool CertTableModel::setData(const QModelIndex &index, const QVariant &value, in
                 return false;
             }
             break;
-       case Data:
+       case Category:
             // Do nothing, if old value == new value
             if(rec->category == value.toString())
             {

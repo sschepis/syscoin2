@@ -27,7 +27,7 @@ public:
 		NewCertOffer
     };
 
-    explicit EditOfferDialog(Mode mode, const QString &cert="", QWidget *parent = 0);
+    explicit EditOfferDialog(Mode mode, const QString &cert="", const QString &cat="", QWidget *parent = 0);
     ~EditOfferDialog();
 
     void setModel(WalletModel*,OfferTableModel *model);

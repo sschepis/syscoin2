@@ -21,7 +21,7 @@ extern const CRPCTable tableRPC;
 string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchAliasPeg, const vector<unsigned char> &vchCurrency, CAmount &nFee, const unsigned int &nHeightToFind, vector<string>& rateList, int &precision);
 extern bool getCategoryList(vector<string>& categoryList);
 extern vector<unsigned char> vchFromString(const std::string &str);
-EditOfferDialog::EditOfferDialog(Mode mode, const QString &strCert, QWidget *parent) :
+EditOfferDialog::EditOfferDialog(Mode mode, const QString &strCert,  const QString &strCategory, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::EditOfferDialog), mapper(0), mode(mode), model(0)
 {
@@ -90,6 +90,11 @@ EditOfferDialog::EditOfferDialog(Mode mode, const QString &strCert, QWidget *par
 		ui->qtyEdit->setEnabled(false);
 		
 		ui->currencyDisclaimer->setText(tr("<font color='blue'>You will receive payment in Syscoin equivalent to the Market-value of the currency you have selected.</font>"));
+		int index = ui->categoryEdit->findText(strCategory, Qt::UserRole);
+		if(index == -1)
+			index = ui->categoryEdit->findText(tr("certificates"), Qt::UserRole);
+		if(index >= 0)
+			ui->categoryEdit->setCurrentIndex(index);
         break;
 	}
 	aliasChanged(ui->aliasEdit->currentText());
