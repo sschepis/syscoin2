@@ -949,7 +949,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		{
 			if(op == OP_ALIAS_ACTIVATE)
 			{
-				if(!dbAlias.IsNull())
+				if(vtxPos.size() > 0)
 				{
 					if(fDebug)
 						LogPrintf("CheckAliasInputs(): Trying to renew an alias that isn't expired");
