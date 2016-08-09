@@ -307,6 +307,7 @@ void EditCertDialog::loadRow(int row, const QString &privatecert)
 	{
 		QModelIndex indexAlias = model->index(row, CertTableModel::Alias, tmpIndex);
 		QModelIndex indexSafeSearch= model->index(row, CertTableModel::SafeSearch, tmpIndex);
+		QModelIndex indexCategory = model->index(row, CertTableModel::Category, tmpIndex);
 		if(indexAlias.isValid())
 		{
 			QString aliasStr = indexAlias.data(CertTableModel::AliasRole).toString();
@@ -325,7 +326,7 @@ void EditCertDialog::loadRow(int row, const QString &privatecert)
 			{ 
 				ui->categoryEdit->setCurrentIndex(index);
 			}
-		}f
+		}
 	}
 	if(privatecert == tr("Yes"))
 		ui->privateBox->setCurrentIndex(0);
