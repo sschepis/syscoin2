@@ -205,6 +205,12 @@ bool COffer::UnserializeFromData(const vector<unsigned char> &vchData) {
 		SetNull();
         return false;
     }
+	// extra check to ensure data was parsed correctly
+	if(!IsSysCompressedOrUncompressedPubKey(vchPubKey))
+	{
+		SetNull();
+		return false;
+	}
 	return true;
 }
 bool COffer::UnserializeFromTx(const CTransaction &tx) {
@@ -551,25 +557,29 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	vector<unsigned char> vchData;
 	if(!GetSyscoinData(tx, vchData))
 	{
+		if(fDebug)
+			LogPrintf("CheckOfferInputs(): Null offer1, skipping...\n");	
 		return true;
 	}
 	else if(!theOffer.UnserializeFromData(vchData))
 	{
+		if(fDebug)
+			LogPrintf("CheckOfferInputs(): Null offer2, skipping...\n");	
 		return true;
 	}
 	// Make sure offer outputs are not spent by a regular transaction, or the offer would be lost
 	if (tx.nVersion != SYSCOIN_TX_VERSION) {
 		if(fDebug)
-			LogPrintf("CheckOfferInputs() : non-syscoin transaction\n");		
+			LogPrintf("CheckOfferInputs(): non-syscoin transaction\n");		
 		return true;
 	}
 	if(fJustCheck)
 	{
 		
 		if(op != OP_OFFER_ACCEPT && vvchArgs.size() != 2)
-			return error("sys 2.1 offer arguments wrong size");
+			return error("CheckOfferInputs(): sys 2.1 offer arguments wrong size");
 		else if(op == OP_OFFER_ACCEPT && vvchArgs.size() != 6)
-			return error("sys 2.1 offer accept arguments wrong size");
+			return error("CheckOfferInputs(): sys 2.1 offer accept arguments wrong size");
 		if(!theOffer.IsNull())
 		{
 			uint256 calculatedHash = Hash(vchData.begin(), vchData.end());
@@ -579,14 +589,14 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			{
 				if(vchRandOffer != vvchArgs[5])
 				{
-					return error("Hash provided doesn't match the calculated hash the data");
+					return error("CheckOfferInputs(): hash provided doesn't match the calculated hash the data");
 				}
 			}
 			else
 			{
 				if(vchRandOffer != vvchArgs[1])
 				{
-					return error("Hash provided doesn't match the calculated hash the data");
+					return error("CheckOfferInputs(): hash provided doesn't match the calculated hash the data");
 				}
 			}
 		}
@@ -663,54 +673,54 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	{
 		if(theOffer.sDescription.size() > MAX_VALUE_LENGTH)
 		{
-			return error("offer description too big");
+			return error("CheckOfferInputs(): offer description too big");
 		}
 		if(theOffer.sTitle.size() > MAX_NAME_LENGTH)
 		{
-			return error("offer title too big");
+			return error("CheckOfferInputs(): offer title too big");
 		}
 		if(theOffer.sCategory.size() > MAX_NAME_LENGTH)
 		{
-			return error("offer category too big");
+			return error("CheckOfferInputs(): offer category too big");
 		}
 		if(theOffer.vchLinkOffer.size() > MAX_GUID_LENGTH)
 		{
-			return error("offer link guid too big");
+			return error("CheckOfferInputs(): offer link guid too big");
 		}
 		if(!IsSysCompressedOrUncompressedPubKey(theOffer.vchPubKey))
 		{
-			return error("offer pub key too invalid length");
+			return error("CheckOfferInputs(): offer pub key too invalid length");
 		}
 		if(theOffer.sCurrencyCode.size() > MAX_GUID_LENGTH)
 		{
-			return error("offer currency code too big");
+			return error("CheckOfferInputs(): offer currency code too big");
 		}
 		if(theOffer.vchAliasPeg.size() > MAX_GUID_LENGTH)
 		{
-			return error("offer alias peg too big");
+			return error("CheckOfferInputs(): offer alias peg too big");
 		}
 		if(theOffer.vchGeoLocation.size() > MAX_NAME_LENGTH)
 		{
-			return error("offer geolocation too big");
+			return error("CheckOfferInputs(): offer geolocation too big");
 		}
 		if(theOffer.offerLinks.size() > 0)
 		{
-			return error("offer links are not allowed in tx data");
+			return error("CheckOfferInputs(): offer links are not allowed in tx data");
 		}
 		if(theOffer.linkWhitelist.entries.size() > 1)
 		{
-			return error("offer has too many affiliate entries, only one allowed per tx");
+			return error("CheckOfferInputs(): offer has too many affiliate entries, only one allowed per tx");
 		}
 		if(!theOffer.vchOffer.empty() && theOffer.vchOffer != vvchArgs[0])
 		{
-			return error("guid in data output doesn't match guid in tx");
+			return error("CheckOfferInputs(): guid in data output doesn't match guid in tx");
 		}
 		if (vvchArgs[0].size() > MAX_GUID_LENGTH)
 			return error("offer hex guid too long");
 
 		if(stringFromVch(theOffer.sCurrencyCode) != "BTC" && theOffer.bOnlyAcceptBTC)
 		{
-			return error("An offer that only accepts BTC must have BTC specified as its currency");
+			return error("CheckOfferInputs(): an offer that only accepts BTC must have BTC specified as its currency");
 		}
 		switch (op) {
 		case OP_OFFER_ACTIVATE:

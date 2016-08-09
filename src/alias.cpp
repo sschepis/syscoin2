@@ -842,7 +842,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		if(IsSys21Fork(nHeight))
 		{
 			if(vvchArgs.size() != 3)
-				return error("sys 2.1 alias arguments wrong size");
+				return error("CheckAliasInputs(): sys 2.1 alias arguments wrong size");
 
 			if(!theAlias.IsNull())
 			{
@@ -851,12 +851,12 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				vector<unsigned char> vchRandAlias = vchFromValue(HexStr(vchRand));
 				if(vchRandAlias != vvchArgs[2])
 				{
-					return error("Hash provided doesn't match the calculated hash the data");
+					return error("CheckAliasInputs(): hash provided doesn't match the calculated hash the data");
 				}
 			}
 		}
 		else if(vvchArgs.size() != 1)
-			return error("sys 2.0 alias arguments wrong size");
+			return error("CheckAliasInputs(): sys 2.0 alias arguments wrong size");
 
 			
 		// Strict check - bug disallowed
@@ -881,7 +881,11 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	}
 	// we need to check for cert update specially because an alias update without data is sent along with offers linked with the alias
 	if (theAlias.IsNull() && op != OP_ALIAS_UPDATE)
+	{
+		if(fDebug)
+			LogPrintf("CheckAliasInputs(): Null alias, skipping...\n");	
 		return true;
+	}
 	vector<CAliasIndex> vtxPos;
 	string retError = "";
 	if(fJustCheck)
@@ -889,27 +893,27 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		
 		if(theAlias.vchPublicValue.size() > MAX_VALUE_LENGTH && vvchArgs[0] != vchFromString("sys_rates") && vvchArgs[0] != vchFromString("sys_category"))
 		{
-			return error("alias pub value too big");
+			return error("CheckAliasInputs(): alias pub value too big");
 		}
 		if(theAlias.vchPrivateValue.size() > MAX_ENCRYPTED_VALUE_LENGTH)
 		{
-			return error("alias priv value too big");
+			return error("CheckAliasInputs(): alias priv value too big");
 		}
 		if(!theAlias.vchPubKey.empty() && !IsSysCompressedOrUncompressedPubKey(theAlias.vchPubKey))
 		{
-			return error("alias pub key invalid length");
+			return error("CheckAliasInputs(): alias pub key invalid length");
 		}
 		if((!IsSys21Fork(theAlias.nHeight) || theAlias.nHeight > nHeight))
 		{
-			return error("bad alias height");
+			return error("CheckAliasInputs(): bad alias height");
 		}
 		switch (op) {
 			case OP_ALIAS_ACTIVATE:
 				// Check GUID
 				if (theAlias.vchGUID != vvchArgs[1])
-					return error("CheckAliasInputs() : OP_ALIAS_ACTIVATE GUID mismatch");
+					return error("CheckAliasInputs(): OP_ALIAS_ACTIVATE GUID mismatch");
 				if(theAlias.vchName != vvchArgs[0])
-					return error("CheckAliasInputs() : OP_ALIAS_ACTIVATE guid in data output doesn't match guid in tx");
+					return error("CheckAliasInputs(): OP_ALIAS_ACTIVATE guid in data output doesn't match guid in tx");
 				
 				break;
 			case OP_ALIAS_UPDATE:
@@ -1085,6 +1089,12 @@ bool CAliasIndex::UnserializeFromData(const vector<unsigned char> &vchData) {
 		SetNull();
         return false;
     }
+	// extra check to ensure data was parsed correctly
+	if(!IsSysCompressedOrUncompressedPubKey(vchPubKey))
+	{
+		SetNull();
+		return false;
+	}
 	return true;
 }
 bool CAliasIndex::UnserializeFromTx(const CTransaction &tx) {

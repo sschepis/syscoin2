@@ -93,6 +93,12 @@ bool CCert::UnserializeFromData(const vector<unsigned char> &vchData) {
 		SetNull();
         return false;
     }
+	// extra check to ensure data was parsed correctly
+	if(!IsSysCompressedOrUncompressedPubKey(vchPubKey))
+	{
+		SetNull();
+		return false;
+	}
 	return true;
 }
 bool CCert::UnserializeFromTx(const CTransaction &tx) {
@@ -369,7 +375,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 	{
 		
 		if(vvchArgs.size() != 2)
-			return error("sys 2.1 cert arguments wrong size");
+			return error("CheckCertInputs(): sys 2.1 cert arguments wrong size");
 
 		if(!theCert.IsNull())
 		{
@@ -378,7 +384,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 			vector<unsigned char> vchRandCert = vchFromValue(HexStr(vchRand));
 			if(vchRandCert != vvchArgs[1])
 			{
-				return error("Hash provided doesn't match the calculated hash the data");
+				return error("CheckCertInputs(): hash provided doesn't match the calculated hash the data");
 			}
 		}
 		
@@ -407,7 +413,11 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 
 	// we need to check for cert update specially because a cert update without data is sent along with offers linked with the cert
     if (theCert.IsNull() && op != OP_CERT_UPDATE)
+	{
+		if(fDebug)
+			LogPrintf("CheckCertInputs(): Null cert, skipping...\n");	
         return true;
+	}
 	
 	vector<CAliasIndex> vtxAliasPos;
 	vector<CCert> vtxPos;
@@ -416,26 +426,26 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 	{
 		if(theCert.vchData.size() > MAX_ENCRYPTED_VALUE_LENGTH)
 		{
-			return error("cert data too big");
+			return error("CheckCertInputs(): cert data too big");
 		}
 		if(theCert.vchTitle.size() > MAX_NAME_LENGTH)
 		{
-			return error("cert title too big");
+			return error("CheckCertInputs(): cert title too big");
 		}
 		if(!theCert.vchPubKey.empty() && !IsSysCompressedOrUncompressedPubKey(theCert.vchPubKey))
 		{
-			return error("cert pub key invalid length");
+			return error("CheckCertInputs(): cert pub key invalid length");
 		}
 		if(!theCert.vchCert.empty() && theCert.vchCert != vvchArgs[0])
 		{
-			return error("guid in data output doesn't match guid in tx");
+			return error("CheckCertInputs(): guid in data output doesn't match guid in tx");
 		}
 		if (vvchArgs[0].size() > MAX_GUID_LENGTH)
-			return error("cert hex guid too long");
+			return error("CheckCertInputs(): cert hex guid too long");
 		switch (op) {
 		case OP_CERT_ACTIVATE:
 			if (foundCert)
-				return error("CheckCertInputs() : certactivate tx pointing to previous syscoin tx");
+				return error("CheckCertInputs(): certactivate tx pointing to previous syscoin tx");
 			if (theCert.vchCert != vvchArgs[0])
 				return error("CheckAliasInputs() : OP_CERT_ACTIVATE cert mismatch");
 			break;

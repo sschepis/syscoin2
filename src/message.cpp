@@ -61,6 +61,13 @@ bool CMessage::UnserializeFromData(const vector<unsigned char> &vchData) {
 		SetNull();
         return false;
     }
+	// extra check to ensure data was parsed correctly
+	if(!IsSysCompressedOrUncompressedPubKey(vchPubKeyTo)
+		|| !IsSysCompressedOrUncompressedPubKey(vchPubKeyFrom))
+	{
+		SetNull();
+		return false;
+	}
 	return true;
 }
 bool CMessage::UnserializeFromTx(const CTransaction &tx) {
@@ -253,10 +260,14 @@ bool CheckMessageInputs(const CTransaction &tx, int op, int nOut, const vector<v
 	vector<unsigned char> vchData;
 	if(!GetSyscoinData(tx, vchData))
 	{
+		if(fDebug)
+			LogPrintf("CheckMessageInputs(): Null message1, skipping...\n");	
 		return true;
 	}
 	else if(!theMessage.UnserializeFromData(vchData))
 	{
+		if(fDebug)
+			LogPrintf("CheckMessageInputs(): Null message2, skipping...\n");	
 		return true;
 	}
     vector<vector<unsigned char> > vvchPrevAliasArgs;
@@ -264,7 +275,7 @@ bool CheckMessageInputs(const CTransaction &tx, int op, int nOut, const vector<v
 	{
 		
 		if(vvchArgs.size() != 2)
-			return error("sys 2.1 msg arguments wrong size");
+			return error("CheckMessageInputs(): sys 2.1 msg arguments wrong size");
 
 		if(!theMessage.IsNull())
 		{
@@ -273,7 +284,7 @@ bool CheckMessageInputs(const CTransaction &tx, int op, int nOut, const vector<v
 			vector<unsigned char> vchRandMsg = vchFromValue(HexStr(vchRand));
 			if(vchRandMsg != vvchArgs[1])
 			{
-				return error("Hash provided doesn't match the calculated hash the data");
+				return error("CheckMessageInputs(): hash provided doesn't match the calculated hash the data");
 			}
 		}
 		
@@ -305,30 +316,30 @@ bool CheckMessageInputs(const CTransaction &tx, int op, int nOut, const vector<v
 	if(fJustCheck)
 	{
 		if (vvchArgs[0].size() > MAX_GUID_LENGTH)
-			return error("message tx GUID too big");
+			return error("CheckMessageInputs(): message tx GUID too big");
 		if(!IsSysCompressedOrUncompressedPubKey(theMessage.vchPubKeyTo))
 		{
-			return error("message public key to, invalid length");
+			return error("CheckMessageInputs(): message public key to, invalid length");
 		}
 		if(!IsSysCompressedOrUncompressedPubKey(theMessage.vchPubKeyFrom))
 		{
-			return error("message public key from, invalid length");
+			return error("CheckMessageInputs(): message public key from, invalid length");
 		}
 		if(theMessage.vchSubject.size() > MAX_NAME_LENGTH)
 		{
-			return error("message subject too big");
+			return error("CheckMessageInputs(): message subject too big");
 		}
 		if(theMessage.vchMessageTo.size() > MAX_ENCRYPTED_VALUE_LENGTH)
 		{
-			return error("message data to too big");
+			return error("CheckMessageInputs(): message data to too big");
 		}
 		if(theMessage.vchMessageFrom.size() > MAX_ENCRYPTED_VALUE_LENGTH)
 		{
-			return error("message data from too big");
+			return error("CheckMessageInputs(): message data from too big");
 		}
 		if(!theMessage.vchMessage.empty() && theMessage.vchMessage != vvchArgs[0])
 		{
-			return error("guid in data output doesn't match guid in tx");
+			return error("CheckMessageInputs(): guid in data output doesn't match guid in tx");
 		}
 		if(op == OP_MESSAGE_ACTIVATE)
 		{

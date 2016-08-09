@@ -80,6 +80,12 @@ bool CEscrow::UnserializeFromData(const vector<unsigned char> &vchData) {
 		SetNull();
         return false;
     }
+	// extra check to ensure data was parsed correctly
+	if(!IsSysCompressedOrUncompressedPubKey(vchBuyerKey))
+	{
+		SetNull();
+		return false;
+	}
 	return true;
 }
 bool CEscrow::UnserializeFromTx(const CTransaction &tx) {
@@ -345,7 +351,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 	{
 		
 		if(vvchArgs.size() != 3)
-			return error("sys 2.1 escrow arguments wrong size");
+			return error("CheckEscrowInputs(): sys 2.1 escrow arguments wrong size");
 
 		if(!theEscrow.IsNull())
 		{
@@ -354,7 +360,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 			vector<unsigned char> vchRandEscrow = vchFromValue(HexStr(vchRand));
 			if(vchRandEscrow != vvchArgs[2])
 			{
-				return error("Hash provided doesn't match the calculated hash the data");
+				return error("CheckEscrowInputs(): hash provided doesn't match the calculated hash the data");
 			}
 		}
 
@@ -395,7 +401,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 	if(theEscrow.IsNull() && !(op == OP_ESCROW_COMPLETE && vvchArgs[1] == vchFromString("0")))
 	{
 		if(fDebug)
-			LogPrintf("CheckEscrowInputs() : Null escrow, skipping...\n");	
+			LogPrintf("CheckEscrowInputs(): Null escrow, skipping...\n");	
 		return true;
 	}
  
@@ -404,54 +410,54 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 	if(fJustCheck)
 	{
 		if (vvchArgs[0].size() > MAX_GUID_LENGTH)
-			return error("escrow tx GUID too big");
+			return error("CheckEscrowInputs(): escrow tx GUID too big");
 		if(!theEscrow.vchBuyerKey.empty() && !IsSysCompressedOrUncompressedPubKey(theEscrow.vchBuyerKey))
 		{
-			return error("escrow buyer pub key invalid length");
+			return error("CheckEscrowInputs(): escrow buyer pub key invalid length");
 		}
 		if(!theEscrow.vchSellerKey.empty() && !IsSysCompressedOrUncompressedPubKey(theEscrow.vchSellerKey))
 		{
-			return error("escrow seller pub key invalid length");
+			return error("CheckEscrowInputs(): escrow seller pub key invalid length");
 		}
 		if(!theEscrow.vchArbiterKey.empty() && !IsSysCompressedOrUncompressedPubKey(theEscrow.vchArbiterKey))
 		{
-			return error("escrow arbiter pub key invalid length");
+			return error("CheckEscrowInputs(): escrow arbiter pub key invalid length");
 		}
 		if(theEscrow.vchRedeemScript.size() > MAX_SCRIPT_ELEMENT_SIZE)
 		{
-			return error("escrow redeem script too long");
+			return error("CheckEscrowInputs(): escrow redeem script too long");
 		}
 		if(theEscrow.buyerFeedback.vchFeedback.size() > MAX_VALUE_LENGTH)
 		{
-			return error("buyer feedback too long");
+			return error("CheckEscrowInputs(): buyer feedback too long");
 		}
 		if(theEscrow.sellerFeedback.vchFeedback.size() > MAX_VALUE_LENGTH)
 		{
-			return error("seller feedback too long");
+			return error("CheckEscrowInputs(): seller feedback too long");
 		}
 		if(theEscrow.arbiterFeedback.vchFeedback.size() > MAX_VALUE_LENGTH)
 		{
-			return error("arbiter feedback too long");
+			return error("CheckEscrowInputs(): arbiter feedback too long");
 		}
 		if(theEscrow.vchOffer.size() > MAX_ID_LENGTH)
 		{
-			return error("escrow offer guid too long");
+			return error("CheckEscrowInputs(): escrow offer guid too long");
 		}
 		if(theEscrow.vchWhitelistAlias.size() > MAX_ID_LENGTH)
 		{
-			return error("escrow alias guid too long");
+			return error("CheckEscrowInputs(): escrow alias guid too long");
 		}
 		if(theEscrow.rawTx.size() > MAX_STANDARD_TX_SIZE)
 		{
-			return error("escrow message tx too long");
+			return error("CheckEscrowInputs(): escrow message tx too long");
 		}
 		if(theEscrow.vchOfferAcceptLink.size() > 0)
 		{
-			return error("escrow offeraccept guid not allowed");
+			return error("CheckEscrowInputs(): escrow offeraccept guid not allowed");
 		}
 		if(!theEscrow.vchEscrow.empty() && theEscrow.vchEscrow != vvchArgs[0])
 		{
-			return error("guid in data output doesn't match guid in tx");
+			return error("CheckEscrowInputs(): guid in data output doesn't match guid in tx");
 		}
 		switch (op) {
 			case OP_ESCROW_ACTIVATE:
