@@ -152,6 +152,7 @@ bool EditAliasDialog::saveCurrentRow()
 			params.push_back(ui->nameEdit->text().toStdString());
 			params.push_back("");
 			params.push_back(ui->safeSearchEdit->currentText().toStdString());	
+			params.push_back("");
 			params.push_back(ui->expiryEdit->itemData(ui->expiryEdit->currentIndex()).toString().toStdString());
 			try {
 				UniValue result = tableRPC.execute(strMethod, params);
