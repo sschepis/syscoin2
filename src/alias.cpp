@@ -1231,7 +1231,8 @@ bool GetTxAndVtxOfAlias(const vector<unsigned char> &vchName,
 void GetAddressFromAlias(const std::string& strAlias, std::string& strAddress, unsigned char& safetyLevel, bool& safeSearch, int64_t& nExpireHeight) {
 	try
 	{
-		string strLowerAlias = boost::algorithm::to_lower(strAlias);
+		string strLowerAlias = strAlias;
+		boost::algorithm::to_lower(strLowerAlias);
 		const vector<unsigned char> &vchAlias = vchFromValue(strLowerAlias);
 		if (paliasdb && !paliasdb->ExistsAlias(vchAlias))
 			throw runtime_error("Alias not found");
@@ -1268,7 +1269,8 @@ void GetAddressFromAlias(const std::string& strAlias, std::string& strAddress, u
 void GetAliasFromAddress(const std::string& strAddress, std::string& strAlias, unsigned char& safetyLevel, bool& safeSearch, int64_t& nExpireHeight) {
 	try
 	{
-		string strLowerAddress = bboost::algorithm::to_lower(strAddress);
+		string strLowerAddress = strAddress;
+		boost::algorithm::to_lower(strLowerAddress);
 		const vector<unsigned char> &vchAddress = vchFromValue(strLowerAddress);
 		if (paliasdb && !paliasdb->ExistsAddress(vchAddress))
 			throw runtime_error("Alias address mapping not found");
