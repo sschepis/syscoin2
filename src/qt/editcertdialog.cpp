@@ -133,7 +133,7 @@ void EditCertDialog::loadCategories()
 			for(unsigned int j = 0;j< categories.size(); j++)
 			{
 				boost::algorithm::trim(categories[j]);
-				if(categories[0] != QString("certificates"))
+				if(categories[0] != "certificates")
 					continue;
 				if(j == 1)
 				{

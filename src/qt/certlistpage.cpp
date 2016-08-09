@@ -15,6 +15,7 @@
 #include <QMenu>
 #include "main.h"
 #include "rpcserver.h"
+#include <QStandardItemModel>
 #include "qcomboboxdelegate.h"
 #include <boost/algorithm/string.hpp>
 #include <QSettings>
@@ -116,7 +117,7 @@ void CertListPage::loadCategories()
 			for(unsigned int j = 0;j< categories.size(); j++)
 			{
 				boost::algorithm::trim(categories[j]);
-				if(categories[0] != QString("certificates"))
+				if(categories[0] != "certificates")
 					continue;
 				if(j == 1)
 				{
