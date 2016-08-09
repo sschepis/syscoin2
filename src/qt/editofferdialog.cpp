@@ -95,6 +95,14 @@ EditOfferDialog::EditOfferDialog(Mode mode, const QString &strCert,  const QStri
 			index = ui->categoryEdit->findText(tr("certificates"));
 		if(index >= 0)
 			ui->categoryEdit->setCurrentIndex(index);
+
+		if(ui->certEdit->currentIndex() <= 0)
+		{
+			QMessageBox::warning(this, windowTitle(),
+				tr("Warning: You cannot sell certificate: %1 because it is not found in the system. It may have expired!").arg(strCert)),
+				QMessageBox::Ok, QMessageBox::Ok);
+		}
+
         break;
 	}
 	aliasChanged(ui->aliasEdit->currentText());
@@ -577,7 +585,7 @@ bool EditOfferDialog::saveCurrentRow()
 		params.push_back(ui->priceEdit->text().toStdString());
 		params.push_back(ui->descriptionEdit->toPlainText().toStdString());
 		params.push_back(ui->currencyEdit->currentText().toStdString());
-		if(ui->certEdit->currentIndex() >= 0)
+		if(ui->certEdit->currentIndex() > 0)
 		{
 			if(!ui->categoryEdit->currentText().startsWith("certificates"))
 			{
@@ -653,7 +661,7 @@ bool EditOfferDialog::saveCurrentRow()
 			params.push_back(ui->descriptionEdit->toPlainText().toStdString());
 			params.push_back(ui->currencyEdit->currentText().toStdString());
 			params.push_back(ui->privateEdit->currentText() == QString("Yes")? "1": "0");
-			if(ui->certEdit->currentIndex() >= 0)
+			if(ui->certEdit->currentIndex() > 0)
 			{
 				if(!ui->categoryEdit->currentText().startsWith("certificates"))
 				{
@@ -751,6 +759,7 @@ void EditOfferDialog::accept()
 			}
 			return;
 		}
+		return;
     }
     QDialog::accept();
 }
