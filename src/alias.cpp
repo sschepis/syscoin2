@@ -1269,9 +1269,7 @@ void GetAddressFromAlias(const std::string& strAlias, std::string& strAddress, u
 void GetAliasFromAddress(const std::string& strAddress, std::string& strAlias, unsigned char& safetyLevel, bool& safeSearch, int64_t& nExpireHeight) {
 	try
 	{
-		string strLowerAddress = strAddress;
-		boost::algorithm::to_lower(strLowerAddress);
-		const vector<unsigned char> &vchAddress = vchFromValue(strLowerAddress);
+		const vector<unsigned char> &vchAddress = vchFromValue(strAddress);
 		if (paliasdb && !paliasdb->ExistsAddress(vchAddress))
 			throw runtime_error("Alias address mapping not found");
 
