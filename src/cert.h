@@ -127,7 +127,7 @@ public:
     }
 
     bool ScanCerts(
-		const std::vector<unsigned char>& vchName, const std::string &strRegExp,  bool safeSearch, const string& strCategory,
+		const std::vector<unsigned char>& vchName, const std::string &strRegExp,  bool safeSearch, const std::string& strCategory,
             unsigned int nMax,
             std::vector<std::pair<std::vector<unsigned char>, CCert> >& certScan);
 
