@@ -216,7 +216,7 @@ public:
                 break;
             }
             parent->beginInsertRows(QModelIndex(), lowerIndex, lowerIndex);
-            cachedCertTable.insert(lowerIndex, CertTableEntry(newEntryType, title, cert, category, data, expires_on, expires_in, expired,privatecert, alias, safesearch));
+            cachedCertTable.insert(lowerIndex, CertTableEntry(newEntryType, title, cert, data, category, expires_on, expires_in, expired,privatecert, alias, safesearch));
             parent->endInsertRows();
             break;
         case CT_UPDATED:
