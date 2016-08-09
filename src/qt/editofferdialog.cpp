@@ -80,7 +80,7 @@ EditOfferDialog::EditOfferDialog(Mode mode, const QString &strCert, QWidget *par
     case NewCertOffer:
 		ui->aliasEdit->setEnabled(false);
 		ui->offerLabel->setVisible(false);
-		ui->aliasPegEdit->setText(tr("SYS_RATES"));
+		ui->aliasPegEdit->setText(tr("sys_rates"));
 		on_aliasPegEdit_editingFinished();
 		ui->privateEdit->setCurrentIndex(ui->privateEdit->findText("Yes"));
 		ui->privateEdit->setEnabled(false);

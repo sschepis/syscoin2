@@ -205,12 +205,6 @@ bool COffer::UnserializeFromData(const vector<unsigned char> &vchData) {
 		SetNull();
         return false;
     }
-	// extra check to ensure data was parsed correctly
-	if(!IsSysCompressedOrUncompressedPubKey(vchPubKey))
-	{
-		SetNull();
-		return false;
-	}
 	return true;
 }
 bool COffer::UnserializeFromTx(const CTransaction &tx) {
@@ -1413,7 +1407,7 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 	if (fHelp || params.size() < 7 || params.size() > 13)
 		throw runtime_error(
 		"offernew <aliaspeg> <alias> <category> <title> <quantity> <price> <description> <currency> [cert. guid] [exclusive resell=1] [accept btc only=0] [geolocation=''] [safe search=Yes]\n"
-						"<aliaspeg> Alias peg you wish to use, leave blank to use SYS_RATES.\n"	
+						"<aliaspeg> Alias peg you wish to use, leave blank to use sys_rates.\n"	
 						"<alias> An alias you own.\n"
 						"<category> category, 255 chars max.\n"
 						"<title> title, 255 chars max.\n"
@@ -1629,7 +1623,7 @@ UniValue offernew_nocheck(const UniValue& params, bool fHelp) {
 	if (fHelp || params.size() < 7 || params.size() > 13)
 		throw runtime_error(
 		"offernew_nocheck <aliaspeg> <alias> <category> <title> <quantity> <price> <description> <currency> [cert. guid] [exclusive resell=1] [accept btc only=0] [geolocation=''] [safe search=Yes]\n"
-						"<aliaspeg> Alias peg you wish to use, leave blank to use SYS_RATES.\n"	
+						"<aliaspeg> Alias peg you wish to use, leave blank to use sys_rates.\n"	
 						"<alias> An alias you own.\n"
 						"<category> category, 255 chars max.\n"
 						"<title> title, 255 chars max.\n"

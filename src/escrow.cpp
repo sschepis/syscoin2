@@ -80,12 +80,6 @@ bool CEscrow::UnserializeFromData(const vector<unsigned char> &vchData) {
 		SetNull();
         return false;
     }
-	// extra check to ensure data was parsed correctly
-	if(!IsSysCompressedOrUncompressedPubKey(vchBuyerKey))
-	{
-		SetNull();
-		return false;
-	}
 	return true;
 }
 bool CEscrow::UnserializeFromTx(const CTransaction &tx) {

@@ -110,7 +110,7 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 	const string &chainName = ChainNameFromCommandLine();
 	if(alias.UnserializeFromData(vchData))
 	{
-		if(alias.vchName == vchFromString("SYS_RATES") || alias.vchName == vchFromString("SYS_BAN") || alias.vchName == vchFromString("SYS_CATEGORY"))
+		if(alias.vchName == vchFromString("sys_rates") || alias.vchName == vchFromString("sys_ban") || alias.vchName == vchFromString("sys_category"))
 			return false;
 		vector<CAliasIndex> vtxPos;
 		// we only prune things that we have in our db and that we can verify the last tx is expired
@@ -626,17 +626,17 @@ bool getCategoryList(vector<string>& categoryList)
 {
 	// check for alias existence in DB
 	vector<CAliasIndex> vtxPos;
-	if (!paliasdb->ReadAlias(vchFromString("SYS_CATEGORY"), vtxPos) || vtxPos.empty())
+	if (!paliasdb->ReadAlias(vchFromString("sys_category"), vtxPos) || vtxPos.empty())
 	{
 		if(fDebug)
-			LogPrintf("getCategoryList() Could not find SYS_CATEGORY alias\n");
+			LogPrintf("getCategoryList() Could not find sys_category alias\n");
 		return false;
 	}
 	
 	if (vtxPos.size() < 1)
 	{
 		if(fDebug)
-			LogPrintf("getCategoryList() Could not find SYS_CATEGORY alias (vtxPos.size() == 0)\n");
+			LogPrintf("getCategoryList() Could not find sys_category alias (vtxPos.size() == 0)\n");
 		return false;
 	}
 
@@ -886,7 +886,8 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	string retError = "";
 	if(fJustCheck)
 	{
-		if(theAlias.vchPublicValue.size() > MAX_VALUE_LENGTH && vvchArgs[0] != vchFromString("SYS_RATES"))
+		
+		if(theAlias.vchPublicValue.size() > MAX_VALUE_LENGTH && vvchArgs[0] != vchFromString("sys_rates") && vvchArgs[0] != vchFromString("sys_category))
 		{
 			return error("alias pub value too big");
 		}
@@ -898,10 +899,6 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		{
 			return error("alias pub key invalid length");
 		}
-		if(!theAlias.vchName.empty() && theAlias.vchName != vvchArgs[0])
-		{
-			return error("guid in data output doesn't match guid in tx");
-		}
 		if((!IsSys21Fork(theAlias.nHeight) || theAlias.nHeight > nHeight))
 		{
 			return error("bad alias height");
@@ -911,20 +908,21 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				// Check GUID
 				if (theAlias.vchGUID != vvchArgs[1])
 					return error("CheckAliasInputs() : OP_ALIAS_ACTIVATE GUID mismatch");
-				if (theAlias.vchName != vvchArgs[0])
-					return error("CheckAliasInputs() : OP_ALIAS_ACTIVATE name mismatch");
+				if(theAlias.vchName != vvchArgs[0])
+					return error("CheckAliasInputs() : OP_ALIAS_ACTIVATE guid in data output doesn't match guid in tx");
+				
 				break;
 			case OP_ALIAS_UPDATE:
 				if (!IsAliasOp(prevOp))
 					return error("CheckAliasInputs() : OP_ALIAS_UPDATE previous tx not found");
+				if(!theAlias.IsNull() && theAlias.vchName != vvchArgs[0])
+					return error("CheckAliasInputs() : OP_ALIAS_UPDATE guid in data output doesn't match guid in tx");
 				// Check name
 				if (vvchPrevArgs[0] != vvchArgs[0])
 					return error("CheckAliasInputs() : OP_ALIAS_UPDATE alias mismatch");
 				// Check GUID
 				if (vvchPrevArgs[1] != vvchArgs[1])
 					return error("CheckAliasInputs() : OP_ALIAS_UPDATE GUID input mismatch");
-				if (!theAlias.IsNull() && theAlias.vchName != vvchArgs[0])
-					return error("CheckAliasInputs() : OP_ALIAS_UPDATE name mismatch");
 				break;
 		default:
 			return error(
@@ -937,13 +935,9 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		bool update = false;
 		CAliasIndex dbAlias;
 		CTransaction aliasTx;
-		vchName = vvchArgs[0];
-		if(op == OP_ALIAS_ACTIVATE && vvchArgs[0] != vchFromString("SYS_RATES") && vvchArgs[0] != vchFromString("SYS_BAN") && vvchArgs[0] != vchFromString("SYS_CATEGORY"))
-		{
-			string strName = stringFromVch(vchName);
-			boost::algorithm::to_lower(strName);
-			vchName = vchFromString(strName);
-		}
+		string strName = stringFromVch(vvchArgs[0]);
+		boost::algorithm::to_lower(strName);
+		vchName = vchFromString(strName);
 		// get the alias from the DB
 		if(!GetTxAndVtxOfAlias(vchName, dbAlias, aliasTx, vtxPos))	
 		{
@@ -1022,7 +1016,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		CSyscoinAddress address(PubKey.GetID());
 		if (!paliasdb->WriteAlias(vchName, vchFromString(address.ToString()), vtxPos))
 			return error( "CheckAliasInputs() :  failed to write to alias DB");
-		if(update && vchName == vchFromString("SYS_BAN"))
+		if(update && vchName == vchFromString("sys_ban"))
 		{
 			updateBans(theAlias.vchPublicValue);
 		}		
@@ -1091,12 +1085,6 @@ bool CAliasIndex::UnserializeFromData(const vector<unsigned char> &vchData) {
 		SetNull();
         return false;
     }
-	// extra check to ensure data was parsed correctly
-	if(!IsSysCompressedOrUncompressedPubKey(vchPubKey))
-	{
-		SetNull();
-		return false;
-	}
 	return true;
 }
 bool CAliasIndex::UnserializeFromTx(const CTransaction &tx) {
@@ -1203,7 +1191,7 @@ bool GetTxOfAlias(const vector<unsigned char> &vchName,
 		return false;
 	txPos = vtxPos.back();
 	int nHeight = txPos.nHeight;
-	if(vchName != vchFromString("SYS_RATES") && vchName != vchFromString("SYS_BAN") && vchName != vchFromString("SYS_CATEGORY"))
+	if(vchName != vchFromString("sys_rates") && vchName != vchFromString("sys_ban") && vchName != vchFromString("sys_category"))
 	{
 		if (!skipExpiresCheck && (nHeight + (txPos.nRenewal*GetAliasExpirationDepth())
 				< chainActive.Tip()->nHeight)) {
@@ -1224,7 +1212,7 @@ bool GetTxAndVtxOfAlias(const vector<unsigned char> &vchName,
 		return false;
 	txPos = vtxPos.back();
 	int nHeight = txPos.nHeight;
-	if(vchName != vchFromString("SYS_RATES") && vchName != vchFromString("SYS_BAN") && vchName != vchFromString("SYS_CATEGORY"))
+	if(vchName != vchFromString("sys_rates") && vchName != vchFromString("sys_ban") && vchName != vchFromString("sys_category"))
 	{
 		if (!skipExpiresCheck && (nHeight + (txPos.nRenewal*GetAliasExpirationDepth())
 				< chainActive.Tip()->nHeight)) {
@@ -1243,7 +1231,8 @@ bool GetTxAndVtxOfAlias(const vector<unsigned char> &vchName,
 void GetAddressFromAlias(const std::string& strAlias, std::string& strAddress, unsigned char& safetyLevel, bool& safeSearch, int64_t& nExpireHeight) {
 	try
 	{
-		const vector<unsigned char> &vchAlias = vchFromValue(strAlias);
+		string strLowerAlias = boost::algorithm::to_lower(strAlias);
+		const vector<unsigned char> &vchAlias = vchFromValue(strLowerAlias);
 		if (paliasdb && !paliasdb->ExistsAlias(vchAlias))
 			throw runtime_error("Alias not found");
 
@@ -1279,7 +1268,8 @@ void GetAddressFromAlias(const std::string& strAlias, std::string& strAddress, u
 void GetAliasFromAddress(const std::string& strAddress, std::string& strAlias, unsigned char& safetyLevel, bool& safeSearch, int64_t& nExpireHeight) {
 	try
 	{
-		const vector<unsigned char> &vchAddress = vchFromValue(strAddress);
+		string strLowerAddress = bboost::algorithm::to_lower(strAddress);
+		const vector<unsigned char> &vchAddress = vchFromValue(strLowerAddress);
 		if (paliasdb && !paliasdb->ExistsAddress(vchAddress))
 			throw runtime_error("Alias address mapping not found");
 
@@ -1455,7 +1445,7 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 
 	vector<unsigned char> vchName = vchFromString(params[0].get_str());
 	string strName = params[0].get_str();
-	if(vchName != vchFromString("SYS_RATES") && vchName != vchFromString("SYS_BAN") && vchName != vchFromString("SYS_CATEGORY"))
+	if(vchName != vchFromString("sys_rates") && vchName != vchFromString("sys_ban") && vchName != vchFromString("sys_category"))
 	{
 		boost::algorithm::to_lower(strName);
 		vchName = vchFromString(strName);
@@ -1590,7 +1580,7 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 	vchPublicValue = vchFromString(strPublicValue);
 	string strPrivateValue = params.size()>=3 && params[2].get_str().size() > 0?params[2].get_str():"";
 	vchPrivateValue = vchFromString(strPrivateValue);
-	if (vchPublicValue.size() > MAX_VALUE_LENGTH && vchName != vchFromString("SYS_RATES"))
+	if (vchPublicValue.size() > MAX_VALUE_LENGTH && vchName != vchFromString("sys_rates"))
 		throw runtime_error("alias public value cannot exceed 1023 bytes!");
 	if (vchPrivateValue.size() > MAX_VALUE_LENGTH)
 		throw runtime_error("alias public value cannot exceed 1023 bytes!");
@@ -1799,7 +1789,7 @@ UniValue aliaslist(const UniValue& params, bool fHelp) {
 			oName.push_back(Pair("rating", (int)rating));
 			oName.push_back(Pair("ratingcount", alias.nRatingCount));
 			expired_block = nHeight + (alias.nRenewal*GetAliasExpirationDepth());
-			if(vchName != vchFromString("SYS_RATES") && vchName != vchFromString("SYS_BAN") && vchName != vchFromString("SYS_CATEGORY"))
+			if(vchName != vchFromString("sys_rates") && vchName != vchFromString("sys_ban") && vchName != vchFromString("sys_category"))
 			{
 				if(expired_block < chainActive.Tip()->nHeight)
 				{
@@ -1971,7 +1961,7 @@ UniValue aliasinfo(const UniValue& params, bool fHelp) {
 		oName.push_back(Pair("ratingcount", alias.nRatingCount));
         oName.push_back(Pair("lastupdate_height", nHeight));
 		expired_block = nHeight + (alias.nRenewal*GetAliasExpirationDepth());
-		if(vchName != vchFromString("SYS_RATES") && vchName != vchFromString("SYS_BAN") && vchName != vchFromString("SYS_CATEGORY"))
+		if(vchName != vchFromString("sys_rates") && vchName != vchFromString("sys_ban") && vchName != vchFromString("sys_category"))
 		{
 			if(expired_block < chainActive.Tip()->nHeight)
 			{
@@ -2050,7 +2040,7 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 			oName.push_back(Pair("rating", (int)rating));
 			oName.push_back(Pair("ratingcount", txPos2.nRatingCount));
 			expired_block = nHeight + (txPos2.nRenewal*GetAliasExpirationDepth()) ;
-			if(vchName != vchFromString("SYS_RATES") && vchName != vchFromString("SYS_BAN") && vchName != vchFromString("SYS_CATEGORY"))
+			if(vchName != vchFromString("sys_rates") && vchName != vchFromString("sys_ban") && vchName != vchFromString("sys_category"))
 			{
 				if(expired_block < chainActive.Tip()->nHeight)
 				{

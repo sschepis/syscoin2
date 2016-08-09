@@ -61,13 +61,6 @@ bool CMessage::UnserializeFromData(const vector<unsigned char> &vchData) {
 		SetNull();
         return false;
     }
-	// extra check to ensure data was parsed correctly
-	if(!IsSysCompressedOrUncompressedPubKey(vchPubKeyTo)
-		|| !IsSysCompressedOrUncompressedPubKey(vchPubKeyFrom))
-	{
-		SetNull();
-		return false;
-	}
 	return true;
 }
 bool CMessage::UnserializeFromTx(const CTransaction &tx) {

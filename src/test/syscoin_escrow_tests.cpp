@@ -196,12 +196,12 @@ BOOST_AUTO_TEST_CASE (generate_escrow_linked_release_with_peg_update)
 	EscrowRelease("node1", guid);
 	// update the EUR peg twice before claiming escrow
 	string data = "{\\\"rates\\\":[{\\\"currency\\\":\\\"USD\\\",\\\"rate\\\":2690.1,\\\"precision\\\":2},{\\\"currency\\\":\\\"EUR\\\",\\\"rate\\\":269.2,\\\"precision\\\":2},{\\\"currency\\\":\\\"GBP\\\",\\\"rate\\\":2697.3,\\\"precision\\\":2},{\\\"currency\\\":\\\"CAD\\\",\\\"rate\\\":2698.0,\\\"precision\\\":2},{\\\"currency\\\":\\\"BTC\\\",\\\"rate\\\":100000.0,\\\"precision\\\":8},{\\\"currency\\\":\\\"SYS\\\",\\\"rate\\\":1.0,\\\"precision\\\":2}]}";
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate SYS_RATES " + data));
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate sys_rates " + data));
 	GenerateBlocks(5);
 	GenerateBlocks(5, "node2");
 	GenerateBlocks(5, "node3");
 	data = "{\\\"rates\\\":[{\\\"currency\\\":\\\"USD\\\",\\\"rate\\\":2690.1,\\\"precision\\\":2},{\\\"currency\\\":\\\"EUR\\\",\\\"rate\\\":218.2,\\\"precision\\\":2},{\\\"currency\\\":\\\"GBP\\\",\\\"rate\\\":2697.3,\\\"precision\\\":2},{\\\"currency\\\":\\\"CAD\\\",\\\"rate\\\":2698.0,\\\"precision\\\":2},{\\\"currency\\\":\\\"BTC\\\",\\\"rate\\\":100000.0,\\\"precision\\\":8},{\\\"currency\\\":\\\"SYS\\\",\\\"rate\\\":1.0,\\\"precision\\\":2}]}";
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate SYS_RATES " + data));
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate sys_rates " + data));
 	// ensure dependent services don't expire
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate buyeralias33 data"));
 	BOOST_CHECK_NO_THROW(CallRPC("node2", "aliasupdate selleralias33 data"));
@@ -215,7 +215,7 @@ BOOST_AUTO_TEST_CASE (generate_escrow_linked_release_with_peg_update)
 	EscrowClaimReleaseLink("node2", guid, "node3");
 	// restore EUR peg
 	data = "{\\\"rates\\\":[{\\\"currency\\\":\\\"USD\\\",\\\"rate\\\":2690.1,\\\"precision\\\":2},{\\\"currency\\\":\\\"EUR\\\",\\\"rate\\\":2695.2,\\\"precision\\\":2},{\\\"currency\\\":\\\"GBP\\\",\\\"rate\\\":2697.3,\\\"precision\\\":2},{\\\"currency\\\":\\\"CAD\\\",\\\"rate\\\":2698.0,\\\"precision\\\":2},{\\\"currency\\\":\\\"BTC\\\",\\\"rate\\\":100000.0,\\\"precision\\\":8},{\\\"currency\\\":\\\"SYS\\\",\\\"rate\\\":1.0,\\\"precision\\\":2}]}";
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate SYS_RATES " + data));
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate sys_rates " + data));
 	GenerateBlocks(5);
 	GenerateBlocks(5, "node2");
 	GenerateBlocks(5, "node3");
@@ -244,7 +244,7 @@ BOOST_AUTO_TEST_CASE (generate_escrowpruning)
 		BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 5"));
 		MilliSleep(2500);
 		BOOST_CHECK_NO_THROW(CallRPC("node2", "generate 5"));
-		BOOST_CHECK_NO_THROW(CallRPC("node1", "offerupdate SYS_RATES selleraliasprune " + offerguid + " category title 100 0.05 description"));
+		BOOST_CHECK_NO_THROW(CallRPC("node1", "offerupdate sys_rates selleraliasprune " + offerguid + " category title 100 0.05 description"));
 		BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 5"));
 		MilliSleep(1000);
 		BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 45"));
@@ -265,7 +265,7 @@ BOOST_AUTO_TEST_CASE (generate_escrowpruning)
 		BOOST_CHECK_NO_THROW(CallRPC("node2", "escrowrelease " + guid1));
 		MilliSleep(1000);
 		BOOST_CHECK_NO_THROW(CallRPC("node2", "generate 5"));
-		BOOST_CHECK_NO_THROW(CallRPC("node1", "offerupdate SYS_RATES selleraliasprune " + offerguid + " category title 100 0.05 description"));
+		BOOST_CHECK_NO_THROW(CallRPC("node1", "offerupdate sys_rates selleraliasprune " + offerguid + " category title 100 0.05 description"));
 		MilliSleep(2500);
 		BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 5"));
 		MilliSleep(2500);
@@ -277,7 +277,7 @@ BOOST_AUTO_TEST_CASE (generate_escrowpruning)
 		BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 5"));
 		MilliSleep(2500);
 		BOOST_CHECK_NO_THROW(CallRPC("node2", "generate 5"));
-		BOOST_CHECK_NO_THROW(CallRPC("node1", "offerupdate SYS_RATES selleraliasprune " + offerguid + " category title 100 0.05 description"));
+		BOOST_CHECK_NO_THROW(CallRPC("node1", "offerupdate sys_rates selleraliasprune " + offerguid + " category title 100 0.05 description"));
 		MilliSleep(2500);
 		BOOST_CHECK_NO_THROW(CallRPC("node2", "generate 5"));
 		MilliSleep(2500);
@@ -294,7 +294,7 @@ BOOST_AUTO_TEST_CASE (generate_escrowpruning)
 		BOOST_CHECK_NO_THROW(CallRPC("node1", "escrowrelease " + guid1));
 		MilliSleep(1000);
 		BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 5"));
-		BOOST_CHECK_NO_THROW(CallRPC("node1", "offerupdate SYS_RATES selleraliasprune " + offerguid + " category title 100 0.05 description"));
+		BOOST_CHECK_NO_THROW(CallRPC("node1", "offerupdate sys_rates selleraliasprune " + offerguid + " category title 100 0.05 description"));
 		MilliSleep(2500);
 		BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 5"));
 		MilliSleep(2500);
@@ -318,7 +318,7 @@ BOOST_AUTO_TEST_CASE (generate_escrowpruning)
 		BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 5"));
 		MilliSleep(2500);
 		BOOST_CHECK_NO_THROW(CallRPC("node2", "generate 5"));
-		BOOST_CHECK_NO_THROW(CallRPC("node1", "offerupdate SYS_RATES selleraliasprune " + offerguid + " category title 100 0.05 description"));
+		BOOST_CHECK_NO_THROW(CallRPC("node1", "offerupdate sys_rates selleraliasprune " + offerguid + " category title 100 0.05 description"));
 		BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 2"));
 		MilliSleep(2500);
 		BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 3"));	

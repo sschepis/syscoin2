@@ -28,37 +28,37 @@ BOOST_AUTO_TEST_CASE (generate_offernew)
 	BOOST_CHECK_EQUAL(OfferFilter("node1", offerguid, "On"), true);
 
 	// should fail: generate an offer with unknown alias
-	BOOST_CHECK_THROW(r = CallRPC("node1", "offernew SYS_RATES fooalias category title 100 0.05 description USD"), runtime_error);
+	BOOST_CHECK_THROW(r = CallRPC("node1", "offernew sys_rates fooalias category title 100 0.05 description USD"), runtime_error);
 	BOOST_CHECK_THROW(r = CallRPC("node1", "offernew_nocheck fooalias category title 100 0.05 description USD"), runtime_error);
 
 	// should fail: generate an offer with negative quantity
-	BOOST_CHECK_THROW(r = CallRPC("node1", "offernew SYS_RATES selleralias1 category title -2 0.05 description USD"), runtime_error);
+	BOOST_CHECK_THROW(r = CallRPC("node1", "offernew sys_rates selleralias1 category title -2 0.05 description USD"), runtime_error);
 	BOOST_CHECK_THROW(r = CallRPC("node1", "offernew_nocheck selleralias1 category title -2 0.05 description USD"), runtime_error);
 
 	// should fail: generate an offer with zero price
-	BOOST_CHECK_THROW(r = CallRPC("node1", "offernew SYS_RATES selleralias1 category title 100 0 description USD"), runtime_error);
+	BOOST_CHECK_THROW(r = CallRPC("node1", "offernew sys_rates selleralias1 category title 100 0 description USD"), runtime_error);
 	BOOST_CHECK_THROW(r = CallRPC("node1", "offernew_nocheck selleralias1 category title 100 0 description USD"), runtime_error);
 
 	// should fail: generate an offer with negative price
-	BOOST_CHECK_THROW(r = CallRPC("node1", "offernew SYS_RATES selleralias1 category title 100 -0.05 description USD"), runtime_error);
+	BOOST_CHECK_THROW(r = CallRPC("node1", "offernew sys_rates selleralias1 category title 100 -0.05 description USD"), runtime_error);
 	BOOST_CHECK_THROW(r = CallRPC("node1", "offernew_nocheck selleralias1 category title 100 -0.05 description USD"), runtime_error);
 
 	// should fail: generate an offer too-large category
 	string s256bytes = "SfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsDfdfddz";
-	BOOST_CHECK_THROW(r = CallRPC("node1", "offernew SYS_RATES selleralias1 " + s256bytes + " title 100 0.05 description USD"), runtime_error);	
+	BOOST_CHECK_THROW(r = CallRPC("node1", "offernew sys_rates selleralias1 " + s256bytes + " title 100 0.05 description USD"), runtime_error);	
 	BOOST_CHECK_THROW(r = CallRPC("node1", "offernew_nocheck selleralias1 " + s256bytes + " title 100 0.05 description USD"), runtime_error);	
 
 	// should fail: generate an offer too-large title
-	BOOST_CHECK_THROW(r = CallRPC("node1", "offernew SYS_RATES selleralias1 category " + s256bytes + " 100 0.05 description USD"), runtime_error);	
+	BOOST_CHECK_THROW(r = CallRPC("node1", "offernew sys_rates selleralias1 category " + s256bytes + " 100 0.05 description USD"), runtime_error);	
 	BOOST_CHECK_THROW(r = CallRPC("node1", "offernew_nocheck selleralias1 category " + s256bytes + " 100 0.05 description USD"), runtime_error);
 
 	// should fail: generate an offer too-large description
 	string s1024bytes =   "asdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfssdsfsdfsdfsdfsdfsdsdfdfsdfsdfsdfsdz";
-	BOOST_CHECK_THROW(r = CallRPC("node1", "offernew SYS_RATES selleralias1 category title 100 0.05 " + s1024bytes + " USD"), runtime_error);
+	BOOST_CHECK_THROW(r = CallRPC("node1", "offernew sys_rates selleralias1 category title 100 0.05 " + s1024bytes + " USD"), runtime_error);
 	BOOST_CHECK_THROW(r = CallRPC("node1", "offernew_nocheck selleralias1 category title 100 0.05 " + s1024bytes + " USD"), runtime_error);
 
 	// should fail: generate an offer with invalid currency
-	BOOST_CHECK_THROW(r = CallRPC("node1", "offernew SYS_RATES selleralias1 category title 100 0.05 description ZZZ"), runtime_error);
+	BOOST_CHECK_THROW(r = CallRPC("node1", "offernew sys_rates selleralias1 category title 100 0.05 description ZZZ"), runtime_error);
 	BOOST_CHECK_THROW(r = CallRPC("node1", "offernew_nocheck selleralias1 category title 100 0.05 description ZZZ"), runtime_error);
 }
 
@@ -82,7 +82,7 @@ BOOST_AUTO_TEST_CASE (generate_certoffernew)
 	string offerguid = OfferNew("node1", "node1alias", "category", "title", "1", "0.05", "description", "USD", certguid1);
 
 	// should fail: generate a cert offer using a quantity greater than 1
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "offernew SYS_RATES node1alias category title 2 0.05 description USD " + certguid1a));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "offernew sys_rates node1alias category title 2 0.05 description USD " + certguid1a));
 	const UniValue &arr = r.get_array();
 	string guid = arr[1].get_str();
 	GenerateBlocks(10, "node1");
@@ -90,9 +90,9 @@ BOOST_AUTO_TEST_CASE (generate_certoffernew)
 	BOOST_CHECK(find_value(r.get_obj(), "quantity").get_str() == "1");
 
 	// should fail: generate a cert offer using a zero quantity
-	BOOST_CHECK_THROW(r = CallRPC("node1", "offernew SYS_RATES node1alias category title 0 0.05 description USD " + certguid1a), runtime_error);
+	BOOST_CHECK_THROW(r = CallRPC("node1", "offernew sys_rates node1alias category title 0 0.05 description USD " + certguid1a), runtime_error);
 	#ifdef ENABLE_DEBUGRPC
-		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "offernew_nocheck SYS_RATES node1alias category title 0 0.05 description USD " + certguid1a));
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "offernew_nocheck sys_rates node1alias category title 0 0.05 description USD " + certguid1a));
 		const UniValue &arr1 = r.get_array();
 		guid = arr1[1].get_str();
 		GenerateBlocks(10, "node1");
@@ -100,9 +100,9 @@ BOOST_AUTO_TEST_CASE (generate_certoffernew)
 		BOOST_CHECK(find_value(r.get_obj(), "quantity").get_str() == "1");
 	#endif
 	// should fail: generate a cert offer using an unlimited quantity
-	BOOST_CHECK_THROW(r = CallRPC("node1", "offernew SYS_RATES node1alias category title -1 0.05 description USD " + certguid1a), runtime_error);
+	BOOST_CHECK_THROW(r = CallRPC("node1", "offernew sys_rates node1alias category title -1 0.05 description USD " + certguid1a), runtime_error);
 	#ifdef ENABLE_DEBUGRPC
-		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "offernew_nocheck SYS_RATES node1alias category title -1 0.05 description USD " + certguid1a));
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "offernew_nocheck sys_rates node1alias category title -1 0.05 description USD " + certguid1a));
 		const UniValue &arr2 = r.get_array();
 		guid = arr2[1].get_str();
 		GenerateBlocks(10, "node1");
@@ -110,12 +110,12 @@ BOOST_AUTO_TEST_CASE (generate_certoffernew)
 		BOOST_CHECK(find_value(r.get_obj(), "quantity").get_str() == "1");
 	#endif
 	// should fail: generate a cert offer using a cert guid you don't own
-	BOOST_CHECK_THROW(r = CallRPC("node1", "offernew SYS_RATES node1alias category title 1 0.05 description USD " + certguid2), runtime_error);	
+	BOOST_CHECK_THROW(r = CallRPC("node1", "offernew sys_rates node1alias category title 1 0.05 description USD " + certguid2), runtime_error);	
 	#ifdef ENABLE_DEBUGRPC
 		BOOST_CHECK_THROW(r = CallRPC("node1", "offernew_nocheck node1alias category title 1 0.05 description USD " + certguid2), runtime_error);	
 	#endif
 	// should fail: generate a cert offer if accepting only BTC
-	BOOST_CHECK_THROW(r = CallRPC("node1", "offernew SYS_RATES node1alias category title 1 0.05 description USD " + certguid1a + " 0 1"), runtime_error);
+	BOOST_CHECK_THROW(r = CallRPC("node1", "offernew sys_rates node1alias category title 1 0.05 description USD " + certguid1a + " 0 1"), runtime_error);
 
 	#ifdef ENABLE_DEBUGRPC
 		BOOST_CHECK_THROW(r = CallRPC("node1", "offernew_nocheck node1alias category title 1 0.05 description USD " + certguid1a + " 0 1"), runtime_error);
@@ -308,42 +308,42 @@ BOOST_AUTO_TEST_CASE (generate_offerupdate)
 	OfferUpdate("node1", "selleralias2", offerguid, "category", "titlenew", "90", "0.15", "descriptionnew");
 
 	// should fail: offer cannot be updated by someone other than owner
-	BOOST_CHECK_THROW(r = CallRPC("node2", "offerupdate SYS_RATES selleralias2 " + offerguid + " category title 90 0.15 description"), runtime_error);
+	BOOST_CHECK_THROW(r = CallRPC("node2", "offerupdate sys_rates selleralias2 " + offerguid + " category title 90 0.15 description"), runtime_error);
 	#ifdef ENABLE_DEBUGRPC
 		BOOST_CHECK_THROW(r = CallRPC("node2", "offerupdate_nocheck selleralias2 " + offerguid + " category title 90 0.15 description"), runtime_error);
 	#endif
 
 	// should fail: generate an offer with unknown alias
-	BOOST_CHECK_THROW(r = CallRPC("node1", "offerupdate SYS_RATES fooalias " + offerguid + " category title 90 0.15 description"), runtime_error);
+	BOOST_CHECK_THROW(r = CallRPC("node1", "offerupdate sys_rates fooalias " + offerguid + " category title 90 0.15 description"), runtime_error);
 	#ifdef ENABLE_DEBUGRPC
 		BOOST_CHECK_THROW(r = CallRPC("node1", "offerupdate_nocheck fooalias " + offerguid + " category title 90 0.15 description"), runtime_error);
 	#endif
 
 	// should fail: generate an offer with zero price
-	BOOST_CHECK_THROW(r = CallRPC("node1", "offerupdate SYS_RATES selleralias2 " + offerguid + " category title 90 0 description"), runtime_error);
+	BOOST_CHECK_THROW(r = CallRPC("node1", "offerupdate sys_rates selleralias2 " + offerguid + " category title 90 0 description"), runtime_error);
 	#ifdef ENABLE_DEBUGRPC
 		BOOST_CHECK_THROW(r = CallRPC("node1", "offerupdate_nocheck selleralias2 " + offerguid + " category title 90 0 description"), runtime_error);
 	#endif
 	// should fail: generate an offer with negative price
-	BOOST_CHECK_THROW(r = CallRPC("node1", "offerupdate SYS_RATES selleralias2 " + offerguid + " category title 90 -0.05 description"), runtime_error);
+	BOOST_CHECK_THROW(r = CallRPC("node1", "offerupdate sys_rates selleralias2 " + offerguid + " category title 90 -0.05 description"), runtime_error);
 	#ifdef ENABLE_DEBUGRPC
 		BOOST_CHECK_THROW(r = CallRPC("node1", "offerupdate_nocheck selleralias2 " + offerguid + " category title 90 -0.05 description"), runtime_error);
 	#endif
 
 	// should fail: generate an offer too-large category
 	string s256bytes =   "SfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsDfdfddz";
-	BOOST_CHECK_THROW(r = CallRPC("node1", "offerupdate SYS_RATES selleralias2 " + offerguid + " " + s256bytes + " title 90 0.15 description"), runtime_error);	
+	BOOST_CHECK_THROW(r = CallRPC("node1", "offerupdate sys_rates selleralias2 " + offerguid + " " + s256bytes + " title 90 0.15 description"), runtime_error);	
 	#ifdef ENABLE_DEBUGRPC
 		BOOST_CHECK_THROW(r = CallRPC("node1", "offerupdate_nocheck selleralias2 " + offerguid + " " + s256bytes + " title 90 0.15 description"), runtime_error);	
 	#endif
 	// should fail: generate an offer too-large title
-	BOOST_CHECK_THROW(r = CallRPC("node1", "offerupdate SYS_RATES selleralias2 " + offerguid + " category " + s256bytes + " 90 0.15 description"), runtime_error);	
+	BOOST_CHECK_THROW(r = CallRPC("node1", "offerupdate sys_rates selleralias2 " + offerguid + " category " + s256bytes + " 90 0.15 description"), runtime_error);	
 	#ifdef ENABLE_DEBUGRPC
 		BOOST_CHECK_THROW(r = CallRPC("node1", "offerupdate_nocheck selleralias2 " + offerguid + " category " + s256bytes + " 90 0.15 description"), runtime_error);	
 	#endif
 	// should fail: generate an offer too-large description
 	string s1024bytes =   "asdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfssdsfsdfsdfsdfsdfsdsdfdfsdfsdfsdfsdz";
-	BOOST_CHECK_THROW(r = CallRPC("node1", "offerupdate SYS_RATES selleralias2 " + offerguid + " category title 90 0.15 " + s1024bytes), runtime_error);
+	BOOST_CHECK_THROW(r = CallRPC("node1", "offerupdate sys_rates selleralias2 " + offerguid + " category title 90 0.15 " + s1024bytes), runtime_error);
 	#ifdef ENABLE_DEBUGRPC
 		BOOST_CHECK_THROW(r = CallRPC("node1", "offerupdate_nocheck selleralias2 " + offerguid + " category title 90 0.15 " + s1024bytes), runtime_error);
 	#endif
@@ -400,7 +400,7 @@ BOOST_AUTO_TEST_CASE (generate_offerupdate_editcurrency)
 	BOOST_CHECK_EQUAL((int)((nTotal/COIN) + 1), (int)(4*0.00001000*100000.0));
 
 	// try to update currency and accept in same block, ensure payment uses old currency not new
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "offerupdate SYS_RATES selleraliascurrency " + offerguid + " category title 90 0.2 desc EUR"));
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "offerupdate sys_rates selleraliascurrency " + offerguid + " category title 90 0.2 desc EUR"));
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "offeraccept buyeraliascurrency " + offerguid + " 10 message"));
 	const UniValue &arr = r.get_array();
 	acceptguid = arr[1].get_str();
@@ -573,8 +573,8 @@ BOOST_AUTO_TEST_CASE (generate_offerexpired)
 
 		GenerateBlocks(5);
 		// should fail: offer update on an expired offer
-		BOOST_CHECK_THROW(r = CallRPC("node1", "offerupdate SYS_RATES selleralias4 " + offerguid + " category title 90 0.15 description"), runtime_error);
-		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "offerupdate_nocheck SYS_RATES selleralias4 " + offerguid + " category title 90 0.15 description"));
+		BOOST_CHECK_THROW(r = CallRPC("node1", "offerupdate sys_rates selleralias4 " + offerguid + " category title 90 0.15 description"), runtime_error);
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "offerupdate_nocheck sys_rates selleralias4 " + offerguid + " category title 90 0.15 description"));
 		GenerateBlocks(5);
 		// ensure the qty hasn't been updated
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "offerinfo " + offerguid));
@@ -658,7 +658,7 @@ BOOST_AUTO_TEST_CASE (generate_certofferexpired)
 		// should fail: offer accept on offer with expired/transferred cert
 		BOOST_CHECK_THROW(r = CallRPC("node2", "offeraccept node2alias2 " + offerguid + " 1 message"), runtime_error);
 		// should fail: generate a cert offer using an expired cert
-		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "offernew_nocheck SYS_RATES node1alias2 category title 1 0.05 description USD " + certguid2));
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "offernew_nocheck sys_rates node1alias2 category title 1 0.05 description USD " + certguid2));
 		const UniValue &arr = r.get_array();
 		string certofferguid = arr[1].get_str();
 		GenerateBlocks(5, "node1");
@@ -750,10 +750,10 @@ BOOST_AUTO_TEST_CASE (generate_offerban)
 	string offerguidsafe = OfferNew("node2", "selleralias15", "category", "title", "100", "10.00", "description", "USD", "nocert", true, "0", "location", "Yes");
 	// not safe to search
 	string offerguidnotsafe = OfferNew("node2", "selleralias15", "category", "title", "100", "10.00", "description", "USD", "nocert", true, "0", "location", "No");
-	// can't ban on any other node than one that created SYS_BAN
+	// can't ban on any other node than one that created sys_ban
 	BOOST_CHECK_THROW(OfferBan("node2",offerguidnotsafe,SAFETY_LEVEL1), runtime_error);
 	BOOST_CHECK_THROW(OfferBan("node3",offerguidsafe,SAFETY_LEVEL1), runtime_error);
-	// ban both offers level 1 (only owner of SYS_CATEGORY can do this)
+	// ban both offers level 1 (only owner of sys_category can do this)
 	BOOST_CHECK_NO_THROW(OfferBan("node1",offerguidsafe,SAFETY_LEVEL1));
 	BOOST_CHECK_NO_THROW(OfferBan("node1",offerguidnotsafe,SAFETY_LEVEL1));
 	// should only show level 1 banned if safe search filter is not used
@@ -765,7 +765,7 @@ BOOST_AUTO_TEST_CASE (generate_offerban)
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "offerinfo " + offerguidsafe));
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "offerinfo " + offerguidnotsafe));
 	
-	// ban both offers level 2 (only owner of SYS_CATEGORY can do this)
+	// ban both offers level 2 (only owner of sys_category can do this)
 	BOOST_CHECK_NO_THROW(OfferBan("node1",offerguidsafe,SAFETY_LEVEL2));
 	BOOST_CHECK_NO_THROW(OfferBan("node1",offerguidnotsafe,SAFETY_LEVEL2));
 	// no matter what filter won't show banned offers
@@ -778,7 +778,7 @@ BOOST_AUTO_TEST_CASE (generate_offerban)
 	BOOST_CHECK_THROW(r = CallRPC("node1", "offerinfo " + offerguidsafe), runtime_error);
 	BOOST_CHECK_THROW(r = CallRPC("node1", "offerinfo " + offerguidnotsafe), runtime_error);
 
-	// unban both offers (only owner of SYS_CATEGORY can do this)
+	// unban both offers (only owner of sys_category can do this)
 	BOOST_CHECK_NO_THROW(OfferBan("node1",offerguidsafe,0));
 	BOOST_CHECK_NO_THROW(OfferBan("node1",offerguidnotsafe,0));
 	// safe to search regardless of filter
@@ -802,7 +802,7 @@ BOOST_AUTO_TEST_CASE (generate_offerpruning)
 		AliasNew("node1", "pruneoffer", "changeddata1");
 		// stop node2 create a service,  mine some blocks to expire the service, when we restart the node the service data won't be synced with node2
 		StopNode("node2");
-		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "offernew SYS_RATES pruneoffer category title 1 0.05 description USD"));
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "offernew sys_rates pruneoffer category title 1 0.05 description USD"));
 		const UniValue &arr = r.get_array();
 		string guid = arr[1].get_str();
 		BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 5"));
@@ -833,7 +833,7 @@ BOOST_AUTO_TEST_CASE (generate_offerpruning)
 		// make sure our offer alias doesn't expire
 		BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate pruneoffer newdata privdata"));
 		// create a new service
-		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "offernew SYS_RATES pruneoffer category title 1 0.05 description USD"));
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "offernew sys_rates pruneoffer category title 1 0.05 description USD"));
 		const UniValue &arr1 = r.get_array();
 		string guid1 = arr1[1].get_str();
 		// make 89 blocks (10 get mined with new)
@@ -846,7 +846,7 @@ BOOST_AUTO_TEST_CASE (generate_offerpruning)
 		// give some time to propogate the new blocks across other 2 nodes
 		MilliSleep(2500);
 		// ensure you can still update before expiry
-		BOOST_CHECK_NO_THROW(CallRPC("node1", "offerupdate SYS_RATES pruneoffer " + guid1 + " category title 1 0.05 description"));
+		BOOST_CHECK_NO_THROW(CallRPC("node1", "offerupdate sys_rates pruneoffer " + guid1 + " category title 1 0.05 description"));
 		// you can search it still on node1/node2
 		BOOST_CHECK_EQUAL(OfferFilter("node1", guid1, "Off"), true);
 		BOOST_CHECK_EQUAL(OfferFilter("node2", guid1, "Off"), true);
@@ -856,7 +856,7 @@ BOOST_AUTO_TEST_CASE (generate_offerpruning)
 		BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 89"));
 		MilliSleep(2500);
 		// ensure service is still active since its supposed to expire at 100 blocks of non updated services
-		BOOST_CHECK_NO_THROW(CallRPC("node1", "offerupdate SYS_RATES pruneoffer " + guid1 + " category title 1 0.05 description"));
+		BOOST_CHECK_NO_THROW(CallRPC("node1", "offerupdate sys_rates pruneoffer " + guid1 + " category title 1 0.05 description"));
 		// you can search it still on node1/node2
 		BOOST_CHECK_EQUAL(OfferFilter("node1", guid1, "Off"), true);
 		BOOST_CHECK_EQUAL(OfferFilter("node2", guid1, "Off"), true);
@@ -869,7 +869,7 @@ BOOST_AUTO_TEST_CASE (generate_offerpruning)
 		BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 60"));
 		MilliSleep(2500);
 		// now it should be expired
-		BOOST_CHECK_THROW(CallRPC("node2", "offerupdate SYS_RATES pruneoffer " + guid1 + " category title 1 0.05 description"), runtime_error);
+		BOOST_CHECK_THROW(CallRPC("node2", "offerupdate sys_rates pruneoffer " + guid1 + " category title 1 0.05 description"), runtime_error);
 		BOOST_CHECK_EQUAL(OfferFilter("node1", guid1, "Off"), false);
 		BOOST_CHECK_EQUAL(OfferFilter("node2", guid1, "Off"), false);
 		// and it should say its expired

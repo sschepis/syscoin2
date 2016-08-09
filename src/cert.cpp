@@ -93,12 +93,6 @@ bool CCert::UnserializeFromData(const vector<unsigned char> &vchData) {
 		SetNull();
         return false;
     }
-	// extra check to ensure data was parsed correctly
-	if(!IsSysCompressedOrUncompressedPubKey(vchPubKey))
-	{
-		SetNull();
-		return false;
-	}
 	return true;
 }
 bool CCert::UnserializeFromTx(const CTransaction &tx) {
