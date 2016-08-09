@@ -9,6 +9,7 @@
 #include <QDataWidgetMapper>
 #include <QMessageBox>
 #include "rpcserver.h"
+#include <QStandardItemModel>
 #include "qcomboboxdelegate.h"
 #include <boost/algorithm/string.hpp>
 #include <QSettings>
