@@ -121,7 +121,7 @@ const vector<unsigned char> CCert::Serialize() {
     return vchData;
 
 }
-bool CCertDB::ScanCerts(const std::vector<unsigned char>& vchCert, const string &strRegexp, bool safeSearch, unsigned int nMax,
+bool CCertDB::ScanCerts(const std::vector<unsigned char>& vchCert, const string &strRegexp, bool safeSearch, const string& strCategory, unsigned int nMax,
         std::vector<std::pair<std::vector<unsigned char>, CCert> >& certScan) {
     // regexp
     using namespace boost::xpressive;
@@ -164,6 +164,11 @@ bool CCertDB::ScanCerts(const std::vector<unsigned char>& vchCert, const string 
 					}
 				}
 				if(!txPos.safeSearch && safeSearch)
+				{
+					pcursor->Next();
+					continue;
+				}
+				if(strCategory.size() > 0 && !boost::algorithm::starts_with(stringFromVch(txPos.sCategory), strCategory))
 				{
 					pcursor->Next();
 					continue;
@@ -424,6 +429,10 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 	string retError = "";
 	if(fJustCheck)
 	{
+		if(theCert.sCategory.size() > MAX_NAME_LENGTH)
+		{
+			return error("CheckCertInputs(): cert category too big");
+		}
 		if(theCert.vchData.size() > MAX_ENCRYPTED_VALUE_LENGTH)
 		{
 			return error("CheckCertInputs(): cert data too big");
@@ -505,6 +514,8 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 						theCert.vchData = dbCert.vchData;
 					if(theCert.vchTitle.empty())
 						theCert.vchTitle = dbCert.vchTitle;
+					if(theCert.sCategory.empty())
+						theCert.sCategory = dbCert.sCategory;
 					// user can't update safety level after creation
 					theCert.safetyLevel = dbCert.safetyLevel;
 					theCert.vchCert = dbCert.vchCert;
@@ -576,14 +587,15 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 
 
 UniValue certnew(const UniValue& params, bool fHelp) {
-    if (fHelp || params.size() < 3 || params.size() > 5)
+    if (fHelp || params.size() < 3 || params.size() > 6)
         throw runtime_error(
-		"certnew <alias> <title> <data> [private=0] [safe search=Yes]\n"
+		"certnew <alias> <title> <data> [private=0] [safe search=Yes] [category=certificates]\n"
 						"<alias> An alias you own.\n"
                         "<title> title, 255 bytes max.\n"
                         "<data> data, 1KB max.\n"
 						"<private> set to 1 if you only want to make the cert data private, only the owner of the cert can view it. Off by default.\n"
  						"<safe search> set to No if this cert should only show in the search when safe search is not selected. Defaults to Yes (cert shows with or without safe search selected in search lists).\n"                     
+						"<category> category, 255 chars max. Defaults to certificates\n"
 						+ HelpRequiringPassphrase());
 	vector<unsigned char> vchAlias = vchFromValue(params[0]);
 	CSyscoinAddress aliasAddress = CSyscoinAddress(stringFromVch(vchAlias));
@@ -604,6 +616,9 @@ UniValue certnew(const UniValue& params, bool fHelp) {
 		throw runtime_error("this alias is not in your wallet");
 	vector<unsigned char> vchTitle = vchFromString(params[1].get_str());
     vector<unsigned char> vchData = vchFromString(params[2].get_str());
+	vector<unsigned char> vchCat = vchFromString("certificates");
+	if(params.size() >= 6)
+		vchCat = vchFromValue(params[5]);
 	bool bPrivate = false;
     if(vchTitle.size() < 1)
         throw runtime_error("certificate cannot be empty!");
@@ -657,6 +672,7 @@ UniValue certnew(const UniValue& params, bool fHelp) {
     // build cert object
     CCert newCert;
 	newCert.vchCert = vchCert;
+	newCert.sCategory = vchCat;
     newCert.vchTitle = vchTitle;
 	newCert.vchData = vchData;
 	newCert.nHeight = chainActive.Tip()->nHeight;
@@ -698,20 +714,23 @@ UniValue certnew(const UniValue& params, bool fHelp) {
 }
 
 UniValue certupdate(const UniValue& params, bool fHelp) {
-    if (fHelp || params.size() < 4 || params.size() > 5)
+    if (fHelp || params.size() < 4 || params.size() > 6)
         throw runtime_error(
-		"certupdate <guid> <title> <data> <private> [safesearch=Yes]\n"
+		"certupdate <guid> <title> <data> <private> [safesearch=Yes] [category=certificates]\n"
                         "Perform an update on an certificate you control.\n"
                         "<guid> certificate guidkey.\n"
                         "<title> certificate title, 255 bytes max.\n"
                         "<data> certificate data, 1KB max.\n"
 						"<private> set to 1 if you only want to make the cert data private, only the owner of the cert can view it.\n"
+						"<category> category, 255 chars max. Defaults to certificates\n"
                         + HelpRequiringPassphrase());
     // gather & validate inputs
     vector<unsigned char> vchCert = vchFromValue(params[0]);
     vector<unsigned char> vchTitle = vchFromValue(params[1]);
     vector<unsigned char> vchData = vchFromValue(params[2]);
-
+	vector<unsigned char> vchCat = vchFromString("certificates");
+	if(params.size() >= 6)
+		vchCat = vchFromValue(params[5]);
 	bool bPrivate = atoi(params[3].get_str().c_str()) == 1? true: false;
 	string strSafeSearch = "Yes";
 	if(params.size() >= 5)
@@ -769,6 +788,8 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
 		theCert.vchTitle = vchTitle;
 	if(copyCert.vchData != vchData)
 		theCert.vchData = vchData;
+	if(copyCert.sCategory != vchCat)
+		theCert.sCategory = vchCat;
 	theCert.nHeight = chainActive.Tip()->nHeight;
 	theCert.bPrivate = bPrivate;
 	theCert.safeSearch = strSafeSearch == "Yes"? true: false;
@@ -991,6 +1012,7 @@ UniValue certinfo(const UniValue& params, bool fHelp) {
 			strData = strDecrypted;		
 	}
     oCert.push_back(Pair("data", strData));
+	oCert.push_back(Pair("category", stringFromVch(ca.sCategory)));
 	oCert.push_back(Pair("private", ca.bPrivate? "Yes": "No"));
 	oCert.push_back(Pair("safesearch", ca.safeSearch ? "Yes" : "No"));
 	oCert.push_back(Pair("safetylevel", ca.safetyLevel));
@@ -1096,7 +1118,7 @@ UniValue certlist(const UniValue& params, bool fHelp) {
 		UniValue oName(UniValue::VOBJ);
         oName.push_back(Pair("cert", stringFromVch(vchName)));
         oName.push_back(Pair("title", stringFromVch(cert.vchTitle)));
-
+		
 		string strData = stringFromVch(cert.vchData);
 
 		string strDecrypted = "";
@@ -1110,6 +1132,7 @@ UniValue certlist(const UniValue& params, bool fHelp) {
 		oName.push_back(Pair("safesearch", cert.safeSearch ? "Yes" : "No"));
 		oName.push_back(Pair("safetylevel", cert.safetyLevel));
 		oName.push_back(Pair("data", strData));
+		oName.push_back(Pair("category", stringFromVch(cert.sCategory)));
 		CPubKey PubKey(cert.vchPubKey);
 		CSyscoinAddress address(PubKey.GetID());
 		address = CSyscoinAddress(address.ToString());
@@ -1186,6 +1209,7 @@ UniValue certhistory(const UniValue& params, bool fHelp) {
 			}
 			oCert.push_back(Pair("private", txPos2.bPrivate? "Yes": "No"));
 			oCert.push_back(Pair("data", strData));
+			oCert.push_back(Pair("category", stringFromVch(txPos2.sCategory)));
             oCert.push_back(Pair("txid", tx.GetHash().GetHex()));
 			CPubKey PubKey(txPos2.vchPubKey);
 			CSyscoinAddress address(PubKey.GetID());
@@ -1207,13 +1231,15 @@ UniValue certhistory(const UniValue& params, bool fHelp) {
     return oRes;
 }
 UniValue certfilter(const UniValue& params, bool fHelp) {
-	if (fHelp || params.size() > 3)
+	if (fHelp || params.size() > 4)
 		throw runtime_error(
-				"certfilter [[[[[regexp]] from=0]] safesearch='Yes']\n"
+				"certfilter [[[[[regexp]] from=0]] safesearch='Yes' category]\n"
 						"scan and filter certs\n"
 						"[regexp] : apply [regexp] on certs, empty means all certs\n"
 						"[from] : show results from this GUID [from], 0 means first.\n"
 						"[certfilter] : shows all certs that are safe to display (not on the ban list)\n"
+						"[safesearch] : shows all certs that are safe to display (not on the ban list)\n"
+						"[category] : category you want to search in, empty for all\n"
 						"certfilter \"\" 5 # list certs updated in last 5 blocks\n"
 						"certfilter \"^cert\" # list all certs starting with \"cert\"\n"
 						"certfilter 36000 0 0 stat # display stats (number of certs) on active certs\n");
@@ -1233,10 +1259,13 @@ UniValue certfilter(const UniValue& params, bool fHelp) {
 	if (params.size() > 2)
 		safeSearch = params[2].get_str()=="On"? true: false;
 
+	if (params.size() > 3)
+		strCategory = params[3].get_str();
+
     UniValue oRes(UniValue::VARR);
     
     vector<pair<vector<unsigned char>, CCert> > certScan;
-    if (!pcertdb->ScanCerts(vchCert, strRegexp, safeSearch, 25, certScan))
+    if (!pcertdb->ScanCerts(vchCert, strRegexp, safeSearch, strCategory, 25, certScan))
         throw runtime_error("scan failed");
     pair<vector<unsigned char>, CCert> pairScan;
 	BOOST_FOREACH(pairScan, certScan) {
@@ -1265,6 +1294,7 @@ UniValue certfilter(const UniValue& params, bool fHelp) {
 		}
 
 		oCert.push_back(Pair("data", strData));
+		oCert.push_back(Pair("category", stringFromVch(txCert.sCategory)));
 		oCert.push_back(Pair("private", txCert.bPrivate? "Yes": "No"));
 		expired_block = nHeight + GetCertExpirationDepth();
         if(expired_block < chainActive.Tip()->nHeight)

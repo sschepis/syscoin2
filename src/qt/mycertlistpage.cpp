@@ -152,11 +152,12 @@ void MyCertListPage::setModel(WalletModel *walletModel, CertTableModel *model)
     ui->tableView->setColumnWidth(0, 75); //cert
     ui->tableView->setColumnWidth(1, 300); //title
     ui->tableView->setColumnWidth(2, 300); //data
-    ui->tableView->setColumnWidth(3, 75); //private
-    ui->tableView->setColumnWidth(4, 75); //expires on
-    ui->tableView->setColumnWidth(5, 75); //expires in
-    ui->tableView->setColumnWidth(6, 100); //cert state
-    ui->tableView->setColumnWidth(7, 0); //owner
+	ui->tableView->setColumnWidth(3, 75); //category
+    ui->tableView->setColumnWidth(4, 75); //private
+    ui->tableView->setColumnWidth(5, 75); //expires on
+    ui->tableView->setColumnWidth(6, 75); //expires in
+    ui->tableView->setColumnWidth(7, 100); //cert state
+    ui->tableView->setColumnWidth(8, 0); //owner
 
     ui->tableView->horizontalHeader()->setStretchLastSection(true);
 
@@ -324,6 +325,7 @@ void MyCertListPage::on_exportButton_clicked()
     writer.addColumn("Cert", CertTableModel::Name, Qt::EditRole);
     writer.addColumn("Title", CertTableModel::Title, Qt::EditRole);
 	writer.addColumn("Data", CertTableModel::Data, Qt::EditRole);
+	writer.addColumn("Category", CertTableModel::Category, Qt::EditRole);
 	writer.addColumn("Private", CertTableModel::Data, Qt::EditRole);
 	writer.addColumn("Expires On", CertTableModel::ExpiresOn, Qt::EditRole);
 	writer.addColumn("Expires In", CertTableModel::ExpiresIn, Qt::EditRole);

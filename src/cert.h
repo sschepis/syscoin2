@@ -29,6 +29,7 @@ public:
 	std::vector<unsigned char> vchPubKey;
     std::vector<unsigned char> vchTitle;
     std::vector<unsigned char> vchData;
+	std::vector<unsigned char> sCategory;
     uint256 txHash;
     uint64_t nHeight;
 	bool bPrivate;
@@ -45,6 +46,7 @@ public:
 	{
 		vchData.clear();
 		vchTitle.clear();
+		sCategory.clear();
 	}
 	ADD_SERIALIZE_METHODS;
     template <typename Stream, typename Operation>
@@ -60,6 +62,7 @@ public:
 			READWRITE(vchCert);
 			READWRITE(safetyLevel);
 			READWRITE(safeSearch);
+			READWRITE(sCategory);
 		}		
 	}
     friend bool operator==(const CCert &a, const CCert &b) {
@@ -73,6 +76,7 @@ public:
 		&& a.safetyLevel == b.safetyLevel
 		&& a.safeSearch == b.safeSearch
 		&& a.vchCert == b.vchCert
+		&& a.sCategory == b.sCategory
         );
     }
 
@@ -86,6 +90,7 @@ public:
 		safetyLevel = b.safetyLevel;
 		safeSearch = b.safeSearch;
 		vchCert = b.vchCert;
+		sCategory = b.sCategory;
         return *this;
     }
 
@@ -93,8 +98,8 @@ public:
         return !(a == b);
     }
 
-    void SetNull() { vchCert.clear(); safetyLevel = 0; safeSearch = false; nHeight = 0; txHash.SetNull(); vchPubKey.clear(); bPrivate = false; vchTitle.clear(); vchData.clear();}
-    bool IsNull() const { return (vchCert.empty() && safetyLevel == 0 && !safeSearch && txHash.IsNull() &&  nHeight == 0 && vchPubKey.empty() && vchData.empty() && vchTitle.empty() && vchPubKey.empty()); }
+    void SetNull() { sCategory.clear(); vchCert.clear(); safetyLevel = 0; safeSearch = false; nHeight = 0; txHash.SetNull(); vchPubKey.clear(); bPrivate = false; vchTitle.clear(); vchData.clear();}
+    bool IsNull() const { return (sCategory.empty() && vchCert.empty() && safetyLevel == 0 && !safeSearch && txHash.IsNull() &&  nHeight == 0 && vchPubKey.empty() && vchData.empty() && vchTitle.empty() && vchPubKey.empty()); }
     bool UnserializeFromTx(const CTransaction &tx);
 	bool UnserializeFromData(const std::vector<unsigned char> &vchData);
 	const std::vector<unsigned char> Serialize();
@@ -122,7 +127,7 @@ public:
     }
 
     bool ScanCerts(
-		const std::vector<unsigned char>& vchName, const std::string &strRegExp,  bool safeSearch,
+		const std::vector<unsigned char>& vchName, const std::string &strRegExp,  bool safeSearch, const string& strCategory,
             unsigned int nMax,
             std::vector<std::pair<std::vector<unsigned char>, CCert> >& certScan);
 

@@ -15,6 +15,7 @@ class QItemSelection;
 class QMenu;
 class QModelIndex;
 class QKeyEvent;
+class QStandardItemModel;
 QT_END_NAMESPACE
 
 /** Widget that shows a list of owned certs.
@@ -29,7 +30,8 @@ public:
     explicit CertListPage(const PlatformStyle *platformStyle, QWidget *parent = 0);
     ~CertListPage();
 
-
+    void addParentItem(QStandardItemModel * model, const QString& text, const QVariant& data );
+    void addChildItem( QStandardItemModel * model, const QString& text, const QVariant& data );
     void setModel(WalletModel*, CertTableModel *model);
     void setOptionsModel(OptionsModel *optionsModel);
     const QString &getReturnValue() const { return returnValue; }
@@ -46,6 +48,7 @@ private:
     QString newCertToSelect;
 	std::map<int, std::pair<std::string, std::string> > pageMap;
 	int currentPage;
+	void loadCategories();
 private Q_SLOTS:
 	void on_searchCert_clicked(std::string offer="");
 	void on_prevButton_clicked();

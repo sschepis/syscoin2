@@ -15,9 +15,12 @@
 #include <QMenu>
 #include "main.h"
 #include "rpcserver.h"
+#include "qcomboboxdelegate.h"
+#include <boost/algorithm/string.hpp>
 #include <QSettings>
 using namespace std;
-
+extern const CRPCTable tableRPC;
+extern bool getCategoryList(vector<string>& categoryList);
 CertListPage::CertListPage(const PlatformStyle *platformStyle, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::CertListPage),
@@ -63,16 +66,72 @@ CertListPage::~CertListPage()
 {
     delete ui;
 }
+
+void CertListPage::addParentItem( QStandardItemModel * model, const QString& text, const QVariant& data )
+{
+	QList<QStandardItem*> lst = model->findItems(text,Qt::MatchExactly);
+	for(unsigned int i=0; i<lst.count(); ++i )
+	{ 
+		if(lst[i]->data(Qt::UserRole) == data)
+			return;
+	}
+    QStandardItem* item = new QStandardItem( text );
+	item->setData( data, Qt::UserRole );
+    item->setData( "parent", Qt::AccessibleDescriptionRole );
+    QFont font = item->font();
+    font.setBold( true );
+    item->setFont( font );
+    model->appendRow( item );
+}
+
+void CertListPage::addChildItem( QStandardItemModel * model, const QString& text, const QVariant& data )
+{
+	QList<QStandardItem*> lst = model->findItems(text,Qt::MatchExactly);
+	for(unsigned int i=0; i<lst.count(); ++i )
+	{ 
+		if(lst[i]->data(Qt::UserRole) == data)
+			return;
+	}
+
+    QStandardItem* item = new QStandardItem( text + QString( 4, QChar( ' ' ) ) );
+    item->setData( data, Qt::UserRole );
+    item->setData( "child", Qt::AccessibleDescriptionRole );
+    model->appendRow( item );
+}
+void CertListPage::loadCategories()
+{
+    QStandardItemModel * model = new QStandardItemModel;
+	vector<string> categoryList;
+	if(!getCategoryList(categoryList))
+	{
+		return;
+	}
+	addParentItem(model, tr("All Certificates"), tr("certificates"));
+	for(unsigned int i = 0;i< categoryList.size(); i++)
+	{
+		vector<string> categories;
+		boost::split(categories,categoryList[i],boost::is_any_of(">"));
+		if(categories.size() > 0)
+		{
+			for(unsigned int j = 0;j< categories.size(); j++)
+			{
+				boost::algorithm::trim(categories[j]);
+				if(categories[0] != QString("certificates"))
+					continue;
+				if(j == 1)
+				{
+					addChildItem(model, QString::fromStdString(categories[1]), QVariant(QString::fromStdString(categoryList[i])));
+				}
+			}
+		}
+	}
+    ui->categoryEdit->setModel(model);
+    ui->categoryEdit->setItemDelegate(new ComboBoxDelegate);
+}
 void CertListPage::showEvent ( QShowEvent * event )
 {
     if(!walletModel) return;
-    /*if(walletModel->getEncryptionStatus() == WalletModel::Locked)
-	{
-        ui->labelExplanation->setText(tr("<font color='blue'>WARNING: Your wallet is currently locked. For security purposes you'll need to enter your passphrase in order to search Syscoin Certs.</font> <a href=\"http://lockedwallet.syscoin.org\">more info</a>"));
-		ui->labelExplanation->setTextFormat(Qt::RichText);
-		ui->labelExplanation->setTextInteractionFlags(Qt::TextBrowserInteraction);
-		ui->labelExplanation->setOpenExternalLinks(true);
-    }*/
+    loadCategories();
 }
 void CertListPage::setModel(WalletModel* walletModel, CertTableModel *model)
 {
@@ -86,11 +145,12 @@ void CertListPage::setModel(WalletModel* walletModel, CertTableModel *model)
     ui->tableView->setColumnWidth(0, 75); //cert
     ui->tableView->setColumnWidth(1, 300); //title
     ui->tableView->setColumnWidth(2, 300); //data
-    ui->tableView->setColumnWidth(3, 75); //private
-    ui->tableView->setColumnWidth(4, 75); //expires on
-    ui->tableView->setColumnWidth(5, 75); //expires in
-    ui->tableView->setColumnWidth(6, 100); //cert state
-    ui->tableView->setColumnWidth(7, 0); //owner
+	ui->tableView->setColumnWidth(3, 75); //category
+    ui->tableView->setColumnWidth(4, 75); //private
+    ui->tableView->setColumnWidth(5, 75); //expires on
+    ui->tableView->setColumnWidth(6, 75); //expires in
+    ui->tableView->setColumnWidth(7, 100); //cert state
+    ui->tableView->setColumnWidth(8, 0); //owner
 
     ui->tableView->horizontalHeader()->setStretchLastSection(true);
 
@@ -228,7 +288,11 @@ void CertListPage::on_searchCert_clicked(string GUID)
     params.push_back(ui->lineEditCertSearch->text().toStdString());
 	params.push_back(GUID);
 	params.push_back(settings.value("safesearch", "").toString().toStdString());
-
+	QVariant currentCategory = ui->categoryEdit->itemData(ui->categoryEdit->currentIndex(), Qt::UserRole);
+	if(ui->categoryEdit->currentIndex() > 0 &&  currentCategory != QVariant::Invalid)
+		params.push_back(currentCategory.toString().toStdString());
+	else if(ui->categoryEdit->currentText() != tr("All Certificates"))
+		params.push_back(ui->categoryEdit->currentText().toStdString());
 
     try {
         result = tableRPC.execute(strMethod, params);

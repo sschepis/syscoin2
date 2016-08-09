@@ -9,10 +9,13 @@
 #include <QDataWidgetMapper>
 #include <QMessageBox>
 #include "rpcserver.h"
+#include "qcomboboxdelegate.h"
+#include <boost/algorithm/string.hpp>
 #include <QSettings>
 using namespace std;
 
 extern const CRPCTable tableRPC;
+extern bool getCategoryList(vector<string>& categoryList);
 EditCertDialog::EditCertDialog(Mode mode, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::EditCertDialog), mapper(0), mode(mode), model(0)
@@ -35,6 +38,7 @@ EditCertDialog::EditCertDialog(Mode mode, QWidget *parent) :
     ui->transferDisclaimer->setVisible(false);
 	
 	loadAliases();
+	loadCategories();
 	connect(ui->aliasEdit,SIGNAL(currentIndexChanged(const QString&)),this,SLOT(aliasChanged(const QString&)));
 	
 	QSettings settings;
@@ -77,6 +81,68 @@ EditCertDialog::EditCertDialog(Mode mode, QWidget *parent) :
     mapper->setSubmitPolicy(QDataWidgetMapper::ManualSubmit);
 	aliasChanged(ui->aliasEdit->currentText());
 	
+}
+	
+void EditCertDialog::addParentItem( QStandardItemModel * model, const QString& text, const QVariant& data )
+{
+	QList<QStandardItem*> lst = model->findItems(text,Qt::MatchExactly);
+	for(unsigned int i=0; i<lst.count(); ++i )
+	{ 
+		if(lst[i]->data(Qt::UserRole) == data)
+			return;
+	}
+    QStandardItem* item = new QStandardItem( text );
+	item->setData( data, Qt::UserRole );
+    item->setData( "parent", Qt::AccessibleDescriptionRole );
+    QFont font = item->font();
+    font.setBold( true );
+    item->setFont( font );
+    model->appendRow( item );
+}
+
+void EditCertDialog::addChildItem( QStandardItemModel * model, const QString& text, const QVariant& data )
+{
+	QList<QStandardItem*> lst = model->findItems(text,Qt::MatchExactly);
+	for(unsigned int i=0; i<lst.count(); ++i )
+	{ 
+		if(lst[i]->data(Qt::UserRole) == data)
+			return;
+	}
+
+    QStandardItem* item = new QStandardItem( text + QString( 4, QChar( ' ' ) ) );
+    item->setData( data, Qt::UserRole );
+    item->setData( "child", Qt::AccessibleDescriptionRole );
+    model->appendRow( item );
+}
+void EditCertDialog::loadCategories()
+{
+    QStandardItemModel * model = new QStandardItemModel;
+	vector<string> categoryList;
+	if(!getCategoryList(categoryList))
+	{
+		return;
+	}
+	addParentItem(model, tr("certificates"), tr("certificates"));
+	for(unsigned int i = 0;i< categoryList.size(); i++)
+	{
+		vector<string> categories;
+		boost::split(categories,categoryList[i],boost::is_any_of(">"));
+		if(categories.size() > 0)
+		{
+			for(unsigned int j = 0;j< categories.size(); j++)
+			{
+				boost::algorithm::trim(categories[j]);
+				if(categories[0] != QString("certificates"))
+					continue;
+				if(j == 1)
+				{
+					addChildItem(model, QString::fromStdString(categories[1]), QVariant(QString::fromStdString(categoryList[i])));
+				}
+			}
+		}
+	}
+    ui->categoryEdit->setModel(model);
+    ui->categoryEdit->setItemDelegate(new ComboBoxDelegate);
 }
 void EditCertDialog::aliasChanged(const QString& alias)
 {
@@ -229,6 +295,7 @@ void EditCertDialog::setModel(WalletModel* walletModel, CertTableModel *model)
 	mapper->addMapping(ui->certEdit, CertTableModel::Name);
     mapper->addMapping(ui->nameEdit, CertTableModel::Title);
 	mapper->addMapping(ui->certDataEdit, CertTableModel::Data);
+	mapper->addMapping(ui->categoryEdit, CertTableModel::Category);
     
 }
 
@@ -250,6 +317,15 @@ void EditCertDialog::loadRow(int row, const QString &privatecert)
 			QString safeSearchStr = indexSafeSearch.data(CertTableModel::SafeSearchRole).toString();
 			ui->safeSearchEdit->setCurrentIndex(ui->safeSearchEdit->findText(safeSearchStr));
 		}
+		if(indexCategory.isValid())
+		{
+			QString categoryStr = indexCategory.data(CertTableModel::CategoryRole).toString();
+			int index = ui->categoryEdit->findData(QVariant(categoryStr));
+			if ( index != -1 ) 
+			{ 
+				ui->categoryEdit->setCurrentIndex(index);
+			}
+		}f
 	}
 	if(privatecert == tr("Yes"))
 		ui->privateBox->setCurrentIndex(0);
@@ -286,6 +362,10 @@ bool EditCertDialog::saveCurrentRow()
 		params.push_back(ui->certDataEdit->toPlainText().toStdString());
 		params.push_back(ui->privateBox->currentText() == QString("Yes")? "1": "0");
 		params.push_back(ui->safeSearchEdit->currentText().toStdString());
+		if(ui->categoryEdit->currentIndex() >= 0)
+			params.push_back(ui->categoryEdit->itemData(ui->categoryEdit->currentIndex(), Qt::UserRole).toString().toStdString());
+		else
+			params.push_back(ui->categoryEdit->currentText().toStdString());
 		try {
             UniValue result = tableRPC.execute(strMethod, params);
 			if (result.type() != UniValue::VNULL)
@@ -319,7 +399,11 @@ bool EditCertDialog::saveCurrentRow()
 			params.push_back(ui->nameEdit->text().toStdString());
 			params.push_back(ui->certDataEdit->toPlainText().toStdString());
 			params.push_back(ui->privateBox->currentText() == QString("Yes")? "1": "0");
-			params.push_back(ui->safeSearchEdit->currentText().toStdString());			
+			params.push_back(ui->safeSearchEdit->currentText().toStdString());
+			if(ui->categoryEdit->currentIndex() >= 0)
+				params.push_back(ui->categoryEdit->itemData(ui->categoryEdit->currentIndex(), Qt::UserRole).toString().toStdString());
+			else
+				params.push_back(ui->categoryEdit->currentText().toStdString());
 			try {
 				UniValue result = tableRPC.execute(strMethod, params);
 				if (result.type() != UniValue::VNULL)
