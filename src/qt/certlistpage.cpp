@@ -278,6 +278,7 @@ void CertListPage::on_searchCert_clicked(string GUID)
 	string name_str;
 	string value_str;
 	string data_str;
+	string category_str;
 	string expires_in_str;
 	string expires_on_str;
 	string alias_str;
@@ -334,6 +335,7 @@ void CertListPage::on_searchCert_clicked(string GUID)
 			name_str = "";
 			value_str = "";
 			data_str = "";
+			category_str = "";
 			expires_in_str = "";
 			expires_on_str = "";
 			alias_str = "";
@@ -354,6 +356,9 @@ void CertListPage::on_searchCert_clicked(string GUID)
 			const UniValue& data_value = find_value(o, "data");
 			if (data_value.type() == UniValue::VSTR)
 				data_str = data_value.get_str();
+			const UniValue& category_value = find_value(o, "category");
+			if (category_value.type() == UniValue::VSTR)
+				category_str = category_value.get_str();
 			const UniValue& private_value = find_value(o, "private");
 			if (private_value.type() == UniValue::VSTR)
 				private_str = private_value.get_str();
@@ -375,6 +380,7 @@ void CertListPage::on_searchCert_clicked(string GUID)
 					QString::fromStdString(name_str),
 					QString::fromStdString(value_str),
 					QString::fromStdString(data_str),
+					QString::fromStdString(category_str),
 					QString::fromStdString(expires_on_str),
 					QString::fromStdString(expires_in_str),
 					QString::fromStdString(expired_str),
@@ -384,6 +390,7 @@ void CertListPage::on_searchCert_clicked(string GUID)
 		   this->model->updateEntry(QString::fromStdString(name_str),
 					QString::fromStdString(value_str),
 					QString::fromStdString(data_str),
+					QString::fromStdString(category_str),
 					QString::fromStdString(expires_on_str),
 					QString::fromStdString(expires_in_str),
 					QString::fromStdString(expired_str), 
