@@ -471,7 +471,53 @@ BOOST_AUTO_TEST_CASE (generate_offeraccept)
 		BOOST_CHECK_THROW(r = CallRPC("node2", "offeraccept_nocheck buyeralias3 " + offerguid + " 0 message"), runtime_error);
 	#endif
 }
+BOOST_AUTO_TEST_CASE (generate_linkedaccept)
+{
+	printf("Running generate_linkedaccept...\n");
+	UniValue r;
 
+	GenerateBlocks(5);
+	GenerateBlocks(5, "node2");
+	GenerateBlocks(5, "node3");
+
+	AliasNew("node1", "node1aliaslinked", "node1aliasdata");
+	AliasNew("node2", "node2aliaslinked", "node2aliasdata");
+	AliasNew("node3", "node3aliaslinked", "node2aliasdata");
+
+	string offerguid = OfferNew("node1", "node1aliaslinked", "category", "title", "10", "0.05", "description", "USD", "nocert");
+	string lofferguid = OfferLink("node2", "node2aliaslinked", offerguid, "3", "newdescription");
+
+	OfferAccept("node1", "node3", "node3aliaslinked", lofferguid, "5", "message", "node2");
+}
+BOOST_AUTO_TEST_CASE (generate_cert_linkedaccept)
+{
+	printf("Running generate_cert_linkedaccept...\n");
+	UniValue r;
+
+	GenerateBlocks(5);
+	GenerateBlocks(5, "node2");
+	GenerateBlocks(5, "node3");
+
+	AliasNew("node1", "node1alias", "node1aliasdata");
+	AliasNew("node2", "node2alias", "node2aliasdata");
+	AliasNew("node3", "node3alias", "node2aliasdata");
+
+	string certguid  = CertNew("node1", "node1alias", "title", "data");
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "certinfo " + certguid));
+	BOOST_CHECK(find_value(r.get_obj(), "ismine").get_str() == "true");
+	BOOST_CHECK(find_value(r.get_obj(), "node1alias").get_str() == "node3alias");
+	// generate a good cert offer
+	string offerguid = OfferNew("node1", "node1alias", "category", "title", "1", "0.05", "description", "USD", certguid);
+	string lofferguid = OfferLink("node2", "node2alias", offerguid, "5", "newdescription");
+
+	AliasUpdate("node1", "node1alias", "changeddata2", "privdata2");
+	AliasUpdate("node2", "node2alias", "changeddata2", "privdata2");
+	AliasUpdate("node2", "node2alias", "changeddata2", "privdata2");
+	OfferAccept("node1", "node3", "node3alias", lofferguid, "2", "message", "node2");
+	BOOST_CHECK_NO_THROW(r = CallRPC("node3", "certinfo " + certguid));
+	BOOST_CHECK(find_value(r.get_obj(), "ismine").get_str() == "true");
+	BOOST_CHECK(find_value(r.get_obj(), "alias").get_str() == "node3alias");
+}
 BOOST_AUTO_TEST_CASE (generate_offeracceptfeedback)
 {
 	printf("Running generate_offeracceptfeedback...\n");

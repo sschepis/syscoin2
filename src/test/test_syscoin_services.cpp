@@ -886,12 +886,9 @@ const string OfferAccept(const string& ownernode, const string& node, const stri
 		sTargetQty = boost::to_string(nCurrentQty);
 	// if this accept is buying a linked offer then we don't change qty (happens when root offer accept is done)
 	if(!rootofferguid.empty())
-	{
 		sTargetQty = boost::to_string(nCurrentQty);
-		BOOST_CHECK(find_value(acceptValue, "pay_message").get_str() == string("Encrypted for owner of offer"));
-	}
-	else
-		BOOST_CHECK(find_value(acceptValue, "pay_message").get_str() == pay_message);
+	
+	BOOST_CHECK(find_value(acceptValue, "pay_message").get_str() == string("Encrypted for owner of offer"));
 	BOOST_CHECK_NO_THROW(r = CallRPC(ownernode, "offerinfo " + offerguid));
 	BOOST_CHECK(find_value(r.get_obj(), "offer").get_str() == offerguid);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "quantity").get_str(),sTargetQty);
