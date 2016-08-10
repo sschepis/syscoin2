@@ -995,7 +995,6 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 		throw runtime_error("Offer must be a valid alias");
 
 	CAliasIndex buyeralias;
-	CTransaction aliastx;
 	if (!GetTxOfAlias(vchAlias, buyeralias, aliastx))
 		throw runtime_error("could not find buyer alias with this name");
 
