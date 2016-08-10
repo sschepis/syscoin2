@@ -459,7 +459,6 @@ UniValue messagenew(const UniValue& params, bool fHelp) {
 		throw runtime_error("Invalid syscoin address");
 	if (!toAddress.isAlias)
 		throw runtime_error("Invalid alias");
-	CTransaction aliastx;
 	if(!GetTxOfAlias(vchFromString(toAddress.aliasName), alias, aliastx))
 		return error("failed to read to alias from alias DB");
 	vchToPubKey = alias.vchPubKey;
