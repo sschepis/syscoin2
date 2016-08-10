@@ -484,7 +484,7 @@ BOOST_AUTO_TEST_CASE (generate_linkedaccept)
 	AliasNew("node2", "node2aliaslinked", "node2aliasdata");
 	AliasNew("node3", "node3aliaslinked", "node2aliasdata");
 
-	string offerguid = OfferNew("node1", "node1aliaslinked", "category", "title", "10", "0.05", "description", "USD", "nocert");
+	string offerguid = OfferNew("node1", "node1aliaslinked", "category", "title", "10", "0.05", "description", "USD", "nocert", false);
 	string lofferguid = OfferLink("node2", "node2aliaslinked", offerguid, "3", "newdescription");
 
 	OfferAccept("node1", "node3", "node3aliaslinked", lofferguid, "5", "message", "node2");
@@ -507,7 +507,7 @@ BOOST_AUTO_TEST_CASE (generate_cert_linkedaccept)
 	BOOST_CHECK(find_value(r.get_obj(), "ismine").get_str() == "true");
 	BOOST_CHECK(find_value(r.get_obj(), "node1alias").get_str() == "node3alias");
 	// generate a good cert offer
-	string offerguid = OfferNew("node1", "node1alias", "category", "title", "1", "0.05", "description", "USD", certguid);
+	string offerguid = OfferNew("node1", "node1alias", "category", "title", "1", "0.05", "description", "USD", certguid, false);
 	string lofferguid = OfferLink("node2", "node2alias", offerguid, "5", "newdescription");
 
 	AliasUpdate("node1", "node1alias", "changeddata2", "privdata2");
