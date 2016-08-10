@@ -856,11 +856,11 @@ UniValue certtransfer(const UniValue& params, bool fHelp) {
 
 		// check for alias existence in DB
 		vector<CAliasIndex> vtxAliasPos;
-		if (!paliasdb->ReadAlias(vchFromString(myAddress.aliasName), vtxAliasPos))
-			throw runtime_error("failed to read alias from alias DB");
-		if (vtxAliasPos.size() < 1)
-			throw runtime_error("no result returned");
-		CAliasIndex xferAlias = vtxAliasPos.back();
+		CAliasIndex xferAlias;
+		CTransaction tx;
+		if (!GetTxAndVtxOfAlias(vchFromString(myAddress.aliasName), xferAlias, tx, vtxAliasPos))
+			throw runtime_error("failed to read xfer alias from alias DB");
+	
 		vchPubKeyByte = xferAlias.vchPubKey;
 		xferKey = CPubKey(vchPubKeyByte);
 		if(!xferKey.IsValid())
@@ -992,12 +992,12 @@ UniValue certinfo(const UniValue& params, bool fHelp) {
 	address = CSyscoinAddress(address.ToString());
 
 	// check that the seller isn't banned level 2
-	vector<CAliasIndex> vtxAliasPos;
-	if (!paliasdb->ReadAlias(vchFromString(address.aliasName), vtxAliasPos))
-		throw runtime_error("failed to read owner alias from alias DB");
-	if (vtxAliasPos.size() < 1)
-		throw runtime_error("no owner found for this cert");
-	if(vtxAliasPos.back().safetyLevel >= SAFETY_LEVEL2)
+	CAliasIndex alias;
+	CTransaction aliastx;
+	if (!GetTxOfAlias(vchFromString(address.aliasName), alias, aliastx, true))
+		throw runtime_error("failed to read xfer alias from alias DB");
+	
+	if(alias.safetyLevel >= SAFETY_LEVEL2)
 		throw runtime_error("cert owner has been banned");
 
     string sHeight = strprintf("%llu", ca.nHeight);

@@ -3991,10 +3991,6 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 	COffer linkOffer;
 	if( !theOffer.vchLinkOffer.empty())
 	{
-		if (!pofferdb->ReadOffer(theOffer.vchLinkOffer, vtxLinkPos))
-			throw runtime_error("failed to read from linked offer DB");
-		if (vtxLinkPos.size() < 1)
-			throw runtime_error("no linked result returned");
 		if(!GetTxOfOffer( theOffer.vchLinkOffer, linkOffer, linkTx, true))
 			throw runtime_error("failed to read linked offer transaction from disk");
 	}

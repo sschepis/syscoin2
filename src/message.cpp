@@ -257,6 +257,7 @@ bool CheckMessageInputs(const CTransaction &tx, int op, int nOut, const vector<v
 	}
 	// unserialize msg from txn, check for valid
 	CMessage theMessage;
+	CAliasIndex alias;
 	vector<unsigned char> vchData;
 	if(!GetSyscoinData(tx, vchData))
 	{
@@ -345,12 +346,9 @@ bool CheckMessageInputs(const CTransaction &tx, int op, int nOut, const vector<v
 		{
 			if(!IsAliasOp(prevAliasOp))
 				return error("CheckMessageInputs(): alias not provided as input");		
-			vector<CAliasIndex> vtxPos;
-			if (!paliasdb->ReadAlias(vvchPrevAliasArgs[0], vtxPos))
+			if(!GetTxOfAlias(vvchPrevAliasArgs[0], alias, tx, true))
 				return error("CheckMessageInputs(): failed to read alias from alias DB");
-			if (vtxPos.size() < 1)
-				return error("CheckMessageInputs(): no alias result returned");
-			if(vtxPos.back().vchPubKey != theMessage.vchPubKeyFrom)
+			if(alias.vchPubKey != theMessage.vchPubKeyFrom)
 				return error("CheckMessageInputs() OP_MESSAGE_ACTIVATE: alias and message from pubkey's must match");	
 			if (theMessage.vchMessage != vvchArgs[0])
 				return error("CheckMessageInputs(): OP_MESSAGE_ACTIVATE guid mismatch");	
@@ -461,13 +459,9 @@ UniValue messagenew(const UniValue& params, bool fHelp) {
 		throw runtime_error("Invalid syscoin address");
 	if (!toAddress.isAlias)
 		throw runtime_error("Invalid alias");
-
-	vector<CAliasIndex> vtxAliasPos;
-	if (!paliasdb->ReadAlias(vchFromString(toAddress.aliasName), vtxAliasPos))
-		throw runtime_error("failed to read alias from alias DB");
-	if (vtxAliasPos.size() < 1)
-		throw runtime_error("no result returned");
-	alias = vtxAliasPos.back();
+	CTransaction aliastx;
+	if(!GetTxOfAlias(vchFromString(toAddress.aliasName), alias, aliastx))
+		return error("failed to read to alias from alias DB");
 	vchToPubKey = alias.vchPubKey;
 	CPubKey ToPubKey = CPubKey(vchToPubKey);
 	if(!ToPubKey.IsValid())

@@ -968,12 +968,11 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	if(IsMine(*pwalletMain, arbiterAddress.Get()))
 		throw runtime_error("Arbiter alias must not be yours");
 	// check for alias existence in DB
-	vector<CAliasIndex> vtxPos;
-	if (!paliasdb->ReadAlias(vchFromString(arbiterAddress.aliasName), vtxPos))
-		throw runtime_error("failed to read alias from alias DB");
-	if (vtxPos.size() < 1)
-		throw runtime_error("no result returned");
-	CAliasIndex arbiteralias = vtxPos.back();
+	CAliasIndex arbiteralias;
+	CTransaction aliastx;
+	if (!GetTxOfAlias(vchFromString(arbiterAddress.aliasName), arbiteralias, aliastx))
+		throw runtime_error("failed to read arbiter alias from DB");
+	
 
 	vector<unsigned char> vchMessage = vchFromValue(params[3]);
 	unsigned int nQty = 1;
@@ -998,7 +997,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	CAliasIndex buyeralias;
 	CTransaction aliastx;
 	if (!GetTxOfAlias(vchAlias, buyeralias, aliastx))
-		throw runtime_error("could not find an alias with this name");
+		throw runtime_error("could not find buyer alias with this name");
 
     if(!IsSyscoinTxMine(aliastx, "alias")) {
 		throw runtime_error("This alias is not yours.");

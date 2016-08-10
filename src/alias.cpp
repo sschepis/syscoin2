@@ -991,6 +991,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					CPubKey xferKey  = CPubKey(theAlias.vchPubKey);	
 					CSyscoinAddress myAddress = CSyscoinAddress(xferKey.GetID());
 					// make sure xfer to pubkey doesn't point to an alias already, otherwise don't assign pubkey to alias
+					// we want to avoid aliases with duplicate public keys (addresses)
 					if (paliasdb->ExistsAddress(vchFromString(myAddress.ToString())))
 					{
 						theAlias.vchPubKey = dbAlias.vchPubKey;
@@ -1920,30 +1921,24 @@ UniValue aliasinfo(const UniValue& params, bool fHelp) {
 	vector<unsigned char> vchName = vchFromValue(params[0]);
 
 	CTransaction tx;
+	CAliasIndex alias;
 	UniValue oShowResult(UniValue::VOBJ);
 
 	{
-
 		// check for alias existence in DB
 		vector<CAliasIndex> vtxPos;
-		if (!paliasdb->ReadAlias(vchName, vtxPos))
+		if (!GetTxAndVtxOfAlias(vchName, alias, tx, vtxPos, true))
 			throw runtime_error("failed to read from alias DB");
-		if (vtxPos.size() < 1)
-			throw runtime_error("no result returned");
-
-		// get transaction pointed to by alias
-		uint256 txHash = vtxPos.back().txHash;
-		if (!GetSyscoinTransaction(vtxPos.back().nHeight, txHash, tx, Params().GetConsensus()))
-			throw runtime_error("failed to read transaction from disk");
+	
 
 		UniValue oName(UniValue::VOBJ);
 		uint64_t nHeight;
 		int expired = 0;
 		int expires_in = 0;
 		int expired_block = 0;
-		nHeight = vtxPos.back().nHeight;
+		nHeight = alias.nHeight;
 		oName.push_back(Pair("name", stringFromVch(vchName)));
-		const CAliasIndex &alias= vtxPos.back();
+
 		if(alias.safetyLevel >= SAFETY_LEVEL2)
 			throw runtime_error("alias has been banned");
 		oName.push_back(Pair("value", stringFromVch(alias.vchPublicValue)));
