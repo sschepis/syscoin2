@@ -13,6 +13,7 @@
 #include <boost/xpressive/xpressive_dynamic.hpp>
 #include <boost/foreach.hpp>
 #include <boost/thread.hpp>
+#include <boost/algorithm/string/predicate.hpp>
 using namespace std;
 extern void SendMoneySyscoin(const vector<CRecipient> &vecSend, CAmount nValue, bool fSubtractFeeFromAmount, CWalletTx& wtxNew, const CWalletTx* wtxInOffer=NULL, const CWalletTx* wtxInCert=NULL, const CWalletTx* wtxInAlias=NULL, const CWalletTx* wtxInEscrow=NULL, bool syscoinTx=true);
 void PutToMessageList(std::vector<CMessage> &messageList, CMessage& index) {
@@ -415,7 +416,9 @@ UniValue messagenew(const UniValue& params, bool fHelp) {
 
 	vector<unsigned char> vchMyMessage = vchFromValue(params[1]);
 	string strFromAddress = params[2].get_str();
+	boost::algorithm::to_lower(strFromAddress);
 	string strToAddress = params[3].get_str();
+	boost::algorithm::to_lower(strToAddress);
 	std::vector<unsigned char> vchFromPubKey;
 	std::vector<unsigned char> vchToPubKey;
 	CSyscoinAddress fromAddress, toAddress;

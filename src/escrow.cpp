@@ -960,6 +960,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	vector<unsigned char> vchAlias = vchFromValue(params[0]);
 	vector<unsigned char> vchOffer = vchFromValue(params[1]);
 	string strArbiter = params[4].get_str();
+	boost::algorithm::to_lower(strArbiter);
 	CSyscoinAddress arbiterAddress = CSyscoinAddress(strArbiter);
 	if (!arbiterAddress.IsValid())
 		throw runtime_error("Invalid arbiter syscoin address");
