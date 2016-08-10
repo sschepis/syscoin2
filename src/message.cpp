@@ -258,6 +258,7 @@ bool CheckMessageInputs(const CTransaction &tx, int op, int nOut, const vector<v
 	// unserialize msg from txn, check for valid
 	CMessage theMessage;
 	CAliasIndex alias;
+	CTransaction aliastx;
 	vector<unsigned char> vchData;
 	if(!GetSyscoinData(tx, vchData))
 	{
@@ -346,7 +347,7 @@ bool CheckMessageInputs(const CTransaction &tx, int op, int nOut, const vector<v
 		{
 			if(!IsAliasOp(prevAliasOp))
 				return error("CheckMessageInputs(): alias not provided as input");		
-			if(!GetTxOfAlias(vvchPrevAliasArgs[0], alias, tx, true))
+			if(!GetTxOfAlias(vvchPrevAliasArgs[0], alias, aliastx, true))
 				return error("CheckMessageInputs(): failed to read alias from alias DB");
 			if(alias.vchPubKey != theMessage.vchPubKeyFrom)
 				return error("CheckMessageInputs() OP_MESSAGE_ACTIVATE: alias and message from pubkey's must match");	
