@@ -867,7 +867,7 @@ const string OfferAccept(const string& ownernode, const string& node, const stri
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "offerinfo " + offerguid));
 	int nCurrentQty = atoi(find_value(r.get_obj(), "quantity").get_str().c_str());
 	CAmount offertotal = AmountFromValue(find_value(r.get_obj(), "sysprice"))*nCurrentQty;
-	string offerlink = find_value(r.get_obj(), "offerlink_guid").get_str();
+	string rootofferguid = find_value(r.get_obj(), "offerlink_guid").get_str();
 	const string &commissionstr = find_value(r.get_obj(), "commission").get_str();
 	int nQtyToAccept = atoi(qty.c_str());
 	string sTargetQty = boost::to_string(nCurrentQty - nQtyToAccept);
@@ -885,7 +885,7 @@ const string OfferAccept(const string& ownernode, const string& node, const stri
 	if(!escrowlink.empty())
 		sTargetQty = boost::to_string(nCurrentQty);
 	// if this accept is buying a linked offer then we don't change qty (happens when root offer accept is done)
-	if(!offerlink.empty())
+	if(!rootofferguid.empty())
 	{
 		sTargetQty = boost::to_string(nCurrentQty);
 		BOOST_CHECK(find_value(acceptValue, "pay_message").get_str() == string("Encrypted for owner of offer"));
@@ -903,11 +903,11 @@ const string OfferAccept(const string& ownernode, const string& node, const stri
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "quantity").get_str(),sTargetQty);
 	BOOST_CHECK(find_value(r.get_obj(), "ismine").get_str() == "false");
 
-	if(!offerlink.empty() && !resellernode.empty())
+	if(!rootofferguid.empty() && !resellernode.empty())
 	{
 		// now get the accept from the resellernode
 		const UniValue &acceptReSellerValue = FindOfferAccept(resellernode, offerguid, acceptguid);
-		nTotal = AmountFromValue(find_value(acceptReSellerValue, "systotal"));
+		CAmount nTotal = AmountFromValue(find_value(acceptReSellerValue, "systotal"));
 		const string &discountstr = find_value(acceptReSellerValue, "offer_discount_percentage").get_str();
 		BOOST_CHECK_EQUAL(nTotal, offertotal);
 		BOOST_CHECK(find_value(acceptReSellerValue, "ismine").get_str() == "true");
@@ -919,11 +919,11 @@ const string OfferAccept(const string& ownernode, const string& node, const stri
 		GenerateBlocks(5, "node2");
 		GenerateBlocks(5, "node3");
 
-		BOOST_CHECK_NO_THROW(r = CallRPC(node, "offerinfo " + offer));
-		int nQtyOfferAfter = atoi(find_value(r.get_obj(), "quantity").get_str().c_str());
+		BOOST_CHECK_NO_THROW(r = CallRPC(node, "offerinfo " + offerguid));
+		string sQtyOfferAfter = find_value(r.get_obj(), "quantity").get_str();
 		sTargetQty = boost::to_string(nCurrentQty - nQtyToAccept);
 		// the second accept should update qty
-		BOOST_CHECK_EQUAL(sTargetQty, nQtyOfferAfter);
+		BOOST_CHECK_EQUAL(sTargetQty, sQtyOfferAfter);
 
 		const UniValue &acceptSellerValue = FindOfferLinkedAccept(node, rootofferguid, acceptguid);
 		BOOST_CHECK(find_value(acceptSellerValue, "linkofferaccept").get_str() == acceptguid);
@@ -936,14 +936,6 @@ const string OfferAccept(const string& ownernode, const string& node, const stri
 		BOOST_CHECK_EQUAL(calculatedTotalAmount/COIN, offertotal/COIN);
 		BOOST_CHECK(find_value(acceptSellerValue, "ismine").get_str() == "true");
 		BOOST_CHECK(find_value(acceptSellerValue, "pay_message").get_str() == pay_message);
-
-
-		// check that the linked offer has updated its qty
-		BOOST_CHECK_NO_THROW(r = CallRPC(ownernode, "offerinfo " + offerguid));
-		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "quantity").get_str(),sTargetQty);
-			
-		BOOST_CHECK_NO_THROW(r = CallRPC(node, "offerinfo " + offerguid));
-		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "quantity").get_str(),sTargetQty);
 	}
 	return acceptguid;
 }

@@ -41,7 +41,8 @@ bool OfferFilter(const string& node, const string& regex, const string& safesear
 void OfferAddWhitelist(const string& node,const string& offer, const string& aliasname, const string& discount);
 void OfferRemoveWhitelist(const string& node, const string& offer, const string& aliasname);
 void OfferClearWhitelist(const string& node, const string& offer);
-
+const UniValue FindOfferLinkedAccept(const string& node, const string& offerguid, const string& acceptguid);
+float GetPriceOfOffer(const float nPrice, const int nDiscountPct, const int nCommission);
 const string OfferLink(const string& node, const string& alias, const string& guid, const string& commission, const string& newdescription);
 const string OfferAccept(const string& ownernode, const string& node, const string& aliasname, const string& offerguid, const string& qty, const string& message,const string& resellernode="");
 const string EscrowNew(const string& node, const string& buyeralias, const string& offerguid, const string& qty, const string& message, const string& arbiteralias, const string& selleralias);
