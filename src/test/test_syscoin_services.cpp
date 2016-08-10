@@ -889,7 +889,7 @@ const string OfferAccept(const string& ownernode, const string& node, const stri
 		sTargetQty = boost::to_string(nCurrentQty);
 	
 	BOOST_CHECK(find_value(acceptValue, "pay_message").get_str() == string("Encrypted for owner of offer"));
-	BOOST_CHECK_NO_THROW(r = CallRPC(ownernode, "offerinfo " + offerguid));
+	BOOST_CHECK_NO_THROW(r = CallRPC(resellernode.empty()? ownernode: resellernode, "offerinfo " + offerguid));
 	BOOST_CHECK(find_value(r.get_obj(), "offer").get_str() == offerguid);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "quantity").get_str(),sTargetQty);
 	BOOST_CHECK(find_value(r.get_obj(), "ismine").get_str() == "true");
@@ -904,7 +904,8 @@ const string OfferAccept(const string& ownernode, const string& node, const stri
 	{
 		// now get the accept from the resellernode
 		const UniValue &acceptReSellerValue = FindOfferAccept(resellernode, offerguid, acceptguid);
-		CAmount nTotal = AmountFromValue(find_value(acceptReSellerValue, "systotal"));
+		CAmount nTotal = AmountFromValue(find_value(acceptReSellerValue, "systotal"))*nCurrentQty;
+		int nCurrentQty = atoi(find_value(acceptReSellerValue, "quantity").get_str().c_str());
 		const string &discountstr = find_value(acceptReSellerValue, "offer_discount_percentage").get_str();
 		BOOST_CHECK_EQUAL(nTotal, offertotal);
 		BOOST_CHECK(find_value(acceptReSellerValue, "ismine").get_str() == "true");
@@ -924,7 +925,7 @@ const string OfferAccept(const string& ownernode, const string& node, const stri
 
 		const UniValue &acceptSellerValue = FindOfferLinkedAccept(node, rootofferguid, acceptguid);
 		BOOST_CHECK(find_value(acceptSellerValue, "linkofferaccept").get_str() == acceptguid);
-		nTotal = AmountFromValue(find_value(acceptSellerValue, "systotal"));
+		nTotal = AmountFromValue(find_value(acceptSellerValue, "systotal"))*nCurrentQty;
 		if(commission != 0 || discount != 0)
 			BOOST_CHECK(nTotal != offertotal);
 		float calculatedTotal = GetPriceOfOffer(nTotal, discount, commission);
