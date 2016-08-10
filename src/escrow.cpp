@@ -3006,21 +3006,16 @@ UniValue escrowfilter(const UniValue& params, bool fHelp) {
 		CPubKey BuyerPubKey(txEscrow.vchBuyerKey);
 		CSyscoinAddress buyeraddy(BuyerPubKey.GetID());
 		buyeraddy = CSyscoinAddress(buyeraddy.ToString());
-		int expired = 0;
-
+	
         UniValue oEscrow(UniValue::VOBJ);
         oEscrow.push_back(Pair("escrow", escrow));
-		if(nHeight + GetEscrowExpirationDepth() - chainActive.Tip()->nHeight <= 0 && txEscrow.op == OP_ESCROW_COMPLETE)
-		{
-			expired = 1;
-		} 
 		string sTime;
 		CBlockIndex *pindex = chainActive[txEscrow.nHeight];
 		if (pindex) {
 			sTime = strprintf("%llu", pindex->nTime);
 		}
 		oEscrow.push_back(Pair("time", sTime));
-		oEscrow.push_back(Pair("expired", expired));
+		
 		oEscrow.push_back(Pair("seller", selleraddy.aliasName));
 		oEscrow.push_back(Pair("arbiter", arbiteraddy.aliasName));
 		oEscrow.push_back(Pair("buyer", buyeraddy.aliasName));

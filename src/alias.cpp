@@ -2147,10 +2147,6 @@ UniValue aliasfilter(const UniValue& params, bool fHelp) {
 		oName.push_back(Pair("rating", (int)rating));
 		oName.push_back(Pair("ratingcount", alias.nRatingCount));
 		expired_block = nHeight + (alias.nRenewal*GetAliasExpirationDepth());
-        if(expired_block < chainActive.Tip()->nHeight)
-		{
-			expired = 1;
-		}  
 		expires_in = expired_block - chainActive.Tip()->nHeight;
 		oName.push_back(Pair("expires_in", expires_in));
 		oName.push_back(Pair("expires_on", expired_block));
