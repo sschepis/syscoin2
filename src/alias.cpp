@@ -809,8 +809,9 @@ void updateBans(const vector<unsigned char> &banData)
 	}
 }
 bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, const CBlock* block) {
-	
-	if (tx.IsCoinBase() || vvchArgs[0].size() > MAX_GUID_LENGTH || vvchArgs[0].size() < 3)
+	if(!IsSys21Fork(nHeight))
+		return true;	
+	if (tx.IsCoinBase())
 		return true;
 	if (fDebug)
 		LogPrintf("*** ALIAS %d %d %s %s\n", nHeight, chainActive.Tip()->nHeight, tx.GetHash().ToString().c_str(), fJustCheck ? "JUSTCHECK" : "BLOCK");
@@ -890,7 +891,8 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	string retError = "";
 	if(fJustCheck)
 	{
-		
+		if(vvchArgs[0].size() > MAX_GUID_LENGTH || vvchArgs[0].size() < 3)
+			return error("CheckAliasInputs(): alias name too long or too short");
 		if(theAlias.vchPublicValue.size() > MAX_VALUE_LENGTH && vvchArgs[0] != vchFromString("sys_rates") && vvchArgs[0] != vchFromString("sys_category"))
 		{
 			return error("CheckAliasInputs(): alias pub value too big");
