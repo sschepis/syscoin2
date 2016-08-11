@@ -1020,7 +1020,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 		throw runtime_error("could not find an offer with this identifier");
 	string retError;
 	if((retError = CheckForAliasExpiry(theOffer.vchPubKey, chainActive.Tip()->nHeight)) != "")
-		throw runtime_error(strprintf("offer alias expired: %s" + retError));
+		throw runtime_error(retError);
 
 	unsigned int memPoolQty = QtyOfPendingAcceptsInMempool(vchOffer);
 	if(theOffer.nQty != -1 && theOffer.nQty < (nQty+memPoolQty))
