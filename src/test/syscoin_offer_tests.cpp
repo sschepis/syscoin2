@@ -514,6 +514,7 @@ BOOST_AUTO_TEST_CASE (generate_cert_linkedaccept)
 	AliasUpdate("node2", "node2alias", "changeddata2", "privdata2");
 	AliasUpdate("node3", "node3alias", "changeddata3", "privdata3");
 	OfferAccept("node1", "node3", "node3alias", lofferguid, "1", "message", "node2");
+	GenerateBlocks(5, "node3");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node3", "certinfo " + certguid));
 	BOOST_CHECK(find_value(r.get_obj(), "ismine").get_str() == "true");
 	BOOST_CHECK(find_value(r.get_obj(), "alias").get_str() == "node3alias");
