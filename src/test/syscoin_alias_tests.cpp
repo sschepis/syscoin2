@@ -670,9 +670,19 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 		BOOST_CHECK_THROW(CallRPC("node1", "aliasupdate aliasexpire newdata1 privdata"), runtime_error);
 
 		// should fail: offer update on an expired alias in offer
-		BOOST_CHECK_THROW(CallRPC("node1", "offerupdate_nocheck sys_rates aliasexpire " + offerguid + " category title 90 0.15 description"), runtime_error);
+		BOOST_CHECK_NO_THROW(CallRPC("node1", "offerupdate_nocheck sys_rates aliasexpire " + offerguid + " category title1 90 0.15 description"));	
+		GenerateBlocks(5);
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "offerinfo " + offerguid));
+		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "title").get_str(), "title");
+
 		// should fail: perform an accept on expired alias in offer
-		BOOST_CHECK_THROW(CallRPC("node2", "offeraccept_nocheck aliasexpire " + offerguid + " 1 message"), runtime_error);
+		BOOST_CHECK_NO_THROW(r = CallRPC("node2", "offeraccept_nocheck aliasexpire " + offerguid + " 1 message"));
+		result = r.get_array();
+		string acceptguid = result[1].get_str();
+		GenerateBlocks(5);
+		r = FindOfferAccept("node2", offerguid, acceptguid, true);
+		// ensure this accept is not found
+		BOOST_CHECK(r.isNull());
 		// should fail: link to an expired alias in offer
 		BOOST_CHECK_THROW(CallRPC("node1", "offerlink_nocheck aliasexpire " + offerguid + " 5 newdescription"), runtime_error);
 		// should fail: generate an offer using expired alias
@@ -698,8 +708,9 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 		BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasnew aliasexpire somedata"));
 		BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 5"));
 		BOOST_CHECK_NO_THROW(CallRPC("node1", "offerupdate sys_rates aliasexpire " + offerguid + " category title 100 0.05 description"));
+		BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 5"));
 		// expire the escrow
-		BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 55"));
+		BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 40"));
 		MilliSleep(2500);
 		StartNode("node3");
 		MilliSleep(2500);
