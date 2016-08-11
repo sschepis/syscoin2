@@ -708,15 +708,16 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 		BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasnew aliasexpire somedata"));
 		BOOST_CHECK_NO_THROW(CallRPC("node1","generate 3"));
 		MilliSleep(2500);
-		BOOST_CHECK_NO_THROW(CallRPC("node1", "certupdate " + certguid + " jag1 data 0"));
-		BOOST_CHECK_NO_THROW(CallRPC("node1","generate 2"));
-		MilliSleep(2500);
 		
 		BOOST_CHECK_NO_THROW(CallRPC("node1", "certupdate " + certgoodguid + " newdata privdata 0"));
 		BOOST_CHECK_NO_THROW(CallRPC("node1", "offerupdate sys_rates aliasexpire " + offerguid + " category title 100 0.05 description"));
 		// expire the escrow
-		BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 50"));
+		BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 25"));
 		MilliSleep(2500);
+		BOOST_CHECK_NO_THROW(CallRPC("node1", "certupdate " + certguid + " jag1 data 0"));
+		BOOST_CHECK_NO_THROW(CallRPC("node1","generate 30"));
+		MilliSleep(2500);
+
 		StartNode("node3");
 		MilliSleep(2500);
 		BOOST_CHECK_NO_THROW(CallRPC("node3", "generate 5"));
