@@ -914,9 +914,10 @@ const string OfferAccept(const string& ownernode, const string& node, const stri
 		// now get the linked accept from the sellernode
 		int discount = atoi(discountstr.c_str());
 		int commission = atoi(commissionstr.c_str());
-		GenerateBlocks(5, "node3");
 		GenerateBlocks(5, "node1");
 		GenerateBlocks(5, "node2");
+		GenerateBlocks(5, "node3");
+
 		// set tgt qty to the correct qty after deducting qty because the second accept should change qty of offer
 		sTargetQty = boost::to_string(nCurrentQty - nQtyToAccept);
 
@@ -925,7 +926,7 @@ const string OfferAccept(const string& ownernode, const string& node, const stri
 		// the second accept should update qty
 		BOOST_CHECK_EQUAL(sTargetQty, sQtyOfferAfter);
 
-		const UniValue &acceptSellerValue = FindOfferLinkedAccept(ownernode, rootofferguid, acceptguid);
+		const UniValue &acceptSellerValue = FindOfferLinkedAccept(node, rootofferguid, acceptguid);
 		BOOST_CHECK_EQUAL(find_value(acceptSellerValue, "quantity").get_str(), qty.c_str());
 
 		BOOST_CHECK(find_value(acceptSellerValue, "linkofferaccept").get_str() == acceptguid);
@@ -936,8 +937,7 @@ const string OfferAccept(const string& ownernode, const string& node, const stri
 		CAmount calculatedTotalAmount(calculatedTotal);
 		
 		BOOST_CHECK_EQUAL(calculatedTotalAmount/COIN, offertotal/COIN);
-		BOOST_CHECK(find_value(acceptSellerValue, "ismine").get_str() == "true");
-		BOOST_CHECK(find_value(acceptSellerValue, "pay_message").get_str() == pay_message);
+		BOOST_CHECK(find_value(acceptSellerValue, "ismine").get_str() == "false");
 	}
 	return acceptguid;
 }
