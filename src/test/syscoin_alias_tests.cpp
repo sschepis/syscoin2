@@ -677,7 +677,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 
 		// should fail: perform an accept on expired alias in offer
 		BOOST_CHECK_NO_THROW(r = CallRPC("node2", "offeraccept_nocheck aliasexpire " + offerguid + " 1 message"));
-		result = r.get_array();
+		UniValue result = r.get_array();
 		string acceptguid = result[1].get_str();
 		GenerateBlocks(5);
 		r = FindOfferAccept("node2", offerguid, acceptguid, true);
