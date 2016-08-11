@@ -671,7 +671,8 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 
 		// should fail: offer update on an expired alias in offer
 		BOOST_CHECK_NO_THROW(CallRPC("node1", "offerupdate_nocheck sys_rates aliasexpire " + offerguid + " category title1 90 0.15 description"));	
-		GenerateBlocks(5);
+		BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 5"));
+		MilliSleep(2500);
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "offerinfo " + offerguid));
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "title").get_str(), "title");
 
@@ -679,7 +680,8 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 		BOOST_CHECK_NO_THROW(r = CallRPC("node2", "offeraccept_nocheck aliasexpire " + offerguid + " 1 message"));
 		UniValue result = r.get_array();
 		string acceptguid = result[1].get_str();
-		GenerateBlocks(5);
+		BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 5"));
+		MilliSleep(2500);
 		r = FindOfferAccept("node2", offerguid, acceptguid, true);
 		// ensure this accept is not found
 		BOOST_CHECK(r.isNull());
@@ -707,8 +709,10 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 		BOOST_CHECK_NO_THROW(CallRPC("node1", "certupdate " + certgoodguid + " newdata privdata 0"));
 		BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasnew aliasexpire somedata"));
 		BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 5"));
+		MilliSleep(2500);
 		BOOST_CHECK_NO_THROW(CallRPC("node1", "offerupdate sys_rates aliasexpire " + offerguid + " category title 100 0.05 description"));
 		BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 5"));
+		MilliSleep(2500);
 		// expire the escrow
 		BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 40"));
 		MilliSleep(2500);
