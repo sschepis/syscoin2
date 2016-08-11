@@ -681,7 +681,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 		BOOST_CHECK_NO_THROW(r = CallRPC("node2", "offeraccept_nocheck aliasexpire " + offerguid + " 1 message"));
 		UniValue result = r.get_array();
 		string acceptguid = result[1].get_str();
-		BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 5"));
+		BOOST_CHECK_NO_THROW(CallRPC("node2", "generate 5"));
 		MilliSleep(2500);
 		r = FindOfferAccept("node2", offerguid, acceptguid, true);
 		// ensure this accept is found
@@ -706,22 +706,22 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 		// keep alive for later calls
 		BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate aliasexpire2 newdata1 privdata"));
 		BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasnew aliasexpire somedata"));
-		BOOST_CHECK_NO_THROW(CallRPC("node1","generate 5"));
+		BOOST_CHECK_NO_THROW(CallRPC("node1","generate 3"));
 		MilliSleep(2500);
 		BOOST_CHECK_NO_THROW(CallRPC("node1", "certupdate " + certguid + " jag1 data 0"));
-		BOOST_CHECK_NO_THROW(CallRPC("node1","generate 5"));
+		BOOST_CHECK_NO_THROW(CallRPC("node1","generate 2"));
 		MilliSleep(2500);
 		
 		BOOST_CHECK_NO_THROW(CallRPC("node1", "certupdate " + certgoodguid + " newdata privdata 0"));
 		BOOST_CHECK_NO_THROW(CallRPC("node1", "offerupdate sys_rates aliasexpire " + offerguid + " category title 100 0.05 description"));
 		// expire the escrow
-		BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 40"));
+		BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 50"));
 		MilliSleep(2500);
 		StartNode("node3");
 		MilliSleep(2500);
-		BOOST_CHECK_NO_THROW(CallRPC("node3", "generate 5"));
+		BOOST_CHECK_NO_THROW(CallRPC("node3", "generate 2"));
 		MilliSleep(2500); 
-		BOOST_CHECK_NO_THROW(CallRPC("node2", "generate 5"));
+		BOOST_CHECK_NO_THROW(CallRPC("node2", "generate 3"));
 		MilliSleep(2500);
 		BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate aliasexpire2 newdata1 privdata"));
 		BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 5"));
