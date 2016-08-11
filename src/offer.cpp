@@ -822,13 +822,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	
 
 	if (!fJustCheck ) {
-		if((retError = CheckForAliasExpiry(theOffer.vchPubKey, nHeight)) != "")
-		{
-			retError = string("CheckOfferInputs(): ") + retError;
-			if(fDebug)
-				LogPrintf(retError.c_str());
-			return true;	
-		}
 		COffer serializedOffer;
 		if(op != OP_OFFER_ACTIVATE) {
 			// save serialized offer for later use
@@ -913,6 +906,13 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						theOffer.vchAliasPeg = dbOffer.vchAliasPeg;
 					// user can't update safety level after creation
 					theOffer.safetyLevel = dbOffer.safetyLevel;
+					if((retError = CheckForAliasExpiry(theOffer.vchPubKey, nHeight)) != "")
+					{
+						retError = string("CheckOfferInputs(): OP_OFFER_UPDATE ") + retError;
+						if(fDebug)
+							LogPrintf(retError.c_str());
+						theOffer = dbOffer;
+					}
 				}
 			}
 			if(!theOffer.vchCert.empty())						
@@ -927,10 +927,17 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		}
 		else if(op == OP_OFFER_ACTIVATE)
 		{
+			if((retError = CheckForAliasExpiry(theOffer.vchPubKey, nHeight)) != "")
+			{
+				retError = string("CheckOfferInputs(): OP_OFFER_ACTIVATE ") + retError;
+				if(fDebug)
+					LogPrintf(retError.c_str());
+				return true;	
+			}
 			if (pofferdb->ExistsOffer(vvchArgs[0]))
 			{
 				if(fDebug)
-					LogPrintf("CheckOfferInputs(): OP_OFFER_ACTIVATE Offer already exists");
+					LogPrintf("CheckOfferInputs(): OP_OFFER_ACTIVATE offer already exists");
 				return true;
 			}
 			// by default offers are private on new, need to update it out of privacy
@@ -1007,26 +1014,30 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					}
 					if(!theOffer.vchLinkOffer.empty())
 					{
-						// if creating a linked offer we set some mandatory fields to the parent
-						theOffer.nQty = linkOffer.nQty;
-						theOffer.linkWhitelist.bExclusiveResell = true;
-						theOffer.sCurrencyCode = linkOffer.sCurrencyCode;
-						theOffer.vchCert = linkOffer.vchCert;
-						theOffer.vchAliasPeg = linkOffer.vchAliasPeg;
-						theOffer.sCategory = linkOffer.sCategory;
-						theOffer.sTitle = linkOffer.sTitle;
-						linkOffer.offerLinks.push_back(vvchArgs[0]);	
-						if(linkOffer.offerLinks.size() > 100)
+						// max links are 100 per offer
+						if(linkOffer.offerLinks.size() < 100)
+						{
+							// if creating a linked offer we set some mandatory fields to the parent
+							theOffer.nQty = linkOffer.nQty;
+							theOffer.linkWhitelist.bExclusiveResell = true;
+							theOffer.sCurrencyCode = linkOffer.sCurrencyCode;
+							theOffer.vchCert = linkOffer.vchCert;
+							theOffer.vchAliasPeg = linkOffer.vchAliasPeg;
+							theOffer.sCategory = linkOffer.sCategory;
+							theOffer.sTitle = linkOffer.sTitle;
+							linkOffer.offerLinks.push_back(vvchArgs[0]);
+							linkOffer.PutToOfferList(myVtxPos);
+							// write parent offer
+					
+							if (!pofferdb->WriteOffer(theOffer.vchLinkOffer, myVtxPos))
+								return error( "CheckOfferInputs() : failed to write to offer link to DB");	
+						}
+						else
 						{
 							if(fDebug)
 								LogPrintf("CheckOfferInputs() OP_OFFER_ACTIVATE: parent offer affiliate table exceeded 100 entries");
-							return true;
-						}
-						linkOffer.PutToOfferList(myVtxPos);
-						// write parent offer
-				
-						if (!pofferdb->WriteOffer(theOffer.vchLinkOffer, myVtxPos))
-							return error( "CheckOfferInputs() : failed to write to offer link to DB");	
+							theOffer.vchLinkOffer.clear();
+						}					
 					}
 				}
 				else

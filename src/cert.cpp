@@ -486,13 +486,6 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 	}
 
     if (!fJustCheck ) {
-		if((retError = CheckForAliasExpiry(theCert.vchPubKey, nHeight)) != "")
-		{
-			retError = string("CheckCertInputs(): ") + retError;
-			if(fDebug)
-				LogPrintf(retError.c_str());
-			return true;
-		}
 		if(op != OP_CERT_ACTIVATE) 
 		{
 			// if not an certnew, load the cert data from the DB
@@ -509,6 +502,13 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 
 			if(!vtxPos.empty())
 			{
+				if((retError = CheckForAliasExpiry(theCert.vchPubKey, nHeight)) != "")
+				{
+					retError = string("CheckCertInputs(): cert alias: ") + retError;
+					if(fDebug)
+						LogPrintf(retError.c_str());
+					theCert.vchPubKey = dbCert.vchPubKey;		
+				}
 				if(theCert.IsNull())
 					theCert = vtxPos.back();
 				else
@@ -528,10 +528,10 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 						// check from alias
 						if((retError = CheckForAliasExpiry(dbCert.vchPubKey, nHeight)) != "")
 						{
-							retError = string("CheckCertInputs(): ") + retError;
+							retError = string("CheckCertInputs(): transfer to alias: ") + retError;
 							if(fDebug)
 								LogPrintf(retError.c_str());
-							return true;							
+							theCert.vchPubKey = dbCert.vchPubKey;						
 						}
 					}
 				}
@@ -541,6 +541,13 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 		}
 		else
 		{
+			if((retError = CheckForAliasExpiry(theCert.vchPubKey, nHeight)) != "")
+			{
+				retError = string("CheckCertInputs(): cert activate: ") + retError;
+				if(fDebug)
+					LogPrintf(retError.c_str());
+				return true;
+			}
 			if (pcertdb->ExistsCert(vvchArgs[0]))
 			{
 				if(fDebug)
