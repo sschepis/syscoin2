@@ -504,7 +504,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 			{
 				if((retError = CheckForAliasExpiry(theCert.vchPubKey, nHeight)) != "")
 				{
-					retError = string("CheckCertInputs(): cert alias: ") + retError;
+					retError = string("CheckCertInputs(): cert update alias: ") + retError;
 					if(fDebug)
 						LogPrintf(retError.c_str());
 					theCert.vchPubKey = dbCert.vchPubKey;		
