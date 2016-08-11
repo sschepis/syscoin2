@@ -706,7 +706,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 		BOOST_CHECK_NO_THROW(CallRPC("node1", "certupdate " + certgoodguid + " newdata privdata 0"));
 		BOOST_CHECK_NO_THROW(CallRPC("node1", "offerupdate sys_rates aliasexpire " + offerguid + " category title 100 0.05 description"));
 		// expire the escrow
-		BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 50"));
+		BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 60"));
 		MilliSleep(2500);
 		StartNode("node3");
 		MilliSleep(2500);
@@ -732,6 +732,10 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 		BOOST_CHECK_THROW(CallRPC("node1", "certtransfer " + certguid + " aliasexpire2"), runtime_error);
 		// should fail: xfer an cert to an expired alias even though transferring cert is good
 		BOOST_CHECK_THROW(CallRPC("node1", "certtransfer " + certgoodguid + " aliasexpire"), runtime_error);
+		BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 5"));
+		MilliSleep(2500);
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "certinfo " + certgoodguid));
+		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "alias").get_str(), "aliasexpire");
 		AliasNew("node2", "aliasexpire2", "somedata");
 		// should pass: confirm that the transferring cert is good by transferring to a good alias
 		BOOST_CHECK_NO_THROW(CallRPC("node1", "certtransfer " + certgoodguid + " aliasexpirenode2"));
