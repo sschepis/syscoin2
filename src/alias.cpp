@@ -1614,6 +1614,10 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 		CSyscoinAddress myAddress = CSyscoinAddress(xferKey.GetID());
 		if (paliasdb->ExistsAddress(vchFromString(myAddress.ToString())))
 			throw runtime_error("You must transfer to a public key that's not associated with any other alias");
+		string retError;
+		if((retError = CheckForAliasExpiry(vchPubKeyByte, chainActive.Tip()->nHeight)) != "")
+			throw runtime_error(strprintf("transfer alias expired: %s" + retError));
+
 	}
 
 	string strSafeSearch = "Yes";

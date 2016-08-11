@@ -750,8 +750,15 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
     // look for a transaction with this key
     CTransaction tx;
 	CCert theCert;
+	
     if (!GetTxOfCert( vchCert, theCert, tx))
         throw runtime_error("could not find a certificate with this key");
+
+	string retError;
+	if((retError = CheckForAliasExpiry(theCert.vchPubKey, chainActive.Tip()->nHeight)) != "")
+		throw runtime_error(retError.c_str());
+	
+	
     // make sure cert is in wallet
 	wtxIn = pwalletMain->GetWalletTx(tx.GetHash());
 	if (wtxIn == NULL || !IsSyscoinTxMine(tx, "cert"))
@@ -876,6 +883,10 @@ UniValue certtransfer(const UniValue& params, bool fHelp) {
 	CCert theCert;
     if (!GetTxOfCert( vchCert, theCert, tx))
         throw runtime_error("could not find a certificate with this key");
+	string retError;
+	if((retError = CheckForAliasExpiry(theCert.vchPubKey, chainActive.Tip()->nHeight)) != "")
+		throw runtime_error(retError.c_str());
+
 	CPubKey aliasKey = CPubKey(theCert.vchPubKey);
 	if(!aliasKey.IsValid())
 	{
@@ -885,9 +896,7 @@ UniValue certtransfer(const UniValue& params, bool fHelp) {
 	myAddress = CSyscoinAddress(myAddress.ToString());
 	if(!myAddress.IsValid() || !myAddress.isAlias)
 		throw runtime_error("Invalid cert alias");
-	CAliasIndex theAlias;
-    if (!GetTxOfAlias( vchFromString(myAddress.aliasName), theAlias, aliastx))
-        throw runtime_error("could not find the certificate alias or it has expired");
+
 	// check to see if certificate in wallet
 	wtxIn = pwalletMain->GetWalletTx(theCert.txHash);
 	if (wtxIn == NULL || !IsSyscoinTxMine(*wtxIn, "cert"))
