@@ -703,15 +703,19 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 		// should fail: new escrow with expired alias
 		BOOST_CHECK_THROW(CallRPC("node2", "escrownew aliasexpirenode2 " + offerguid + " 1 message aliasexpire2"), runtime_error);
 
-		// keep aliasexpire2 alive for later calls
+		// keep alive for later calls
 		BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate aliasexpire2 newdata1 privdata"));
 		BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasnew aliasexpire somedata"));
 		BOOST_CHECK_NO_THROW(CallRPC("node1","generate 5"));
 		MilliSleep(2500);
+		BOOST_CHECK_NO_THROW(CallRPC("node1", "certupdate " + certguid + " jag1 data 0"));
+		BOOST_CHECK_NO_THROW(CallRPC("node1","generate 5"));
+		MilliSleep(2500);
+		
 		BOOST_CHECK_NO_THROW(CallRPC("node1", "certupdate " + certgoodguid + " newdata privdata 0"));
 		BOOST_CHECK_NO_THROW(CallRPC("node1", "offerupdate sys_rates aliasexpire " + offerguid + " category title 100 0.05 description"));
 		// expire the escrow
-		BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 50"));
+		BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 40"));
 		MilliSleep(2500);
 		StartNode("node3");
 		MilliSleep(2500);
@@ -743,6 +747,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 		BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 5"));
 		MilliSleep(2500);
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "certinfo " + certgoodguid));
+		// ensure it didn't get transferred
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "alias").get_str(), "aliasexpire2");
 
 		// should pass: confirm that the transferring cert is good by transferring to a good alias
@@ -750,6 +755,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 		BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 5"));
 		MilliSleep(2500);
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "certinfo " + certgoodguid));
+		// ensure it got transferred
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "alias").get_str(), "aliasexpirenode2");
 
 		GenerateBlocks(110);
