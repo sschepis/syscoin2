@@ -472,21 +472,6 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				if(!theEscrow.buyerFeedback.IsNull() || !theEscrow.sellerFeedback.IsNull() || !theEscrow.arbiterFeedback.IsNull())
 				{
 					return error("CheckEscrowInputs() :cannot leave feedback in activate tx");
-				}
-				if((retError = CheckForAliasExpiry(theEscrow.vchBuyerKey, nHeight)) != "")
-				{
-					retError = string("CheckEscrowInputs(): ") + retError;
-					return error(retError.c_str());
-				}
-				if((retError = CheckForAliasExpiry(theEscrow.vchSellerKey, nHeight)) != "")
-				{
-					retError = string("CheckEscrowInputs(): ") + retError;
-					return error(retError.c_str());
-				}	
-				if((retError = CheckForAliasExpiry(theEscrow.vchArbiterKey, nHeight)) != "")
-				{
-					retError = string("CheckEscrowInputs(): ") + retError;
-					return error(retError.c_str());
 				}	
 			
 				break;
@@ -578,6 +563,30 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 
 
     if (!fJustCheck ) {
+		if(op == OP_ESCROW_ACTIVATE) 
+		{
+			if((retError = CheckForAliasExpiry(theEscrow.vchBuyerKey, nHeight)) != "")
+			{
+				retError = string("CheckEscrowInputs(): ") + retError;
+				if(fDebug)
+					LogPrintf(retError);
+				return true;
+			}
+			if((retError = CheckForAliasExpiry(theEscrow.vchSellerKey, nHeight)) != "")
+			{
+				retError = string("CheckEscrowInputs(): ") + retError;
+				if(fDebug)
+					LogPrintf(retError);
+				return true;
+			}	
+			if((retError = CheckForAliasExpiry(theEscrow.vchArbiterKey, nHeight)) != "")
+			{
+				retError = string("CheckEscrowInputs(): ") + retError;
+				if(fDebug)
+					LogPrintf(retError);
+				return true;
+			}
+		}
 		vector<CEscrow> vtxPos;
 		// make sure escrow settings don't change (besides rawTx) outside of activation
 		if(op != OP_ESCROW_ACTIVATE) 

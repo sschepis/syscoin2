@@ -483,14 +483,16 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 		default:
 			return error( "CheckCertInputs() : cert transaction has unknown op");
 		}
-		if((retError = CheckForAliasExpiry(theCert.vchPubKey, nHeight)) != "")
-		{
-			retError = string("CheckCertInputs(): ") + retError;
-			return error(retError.c_str());
-		}
 	}
 
     if (!fJustCheck ) {
+		if((retError = CheckForAliasExpiry(theCert.vchPubKey, nHeight)) != "")
+		{
+			retError = string("CheckCertInputs(): ") + retError;
+			if(fDebug)
+				LogPrintf(retError);
+			return true;
+		}
 		if(op != OP_CERT_ACTIVATE) 
 		{
 			// if not an certnew, load the cert data from the DB
@@ -520,32 +522,6 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 					// user can't update safety level after creation
 					theCert.safetyLevel = dbCert.safetyLevel;
 					theCert.vchCert = dbCert.vchCert;
-
-					// ensure an expired tx for alias transfer doesn't actually do the transfer
-					if(op == OP_CERT_TRANSFER)
-					{
-						CPubKey PubKey(dbCert.vchPubKey);
-						CSyscoinAddress aliasaddress(PubKey.GetID());
-						aliasaddress = CSyscoinAddress(aliasaddress.ToString());
-						if(!aliasaddress.IsValid() || !aliasaddress.isAlias)
-						{
-							theCert.vchPubKey = dbCert.vchPubKey;
-						}
-						else
-						{
-							CTransaction txAlias;
-							CAliasIndex alias;
-							// make sure alias is still valid
-							if (!GetTxOfAlias( vchFromString(aliasaddress.aliasName), alias, txAlias))
-							{
-								if(fDebug)
-									LogPrintf("CheckOfferInputs(): OP_CERT_TRANSFER Trying to transfer an expired certificate");
-								theCert.vchPubKey = dbCert.vchPubKey;		
-							}
-							
-						}
-					}
-
 				}
 			}
 			else

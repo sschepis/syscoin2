@@ -357,22 +357,26 @@ bool CheckMessageInputs(const CTransaction &tx, int op, int nOut, const vector<v
 		}
 		else
 			return error( "CheckMessageInputs() : message transaction has unknown op");
-		if((retError = CheckForAliasExpiry(theMessage.vchPubKeyTo, nHeight)) != "")
-		{
-			retError = string("CheckMessageInputs(): ") + retError;
-			return error(retError.c_str());
-		}
-		if((retError = CheckForAliasExpiry(theMessage.vchPubKeyFrom, nHeight)) != "")
-		{
-			retError = string("CheckMessageInputs(): ") + retError;
-			return error(retError.c_str());
-		}
 	}
 	// save serialized message for later use
 	CMessage serializedMessage = theMessage;
 
 
     if (!fJustCheck ) {
+		if((retError = CheckForAliasExpiry(theMessage.vchPubKeyTo, nHeight)) != "")
+		{
+			retError = string("CheckMessageInputs(): ") + retError;
+			if(fDebug)
+				LogPrintf(retError);
+			return true;
+		}
+		if((retError = CheckForAliasExpiry(theMessage.vchPubKeyFrom, nHeight)) != "")
+		{
+			retError = string("CheckMessageInputs(): ") + retError;
+			if(fDebug)
+				LogPrintf(retError);
+			return true;		}
+
 		vector<CMessage> vtxPos;
 		if (pmessagedb->ExistsMessage(vvchArgs[0])) {
 			if(fDebug)

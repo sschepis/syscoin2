@@ -818,15 +818,17 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		default:
 			return error( "CheckOfferInputs() : offer transaction has unknown op");
 		}
-		if((retError = CheckForAliasExpiry(theOffer.vchPubKey, nHeight)) != "")
-		{
-			retError = string("CheckOfferInputs(): ") + retError;
-			return error(retError.c_str());
-		}
 	}
 	
 
 	if (!fJustCheck ) {
+		if((retError = CheckForAliasExpiry(theOffer.vchPubKey, nHeight)) != "")
+		{
+			retError = string("CheckOfferInputs(): ") + retError;
+			if(fDebug)
+				LogPrintf(retError;
+			return true;	
+		}
 		COffer serializedOffer;
 		if(op != OP_OFFER_ACTIVATE) {
 			// save serialized offer for later use
