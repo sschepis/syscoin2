@@ -914,9 +914,11 @@ const string OfferAccept(const string& ownernode, const string& node, const stri
 		// now get the linked accept from the sellernode
 		int discount = atoi(discountstr.c_str());
 		int commission = atoi(commissionstr.c_str());
+		GenerateBlocks(5, "node3");
 		GenerateBlocks(5, "node1");
 		GenerateBlocks(5, "node2");
-		GenerateBlocks(5, "node3");
+		// set tgt qty to the correct qty after deducting qty because the second accept should change qty of offer
+		sTargetQty = boost::to_string(nCurrentQty - nQtyToAccept);
 
 		BOOST_CHECK_NO_THROW(r = CallRPC(node, "offerinfo " + offerguid));
 		string sQtyOfferAfter = find_value(r.get_obj(), "quantity").get_str();
