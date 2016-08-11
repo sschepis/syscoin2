@@ -866,10 +866,11 @@ const string OfferAccept(const string& ownernode, const string& node, const stri
 	
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "offerinfo " + offerguid));
 	int nCurrentQty = atoi(find_value(r.get_obj(), "quantity").get_str().c_str());
-	CAmount offertotal = AmountFromValue(find_value(r.get_obj(), "sysprice"))*nQty;
+	
 	string rootofferguid = find_value(r.get_obj(), "offerlink_guid").get_str();
 	const string &commissionstr = find_value(r.get_obj(), "commission").get_str();
 	int nQtyToAccept = atoi(qty.c_str());
+	CAmount offertotal = AmountFromValue(find_value(r.get_obj(), "sysprice"))*nQtyToAccept;
 	string sTargetQty = boost::to_string(nCurrentQty - nQtyToAccept);
 
 	string offeracceptstr = "offeraccept " + aliasname + " " + offerguid + " " + qty + " " + pay_message;
