@@ -569,21 +569,21 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 			{
 				retError = string("CheckEscrowInputs(): ") + retError;
 				if(fDebug)
-					LogPrintf(retError);
+					LogPrintf(retError.c_str());
 				return true;
 			}
 			if((retError = CheckForAliasExpiry(theEscrow.vchSellerKey, nHeight)) != "")
 			{
 				retError = string("CheckEscrowInputs(): ") + retError;
 				if(fDebug)
-					LogPrintf(retError);
+					LogPrintf(retError.c_str());
 				return true;
 			}	
 			if((retError = CheckForAliasExpiry(theEscrow.vchArbiterKey, nHeight)) != "")
 			{
 				retError = string("CheckEscrowInputs(): ") + retError;
 				if(fDebug)
-					LogPrintf(retError);
+					LogPrintf(retError.c_str());
 				return true;
 			}
 		}

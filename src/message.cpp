@@ -367,14 +367,14 @@ bool CheckMessageInputs(const CTransaction &tx, int op, int nOut, const vector<v
 		{
 			retError = string("CheckMessageInputs(): ") + retError;
 			if(fDebug)
-				LogPrintf(retError);
+				LogPrintf(retError.c_str());
 			return true;
 		}
 		if((retError = CheckForAliasExpiry(theMessage.vchPubKeyFrom, nHeight)) != "")
 		{
 			retError = string("CheckMessageInputs(): ") + retError;
 			if(fDebug)
-				LogPrintf(retError);
+				LogPrintf(retError.c_str());
 			return true;		}
 
 		vector<CMessage> vtxPos;

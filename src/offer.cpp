@@ -826,7 +826,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		{
 			retError = string("CheckOfferInputs(): ") + retError;
 			if(fDebug)
-				LogPrintf(retError);
+				LogPrintf(retError.c_str());
 			return true;	
 		}
 		COffer serializedOffer;

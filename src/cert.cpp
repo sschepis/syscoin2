@@ -490,7 +490,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 		{
 			retError = string("CheckCertInputs(): ") + retError;
 			if(fDebug)
-				LogPrintf(retError);
+				LogPrintf(retError.c_str());
 			return true;
 		}
 		if(op != OP_CERT_ACTIVATE) 
