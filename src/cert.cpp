@@ -522,6 +522,18 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 					// user can't update safety level after creation
 					theCert.safetyLevel = dbCert.safetyLevel;
 					theCert.vchCert = dbCert.vchCert;
+					// ensure an expired tx for alias transfer doesn't actually do the transfer
+					if(op == OP_CERT_TRANSFER)
+					{
+						// check from alias
+						if((retError = CheckForAliasExpiry(dbCert.vchPubKey, nHeight)) != "")
+						{
+							retError = string("CheckCertInputs(): ") + retError;
+							if(fDebug)
+								LogPrintf(retError.c_str());
+							return true;							
+						}
+					}
 				}
 			}
 			else
