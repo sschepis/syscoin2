@@ -2347,7 +2347,7 @@ bool CreateLinkedOfferAcceptRecipients(vector<CRecipient> &vecSend, const CAmoun
 		if(vvchOffer[0] != offerGUID)
 			continue;
 		COffer offer(tx);
-		CAmount nTotalValue = ( nPrice * offer.accept );
+		CAmount nTotalValue = ( nPrice * offer.accept.nQty );
 		scriptPubKeyAccept << CScript::EncodeOP_N(OP_OFFER_ACCEPT) << linkedOfferGUID << vvchOffer[1] << vvchOffer[2] << vchHashOffer << OP_2DROP << OP_2DROP << OP_2DROP << OP_DROP; 
 		scriptPubKeyAccept += scriptPubKeyDestination;
 		scriptPubKeyPayment += scriptPubKeyDestination;
