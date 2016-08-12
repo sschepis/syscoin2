@@ -850,6 +850,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, const CCoinsViewCache& inputs, i
 	bool fJustCheck = true;
 	if(nHeight == 0)
 		nHeight = chainActive.Height();
+	string errorMessage;
 	if(tx.nVersion == GetSyscoinTxVersion())
 	{
 		if(tx.nVersion == SYSCOIN_TX_VERSION)
@@ -869,12 +870,14 @@ bool CheckSyscoinInputs(const CTransaction& tx, const CCoinsViewCache& inputs, i
 			}
 			if(DecodeOfferTx(tx, op, nOut, vvchArgs))
 			{	
-				good = CheckOfferInputs(tx, op, nOut, vvchArgs, inputs, fJustCheck, nHeight);	 
+				good = CheckOfferInputs(tx, op, nOut, vvchArgs, inputs, fJustCheck, nHeight, errorMessage);	 
 			}
 			if(DecodeMessageTx(tx, op, nOut, vvchArgs))
 			{
 				good = CheckMessageInputs(tx, op, nOut, vvchArgs, inputs, fJustCheck, nHeight);		
 			}
+			if(fDebug && !errorMessage.empty())
+				LogPrintf(errorMessage.c_str() + "\n");
 			// remove tx's that don't pass our check
 			if(!good)
 			{
@@ -931,6 +934,7 @@ bool AddSyscoinServicesToDB(const CBlock& block, const CCoinsViewCache& inputs, 
 			}	
 		}
 	}
+	string errorMessage;
 	for (unsigned int i = 0; i < block.vtx.size(); i++)
     {
         const CTransaction &tx = block.vtx[i];
@@ -948,7 +952,9 @@ bool AddSyscoinServicesToDB(const CBlock& block, const CCoinsViewCache& inputs, 
 					continue;
 				if(!IsOfferOp(offerOp))
 					continue;
-				good = CheckOfferInputs(tx, offerOp, j, offerVvch, inputs, fJustCheck, nHeight, &block);	
+				good = CheckOfferInputs(tx, offerOp, j, offerVvch, inputs, fJustCheck, nHeight, errorMessage, &block);	
+				if(fDebug && !errorMessage.empty())
+					LogPrintf(errorMessage.c_str() + "\n");
 				if(!good)
 					break;
 			}

@@ -425,6 +425,7 @@ void SendMoneySyscoin(const vector<CRecipient> &vecSend, CAmount nValue, bool fS
 	vector<vector<unsigned char> > vvch;
 	int op, nOut;
 	bool fJustCheck = true;
+	string errorMessage;
 	CCoinsViewCache inputs(pcoinsTip);
 	if(DecodeAliasTx(wtxNew, op, nOut, vvch))
 	{
@@ -443,8 +444,11 @@ void SendMoneySyscoin(const vector<CRecipient> &vecSend, CAmount nValue, bool fS
 	}
 	if(DecodeOfferTx(wtxNew, op, nOut, vvch))		
 	{
-		if(!CheckOfferInputs(wtxNew,  op, nOut, vvch, inputs, fJustCheck, chainActive.Tip()->nHeight, NULL))
+		if(!CheckOfferInputs(wtxNew,  op, nOut, vvch, inputs, fJustCheck, chainActive.Tip()->nHeight, errorMessage, NULL))
 			throw runtime_error("Error: The transaction was rejected! Offer Inputs were invalid!");
+		if(!errorMessage.empty())
+			throw runtime_error(errorMessage.c_str());
+
 	}
 	if(DecodeMessageTx(wtxNew, op, nOut, vvch))
 	{
