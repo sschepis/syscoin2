@@ -443,10 +443,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 		{
 			return error("CheckEscrowInputs(): escrow offer guid too long");
 		}
-		if(theEscrow.vchWhitelistAlias.size() > MAX_ID_LENGTH)
-		{
-			return error("CheckEscrowInputs(): escrow alias guid too long");
-		}
+
 		if(theEscrow.rawTx.size() > MAX_STANDARD_TX_SIZE)
 		{
 			return error("CheckEscrowInputs(): escrow message tx too long");
@@ -461,10 +458,6 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 		}
 		switch (op) {
 			case OP_ESCROW_ACTIVATE:
-				if(!theEscrow.vchWhitelistAlias.empty() && !IsAliasOp(prevAliasOp))
-					return error("CheckEscrowInputs() : an escrow offer accept using an alias must attach the alias as an input");
-				if(IsAliasOp(prevAliasOp) && vvchPrevAliasArgs[0] != theEscrow.vchWhitelistAlias)
-					return error("CheckEscrowInputs() : escrow alias guid and alias input guid mismatch");
 				if(theEscrow.op != OP_ESCROW_ACTIVATE)
 					return error("CheckEscrowInputs():  OP_ESCROW_ACTIVATE invalid op, should be escrow activate");
 				if (theEscrow.vchEscrow != vvchArgs[0])
@@ -1030,48 +1023,47 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 		throw runtime_error("Cannot purchase a wanted offer");
 
 	vchSellerPubKey = theOffer.vchPubKey;
+	const CWalletTx *wtxAliasIn = NULL;
+
+	CScript scriptPubKeyAlias, scriptPubKeyAliasOrig;
 	if(!theOffer.vchLinkOffer.empty())
 	{
-		if(pofferdb->ExistsOffer(theOffer.vchLinkOffer))
+	
+		CTransaction tmpTx;
+		if (!GetTxOfOffer( theOffer.vchLinkOffer, linkedOffer, tmpTx, true))
+			throw runtime_error("Trying to accept a linked offer but could not find parent offer");
+		if (linkedOffer.bOnlyAcceptBTC)
+			throw runtime_error("Linked offer only accepts Bitcoins, linked offers currently only work with Syscoin payments");
+		vchSellerPubKey = linkedOffer.vchPubKey;
+		
+		// if offer is not linked, look for a discount for the buyer
+		CAliasIndex theAlias;
+		COfferLinkWhitelistEntry foundEntry;
+		theOffer.linkWhitelist.GetLinkEntryByHash(vchAlias, foundEntry);
+
+		if(!foundEntry.IsNull())
 		{
-			CTransaction tmpTx;
-			if (!GetTxOfOffer( theOffer.vchLinkOffer, linkedOffer, tmpTx, true))
-				throw runtime_error("Trying to accept a linked offer but could not find parent offer");
-			if (linkedOffer.bOnlyAcceptBTC)
-				throw runtime_error("Linked offer only accepts Bitcoins, linked offers currently only work with Syscoin payments");
-			vchSellerPubKey = linkedOffer.vchPubKey;
-		}
-	}
-	COfferLinkWhitelistEntry foundAlias;
-	CAliasIndex theAlias;
-	const CWalletTx *wtxAliasIn = NULL;
-	vector<unsigned char> vchWhitelistAlias;
-	CScript scriptPubKeyAlias, scriptPubKeyAliasOrig;
-	// go through the whitelist and see if you own any of the aliases to apply to this offer for a discount
-	for(unsigned int i=0;i<theOffer.linkWhitelist.entries.size();i++) {
-		CTransaction txAlias;	
-		vector<vector<unsigned char> > vvch;
-		COfferLinkWhitelistEntry& entry = theOffer.linkWhitelist.entries[i];
-		// make sure this alias is still valid
-		if (GetTxOfAlias(entry.aliasLinkVchRand, theAlias, txAlias))
-		{
-			// check for existing alias updates/transfers
-			if (ExistsInMempool(entry.aliasLinkVchRand, OP_ALIAS_UPDATE)) {
-				throw runtime_error("there is are pending operations on that alias");
-			}
-			// make sure its in your wallet (you control this alias)
-			wtxAliasIn = pwalletMain->GetWalletTx(txAlias.GetHash());		
-			if (IsSyscoinTxMine(txAlias, "alias") && wtxAliasIn != NULL && theAlias.vchPubKey == buyeralias.vchPubKey) 
+			CTransaction txAlias;	
+			// make sure this alias is still valid
+			if (GetTxOfAlias(vchAlias, theAlias, txAlias, true))
 			{
-				foundAlias = entry;
-				vchWhitelistAlias = entry.aliasLinkVchRand;
-				CPubKey currentKey(theAlias.vchPubKey);
-				scriptPubKeyAliasOrig = GetScriptForDestination(currentKey.GetID());
-			}		
+				// check for existing alias updates/transfers
+				if (ExistsInMempool(vchAlias, OP_ALIAS_UPDATE)) {
+					throw runtime_error("there is are pending operations on that alias");
+				}
+				// make sure its in your wallet (you control this alias)
+				if (IsSyscoinTxMine(txAlias, "alias")) 
+				{
+					wtxAliasIn = pwalletMain->GetWalletTx(txAlias.GetHash());		
+					CPubKey currentKey(theAlias.vchPubKey);
+					scriptPubKeyAliasOrig = GetScriptForDestination(currentKey.GetID());
+					scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << vchAlias  << theAlias.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
+					scriptPubKeyAlias += scriptPubKeyAliasOrig;
+				}		
+			}
 		}
 	}
-	scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << vchWhitelistAlias  << theAlias.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
-	scriptPubKeyAlias += scriptPubKeyAliasOrig;
+
 
 	if (ExistsInMempool(vchOffer, OP_OFFER_ACTIVATE) || ExistsInMempool(vchOffer, OP_OFFER_UPDATE)) {
 		throw runtime_error("there are pending operations on that offer");
@@ -1149,7 +1141,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	// send to escrow address
 
 	int precision = 2;
-	CAmount nPricePerUnit = convertCurrencyCodeToSyscoin(theOffer.vchAliasPeg, theOffer.sCurrencyCode, theOffer.GetPrice(foundAlias), chainActive.Tip()->nHeight, precision);
+	CAmount nPricePerUnit = convertCurrencyCodeToSyscoin(theOffer.vchAliasPeg, theOffer.sCurrencyCode, theOffer.GetPrice(foundEntry), chainActive.Tip()->nHeight, precision);
 	CAmount nTotal = nPricePerUnit*nQty;
 
 	CAmount nEscrowFee = GetEscrowArbiterFee(nTotal);
@@ -1171,7 +1163,6 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	newEscrow.vchEscrow = vchEscrow;
 	newEscrow.vchBuyerKey = buyeralias.vchPubKey;
 	newEscrow.vchArbiterKey = arbiteralias.vchPubKey;
-	newEscrow.vchWhitelistAlias = vchWhitelistAlias;
 	newEscrow.vchRedeemScript = redeemScript;
 	newEscrow.vchOffer = vchOffer;
 	newEscrow.vchSellerKey = vchSellerPubKey;

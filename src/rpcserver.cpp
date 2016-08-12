@@ -403,13 +403,6 @@ static const CRPCCommand vRPCCommands[] =
     { "wallet", "offerhistory",         &offerhistory,         false },
     { "wallet", "offerfilter",          &offerfilter,          false },
 
-// SYSCOIN
-#ifdef ENABLE_DEBUGRPC
-    { "wallet", "offernew_nocheck",    &offernew_nocheck,    false },
-    { "wallet", "offerlink_nocheck",   &offerlink_nocheck,   false },
-    { "wallet", "offerupdate_nocheck", &offerupdate_nocheck, false },
-    { "wallet", "offeraccept_nocheck", &offeraccept_nocheck, false },
-#endif
 
   // use the blockchain as a certificate issuance platform
   { "wallet", "certnew",         &certnew,     false },

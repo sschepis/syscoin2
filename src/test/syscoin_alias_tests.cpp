@@ -152,75 +152,72 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpiredbuyback)
 	// expired aliases shouldnt be searchable
 	BOOST_CHECK_EQUAL(AliasFilter("node1", "aliasexpirebuyback", "On"), false);
 	BOOST_CHECK_EQUAL(AliasFilter("node2", "aliasexpirebuyback", "On"), false);
-	#ifdef ENABLE_DEBUGRPC
-		// renew alias and now its searchable
-		AliasNew("node1", "aliasexpirebuyback", "somedata1", "data1");
-		BOOST_CHECK_EQUAL(AliasFilter("node1", "aliasexpirebuyback", "On"), true);
-		BOOST_CHECK_EQUAL(AliasFilter("node2", "aliasexpirebuyback", "On"), true);
+	
+	// renew alias and now its searchable
+	AliasNew("node1", "aliasexpirebuyback", "somedata1", "data1");
+	BOOST_CHECK_EQUAL(AliasFilter("node1", "aliasexpirebuyback", "On"), true);
+	BOOST_CHECK_EQUAL(AliasFilter("node2", "aliasexpirebuyback", "On"), true);
 
-		GenerateBlocks(110);
-		// try to renew alias again second time
-		AliasNew("node1", "aliasexpirebuyback", "somedata2", "data2");
-		// run the test with node3 offline to test pruning with renewing alias
-		StopNode("node3");
-		BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasnew aliasexpirebuyback1 data"));
-		BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 110"));
-		MilliSleep(2500);
-		BOOST_CHECK_EQUAL(AliasFilter("node1", "aliasexpirebuyback1", "On"), false);
-		BOOST_CHECK_EQUAL(AliasFilter("node2", "aliasexpirebuyback1", "On"), false);
+	GenerateBlocks(110);
+	// try to renew alias again second time
+	AliasNew("node1", "aliasexpirebuyback", "somedata2", "data2");
+	// run the test with node3 offline to test pruning with renewing alias
+	StopNode("node3");
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasnew aliasexpirebuyback1 data"));
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 110"));
+	MilliSleep(2500);
+	BOOST_CHECK_EQUAL(AliasFilter("node1", "aliasexpirebuyback1", "On"), false);
+	BOOST_CHECK_EQUAL(AliasFilter("node2", "aliasexpirebuyback1", "On"), false);
 
-		StartNode("node3");
-		BOOST_CHECK_NO_THROW(CallRPC("node3", "generate 5"));
-		MilliSleep(2500);
-		BOOST_CHECK_EQUAL(AliasFilter("node1", "aliasexpirebuyback1", "On"), false);
-		BOOST_CHECK_EQUAL(AliasFilter("node2", "aliasexpirebuyback1", "On"), false);
-		BOOST_CHECK_EQUAL(AliasFilter("node3", "aliasexpirebuyback1", "On"), false);
-		// node3 shouldn't find the service at all (meaning node3 doesn't sync the data)
-		BOOST_CHECK_THROW(CallRPC("node3", "aliasinfo aliasexpirebuyback1"), runtime_error);
+	StartNode("node3");
+	BOOST_CHECK_NO_THROW(CallRPC("node3", "generate 5"));
+	MilliSleep(2500);
+	BOOST_CHECK_EQUAL(AliasFilter("node1", "aliasexpirebuyback1", "On"), false);
+	BOOST_CHECK_EQUAL(AliasFilter("node2", "aliasexpirebuyback1", "On"), false);
+	BOOST_CHECK_EQUAL(AliasFilter("node3", "aliasexpirebuyback1", "On"), false);
+	// node3 shouldn't find the service at all (meaning node3 doesn't sync the data)
+	BOOST_CHECK_THROW(CallRPC("node3", "aliasinfo aliasexpirebuyback1"), runtime_error);
 
-		// run the test with node3 offline to test pruning with renewing alias twice
-		StopNode("node3");
-		BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasnew aliasexpirebuyback2 data"));
-		BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 110"));
-		MilliSleep(2500);
-		BOOST_CHECK_EQUAL(AliasFilter("node1", "aliasexpirebuyback2", "On"), false);
-		BOOST_CHECK_EQUAL(AliasFilter("node2", "aliasexpirebuyback2", "On"), false);
-		// renew second time
-		BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasnew aliasexpirebuyback2 data"));
-		BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 110"));
-		MilliSleep(2500);
-		BOOST_CHECK_EQUAL(AliasFilter("node1", "aliasexpirebuyback2", "On"), false);
-		BOOST_CHECK_EQUAL(AliasFilter("node2", "aliasexpirebuyback2", "On"), false);
-		StartNode("node3");
-		BOOST_CHECK_NO_THROW(CallRPC("node3", "generate 5"));
-		MilliSleep(2500);
-		BOOST_CHECK_EQUAL(AliasFilter("node1", "aliasexpirebuyback2", "On"), false);
-		BOOST_CHECK_EQUAL(AliasFilter("node2", "aliasexpirebuyback2", "On"), false);
-		BOOST_CHECK_EQUAL(AliasFilter("node3", "aliasexpirebuyback2", "On"), false);
-		// node3 shouldn't find the service at all (meaning node3 doesn't sync the data)
-		BOOST_CHECK_THROW(CallRPC("node3", "aliasinfo aliasexpirebuyback2"), runtime_error);
+	// run the test with node3 offline to test pruning with renewing alias twice
+	StopNode("node3");
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasnew aliasexpirebuyback2 data"));
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 110"));
+	MilliSleep(2500);
+	BOOST_CHECK_EQUAL(AliasFilter("node1", "aliasexpirebuyback2", "On"), false);
+	BOOST_CHECK_EQUAL(AliasFilter("node2", "aliasexpirebuyback2", "On"), false);
+	// renew second time
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasnew aliasexpirebuyback2 data"));
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 110"));
+	MilliSleep(2500);
+	BOOST_CHECK_EQUAL(AliasFilter("node1", "aliasexpirebuyback2", "On"), false);
+	BOOST_CHECK_EQUAL(AliasFilter("node2", "aliasexpirebuyback2", "On"), false);
+	StartNode("node3");
+	BOOST_CHECK_NO_THROW(CallRPC("node3", "generate 5"));
+	MilliSleep(2500);
+	BOOST_CHECK_EQUAL(AliasFilter("node1", "aliasexpirebuyback2", "On"), false);
+	BOOST_CHECK_EQUAL(AliasFilter("node2", "aliasexpirebuyback2", "On"), false);
+	BOOST_CHECK_EQUAL(AliasFilter("node3", "aliasexpirebuyback2", "On"), false);
+	// node3 shouldn't find the service at all (meaning node3 doesn't sync the data)
+	BOOST_CHECK_THROW(CallRPC("node3", "aliasinfo aliasexpirebuyback2"), runtime_error);
 
-		// steal alias after expiry and original node try to recreate or update should fail
-		AliasNew("node1", "aliasexpirebuyback", "somedata", "data");
-		GenerateBlocks(110);
-		AliasNew("node2", "aliasexpirebuyback", "somedata", "data");
-		BOOST_CHECK_THROW(CallRPC("node2", "aliasnew aliasexpirebuyback data"), runtime_error);
-		BOOST_CHECK_THROW(CallRPC("node1", "aliasnew aliasexpirebuyback data"), runtime_error);
-		BOOST_CHECK_THROW(CallRPC("node1", "aliasupdate aliasexpirebuyback changedata1 pvtdata"), runtime_error);
+	// steal alias after expiry and original node try to recreate or update should fail
+	AliasNew("node1", "aliasexpirebuyback", "somedata", "data");
+	GenerateBlocks(110);
+	AliasNew("node2", "aliasexpirebuyback", "somedata", "data");
+	BOOST_CHECK_THROW(CallRPC("node2", "aliasnew aliasexpirebuyback data"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew aliasexpirebuyback data"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "aliasupdate aliasexpirebuyback changedata1 pvtdata"), runtime_error);
 
-		// this time steal the alias and original recreate at the same time
-		GenerateBlocks(110);
-		AliasNew("node1", "aliasexpirebuyback", "somedata", "data");
-		GenerateBlocks(110);
-		BOOST_CHECK_NO_THROW(CallRPC("node2", "aliasnew aliasexpirebuyback data1"));
-		GenerateBlocks(5,"node2");
-		MilliSleep(2500);
-		BOOST_CHECK_THROW(CallRPC("node1", "aliasnew aliasexpirebuyback data2"), runtime_error);
-		MilliSleep(2500);
-		GenerateBlocks(5);
-		
-
-	#endif
+	// this time steal the alias and original recreate at the same time
+	GenerateBlocks(110);
+	AliasNew("node1", "aliasexpirebuyback", "somedata", "data");
+	GenerateBlocks(110);
+	BOOST_CHECK_NO_THROW(CallRPC("node2", "aliasnew aliasexpirebuyback data1"));
+	GenerateBlocks(5,"node2");
+	MilliSleep(2500);
+	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew aliasexpirebuyback data2"), runtime_error);
+	MilliSleep(2500);
+	GenerateBlocks(5);
 }
 
 BOOST_AUTO_TEST_CASE (generate_aliasban)
@@ -427,74 +424,73 @@ BOOST_AUTO_TEST_CASE (generate_aliaspruning)
 {
 	UniValue r;
 	// makes sure services expire in 100 blocks instead of 1 year of blocks for testing purposes
-	#ifdef ENABLE_DEBUGRPC
-		printf("Running generate_aliaspruning...\n");
-		// stop node2 create a service,  mine some blocks to expire the service, when we restart the node the service data won't be synced with node2
-		StopNode("node2");
-		BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasnew aliasprune data"));
-		BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 5"));
-		// we can find it as normal first
-		BOOST_CHECK_EQUAL(AliasFilter("node1", "aliasprune", "Off"), true);
-		// then we let the service expire
-		BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 100"));
-		StartNode("node2");
-		MilliSleep(2500);
-		BOOST_CHECK_NO_THROW(CallRPC("node2", "generate 5"));
-		MilliSleep(2500);
-		// now we shouldn't be able to search it
-		BOOST_CHECK_EQUAL(AliasFilter("node1", "aliasprune", "Off"), false);
-		// and it should say its expired
-		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo aliasprune"));
-		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_int(), 1);	
 
-		// node2 shouldn't find the service at all (meaning node2 doesn't sync the data)
-		BOOST_CHECK_THROW(CallRPC("node2", "aliasinfo aliasprune"), runtime_error);
-		BOOST_CHECK_EQUAL(AliasFilter("node2", "aliasprune", "Off"), false);
+	printf("Running generate_aliaspruning...\n");
+	// stop node2 create a service,  mine some blocks to expire the service, when we restart the node the service data won't be synced with node2
+	StopNode("node2");
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasnew aliasprune data"));
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 5"));
+	// we can find it as normal first
+	BOOST_CHECK_EQUAL(AliasFilter("node1", "aliasprune", "Off"), true);
+	// then we let the service expire
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 100"));
+	StartNode("node2");
+	MilliSleep(2500);
+	BOOST_CHECK_NO_THROW(CallRPC("node2", "generate 5"));
+	MilliSleep(2500);
+	// now we shouldn't be able to search it
+	BOOST_CHECK_EQUAL(AliasFilter("node1", "aliasprune", "Off"), false);
+	// and it should say its expired
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo aliasprune"));
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_int(), 1);	
 
-		// stop node3
-		StopNode("node3");
-		// create a new service
-		BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasnew aliasprune1 data"));
-		// make 89 blocks (10 get mined with new)
-		BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 79"));
-		MilliSleep(2500);
-		// stop and start node1
-		StopNode("node1");
-		StartNode("node1");
-		BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 5"));
-		// give some time to propogate the new blocks across other 2 nodes
-		MilliSleep(2500);
-		// ensure you can still update before expiry
-		BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate aliasprune1 newdata privdata"));
-		// you can search it still on node1/node2
-		BOOST_CHECK_EQUAL(AliasFilter("node1", "aliasprune1", "Off"), true);
-		BOOST_CHECK_EQUAL(AliasFilter("node2", "aliasprune1", "Off"), true);
-		// generate 89 more blocks (10 get mined from update)
-		BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 89"));
-		MilliSleep(2500);
-		// ensure service is still active since its supposed to expire at 100 blocks of non updated services
-		BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate aliasprune1 newdata1 privdata"));
-		// you can search it still on node1/node2
-		BOOST_CHECK_EQUAL(AliasFilter("node1", "aliasprune1", "Off"), true);
-		BOOST_CHECK_EQUAL(AliasFilter("node2", "aliasprune1", "Off"), true);
+	// node2 shouldn't find the service at all (meaning node2 doesn't sync the data)
+	BOOST_CHECK_THROW(CallRPC("node2", "aliasinfo aliasprune"), runtime_error);
+	BOOST_CHECK_EQUAL(AliasFilter("node2", "aliasprune", "Off"), false);
 
-		BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 125"));
-		MilliSleep(2500);
-		// now it should be expired
-		BOOST_CHECK_THROW(CallRPC("node2", "aliasupdate aliasprune1 newdata2 privdata"), runtime_error);
-		BOOST_CHECK_EQUAL(AliasFilter("node1", "aliasprune1", "Off"), false);
-		BOOST_CHECK_EQUAL(AliasFilter("node2", "aliasprune1", "Off"), false);
-		// and it should say its expired
-		BOOST_CHECK_NO_THROW(r = CallRPC("node2", "aliasinfo aliasprune1"));
-		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_int(), 1);	
+	// stop node3
+	StopNode("node3");
+	// create a new service
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasnew aliasprune1 data"));
+	// make 89 blocks (10 get mined with new)
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 79"));
+	MilliSleep(2500);
+	// stop and start node1
+	StopNode("node1");
+	StartNode("node1");
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 5"));
+	// give some time to propogate the new blocks across other 2 nodes
+	MilliSleep(2500);
+	// ensure you can still update before expiry
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate aliasprune1 newdata privdata"));
+	// you can search it still on node1/node2
+	BOOST_CHECK_EQUAL(AliasFilter("node1", "aliasprune1", "Off"), true);
+	BOOST_CHECK_EQUAL(AliasFilter("node2", "aliasprune1", "Off"), true);
+	// generate 89 more blocks (10 get mined from update)
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 89"));
+	MilliSleep(2500);
+	// ensure service is still active since its supposed to expire at 100 blocks of non updated services
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate aliasprune1 newdata1 privdata"));
+	// you can search it still on node1/node2
+	BOOST_CHECK_EQUAL(AliasFilter("node1", "aliasprune1", "Off"), true);
+	BOOST_CHECK_EQUAL(AliasFilter("node2", "aliasprune1", "Off"), true);
 
-		StartNode("node3");
-		BOOST_CHECK_NO_THROW(CallRPC("node3", "generate 5"));
-		MilliSleep(2500);
-		// node3 shouldn't find the service at all (meaning node3 doesn't sync the data)
-		BOOST_CHECK_THROW(CallRPC("node3", "aliasinfo aliasprune1"), runtime_error);
-		BOOST_CHECK_EQUAL(AliasFilter("node3", "aliasprune1", "Off"), false);
-	#endif
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 125"));
+	MilliSleep(2500);
+	// now it should be expired
+	BOOST_CHECK_THROW(CallRPC("node2", "aliasupdate aliasprune1 newdata2 privdata"), runtime_error);
+	BOOST_CHECK_EQUAL(AliasFilter("node1", "aliasprune1", "Off"), false);
+	BOOST_CHECK_EQUAL(AliasFilter("node2", "aliasprune1", "Off"), false);
+	// and it should say its expired
+	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "aliasinfo aliasprune1"));
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_int(), 1);	
+
+	StartNode("node3");
+	BOOST_CHECK_NO_THROW(CallRPC("node3", "generate 5"));
+	MilliSleep(2500);
+	// node3 shouldn't find the service at all (meaning node3 doesn't sync the data)
+	BOOST_CHECK_THROW(CallRPC("node3", "aliasinfo aliasprune1"), runtime_error);
+	BOOST_CHECK_EQUAL(AliasFilter("node3", "aliasprune1", "Off"), false);
 }
 BOOST_AUTO_TEST_CASE (generate_aliasprunewithoffer)
 {
@@ -652,113 +648,107 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 10"));
 	MilliSleep(2500);
 
-	#ifdef ENABLE_DEBUGRPC
-		UniValue pkr = CallRPC("node2", "generatepublickey");
-		if (pkr.type() != UniValue::VARR)
-			throw runtime_error("Could not parse rpc results");
 
-		const UniValue &resultArray = pkr.get_array();
-		string pubkey = resultArray[0].get_str();		
+	UniValue pkr = CallRPC("node2", "generatepublickey");
+	if (pkr.type() != UniValue::VARR)
+		throw runtime_error("Could not parse rpc results");
 
-		// should fail: alias update on expired alias
-		BOOST_CHECK_THROW(CallRPC("node1", "aliasupdate aliasexpire newdata1 privdata"), runtime_error);
-		// should fail: alias transfer from expired alias
-		BOOST_CHECK_THROW(CallRPC("node1", "aliasupdate aliasexpire changedata1 pvtdata Yes " + pubkey), runtime_error);
-		// should fail: alias transfer to another alias
-		BOOST_CHECK_THROW(CallRPC("node1", "aliasupdate aliasexpire2 changedata1 pvtdata Yes " + aliasexpirenode2pubkey), runtime_error);
-		// should fail: alias update on expired alias
-		BOOST_CHECK_THROW(CallRPC("node1", "aliasupdate aliasexpire newdata1 privdata"), runtime_error);
+	const UniValue &resultArray = pkr.get_array();
+	string pubkey = resultArray[0].get_str();		
 
-		// should fail: offer update on an expired alias in offer
-		BOOST_CHECK_NO_THROW(CallRPC("node1", "offerupdate_nocheck sys_rates aliasexpire " + offerguid + " category title1 90 0.15 description"));	
-		BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 5"));
-		MilliSleep(2500);
-		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "offerinfo " + offerguid));
-		// ensure title doesn't change
-		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "title").get_str(), "title");
+	// should fail: alias update on expired alias
+	BOOST_CHECK_THROW(CallRPC("node1", "aliasupdate aliasexpire newdata1 privdata"), runtime_error);
+	// should fail: alias transfer from expired alias
+	BOOST_CHECK_THROW(CallRPC("node1", "aliasupdate aliasexpire changedata1 pvtdata Yes " + pubkey), runtime_error);
+	// should fail: alias transfer to another alias
+	BOOST_CHECK_THROW(CallRPC("node1", "aliasupdate aliasexpire2 changedata1 pvtdata Yes " + aliasexpirenode2pubkey), runtime_error);
+	// should fail: alias update on expired alias
+	BOOST_CHECK_THROW(CallRPC("node1", "aliasupdate aliasexpire newdata1 privdata"), runtime_error);
 
-		// should pass: perform an accept on expired alias in offer, you are allowed to buy from expired alias in an offer if you really want (rpc will make sure it doesn't happen anyway)
-		BOOST_CHECK_NO_THROW(r = CallRPC("node2", "offeraccept_nocheck aliasexpire " + offerguid + " 1 message"));
-		UniValue result = r.get_array();
-		string acceptguid = result[1].get_str();
-		BOOST_CHECK_NO_THROW(CallRPC("node2", "generate 5"));
-		MilliSleep(2500);
-		r = FindOfferAccept("node2", offerguid, acceptguid, true);
-		// ensure this accept is found
-		BOOST_CHECK(!r.isNull());
-		// should fail: link to an expired alias in offer
-		BOOST_CHECK_THROW(CallRPC("node1", "offerlink_nocheck aliasexpire " + offerguid + " 5 newdescription"), runtime_error);
-		// should fail: generate an offer using expired alias
-		BOOST_CHECK_THROW(CallRPC("node1", "offernew_nocheck sys_rates aliasexpire category title 1 0.05 description USD nocert 0 1"), runtime_error);
-
-		// should fail: send message from expired alias to expired alias
-		BOOST_CHECK_THROW(CallRPC("node1", "messagenew subject title aliasexpire aliasexpirenode2"), runtime_error);
-		// should fail: send message from expired alias to non-expired alias
-		BOOST_CHECK_THROW(CallRPC("node1", "messagenew subject title aliasexpire aliasexpire2node2"), runtime_error);
-		// should fail: send message from non-expired alias to expired alias
-		BOOST_CHECK_THROW(CallRPC("node2", "messagenew subject title aliasexpire2node2 aliasexpire"), runtime_error);
-
-		// should fail: new escrow with expired arbiter alias
-		BOOST_CHECK_THROW(CallRPC("node2", "escrownew aliasexpire2node2 " + offerguid + " 1 message aliasexpire"), runtime_error);
-		// should fail: new escrow with expired alias
-		BOOST_CHECK_THROW(CallRPC("node2", "escrownew aliasexpirenode2 " + offerguid + " 1 message aliasexpire2"), runtime_error);
-
-		// keep alive for later calls
-		BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate aliasexpire2 newdata1 privdata"));
-		BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasnew aliasexpire somedata"));
-		BOOST_CHECK_NO_THROW(CallRPC("node1","generate 3"));
-		MilliSleep(2500);
-		
-		BOOST_CHECK_NO_THROW(CallRPC("node1", "certupdate " + certgoodguid + " newdata privdata 0"));
-		BOOST_CHECK_NO_THROW(CallRPC("node1", "offerupdate sys_rates aliasexpire " + offerguid + " category title 100 0.05 description"));
-		// expire the escrow
-		BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 25"));
-		MilliSleep(2500);
-		BOOST_CHECK_NO_THROW(CallRPC("node1", "certupdate " + certguid + " jag1 data 0"));
-		BOOST_CHECK_NO_THROW(CallRPC("node1","generate 30"));
-		MilliSleep(2500);
-
-		StartNode("node3");
-		MilliSleep(2500);
-		BOOST_CHECK_NO_THROW(CallRPC("node3", "generate 5"));
-		MilliSleep(2500); 
-		BOOST_CHECK_NO_THROW(CallRPC("node2", "generate 5"));
-		MilliSleep(2500);
-		BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate aliasexpire2 newdata1 privdata"));
-		BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 5"));
-		MilliSleep(2500);
-		// ensure node3 can see (not pruned) expired escrows that aren't complete or refunded yet
-		BOOST_CHECK_NO_THROW(CallRPC("node3", "escrowinfo " + escrowguid));
-		// and node2
-		BOOST_CHECK_NO_THROW(CallRPC("node2", "escrowinfo " + escrowguid));
-		// not able to release and claim release on escrow with expired aliases and expired escrow (not complete or refunded)
-		BOOST_CHECK_THROW(CallRPC("node2", "escrowrelease " + escrowguid), runtime_error);
-		AliasNew("node2", "aliasexpirenode2", "somedata");
-		BOOST_CHECK_NO_THROW(CallRPC("node1", "certupdate " + certgoodguid + " newdata privdata 0"));
-		// able to release and claim release on escrow with non-expired aliases and expired escrow (not complete or refunded)
-		EscrowRelease("node2", escrowguid);	 
-		EscrowClaimRelease("node1", escrowguid); 
-
-		// should fail: update cert with expired alias
-		BOOST_CHECK_THROW(CallRPC("node1", "certupdate " + certguid + " jag1 data 0"), runtime_error);
-		// should fail: xfer an cert with expired alias
-		BOOST_CHECK_THROW(CallRPC("node1", "certtransfer " + certguid + " aliasexpire2"), runtime_error);
-		// should fail: xfer an cert to an expired alias even though transferring cert is good
-		BOOST_CHECK_THROW(CallRPC("node1", "certtransfer " + certgoodguid + " aliasexpire"), runtime_error);
+	// should fail: offer update on an expired alias in offer
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "offerupdate sys_rates aliasexpire " + offerguid + " category title1 90 0.15 description"));	
 
 
-		// should pass: confirm that the transferring cert is good by transferring to a good alias
-		BOOST_CHECK_NO_THROW(CallRPC("node1", "certtransfer " + certgoodguid + " aliasexpirenode2"));
-		BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 5"));
-		MilliSleep(2500);
-		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "certinfo " + certgoodguid));
-		// ensure it got transferred
-		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "alias").get_str(), "aliasexpirenode2");
+	// should pass: perform an accept on expired alias in offer, you are allowed to buy from expired alias in an offer if you really want (rpc will make sure it doesn't happen anyway)
+	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "offeraccept aliasexpire " + offerguid + " 1 message"));
+	UniValue result = r.get_array();
+	string acceptguid = result[1].get_str();
+	BOOST_CHECK_NO_THROW(CallRPC("node2", "generate 5"));
+	MilliSleep(2500);
+	r = FindOfferAccept("node2", offerguid, acceptguid, true);
+	// ensure this accept is found
+	BOOST_CHECK(!r.isNull());
+	// should fail: link to an expired alias in offer
+	BOOST_CHECK_THROW(CallRPC("node1", "offerlink aliasexpire " + offerguid + " 5 newdescription"), runtime_error);
+	// should fail: generate an offer using expired alias
+	BOOST_CHECK_THROW(CallRPC("node1", "offernew sys_rates aliasexpire category title 1 0.05 description USD nocert 0 1"), runtime_error);
 
-		GenerateBlocks(110);
-		// should fail: generate a cert using expired alias
-		BOOST_CHECK_THROW(CallRPC("node1", "certnew aliasexpire2 jag1 data 1"), runtime_error);
+	// should fail: send message from expired alias to expired alias
+	BOOST_CHECK_THROW(CallRPC("node1", "messagenew subject title aliasexpire aliasexpirenode2"), runtime_error);
+	// should fail: send message from expired alias to non-expired alias
+	BOOST_CHECK_THROW(CallRPC("node1", "messagenew subject title aliasexpire aliasexpire2node2"), runtime_error);
+	// should fail: send message from non-expired alias to expired alias
+	BOOST_CHECK_THROW(CallRPC("node2", "messagenew subject title aliasexpire2node2 aliasexpire"), runtime_error);
 
-	#endif
+	// should fail: new escrow with expired arbiter alias
+	BOOST_CHECK_THROW(CallRPC("node2", "escrownew aliasexpire2node2 " + offerguid + " 1 message aliasexpire"), runtime_error);
+	// should fail: new escrow with expired alias
+	BOOST_CHECK_THROW(CallRPC("node2", "escrownew aliasexpirenode2 " + offerguid + " 1 message aliasexpire2"), runtime_error);
+
+	// keep alive for later calls
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate aliasexpire2 newdata1 privdata"));
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasnew aliasexpire somedata"));
+	BOOST_CHECK_NO_THROW(CallRPC("node1","generate 3"));
+	MilliSleep(2500);
+	
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "certupdate " + certgoodguid + " newdata privdata 0"));
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "offerupdate sys_rates aliasexpire " + offerguid + " category title 100 0.05 description"));
+	// expire the escrow
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 30"));
+	MilliSleep(2500);
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "certupdate " + certguid + " jag1 data 0"));
+	BOOST_CHECK_NO_THROW(CallRPC("node1","generate 30"));
+	MilliSleep(2500);
+
+	StartNode("node3");
+	MilliSleep(2500);
+	BOOST_CHECK_NO_THROW(CallRPC("node3", "generate 5"));
+	MilliSleep(2500); 
+	BOOST_CHECK_NO_THROW(CallRPC("node2", "generate 5"));
+	MilliSleep(2500);
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate aliasexpire2 newdata1 privdata"));
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 5"));
+	MilliSleep(2500);
+	// ensure node3 can see (not pruned) expired escrows that aren't complete or refunded yet
+	BOOST_CHECK_NO_THROW(CallRPC("node3", "escrowinfo " + escrowguid));
+	// and node2
+	BOOST_CHECK_NO_THROW(CallRPC("node2", "escrowinfo " + escrowguid));
+	// not able to release and claim release on escrow with expired aliases and expired escrow (not complete or refunded)
+	BOOST_CHECK_THROW(CallRPC("node2", "escrowrelease " + escrowguid), runtime_error);
+	AliasNew("node2", "aliasexpirenode2", "somedata");
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "certupdate " + certgoodguid + " newdata privdata 0"));
+	// able to release and claim release on escrow with non-expired aliases and expired escrow (not complete or refunded)
+	EscrowRelease("node2", escrowguid);	 
+	EscrowClaimRelease("node1", escrowguid); 
+
+	// should fail: update cert with expired alias
+	BOOST_CHECK_THROW(CallRPC("node1", "certupdate " + certguid + " jag1 data 0"), runtime_error);
+	// should fail: xfer an cert with expired alias
+	BOOST_CHECK_THROW(CallRPC("node1", "certtransfer " + certguid + " aliasexpire2"), runtime_error);
+	// should fail: xfer an cert to an expired alias even though transferring cert is good
+	BOOST_CHECK_THROW(CallRPC("node1", "certtransfer " + certgoodguid + " aliasexpire"), runtime_error);
+
+
+	// should pass: confirm that the transferring cert is good by transferring to a good alias
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "certtransfer " + certgoodguid + " aliasexpirenode2"));
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 5"));
+	MilliSleep(2500);
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "certinfo " + certgoodguid));
+	// ensure it got transferred
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "alias").get_str(), "aliasexpirenode2");
+
+	GenerateBlocks(110);
+	// should fail: generate a cert using expired alias
+	BOOST_CHECK_THROW(CallRPC("node1", "certnew aliasexpire2 jag1 data 1"), runtime_error);
 }
 BOOST_AUTO_TEST_SUITE_END ()

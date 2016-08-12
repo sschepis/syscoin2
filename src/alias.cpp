@@ -2162,7 +2162,6 @@ string CheckForAliasExpiry(const vector<unsigned char> &vchPubKey, const int nHe
 	{
 	
 		CPubKey PubKey(vchPubKey);
-		vector<unsigned char> aliasName;
 		vector<CAliasIndex> vtxAliasPos;
 		CSyscoinAddress alias(PubKey.GetID());
 		alias = CSyscoinAddress(alias.ToString());
