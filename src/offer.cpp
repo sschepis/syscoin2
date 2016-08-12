@@ -553,7 +553,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	// unserialize msg from txn, check for valid
 	COffer theOffer;
 	vector<unsigned char> vchData;
-	string errorMessage;
 	if(!GetSyscoinData(tx, vchData))
 	{
 		errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR ERRCODE: 1 - Cannot find data inside of this transaction relating to an offer";
@@ -836,67 +835,67 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			}
 			if(prevOp == OP_OFFER_ACCEPT)
 			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 37 - Cannot use offeraccept as input to an update");
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 37 - Cannot use offeraccept as input to an update";
 				return error(errorMessage.c_str());
 			}
 			if (vvchPrevArgs[0] != vvchArgs[0])
 			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 38 - Offerupdate offer mismatch");
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 38 - Offerupdate offer mismatch";
 				return error(errorMessage.c_str());
 			}
 			if (IsCertOp(prevCertOp) && theOffer.vchCert != vvchPrevCertArgs[0])
 			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 39 - Cert input and offer cert guid mismatch");
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 39 - Cert input and offer cert guid mismatch";
 				return error(errorMessage.c_str());
 			}
 			if (!theOffer.vchCert.empty() && !IsCertOp(prevCertOp))
 			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 40 - You must own the cert offer you wish to update");
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 40 - You must own the cert offer you wish to update";
 				return error(errorMessage.c_str());
 			}
 			if ( theOffer.vchOffer != vvchArgs[0])
 			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 41 - Offer input and offer guid mismatch");
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 41 - Offer input and offer guid mismatch";
 				return error(errorMessage.c_str());
 			}
 			if(!theOffer.linkWhitelist.IsNull() && (theOffer.linkWhitelist.entries[0].nDiscountPct < -99 || theOffer.linkWhitelist.entries[0].nDiscountPct > 99) && theOffer.linkWhitelist.entries[0].nDiscountPct != 127)
 			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 42 - Invalid discount amount, must be within -99 and 99 or 127 if removing an affiliate");
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 42 - Invalid discount amount, must be within -99 and 99 or 127 if removing an affiliate";
 				return error(errorMessage.c_str());
 			}
 
 			if(theOffer.nQty < -1)
 			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 43 - Quantity must be greator than or equal to -1");
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 43 - Quantity must be greator than or equal to -1";
 				return error(errorMessage.c_str());
 			}
 			if(!theOffer.vchCert.empty() && theOffer.nQty <= 0)
 			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 44 - Quantity must be greator than 0 for a digital offer");
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 44 - Quantity must be greator than 0 for a digital offer";
 				return error(errorMessage.c_str());
 			if(theOffer.nPrice <= 0)
 			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 45 - Offer price must be greater than 0");
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 45 - Offer price must be greater than 0";
 				return error(errorMessage.c_str());
 			}
 			if(theOffer.sCategory.size() < 1)
 			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 46 - Offer category cannot be empty");
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 46 - Offer category cannot be empty";
 				return error(errorMessage.c_str());
 			}
 			if(theOffer.sTitle.size() < 1)
 			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 47 - Offer title cannot be empty");
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 47 - Offer title cannot be empty";
 				return error(errorMessage.c_str());
 			}
 			if(theOffer.bOnlyAcceptBTC && !theOffer.vchCert.empty())
 			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 48 - Cannot sell a certificate accepting only Bitcoins");
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 48 - Cannot sell a certificate accepting only Bitcoins";
 				return error(errorMessage.c_str());
 			}
 			if(theOffer.bOnlyAcceptBTC && stringFromVch(theOffer.sCurrencyCode) != "BTC")
 			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 49 - Can only accept Bitcoins for offer's that set their currency to BTC");
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 49 - Can only accept Bitcoins for offer's that set their currency to BTC";
 				return error(errorMessage.c_str());
 			}
 			break;
@@ -907,17 +906,17 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			{
 				if(prevOp != OP_OFFER_ACCEPT)
 				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 50 - Must use offeraccept as input to an accept feedback");
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 50 - Must use offeraccept as input to an accept feedback";
 					return error(errorMessage.c_str());
 				}
 				if (vvchPrevArgs[1] != vvchArgs[1])
 				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 51 - Offeraccept feedback mismatch");
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 51 - Offeraccept feedback mismatch";
 					return error(errorMessage.c_str());
 				}
 				if(theOfferAccept.feedback.vchFeedback.empty())
 				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 52 - Cannot leave empty feedback");
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 52 - Cannot leave empty feedback";
 					return error(errorMessage.c_str());
 				}
 				break;
@@ -925,39 +924,39 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 
 			if (theOfferAccept.IsNull())
 			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 53 - Offeraccept object cannot be empty");
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 53 - Offeraccept object cannot be empty";
 				return error(errorMessage.c_str());
 			}
 			if (IsOfferOp(prevOp) && !theOfferAccept.feedback.IsNull() && vvchPrevArgs[1] != theOfferAccept.vchLinkAccept && vvchPrevArgs[0] != theOfferAccept.vchLinkOffer)
 			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 54 - Prev offer input and link accept guid mismatch");
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 54 - Prev offer input and link accept guid mismatch";
 				return error(errorMessage.c_str());
 			}
 			if (IsEscrowOp(prevEscrowOp) && !theOfferAccept.txBTCId.IsNull())
 			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 55 - Cannot use BTC for escrow transactions");
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 55 - Cannot use BTC for escrow transactions";
 				return error(errorMessage.c_str());
 			}
 			if (IsEscrowOp(prevEscrowOp) && theOfferAccept.vchEscrow != vvchPrevEscrowArgs[0])
 			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 56 - Escrow guid mismatch");
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 56 - Escrow guid mismatch";
 				return error(errorMessage.c_str());
 			}
 			if (IsAliasOp(prevAliasOp) && theOffer.vchLinkAlias != vvchPrevAliasArgs[0])
 			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 57 - Whitelist alias guid mismatch");
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 57 - Whitelist alias guid mismatch";
 				return error(errorMessage.c_str());
 			}
 			if (vvchArgs[1].size() > MAX_GUID_LENGTH)
 			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 58 - Offeraccept transaction with guid too big");
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 58 - Offeraccept transaction with guid too big";
 				return error(errorMessage.c_str());
 			}
 			if(prevOp == OP_OFFER_ACCEPT)
 			{
 				if(!theOfferAccept.txBTCId.IsNull())
 				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 59 - Cannot accept a linked offer with BTC");
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 59 - Cannot accept a linked offer with BTC";
 					return error(errorMessage.c_str());
 				}
 			}
@@ -965,39 +964,39 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 
 			if (theOfferAccept.vchAcceptRand.size() > MAX_GUID_LENGTH)
 			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 60 - Offer accept hex guid too long");
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 60 - Offer accept hex guid too long";
 				return error(errorMessage.c_str());
 			}
 			if (theOfferAccept.vchLinkAccept.size() > MAX_GUID_LENGTH)
 			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 61 - Offer link accept hex guid too long");
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 61 - Offer link accept hex guid too long";
 				return error(errorMessage.c_str());
 			}
 			if (theOfferAccept.vchLinkOffer.size() > MAX_GUID_LENGTH)
 			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 62 - Offer link hex guid too long");
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 62 - Offer link hex guid too long";
 				return error(errorMessage.c_str());
 			}
 			if (theOfferAccept.vchMessage.size() > MAX_ENCRYPTED_VALUE_LENGTH)
 			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 63 - Message field too big");
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 63 - Message field too big";
 				return error(errorMessage.c_str());
 			}
 			if (IsEscrowOp(prevEscrowOp) && IsOfferOp(prevOp))
 			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 64 - Offer accept cannot attach both escrow and offer inputs at the same time");
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 64 - Offer accept cannot attach both escrow and offer inputs at the same time";
 				return error(errorMessage.c_str());
 			}
 			if (theOffer.vchOffer != vvchArgs[0])
 			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 65 - Offer input and offer guid mismatch");
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 65 - Offer input and offer guid mismatch";
 				return error(errorMessage.c_str());
 			}
 
 			break;
 
 		default:
-			errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 66 - Offer transaction has unknown op");
+			errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 66 - Offer transaction has unknown op";
 			return error(errorMessage.c_str());
 		}
 	}
@@ -1013,7 +1012,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		
 			if(!GetTxAndVtxOfOffer(vvchArgs[0], theOffer, offerTx, vtxPos))	
 			{		
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 67 - Failed to read from offer DB");
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 67 - Failed to read from offer DB";
 				return true;				
 			}						
 		}
@@ -1025,7 +1024,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			{
 				if(serializedOffer.bOnlyAcceptBTC)
 				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 68 - Linked offer cannot accept BTC only");
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 68 - Linked offer cannot accept BTC only";
 					serializedOffer.bOnlyAcceptBTC = false;
 				}
 				
@@ -1035,7 +1034,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			{
 				if(!theOffer.vchLinkOffer.empty())
 				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 69 - Cannot sell a digital offer as a linked offer");
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 69 - Cannot sell a digital offer as a linked offer";
 					theOffer.vchCert.clear();	
 				}
 				else
@@ -1048,7 +1047,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					}
 					else
 					{
-						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 70 - Trying to update an offer with an expired certificate");
+						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 70 - Trying to update an offer with an expired certificate";
 						theOffer.vchCert.clear();	
 					}
 				}
