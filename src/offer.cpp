@@ -748,24 +748,24 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					return error("CheckOfferInputs() OP_OFFER_ACTIVATE: markup must be greator than 0!");
 				}
 				if(theOffer.bOnlyAcceptBTC)
-					throw runtime_error("Linked offer cannot accept BTC only");
+					return error("Linked offer cannot accept BTC only");
 			}
 			if(theOffer.nQty < -1)
 				return error("CheckOfferInputs() OP_OFFER_ACTIVATE: qty must be greator than or equal to -1!");
 			if(!theOffer.vchCert.empty() && theOffer.nQty <= 0)
-				throw runtime_error("qty must be greator than 0 for a cert offer");
+				return error("qty must be greator than 0 for a cert offer");
 			if(theOffer.nPrice <= 0)
 			{
-				throw error("offer price must be greater than 0!");
+				return error("offer price must be greater than 0!");
 			}
 			if(theOffer.sCategory.size() < 1)
-				throw error("offer category cannot be empty!");
+				return error("offer category cannot be empty!");
 			if(theOffer.sTitle.size() < 1)
-				throw error("offer title cannot be empty!");
+				return error("offer title cannot be empty!");
 			if(theOffer.bOnlyAcceptBTC && !theOffer.vchCert.empty())
-				throw runtime_error("Cannot sell a certificate accepting only Bitcoins");
+				return error("Cannot sell a certificate accepting only Bitcoins");
 			if(theOffer.bOnlyAcceptBTC && stringFromVch(theOffer.sCurrencyCode) != "BTC")
-				throw runtime_error("Can only accept Bitcoins for offer's that set their currency to BTC");
+				return error("Can only accept Bitcoins for offer's that set their currency to BTC");
 
 			break;
 		case OP_OFFER_UPDATE:
@@ -1838,11 +1838,7 @@ UniValue offerlink(const UniValue& params, bool fHelp) {
 	string baSig;
 	COfferLinkWhitelistEntry whiteListEntry;
 	vector<unsigned char> vchAlias = vchFromValue(params[0]);
-	CSyscoinAddress aliasAddress = CSyscoinAddress(stringFromVch(vchAlias));
-	if (!aliasAddress.IsValid())
-		throw runtime_error("Invalid syscoin address");
-	if (!aliasAddress.isAlias)
-		throw runtime_error("Offer must be a valid alias");
+
 
 	CTransaction aliastx;
 	CAliasIndex alias;
@@ -1850,7 +1846,7 @@ UniValue offerlink(const UniValue& params, bool fHelp) {
 		throw runtime_error("could not find an alias with this name");
     if(!IsSyscoinTxMine(aliastx, "alias")) {
 		throw runtime_error("This alias is not yours.");
-    }
+    }`
 	if (pwalletMain->GetWalletTx(aliastx.GetHash()) == NULL)
 		throw runtime_error("this alias is not in your wallet");
 	vector<unsigned char> vchLinkOffer = vchFromValue(params[1]);
@@ -1858,7 +1854,7 @@ UniValue offerlink(const UniValue& params, bool fHelp) {
 	// look for a transaction with this key
 	CTransaction tx;
 	COffer linkOffer;
-	if (!GetTxOfOffer( vchLinkOffer, linkOffer, tx) || vchLinkOffer.empty())
+	if (vchLinkOffer.empty() || !GetTxOfOffer( vchLinkOffer, linkOffer, tx))
 		throw runtime_error("could not find an offer with this guid");
 
 	int commissionInteger = atoi(params[2].get_str().c_str());
