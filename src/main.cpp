@@ -877,7 +877,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, const CCoinsViewCache& inputs, i
 				good = CheckMessageInputs(tx, op, nOut, vvchArgs, inputs, fJustCheck, nHeight);		
 			}
 			if(fDebug && !errorMessage.empty())
-				LogPrintf("%s\n", errorMessage).c_str());
+				LogPrintf("%s\n", errorMessage.c_str());
 			// remove tx's that don't pass our check
 			if(!good)
 			{
@@ -954,7 +954,7 @@ bool AddSyscoinServicesToDB(const CBlock& block, const CCoinsViewCache& inputs, 
 					continue;
 				good = CheckOfferInputs(tx, offerOp, j, offerVvch, inputs, fJustCheck, nHeight, errorMessage, &block);	
 				if(fDebug && !errorMessage.empty())
-					LogPrintf("%s\n", errorMessage).c_str());
+					LogPrintf("%s\n", errorMessage.c_str());
 				if(!good)
 					break;
 			}
