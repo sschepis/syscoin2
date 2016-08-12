@@ -752,7 +752,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			}
 			if(theOffer.nQty < -1)
 				return error("CheckOfferInputs() OP_OFFER_ACTIVATE: qty must be greator than or equal to -1!");
-			if(!theOffer.vchCert.empty() && nQty <= 0)
+			if(!theOffer.vchCert.empty() && theOffer.nQty <= 0)
 				throw runtime_error("qty must be greator than 0 for a cert offer");
 			if(theOffer.nPrice <= 0)
 			{
@@ -1883,8 +1883,9 @@ UniValue offerlink(const UniValue& params, bool fHelp) {
 	const CWalletTx *wtxAliasIn = NULL;
 
 	linkOffer.linkWhitelist.GetLinkEntryByHash(alias.vchName, entry);	
-
-	if (!entry.IsNull() && GetTxOfAlias(entry.aliasLinkVchRand, theAlias, txAlias))
+	CAliasIndex tmpAlias;
+	CTransaction txAlias;
+	if (!entry.IsNull() && GetTxOfAlias(entry.aliasLinkVchRand, tmpAlias, txAlias))
 	{
 		// make sure its in your wallet (you control this alias)
 		if (IsSyscoinTxMine(txAlias, "alias")) 
