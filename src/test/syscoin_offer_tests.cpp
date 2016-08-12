@@ -89,7 +89,7 @@ BOOST_AUTO_TEST_CASE (generate_certoffernew)
 
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "offernew sys_rates node1alias category title 0 0.05 description USD " + certguid1a));
 	const UniValue &arr1 = r.get_array();
-	guid = arr1[1].get_str();
+	string guid = arr1[1].get_str();
 	GenerateBlocks(10, "node1");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "offerinfo " + guid));
 	BOOST_CHECK(find_value(r.get_obj(), "quantity").get_str() == "1");
