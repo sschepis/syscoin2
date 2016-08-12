@@ -1846,7 +1846,7 @@ UniValue offerlink(const UniValue& params, bool fHelp) {
 		throw runtime_error("could not find an alias with this name");
     if(!IsSyscoinTxMine(aliastx, "alias")) {
 		throw runtime_error("This alias is not yours.");
-    }`
+    }
 	if (pwalletMain->GetWalletTx(aliastx.GetHash()) == NULL)
 		throw runtime_error("this alias is not in your wallet");
 	vector<unsigned char> vchLinkOffer = vchFromValue(params[1]);
