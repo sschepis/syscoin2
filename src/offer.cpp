@@ -564,7 +564,8 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		return true;
 	}
 	// Make sure offer outputs are not spent by a regular transaction, or the offer would be lost
-	if (tx.nVersion != SYSCOIN_TX_VERSION) {
+	if (tx.nVersion != SYSCOIN_TX_VERSION) 
+	{
 		errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 3 - Non-Syscoin transaction found";
 		return true;
 	}
@@ -789,6 +790,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				{
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 28 - Linked offer cannot accept BTC only";
 					return error(errorMessage.c_str());
+				}
 			}
 			if(theOffer.nQty < -1)
 			{
