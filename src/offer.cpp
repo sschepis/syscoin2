@@ -56,7 +56,7 @@ bool foundOfferLinkInWallet(const vector<unsigned char> &vchOffer, const vector<
 						if(foundOffer)
 							break;
 
-						if (!foundOffer && opIn == OP_OFFER_ACCEPT && vvchIn[4] != vchFromString("1")) {
+						if (!foundOffer && opIn == OP_OFFER_ACCEPT && vvchIn[2] != vchFromString("1")) {
 							foundOffer = true; 
 							vchOfferAcceptLink = vvchIn[1];
 						}
@@ -363,7 +363,7 @@ int IndexOfOfferOutput(const CTransaction& tx, bool skipAcceptBuyerSpecialOutput
 		const CTxOut& out = tx.vout[i];
 		// find an output you own
 		if (pwalletMain->IsMine(out) && DecodeOfferScript(out.scriptPubKey, op, vvch)) {
-			if(skipAcceptBuyerSpecialOutput && op == OP_OFFER_ACCEPT && vvch[4] == vchFromString("1"))
+			if(skipAcceptBuyerSpecialOutput && op == OP_OFFER_ACCEPT && vvch[2] == vchFromString("1"))
 				continue;
 			return i;
 		}
@@ -464,7 +464,7 @@ bool DecodeOfferTx(const CTransaction& tx, int& op, int& nOut,
 		const CTxOut& out = tx.vout[i];
 		// skip the special buyer feedback output (we should have the normal offer accept output also)
 		if (DecodeOfferScript(out.scriptPubKey, op, vvch)) {
-			if(op == OP_OFFER_ACCEPT && vvch[4] == vchFromString("1"))
+			if(op == OP_OFFER_ACCEPT && vvch[2] == vchFromString("1"))
 				continue;
 			nOut = i; found = true;
 			break;
@@ -576,7 +576,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		
 		if(op != OP_OFFER_ACCEPT && vvchArgs.size() != 2)
 			return error("CheckOfferInputs(): sys 2.1 offer arguments wrong size");
-		else if(op == OP_OFFER_ACCEPT && vvchArgs.size() != 6)
+		else if(op == OP_OFFER_ACCEPT && vvchArgs.size() != 4)
 			return error("CheckOfferInputs(): sys 2.1 offer accept arguments wrong size");
 		if(!theOffer.IsNull())
 		{
@@ -843,7 +843,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				return error("CheckOfferInputs() :OP_OFFER_ACCEPT offer link accept hex guid too long");
 			if (theOfferAccept.vchLinkOffer.size() > MAX_GUID_LENGTH)
 				return error("CheckOfferInputs() :OP_OFFER_ACCEPT offer link hex guid too long");
-			if (vvchArgs[2].size() > MAX_ENCRYPTED_VALUE_LENGTH)
+			if (theOfferAccept.vchMessage.size() > MAX_ENCRYPTED_VALUE_LENGTH)
 				return error("CheckOfferInputs() :OP_OFFER_ACCEPT message field too big");
 			if (IsEscrowOp(prevEscrowOp) && IsOfferOp(prevOp))
 				return error("CheckOfferInputs() :OP_OFFER_ACCEPT offer accept cannot attach both escrow and offer inputs at the same time");	
@@ -988,7 +988,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				{
 					theOffer.nQty = 1;
 					// if selling a cert, offers pubkey must match certs pubkey
-					theOffer.vchPubKey = theCert.vchPubKey
+					theOffer.vchPubKey = theCert.vchPubKey;
 				}
 				else
 				{
@@ -1027,7 +1027,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 								LogPrintf("CheckOfferInputs() OP_OFFER_ACTIVATE: can't find this alias in the parent offer affiliate list");
 							theOffer.vchLinkOffer.clear();	
 						}
-						else if (!GetTxOfAlias(theOffer.vchLinkAlias, theAlias, txAlias))
+						else if (!GetTxOfAlias(theOffer.vchLinkAlias, theAlias, aliasTx))
 						{
 							if(fDebug)
 								LogPrintf("CheckOfferInputs() OP_OFFER_ACTIVATE: can't find alias used to create linked offer. Perhaps it is expired.");
@@ -1102,7 +1102,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		else if (op == OP_OFFER_ACCEPT) {
 			theOfferAccept = serializedOffer.accept;
 
-			if((retError = CheckForAliasExpiry(theOfferAccept.accept.vchBuyerKey, nHeight)) != "")
+			if((retError = CheckForAliasExpiry(theOfferAccept.vchBuyerKey, nHeight)) != "")
 			{
 				retError = string("CheckOfferInputs(): OP_OFFER_ACCEPT ") + retError;
 				if(fDebug)
@@ -1119,7 +1119,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						LogPrintf("CheckOfferInputs(): Trying to sell an expired certificate");
 					return true;
 				}
-				else if(!theOfferAccept.txBTCId.empty())
+				else if(!theOfferAccept.txBTCId.IsNull())
 				{
 					if(fDebug)
 						LogPrintf("CheckOfferInputs(): Cannot purchase certificates with Bitcoins");
@@ -1139,7 +1139,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				return true;
 			}
 					
-			if(vvchArgs[4] == vchFromString("1"))
+			if(vvchArgs[2] == vchFromString("1"))
 			{
 				if(fDebug)
 					LogPrintf( "CheckOfferInputs() : Buyer special accept output... skipping\n");
@@ -1212,7 +1212,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				if(!theOffer.vchLinkOffer.empty())
 				{
 
-					if(!theOfferAccept.txBTCId.empty())
+					if(!theOfferAccept.txBTCId.IsNull())
 					{
 						if(fDebug)
 							LogPrintf("CheckOfferInputs() OP_OFFER_ACCEPT: cannot accept a linked offer by paying in Bitcoins");
@@ -1224,7 +1224,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 							LogPrintf("CheckOfferInputs() OP_OFFER_ACCEPT: could not get linked offer");
 						return true;
 					}
-					else if(!theOffer.vchCert.empty()) && theCert.vchPubKey != linkOffer.vchPubKey)
+					else if(!theOffer.vchCert.empty() && theCert.vchPubKey != linkOffer.vchPubKey)
 					{
 						if(fDebug)
 							LogPrintf("CheckOfferInputs() OP_OFFER_ACCEPT: Cannot purchase this linked offer because the certificate has been transferred or it is linked to another offer");
@@ -1518,7 +1518,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			{	
 				// theOffer.vchLinkOffer is the linked offer guid
 				// theOffer is this reseller offer used to get pubkey to send to offeraccept as first parameter
-				string strError = makeOfferLinkAcceptTX(theOfferAccept, vvchArgs[0], vvchArgs[2], theOffer.vchLinkOffer, tx.GetHash().GetHex(), theOffer, block);
+				string strError = makeOfferLinkAcceptTX(theOfferAccept, vvchArgs[0], theOfferAccept.vchMessage, theOffer.vchLinkOffer, tx.GetHash().GetHex(), theOffer, block);
 				if(strError != "" && fDebug)					
 					LogPrintf("CheckOfferInputs() - OP_OFFER_ACCEPT - makeOfferLinkAcceptTX %s\n", strError.c_str());			
 				
@@ -2223,6 +2223,7 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 		if (IsSyscoinTxMine(txCert, "cert")) 
 		{
 			wtxCertIn = pwalletMain->GetWalletTx(txCert.GetHash());
+			CPubKey currentCertKey(theCert.vchPubKey);
 			scriptPubKeyCertOrig = GetScriptForDestination(currentCertKey.GetID());
 			scriptPubKeyCert << CScript::EncodeOP_N(OP_CERT_UPDATE) << vchCert << vchFromString("") << OP_2DROP << OP_DROP;
 			scriptPubKeyCert += scriptPubKeyCertOrig;
@@ -2345,9 +2346,9 @@ bool CreateLinkedOfferAcceptRecipients(vector<CRecipient> &vecSend, const CAmoun
 			continue;
 		if(vvchOffer[0] != offerGUID)
 			continue;
-		unsigned int nQty = boost::lexical_cast<unsigned int>(stringFromVch(vvchOffer[3]));
-		CAmount nTotalValue = ( nPrice * nQty );
-		scriptPubKeyAccept << CScript::EncodeOP_N(OP_OFFER_ACCEPT) << linkedOfferGUID << vvchOffer[1] << vvchOffer[2] << vvchOffer[3] << vvchOffer[4] << vchHashOffer << OP_2DROP << OP_2DROP << OP_2DROP << OP_DROP; 
+		COffer offer(tx);
+		CAmount nTotalValue = ( nPrice * offer.accept );
+		scriptPubKeyAccept << CScript::EncodeOP_N(OP_OFFER_ACCEPT) << linkedOfferGUID << vvchOffer[1] << vvchOffer[2] << vchHashOffer << OP_2DROP << OP_2DROP << OP_2DROP << OP_DROP; 
 		scriptPubKeyAccept += scriptPubKeyDestination;
 		scriptPubKeyPayment += scriptPubKeyDestination;
 		CRecipient acceptRecipient;
@@ -2471,7 +2472,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 		// get escrow activation
 		vector<CEscrow> escrowVtxPos;
 		CTransaction escrowTx;
-		if (GetTxAndVtxOfEscrow( escrowVvch[0], escrow, escrowTx, escrowVtxPos, true))
+		if (GetTxAndVtxOfEscrow( escrowVvch[0], escrow, escrowTx, escrowVtxPos))
 		{
 			CScript scriptPubKeyEscrowBuyerDestination, scriptPubKeyEscrowSellerDestination, scriptPubKeyEscrowArbiterDestination;
 			// we want the initial funding escrow transaction height as when to calculate this offer accept price from convertCurrencyCodeToSyscoin()
@@ -2521,7 +2522,6 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	CAliasIndex theAlias;
 	const CWalletTx *wtxAliasIn = NULL;
 
-	CScript scriptPubKeyAlias, scriptPubKeyAliasOrig;
 	COfferLinkWhitelistEntry foundEntry;
 	theOffer.linkWhitelist.GetLinkEntryByHash(vchAlias, foundEntry);
 	// only non linked offers can have discounts applied via whitelist for buyer
@@ -2532,7 +2532,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 		if (GetTxOfAlias(vchAlias, theAlias, txAlias, true))
 		{
 			// check for existing alias updates/transfers
-			if (ExistsInMempool(entry.aliasLinkVchRand, OP_ALIAS_UPDATE)) {
+			if (ExistsInMempool(vchAlias, OP_ALIAS_UPDATE)) {
 				throw runtime_error("there is are pending operations on that alias");
 			}
 			// make sure its in your wallet (you control this alias)
@@ -2552,15 +2552,23 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 		throw runtime_error(strprintf("not enough remaining quantity to fulfill this orderaccept, qty remaining %u, qty desired %u,  qty waiting to be accepted by the network %d", vtxPos.back().nQty, nQty, memPoolQty));
 
 	int precision = 2;
-	CAmount nPrice = convertCurrencyCodeToSyscoin(theOffer.vchAliasPeg, theOffer.sCurrencyCode, theOffer.GetPrice(foundAlias), nHeight, precision);
+	CAmount nPrice = convertCurrencyCodeToSyscoin(theOffer.vchAliasPeg, theOffer.sCurrencyCode, theOffer.GetPrice(foundEntry), nHeight, precision);
 	if(nPrice == 0)
 		throw runtime_error(strprintf("%s currency not found in offer's alias peg %s", stringFromVch(theOffer.sCurrencyCode), stringFromVch(theOffer.vchAliasPeg)));
 	string strCipherText = "";
+
+
 	// encryption should only happen once even when not a resell or not an escrow accept. It is already encrypted in both cases.
 	if(vchLinkOfferAcceptTxHash.empty() && vchEscrowTxHash.empty())
 	{
 		if(!theOffer.vchLinkOffer.empty())
 		{
+			CTransaction linktx;
+			COffer linkedOffer;
+			if (!GetTxOfOffer( theOffer.vchLinkOffer, linkedOffer, linktx, true))
+			{
+				throw runtime_error("could not find linked offer with this identifier");
+			}
 			// encrypt to root offer owner if this is a linked offer you are accepting
 			if(!EncryptMessage(linkedOffer.vchPubKey, vchMessage, strCipherText))
 				throw runtime_error("could not encrypt message to seller");
@@ -2596,6 +2604,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	// in checkescrowinput we override this if its from an escrow release, just like above.
 	txAccept.nAcceptHeight = nHeight;
 	txAccept.vchBuyerKey = vchPubKey;
+	txAccept.vchMessage = vchPaymentMessage;
     CAmount nTotalValue = ( nPrice * nQty );
     
 	// send one to ourselves to we can leave feedback (notice the last opcode is 1 to denote its a special feedback output for the buyer to be able to leave feedback first and not a normal accept output)
@@ -2621,9 +2630,9 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
  	vector<unsigned char> vchHash = CScriptNum(hash.GetCheapHash()).getvch();
     vector<unsigned char> vchHashOffer = vchFromValue(HexStr(vchHash));
 	// if this is a linked accept then we create output for feedback for the reseller since the normal accept from buyer is used here by the linked accept
-	scriptPubKeyBuyer  << CScript::EncodeOP_N(OP_OFFER_ACCEPT) << vchOffer << vchAccept << vchFromString("NA") << vchFromString(boost::lexical_cast<std::string>(nQty)) << vchFromString("1") << vchHashOffer << OP_2DROP << OP_2DROP << OP_2DROP << OP_DROP;
+	scriptPubKeyBuyer  << CScript::EncodeOP_N(OP_OFFER_ACCEPT) << vchOffer << vchAccept << vchFromString("1") << vchHashOffer << OP_2DROP << OP_2DROP << OP_2DROP << OP_DROP;
 	// normal accept sig
-	scriptPubKeyAccept << CScript::EncodeOP_N(OP_OFFER_ACCEPT) << vchOffer << vchAccept << vchPaymentMessage   << vchFromString(boost::lexical_cast<std::string>(nQty)) << vchFromString("0") << vchHashOffer << OP_2DROP << OP_2DROP << OP_2DROP << OP_DROP;
+	scriptPubKeyAccept << CScript::EncodeOP_N(OP_OFFER_ACCEPT) << vchOffer << vchAccept << vchFromString("0") << vchHashOffer << OP_2DROP << OP_2DROP << OP_2DROP << OP_DROP;
 	
 
 	scriptPubKeyBuyer += scriptPubKeyBuyerDestination;
@@ -2909,10 +2918,10 @@ UniValue offeracceptfeedback(const UniValue& params, bool fHelp) {
 	scriptPubKeySellerDestination= GetScriptForDestination(sellerKey.GetID());
 	vector<CRecipient> vecSend;
 	CRecipient recipientBuyer, recipientSeller;
-	scriptPubKeyBuyer << CScript::EncodeOP_N(OP_OFFER_ACCEPT) << vvch[0] << vvch[1] << vvch[2] << vvch[3] << vvch[4] << vchHashOffer << OP_2DROP << OP_2DROP << OP_2DROP << OP_DROP;
+	scriptPubKeyBuyer << CScript::EncodeOP_N(OP_OFFER_ACCEPT) << vvch[0] << vvch[1] << vvch[2] << vchHashOffer << OP_2DROP << OP_2DROP << OP_2DROP << OP_DROP;
 	scriptPubKeyBuyer += scriptPubKeyBuyerDestination;
 	CreateRecipient(scriptPubKeyBuyer, recipientBuyer);
-	scriptPubKeySeller << CScript::EncodeOP_N(OP_OFFER_ACCEPT) << vvch[0] << vvch[1] << vvch[2] << vvch[3] << vvch[4] << vchHashOffer << OP_2DROP << OP_2DROP << OP_2DROP << OP_DROP;
+	scriptPubKeySeller << CScript::EncodeOP_N(OP_OFFER_ACCEPT) << vvch[0] << vvch[1] << vvch[2] << vchHashOffer << OP_2DROP << OP_2DROP << OP_2DROP << OP_DROP;
 	scriptPubKeySeller += scriptPubKeySellerDestination;
 	CreateRecipient(scriptPubKeySeller, recipientSeller);
 	// buyer
@@ -3018,7 +3027,7 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 				continue;
 			if(op != OP_OFFER_ACCEPT)
 				continue;
-			if(vvch[4] == vchFromString("1"))
+			if(vvch[2] == vchFromString("1"))
 				continue;
 			if(ca.vchAcceptRand == vvch[1])
 				break;
@@ -3030,8 +3039,7 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 		CSyscoinAddress buyeraddy(BuyerPubKey.GetID());
 		buyeraddy = CSyscoinAddress(buyeraddy.ToString());
 
-		const vector<unsigned char> &vchAcceptRand = vvch[1];	
-		const vector<unsigned char> &vchMessage = vvch[2];	
+		const vector<unsigned char> &vchAcceptRand = vvch[1];		
 		string sTime;
 		CBlockIndex *pindex = chainActive[ca.nHeight];
 		if (pindex) {
@@ -3072,7 +3080,7 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 				break;
 
 			if (!foundOffer && IsOfferOp(opIn)) {
-				if(opIn == OP_OFFER_ACCEPT && vvchIn[4] != vchFromString("1"))
+				if(opIn == OP_OFFER_ACCEPT && vvchIn[2] != vchFromString("1"))
 				{
 					vchOfferAcceptLink = vvchIn[1];
 					foundOffer = true; 
@@ -3102,7 +3110,7 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 		else
 			oOfferAccept.push_back(Pair("paid","true"));
 		string strMessage = string("");
-		if(!DecryptMessage(acceptOffer.vchPubKey, vchMessage, strMessage))
+		if(!DecryptMessage(acceptOffer.vchPubKey, ca.vchMessage, strMessage))
 			strMessage = string("Encrypted for owner of offer");
 		oOfferAccept.push_back(Pair("pay_message", strMessage));
 		UniValue oBuyerFeedBack(UniValue::VARR);
@@ -3271,12 +3279,11 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 				if(op != OP_OFFER_ACCEPT)
 					continue;
 				// dont show feedback outputs as accepts
-				if(vvch[4] == vchFromString("1"))
+				if(vvch[2] == vchFromString("1"))
 					continue;
 
 				if(vvch[0] != vchOfferToFind && !vchOfferToFind.empty())
 					continue;
-				const vector<unsigned char> &vchMessage = vvch[2];	
 				vchOffer = vvch[0];
 				
 				COfferAccept theOfferAccept;
@@ -3340,7 +3347,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 						break;
 
 					if (!foundOffer && IsOfferOp(opIn)) {
-						if(opIn == OP_OFFER_ACCEPT && vvchIn[4] != vchFromString("1"))
+						if(opIn == OP_OFFER_ACCEPT && vvchIn[2] != vchFromString("1"))
 						{
 							vchOfferAcceptLink = vvchIn[1];
 							foundOffer = true; 
@@ -3372,7 +3379,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 
 				
 				string strMessage = string("");
-				if(!DecryptMessage(theOffer.vchPubKey, vchMessage, strMessage))
+				if(!DecryptMessage(theOffer.vchPubKey, theOfferAccept.vchMessage, strMessage))
 					strMessage = string("Encrypted for owner of offer");
 				oOfferAccept.push_back(Pair("pay_message", strMessage));
 				oRes.push_back(oOfferAccept);
