@@ -425,7 +425,7 @@ void SendMoneySyscoin(const vector<CRecipient> &vecSend, CAmount nValue, bool fS
 	vector<vector<unsigned char> > vvch;
 	int op, nOut;
 	bool fJustCheck = true;
-	string errorMessage;
+	string errorMessage="";
 	CCoinsViewCache inputs(pcoinsTip);
 	if(DecodeAliasTx(wtxNew, op, nOut, vvch))
 	{
