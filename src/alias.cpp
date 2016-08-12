@@ -424,17 +424,12 @@ string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchAliasPeg, const
 	string currencyCodeToFind = stringFromVch(vchCurrency);
 	// check for alias existence in DB
 	vector<CAliasIndex> vtxPos;
-	if (!paliasdb->ReadAlias(vchAliasPeg, vtxPos) || vtxPos.empty())
+	CAliasIndex tmpAlias;
+	CTransaction aliastx;
+	if (!GetTxAndVtxOfAlias(vchAliasPeg, tmpAlias, aliastx, vtxPos))
 	{
 		if(fDebug)
 			LogPrintf("getCurrencyToSYSFromAlias() Could not find %s alias\n", stringFromVch(vchAliasPeg).c_str());
-		return "1";
-	}
-	
-	if (vtxPos.size() < 1)
-	{
-		if(fDebug)
-			LogPrintf("getCurrencyToSYSFromAlias() Could not find %s alias (vtxPos.size() == 0)\n", stringFromVch(vchAliasPeg).c_str());
 		return "1";
 	}
 	CAliasIndex foundAlias;

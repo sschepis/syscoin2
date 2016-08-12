@@ -746,9 +746,27 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				if(theOffer.nCommission <= 0)
 				{
 					return error("CheckOfferInputs() OP_OFFER_ACTIVATE: markup must be greator than 0!");
-				}	
+				}
+				if(theOffer.bOnlyAcceptBTC)
+					throw runtime_error("Linked offer cannot accept BTC only");
 			}
-			
+			if(theOffer.nQty < -1)
+				return error("CheckOfferInputs() OP_OFFER_ACTIVATE: qty must be greator than or equal to -1!");
+			if(!theOffer.vchCert.empty() && nQty <= 0)
+				throw runtime_error("qty must be greator than 0 for a cert offer");
+			if(theOffer.nPrice <= 0)
+			{
+				throw error("offer price must be greater than 0!");
+			}
+			if(theOffer.sCategory.size() < 1)
+				throw error("offer category cannot be empty!");
+			if(theOffer.sTitle.size() < 1)
+				throw error("offer title cannot be empty!");
+			if(theOffer.bOnlyAcceptBTC && !theOffer.vchCert.empty())
+				throw runtime_error("Cannot sell a certificate accepting only Bitcoins");
+			if(theOffer.bOnlyAcceptBTC && stringFromVch(theOffer.sCurrencyCode) != "BTC")
+				throw runtime_error("Can only accept Bitcoins for offer's that set their currency to BTC");
+
 			break;
 		case OP_OFFER_UPDATE:
 			if (!IsOfferOp(prevOp) )
@@ -1010,6 +1028,12 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					{
 						if(fDebug)
 							LogPrintf("CheckOfferInputs() OP_OFFER_ACTIVATE: parent offer set to exlusive resell but no alias input given to linked offer");	
+						theOffer.vchLinkOffer.clear();	
+					}
+					if(linkOffer.bOnlyAcceptBTC)
+					{
+						if(fDebug)
+							LogPrintf("CheckOfferInputs() OP_OFFER_ACTIVATE: Cannot link to an offer that only accepts Bitcoins as payment");	
 						theOffer.vchLinkOffer.clear();	
 					}
 					if(!theOffer.vchLinkOffer.empty())
@@ -1447,15 +1471,8 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 	float nPrice;
 	bool bExclusiveResell = true;
 	vector<unsigned char> vchAliasPeg = vchFromValue(params[0]);
-	CSyscoinAddress aliasPegAddress = CSyscoinAddress(stringFromVch(vchAliasPeg));
-	if (!aliasPegAddress.IsValid() || !aliasPegAddress.isAlias)
-		throw runtime_error("Invalid alias peg");
 	vector<unsigned char> vchAlias = vchFromValue(params[1]);
 	CSyscoinAddress aliasAddress = CSyscoinAddress(stringFromVch(vchAlias));
-	if (!aliasAddress.IsValid())
-		throw runtime_error("Invalid syscoin address");
-	if (!aliasAddress.isAlias)
-		throw runtime_error("Offer must be a valid alias");
 
 	CTransaction aliastx;
 	CAliasIndex alias;
@@ -1479,25 +1496,8 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 	} catch (std::exception &e) {
 		throw runtime_error("invalid quantity value, must be less than 4294967296 and greater than or equal to -1");
 	}
-	if(nQty < -1)
-		throw runtime_error("qty must be greater than or equal to -1");
 	nPrice = atof(params[5].get_str().c_str());
-	if(nPrice <= 0)
-	{
-		throw runtime_error("offer price must be greater than 0!");
-	}
 	vchDesc = vchFromValue(params[6]);
-	if(vchCat.size() < 1)
-        throw runtime_error("offer category cannot be empty!");
-	if(vchTitle.size() < 1)
-        throw runtime_error("offer title cannot be empty!");
-	if(vchCat.size() > MAX_NAME_LENGTH)
-        throw runtime_error("offer category cannot exceed 255 bytes!");
-	if(vchTitle.size() > MAX_NAME_LENGTH)
-        throw runtime_error("offer title cannot exceed 255 bytes!");
-    // 1Kbyte offer desc. maxlen
-	if (vchDesc.size() > MAX_VALUE_LENGTH)
-		throw runtime_error("offer description cannot exceed 1023 bytes!");
 	CScript scriptPubKeyOrig, scriptPubKeyCertOrig;
 	CScript scriptPubKey, scriptPubKeyCert;
 	const CWalletTx *wtxCertIn = NULL;
@@ -1511,8 +1511,6 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 		// make sure this cert is still valid
 		if (GetTxOfCert( vchCert, theCert, txCert))
 		{
-			if(nQty <= 0)
-				throw runtime_error("qty must be greator than 0 for a cert offer");
       		// check for existing cert 's
 			if (ExistsInMempool(vchCert, OP_CERT_UPDATE) || ExistsInMempool(vchCert, OP_CERT_TRANSFER)) {
 				throw runtime_error("there are pending operations on that cert");
@@ -1540,10 +1538,6 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 	if(params.size() >= 11)
 	{
 		bOnlyAcceptBTC = atoi(params[10].get_str().c_str()) == 1? true: false;
-		if(bOnlyAcceptBTC && !vchCert.empty())
-			throw runtime_error("Cannot sell a certificate accepting only Bitcoins");
-		if(bOnlyAcceptBTC && stringFromVch(vchCurrency) != "BTC")
-			throw runtime_error("Can only accept Bitcoins for offer's that set their currency to BTC");
 
 	}	
 	string strGeoLocation = "";
@@ -1867,31 +1861,12 @@ UniValue offerlink(const UniValue& params, bool fHelp) {
 	if (!GetTxOfOffer( vchLinkOffer, linkOffer, tx) || vchLinkOffer.empty())
 		throw runtime_error("could not find an offer with this guid");
 
-	if(!linkOffer.vchLinkOffer.empty())
-	{
-		throw runtime_error("cannot link to an offer that is already linked to another offer");
-	}
-
 	int commissionInteger = atoi(params[2].get_str().c_str());
-	if(commissionInteger > 255)
-	{
-		throw runtime_error("markup must be less than 256!");
-	}
-	if(commissionInteger <= 0)
-	{
-		throw runtime_error("markup must be greator than 0!");
-	}	
 	if(params.size() >= 4)
 	{
 
 		vchDesc = vchFromValue(params[3]);
-		if(vchDesc.size() > 0)
-		{
-			// 1kbyte offer desc. maxlen
-			if (vchDesc.size() > MAX_VALUE_LENGTH)
-				throw runtime_error("offer description cannot exceed 1023 bytes!");
-		}
-		else
+		if(vchDesc.empty())
 		{
 			vchDesc = linkOffer.sDescription;
 		}
@@ -1902,47 +1877,29 @@ UniValue offerlink(const UniValue& params, bool fHelp) {
 	}	
 
 
-	COfferLinkWhitelistEntry foundEntry;
+	COfferLinkWhitelistEntry entry, foundEntry;
 	CScript scriptPubKeyOrig, scriptPubKeyAliasOrig;
 	CScript scriptPubKey, scriptPubKeyAlias;
 	const CWalletTx *wtxAliasIn = NULL;
 
-	// go through the whitelist and see if you own any of the aliases to apply to this offer for a discount
-	for(unsigned int i=0;i<linkOffer.linkWhitelist.entries.size();i++) {
-		CTransaction txAlias;
-		CAliasIndex theAlias;
-		COfferLinkWhitelistEntry& entry = linkOffer.linkWhitelist.entries[i];
-		// make sure this alias is still valid
-		if (GetTxOfAlias(entry.aliasLinkVchRand, theAlias, txAlias))
+	linkOffer.linkWhitelist.GetLinkEntryByHash(alias.vchName, entry);	
+
+	if (!entry.IsNull() && GetTxOfAlias(entry.aliasLinkVchRand, theAlias, txAlias))
+	{
+		// make sure its in your wallet (you control this alias)
+		if (IsSyscoinTxMine(txAlias, "alias")) 
 		{
-			// make sure its in your wallet (you control this alias)
-			// it must be the same one that you passed in to this function
-			if (IsSyscoinTxMine(txAlias, "alias") && theAlias.vchPubKey == alias.vchPubKey) 
-			{
-				wtxAliasIn = pwalletMain->GetWalletTx(txAlias.GetHash());
-				foundEntry = entry;
-				CPubKey currentAliasKey(theAlias.vchPubKey);
-				scriptPubKeyAliasOrig = GetScriptForDestination(currentAliasKey.GetID());
-				if(commissionInteger <= -foundEntry.nDiscountPct)
-						throw runtime_error(strprintf("You cannot re-sell at a lower price than the discount you received as an affiliate (current discount received: %d%%)", foundEntry.nDiscountPct));
-				scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << foundEntry.aliasLinkVchRand <<  theAlias.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
-				scriptPubKeyAlias += scriptPubKeyAliasOrig;			
-			}
+			wtxAliasIn = pwalletMain->GetWalletTx(txAlias.GetHash());
+			foundEntry = entry;
+			CPubKey currentAliasKey(theAlias.vchPubKey);
+			scriptPubKeyAliasOrig = GetScriptForDestination(currentAliasKey.GetID());
+			if(commissionInteger <= -foundEntry.nDiscountPct)
+					throw runtime_error(strprintf("You cannot re-sell at a lower price than the discount you received as an affiliate (current discount received: %d%%)", foundEntry.nDiscountPct));
+			scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << foundEntry.aliasLinkVchRand <<  theAlias.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
+			scriptPubKeyAlias += scriptPubKeyAliasOrig;			
 		}
 	}
-	// if the whitelist exclusive mode is on and you dont have an alias in the whitelist, you cannot link to this offer
-	if(foundEntry.IsNull() && linkOffer.linkWhitelist.bExclusiveResell)
-	{
-		throw runtime_error("Cannot link to this offer because the alias given is not on the offer's affiliate list (it is in exclusive mode)");
-	}
-	if(linkOffer.bOnlyAcceptBTC)
-	{
-		throw runtime_error("Cannot link to an offer that only accepts Bitcoins as payment");
-	}
-	if(linkOffer.offerLinks.size() > 100)
-	{
-		throw runtime_error("This link would exceed the number of allowable affiliates(100) for that offer");
-	}
+	
 	// this is a syscoin transaction
 	CWalletTx wtx;
 
