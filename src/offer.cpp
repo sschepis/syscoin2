@@ -1716,6 +1716,8 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 	{
 		
 		vchCert = vchFromValue(params[8]);
+		if(vchCert == vchFromString("nocert"))
+			vchCert.clear();
 		CTransaction txCert;
 		
 		// make sure this cert is still valid
