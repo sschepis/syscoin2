@@ -2599,7 +2599,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 
 	txAccept.vchAcceptRand = vchAccept;
 	txAccept.nQty = nQty;
-	txAccept.nPrice = theOffer.GetPrice(foundAlias);
+	txAccept.nPrice = theOffer.GetPrice(foundEntry);
 	// if we have a linked offer accept then use height from linked accept (the one buyer makes, not the reseller). We need to do this to make sure we convert price at the time of initial buyer's accept.
 	// in checkescrowinput we override this if its from an escrow release, just like above.
 	txAccept.nAcceptHeight = nHeight;
