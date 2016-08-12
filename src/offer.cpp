@@ -875,6 +875,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 44 - Quantity must be greator than 0 for a digital offer";
 				return error(errorMessage.c_str());
+			}
 			if(theOffer.nPrice <= 0)
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 45 - Offer price must be greater than 0";
@@ -1313,7 +1314,8 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				// also if this offer you are accepting is linked to another offer don't need to update qty (once the root accept is done this offer qty will be updated)
 				if(theOffer.nQty != -1 && theOfferAccept.vchEscrow.empty() && theOffer.vchLinkOffer.empty())
 				{
-					if((theOfferAccept.nQty > theOffer.nQty)) {
+					if((theOfferAccept.nQty > theOffer.nQty))
+					{
 						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 91 - Not enough quantity left in this offer for this purchase";
 						return true;
 					}				
