@@ -1026,6 +1026,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	const CWalletTx *wtxAliasIn = NULL;
 
 	CScript scriptPubKeyAlias, scriptPubKeyAliasOrig;
+	COfferLinkWhitelistEntry foundEntry;
 	if(!theOffer.vchLinkOffer.empty())
 	{
 	
@@ -1038,7 +1039,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 		
 		// if offer is not linked, look for a discount for the buyer
 		CAliasIndex theAlias;
-		COfferLinkWhitelistEntry foundEntry;
+		
 		theOffer.linkWhitelist.GetLinkEntryByHash(vchAlias, foundEntry);
 
 		if(!foundEntry.IsNull())
