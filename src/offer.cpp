@@ -1896,7 +1896,7 @@ UniValue offerlink(const UniValue& params, bool fHelp) {
 			scriptPubKeyAliasOrig = GetScriptForDestination(currentAliasKey.GetID());
 			if(commissionInteger <= -foundEntry.nDiscountPct)
 					throw runtime_error(strprintf("You cannot re-sell at a lower price than the discount you received as an affiliate (current discount received: %d%%)", foundEntry.nDiscountPct));
-			scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << foundEntry.aliasLinkVchRand <<  theAlias.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
+			scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << foundEntry.aliasLinkVchRand <<  alias.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
 			scriptPubKeyAlias += scriptPubKeyAliasOrig;			
 		}
 	}
