@@ -815,7 +815,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 30 - Quantity must be greator than 0 for a digital offer";
 				return error(errorMessage.c_str());
 			}
-			if(theOffer.nPrice <= 0)
+			if(theOffer.nPrice < 0)
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 31 - Offer price must be greater than 0";
 				return error(errorMessage.c_str());
