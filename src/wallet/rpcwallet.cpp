@@ -444,7 +444,7 @@ void SendMoneySyscoin(const vector<CRecipient> &vecSend, CAmount nValue, bool fS
 	}
 	if(DecodeOfferTx(wtxNew, op, nOut, vvch))		
 	{
-		CheckOfferInputs(wtxNew,  op, nOut, vvch, inputs, fJustCheck, chainActive.Tip()->nHeight, errorMessage, NULL);
+		CheckOfferInputs(wtxNew,  op, nOut, vvch, inputs, fJustCheck, chainActive.Tip()->nHeight, errorMessage, NULL, false);
 		if(!errorMessage.empty())
 			throw runtime_error(errorMessage.c_str());
 		CheckOfferInputs(wtxNew,  op, nOut, vvch, inputs, !fJustCheck, chainActive.Tip()->nHeight, errorMessage, NULL, true);
