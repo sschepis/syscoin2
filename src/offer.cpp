@@ -810,12 +810,12 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 29 - Quantity must be greator than or equal to -1";
 				return error(errorMessage.c_str());
 			}
-			if(!theOffer.vchCert.empty() && theOffer.nQty <= 0)
+			if(!theOffer.vchCert.empty() && theOffer.nQty != 1)
 			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 30 - Quantity must be greator than 0 for a digital offer";
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 30 - Quantity must be 1 for a digital offer";
 				return error(errorMessage.c_str());
 			}
-			if(theOffer.nPrice < 0)
+			if(theOffer.nPrice <= 0)
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 31 - Offer price must be greater than 0";
 				return error(errorMessage.c_str());
@@ -874,9 +874,9 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 43 - Quantity must be greator than or equal to -1";
 				return error(errorMessage.c_str());
 			}
-			if(!theOffer.vchCert.empty() && theOffer.nQty <= 0)
+			if(!theOffer.vchCert.empty() && theOffer.nQty != 1)
 			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 44 - Quantity must be greator than 0 for a digital offer";
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 44 - Quantity must be 1 for a digital offer";
 				return error(errorMessage.c_str());
 			}
 			if(theOffer.nPrice <= 0)
@@ -1088,8 +1088,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					}
 				}
 			}
-			if(!theOffer.vchCert.empty())						
-				theOffer.nQty = 1;
 			// check for valid alias peg
 			if(getCurrencyToSYSFromAlias(theOffer.vchAliasPeg, theOffer.sCurrencyCode, nRate, theOffer.nHeight, rateList,precision) != "")
 			{
@@ -1117,7 +1115,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				CTransaction txCert;
 				if (GetTxOfCert( theOffer.vchCert, theCert, txCert))
 				{
-					theOffer.nQty = 1;
 					// if selling a cert, offers pubkey must match certs pubkey
 					theOffer.vchPubKey = theCert.vchPubKey;
 				}
@@ -1298,8 +1295,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			// if its not a special feedback output for the buyer then we decrease qty accordingly
 			else
 			{
-				if(!theOffer.vchCert.empty())
-					theOfferAccept.nQty = 1;
 
 				if(theOfferAccept.nQty <= 0)
 					theOfferAccept.nQty = 1;

@@ -36,9 +36,6 @@ BOOST_AUTO_TEST_CASE (generate_offernew)
 	// should fail: generate an offer with zero price
 	BOOST_CHECK_THROW(r = CallRPC("node1", "offernew sys_rates selleralias1 category title 100 0 description USD"), runtime_error);
 
-	// should fail: generate an offer with negative price
-	BOOST_CHECK_THROW(r = CallRPC("node1", "offernew sys_rates selleralias1 category title 100 -0.05 description USD"), runtime_error);
-
 	// should fail: generate an offer too-large category
 	string s256bytes = "SfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsDfdfddz";
 	BOOST_CHECK_THROW(r = CallRPC("node1", "offernew sys_rates selleralias1 " + s256bytes + " title 100 0.05 description USD"), runtime_error);	
