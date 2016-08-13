@@ -2455,7 +2455,7 @@ bool CreateLinkedOfferAcceptRecipients(vector<CRecipient> &vecSend, const CAmoun
 			continue;
 		COffer offer(tx);
 		CAmount nTotalValue = ( nPrice * offer.accept.nQty );
-		scriptPubKeyAccept << CScript::EncodeOP_N(OP_OFFER_ACCEPT) << linkedOfferGUID << vvchOffer[1] << vvchOffer[2] << vchHashOffer << OP_2DROP << OP_2DROP << OP_2DROP << OP_DROP; 
+		scriptPubKeyAccept << CScript::EncodeOP_N(OP_OFFER_ACCEPT) << linkedOfferGUID << vvchOffer[1] << vvchOffer[2] << vchHashOffer << OP_2DROP << OP_2DROP << OP_DROP; 
 		scriptPubKeyAccept += scriptPubKeyDestination;
 		scriptPubKeyPayment += scriptPubKeyDestination;
 		CRecipient acceptRecipient;
@@ -2733,9 +2733,9 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
  	vector<unsigned char> vchHash = CScriptNum(hash.GetCheapHash()).getvch();
     vector<unsigned char> vchHashOffer = vchFromValue(HexStr(vchHash));
 	// if this is a linked accept then we create output for feedback for the reseller since the normal accept from buyer is used here by the linked accept
-	scriptPubKeyBuyer  << CScript::EncodeOP_N(OP_OFFER_ACCEPT) << vchOffer << vchAccept << vchFromString("1") << vchHashOffer << OP_2DROP << OP_2DROP << OP_2DROP << OP_DROP;
+	scriptPubKeyBuyer  << CScript::EncodeOP_N(OP_OFFER_ACCEPT) << vchOffer << vchAccept << vchFromString("1") << vchHashOffer << OP_2DROP << OP_2DROP << OP_DROP;
 	// normal accept sig
-	scriptPubKeyAccept << CScript::EncodeOP_N(OP_OFFER_ACCEPT) << vchOffer << vchAccept << vchFromString("0") << vchHashOffer << OP_2DROP << OP_2DROP << OP_2DROP << OP_DROP;
+	scriptPubKeyAccept << CScript::EncodeOP_N(OP_OFFER_ACCEPT) << vchOffer << vchAccept << vchFromString("0") << vchHashOffer << OP_2DROP << OP_2DROP << OP_DROP;
 	
 
 	scriptPubKeyBuyer += scriptPubKeyBuyerDestination;
@@ -2983,8 +2983,6 @@ UniValue offeracceptfeedback(const UniValue& params, bool fHelp) {
 		sellerFeedback.nRating = nRating;
 		sellerFeedback.nHeight = chainActive.Tip()->nHeight;
 		offer.accept.feedback = sellerFeedback;
-
-
 	}
 	// seller
 	else if(foundSellerKey)
@@ -2994,8 +2992,6 @@ UniValue offeracceptfeedback(const UniValue& params, bool fHelp) {
 		buyerFeedback.nRating = nRating;
 		buyerFeedback.nHeight = chainActive.Tip()->nHeight;
 		offer.accept.feedback = buyerFeedback;	
-
-
 	}
 	else
 	{
@@ -3012,10 +3008,10 @@ UniValue offeracceptfeedback(const UniValue& params, bool fHelp) {
 	scriptPubKeySellerDestination= GetScriptForDestination(sellerKey.GetID());
 	vector<CRecipient> vecSend;
 	CRecipient recipientBuyer, recipientSeller;
-	scriptPubKeyBuyer << CScript::EncodeOP_N(OP_OFFER_ACCEPT) << vvch[0] << vvch[1] << vvch[2] << vchHashOffer << OP_2DROP << OP_2DROP << OP_2DROP << OP_DROP;
+	scriptPubKeyBuyer << CScript::EncodeOP_N(OP_OFFER_ACCEPT) << vvch[0] << vvch[1] << vvch[2] << vchHashOffer << OP_2DROP <<  OP_2DROP << OP_DROP;
 	scriptPubKeyBuyer += scriptPubKeyBuyerDestination;
 	CreateRecipient(scriptPubKeyBuyer, recipientBuyer);
-	scriptPubKeySeller << CScript::EncodeOP_N(OP_OFFER_ACCEPT) << vvch[0] << vvch[1] << vvch[2] << vchHashOffer << OP_2DROP << OP_2DROP << OP_2DROP << OP_DROP;
+	scriptPubKeySeller << CScript::EncodeOP_N(OP_OFFER_ACCEPT) << vvch[0] << vvch[1] << vvch[2] << vchHashOffer << OP_2DROP << OP_2DROP << OP_DROP;
 	scriptPubKeySeller += scriptPubKeySellerDestination;
 	CreateRecipient(scriptPubKeySeller, recipientSeller);
 	// buyer
