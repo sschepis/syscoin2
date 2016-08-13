@@ -87,22 +87,8 @@ BOOST_AUTO_TEST_CASE (generate_certoffernew)
 	// should fail: generate a cert offer using a zero quantity
 	BOOST_CHECK_THROW(r = CallRPC("node1", "offernew sys_rates node1alias category title 0 0.05 description USD " + certguid1a), runtime_error);
 
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "offernew sys_rates node1alias category title 0 0.05 description USD " + certguid1a));
-	const UniValue &arr1 = r.get_array();
-	string guid = arr1[1].get_str();
-	GenerateBlocks(10, "node1");
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "offerinfo " + guid));
-	BOOST_CHECK(find_value(r.get_obj(), "quantity").get_str() == "1");
-
 	// should fail: generate a cert offer using an unlimited quantity
 	BOOST_CHECK_THROW(r = CallRPC("node1", "offernew sys_rates node1alias category title -1 0.05 description USD " + certguid1a), runtime_error);
-
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "offernew sys_rates node1alias category title -1 0.05 description USD " + certguid1a));
-	const UniValue &arr2 = r.get_array();
-	guid = arr2[1].get_str();
-	GenerateBlocks(10, "node1");
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "offerinfo " + guid));
-	BOOST_CHECK(find_value(r.get_obj(), "quantity").get_str() == "1");
 
 	// should fail: generate a cert offer using a cert guid you don't own
 	BOOST_CHECK_THROW(r = CallRPC("node1", "offernew sys_rates node1alias category title 1 0.05 description USD " + certguid2), runtime_error);	
@@ -111,7 +97,6 @@ BOOST_AUTO_TEST_CASE (generate_certoffernew)
 
 	// should fail: generate a cert offer if accepting only BTC
 	BOOST_CHECK_THROW(r = CallRPC("node1", "offernew sys_rates node1alias category title 1 0.05 description USD " + certguid1a + " 0 1"), runtime_error);
-
 
 	BOOST_CHECK_THROW(r = CallRPC("node1", "offernew node1alias category title 1 0.05 description USD " + certguid1a + " 0 1"), runtime_error);
 	// should fail: generate a cert offer using different public keys for cert and alias
@@ -237,15 +222,6 @@ BOOST_AUTO_TEST_CASE (generate_offernew_linkedofferexmode)
 
 	// should fail: attempt to create a linked offer for an exclusive mode product without being on the whitelist
 	BOOST_CHECK_THROW(r = CallRPC("node2", "offerlink selleralias9 " + offerguid + " 5 newdescription"), runtime_error);
-
-	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "offerlink selleralias9 " + offerguid + " 5 newdescription"));
-	const UniValue &arr = r.get_array();
-	string linkofferguid = arr[1].get_str();
-	GenerateBlocks(5, "node2");
-	// ensure offer isn't linked
-	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "offerinfo " + linkofferguid));
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "offerlink").get_str(), "false");
-
 
 	// should succeed: offer seller adds affiliate to whitelist
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "offeraddwhitelist " + offerguid + " selleralias9 10"));
@@ -445,15 +421,6 @@ BOOST_AUTO_TEST_CASE (generate_offeraccept)
 
 	// perform an accept on more items than available
 	BOOST_CHECK_THROW(r = CallRPC("node2", "offeraccept buyeralias3 " + offerguid + " 100 message"), runtime_error);
-
-	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "offeraccept buyeralias3 " + offerguid + " 100 message"));
-	const UniValue &arr = r.get_array();
-	acceptguid = arr[1].get_str();
-	GenerateBlocks(5, "node2");
-	r = FindOfferAccept("node2", offerguid, acceptguid, true);
-	// ensure this accept is not found because its over  qty
-	BOOST_CHECK(r.isNull());
-
 
 	// perform an accept on negative quantity
 	BOOST_CHECK_THROW(r = CallRPC("node2", "offeraccept buyeralias3 " + offerguid + " -1 message"), runtime_error);

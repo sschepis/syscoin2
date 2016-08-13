@@ -666,7 +666,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	BOOST_CHECK_THROW(CallRPC("node1", "aliasupdate aliasexpire newdata1 privdata"), runtime_error);
 
 	// should fail: offer update on an expired alias in offer
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "offerupdate sys_rates aliasexpire " + offerguid + " category title1 90 0.15 description"));	
+	BOOST_CHECK_THROW(CallRPC("node1", "offerupdate sys_rates aliasexpire " + offerguid + " category title1 90 0.15 description"), runtime_error);	
 
 
 	// should fail: perform an accept on expired alias in offer
