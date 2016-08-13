@@ -243,14 +243,6 @@ BOOST_AUTO_TEST_CASE (generate_offernew_linkedlinkedoffer)
 	// should fail: try to generate a linked offer with a linked offer
 	BOOST_CHECK_THROW(r = CallRPC("node3", "offerlink selleralias14 " + lofferguid + " 5 newdescription"), runtime_error);
 
-	BOOST_CHECK_NO_THROW(r = CallRPC("node3", "offerlink selleralias14 " + lofferguid + " 5 newdescription"));	
-	const UniValue &arr = r.get_array();
-	string linkofferguid = arr[1].get_str();
-	GenerateBlocks(5, "node3");
-	// ensure offer isn't linked
-	BOOST_CHECK_NO_THROW(r = CallRPC("node3", "offerinfo " + linkofferguid));
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "offerlink").get_str(), "false");
-
 }
 
 BOOST_AUTO_TEST_CASE (generate_offerupdate)
@@ -576,20 +568,10 @@ BOOST_AUTO_TEST_CASE (generate_offerexpired)
 	GenerateBlocks(5);
 	// should fail: offer update on an expired offer
 	BOOST_CHECK_THROW(r = CallRPC("node1", "offerupdate sys_rates selleralias4 " + offerguid + " category title 90 0.15 description"), runtime_error);
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "offerupdate sys_rates selleralias4 " + offerguid + " category title 90 0.15 description"));
-	GenerateBlocks(5);
-	// ensure the qty hasn't been updated
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "offerinfo " + offerguid));
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "quantity").get_str(), "100");
+	
 	// should fail: link to an expired offer
 	BOOST_CHECK_THROW(r = CallRPC("node2", "offerlink buyeralias4 " + offerguid + " 5 newdescription"), runtime_error);	
-	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "offerlink buyeralias4 " + offerguid + " 5 newdescription"));	
-	const UniValue &arr1 = r.get_array();
-	string linkofferguid = arr1[1].get_str();
-	GenerateBlocks(5, "node2");
-	// ensure offer isn't linked
-	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "offerinfo " + linkofferguid));
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "offerlink").get_str(), "false");
+	
 
 }
 
