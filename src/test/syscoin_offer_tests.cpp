@@ -475,14 +475,7 @@ BOOST_AUTO_TEST_CASE (generate_offeracceptfeedback)
 	}
 
 	// now you can't leave any more feedback as a seller
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", offerfeedbackstr));
-	const UniValue &arr = r.get_array();
-	string acceptTxid = arr[0].get_str();
-
-	GenerateBlocks(10, "node1");
-	r = FindOfferAcceptFeedback("node1", offerguid, acceptguid, acceptTxid, true);
-	// ensure this feedback is not found because its over the limit
-	BOOST_CHECK(r.isNull());
+	BOOST_CHECK_THROW(r = CallRPC("node1", offerfeedbackstr), tuntime_error);
 	GenerateBlocks(5, "node2");
 	// perform a valid accept
 	acceptguid = OfferAccept("node1", "node2", "buyeraliasfeedback", offerguid, "1", "message");
