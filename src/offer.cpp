@@ -2258,7 +2258,9 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	if (params.size() >= 8) vchDesc = vchFromValue(params[7]);
 	if (params.size() >= 9) sCurrencyCode = vchFromValue(params[8]);
 	if (params.size() >= 10) bPrivate = atoi(params[9].get_str().c_str()) == 1? true: false;
-	if (params.size() >= 11) vchCert = vchFromValue(params[10]);
+	if (params.size() >= 11) vchCert = vchFromValue(params[10])
+	if(vchCert == vchFromString("nocert"))
+		vchCert.clear();
 	if (params.size() >= 12) bExclusiveResell = atoi(params[11].get_str().c_str()) == 1? true: false;
 	if (params.size() >= 13) vchGeoLocation = vchFromValue(params[12]);
 	string strSafeSearch = "Yes";
