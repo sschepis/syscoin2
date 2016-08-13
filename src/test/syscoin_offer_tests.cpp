@@ -263,13 +263,6 @@ BOOST_AUTO_TEST_CASE (generate_offerupdate)
 	// should fail: generate an offer with unknown alias
 	BOOST_CHECK_THROW(r = CallRPC("node1", "offerupdate sys_rates fooalias " + offerguid + " category title 90 0.15 description"), runtime_error);
 
-	// should fail: generate an offer with zero price
-	BOOST_CHECK_THROW(r = CallRPC("node1", "offerupdate sys_rates selleralias2 " + offerguid + " category title 90 0 description"), runtime_error);
-
-	// should fail: generate an offer with negative price
-	BOOST_CHECK_THROW(r = CallRPC("node1", "offerupdate sys_rates selleralias2 " + offerguid + " category title 90 -0.05 description"), runtime_error);
-
-
 	// should fail: generate an offer too-large category
 	string s256bytes =   "SfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsDfdfddz";
 	BOOST_CHECK_THROW(r = CallRPC("node1", "offerupdate sys_rates selleralias2 " + offerguid + " " + s256bytes + " title 90 0.15 description"), runtime_error);	
