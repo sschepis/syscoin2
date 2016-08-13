@@ -2380,7 +2380,7 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 		theOffer.vchGeoLocation = vchGeoLocation;
 	if(offerCopy.sCurrencyCode != sCurrencyCode)
 		theOffer.sCurrencyCode = sCurrencyCode;
-	if(offerCopy.vchCert != vchCert)
+	if(wtxCertIn != NULL)
 		theOffer.vchCert = vchCert;
 	theOffer.vchPubKey = alias.vchPubKey;
 	theOffer.safeSearch = strSafeSearch == "Yes"? true: false;
