@@ -792,6 +792,19 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					return error(errorMessage.c_str());
 				}
 			}
+			else
+			{
+				if(theOffer.sCategory.size() < 1)
+				{
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 32 - Offer category cannot be empty";
+					return error(errorMessage.c_str());
+				}
+				if(theOffer.sTitle.size() < 1)
+				{
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 33 - Offer title cannot be empty";
+					return error(errorMessage.c_str());
+				}
+			}
 			if(theOffer.nQty < -1)
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 29 - Quantity must be greator than or equal to -1";
@@ -805,16 +818,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			if(theOffer.nPrice <= 0)
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 31 - Offer price must be greater than 0";
-				return error(errorMessage.c_str());
-			}
-			if(theOffer.sCategory.size() < 1)
-			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 32 - Offer category cannot be empty";
-				return error(errorMessage.c_str());
-			}
-			if(theOffer.sTitle.size() < 1)
-			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 33 - Offer title cannot be empty";
 				return error(errorMessage.c_str());
 			}
 			if(theOffer.bOnlyAcceptBTC && !theOffer.vchCert.empty())
