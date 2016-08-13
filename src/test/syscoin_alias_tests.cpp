@@ -669,15 +669,8 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "offerupdate sys_rates aliasexpire " + offerguid + " category title1 90 0.15 description"));	
 
 
-	// should pass: perform an accept on expired alias in offer, you are allowed to buy from expired alias in an offer if you really want (rpc will make sure it doesn't happen anyway)
-	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "offeraccept aliasexpire " + offerguid + " 1 message"));
-	UniValue result = r.get_array();
-	string acceptguid = result[1].get_str();
-	BOOST_CHECK_NO_THROW(CallRPC("node2", "generate 5"));
-	MilliSleep(2500);
-	r = FindOfferAccept("node2", offerguid, acceptguid, true);
-	// ensure this accept is found
-	BOOST_CHECK(!r.isNull());
+	// should fail: perform an accept on expired alias in offer
+	BOOST_CHECK_THROW(r = CallRPC("node2", "offeraccept aliasexpire " + offerguid + " 1 message"), runtime_error);
 	// should fail: link to an expired alias in offer
 	BOOST_CHECK_THROW(CallRPC("node1", "offerlink aliasexpire " + offerguid + " 5 newdescription"), runtime_error);
 	// should fail: generate an offer using expired alias
@@ -707,7 +700,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 30"));
 	MilliSleep(2500);
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "certupdate " + certguid + " jag1 data 0"));
-	BOOST_CHECK_NO_THROW(CallRPC("node1","generate 30"));
+	BOOST_CHECK_NO_THROW(CallRPC("node1","generate 35"));
 	MilliSleep(2500);
 
 	StartNode("node3");
