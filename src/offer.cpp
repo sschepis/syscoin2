@@ -589,7 +589,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			vector<unsigned char> vchRandOffer = vchFromValue(HexStr(vchRand));
 			if(op == OP_OFFER_ACCEPT)
 			{
-				if(vchRandOffer != vvchArgs[5])
+				if(vchRandOffer != vvchArgs[3])
 				{
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 6 - Hash provided doesn't match the calculated hash the data";
 					return error(errorMessage.c_str());
