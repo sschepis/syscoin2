@@ -134,17 +134,10 @@ string makeOfferLinkAcceptTX(const COfferAccept& theOfferAccept, const vector<un
 	}
 	if(!foundOfferTx)
 		return "cannot accept a linked offer accept in linkedAcceptBlock";
-	if(!theOfferAccept.txBTCId.IsNull())
-	{
-		return "cannot accept a linked offer by paying in Bitcoins";
-	}
+
 	CPubKey PubKey(theOffer.vchPubKey);
 	CSyscoinAddress address(PubKey.GetID());
 	address = CSyscoinAddress(address.ToString());
-	if(!address.IsValid() || !address.isAlias )
-	{
-		return "Invalid address or alias";
-	}
 	params.push_back(address.aliasName);
 	params.push_back(stringFromVch(vchLinkOffer));
 	params.push_back("99");
@@ -1372,7 +1365,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					}	
 					// if this is an accept for a linked offer, the root offer is set to exclusive mode and reseller doesn't have an alias in the whitelist, you cannot accept this linked offer
 					// serializedOffer.vchLinkAlias is validated below if its not empty
-					if(serializedOffer.vchLinkAlias.empty() && offer.linkWhitelist.bExclusiveResell)
+					if(serializedOffer.vchLinkAlias.empty() && theOffer.linkWhitelist.bExclusiveResell)
 					{
 						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 100 - Cannot pay for this linked offer because you don't own an alias from its affiliate list. Root offer is set to exclusive mode";
 						return true;
