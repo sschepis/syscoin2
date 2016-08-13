@@ -881,16 +881,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 45 - Offer price must be greater than 0";
 				return error(errorMessage.c_str());
 			}
-			if(theOffer.sCategory.size() < 1)
-			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 46 - Offer category cannot be empty";
-				return error(errorMessage.c_str());
-			}
-			if(theOffer.sTitle.size() < 1)
-			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 47 - Offer title cannot be empty";
-				return error(errorMessage.c_str());
-			}
 			if(theOffer.bOnlyAcceptBTC && !theOffer.vchCert.empty())
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 48 - Cannot sell a certificate accepting only Bitcoins";
