@@ -528,7 +528,7 @@ CScript RemoveOfferScriptPrefix(const CScript& scriptIn) {
 	return CScript(pc, scriptIn.end());
 }
 
-bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, string &errorMessage, const CBlock* block) {
+bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, string &errorMessage, const CBlock* block, bool dontaddtodb) {
 		
 	if(!IsSys21Fork(nHeight))
 		return true;
@@ -1191,7 +1191,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 							linkOffer.PutToOfferList(myVtxPos);
 							// write parent offer
 					
-							if (!pofferdb->WriteOffer(theOffer.vchLinkOffer, myVtxPos))
+							if (!dontaddtodb && !pofferdb->WriteOffer(theOffer.vchLinkOffer, myVtxPos))
 							{
 								errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 80 - Failed to write to offer link to DB";
 								return error(errorMessage.c_str());
@@ -1567,7 +1567,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						linkOffer.PutToOfferList(myVtxPos);
 						// write offer
 					
-						if (!pofferdb->WriteOffer(theOffer.offerLinks[i], myVtxPos))
+						if (!dontaddtodb && !pofferdb->WriteOffer(theOffer.offerLinks[i], myVtxPos))
 						{
 							errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 114 - Failed to write to offer link to DB";		
 							return error(errorMessage.c_str());		
@@ -1582,7 +1582,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		theOffer.PutToOfferList(vtxPos);
 		// write offer
 	
-		if (!pofferdb->WriteOffer(vvchArgs[0], vtxPos))
+		if (!dontaddtodb && !pofferdb->WriteOffer(vvchArgs[0], vtxPos))
 		{
 			errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 115 - Failed to write to offer DB";		
 			return error(errorMessage.c_str());
@@ -1603,7 +1603,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						linkOffer.PutToOfferList(myVtxPos);
 						// write offer
 					
-						if (!pofferdb->WriteOffer(theOffer.offerLinks[i], myVtxPos))
+						if (!dontaddtodb && !pofferdb->WriteOffer(theOffer.offerLinks[i], myVtxPos))
 						{
 							errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 116 - Failed to write to offer link to DB";		
 							return error(errorMessage.c_str());
@@ -1613,7 +1613,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			}
  			
 			// if its my offer and its linked and its not a special feedback output for the buyer
-			if (pwalletMain && !theOffer.vchLinkOffer.empty() && IsSyscoinTxMine(tx, "offer"))
+			if (!dontaddtodb && pwalletMain && !theOffer.vchLinkOffer.empty() && IsSyscoinTxMine(tx, "offer"))
 			{	
 				// theOffer.vchLinkOffer is the linked offer guid
 				// theOffer is this reseller offer used to get pubkey to send to offeraccept as first parameter
@@ -1627,7 +1627,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			// only if we are the root offer owner do we even consider xfering a cert					
  			// purchased a cert so xfer it
 			// also can't auto xfer offer paid in btc, need to do manually
- 			if(pwalletMain && theOfferAccept.txBTCId.IsNull() && IsSyscoinTxMine(tx, "offer") && !theOffer.vchCert.empty() && theOffer.vchLinkOffer.empty())
+ 			if(!dontaddtodb && pwalletMain && theOfferAccept.txBTCId.IsNull() && IsSyscoinTxMine(tx, "offer") && !theOffer.vchCert.empty() && theOffer.vchLinkOffer.empty())
  			{
  				string strError = makeTransferCertTX(theOffer, theOfferAccept);
  				if(strError != "")
