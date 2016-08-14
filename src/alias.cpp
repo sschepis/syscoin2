@@ -139,7 +139,7 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 		{
 			uint64_t nLastHeight =  vtxPos.back().nHeight;
 			// if alises of offer is not expired then don't prune the offer yet
-			sellerAddress = CSyscoinAddress(stringFromVch(vtxPos.back().vchAlias));
+			CSyscoinAddress sellerAddress = CSyscoinAddress(stringFromVch(vtxPos.back().vchAlias));
 			if(sellerAddress.IsValid() && sellerAddress.isAlias && sellerAddress.nExpireHeight >=  chainActive.Tip()->nHeight)
 				nLastHeight = chainActive.Tip()->nHeight;
 			nHeight = nLastHeight + GetOfferExpirationDepth();
