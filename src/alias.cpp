@@ -175,17 +175,17 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 			if(vtxPos.back().op != OP_ESCROW_COMPLETE)
 				nLastHeight = chainActive.Tip()->nHeight;
 			// if alises of escrow are not expired then don't prune the escrow yet
-			buyerAddress = CSyscoinAddress(stringFromVch(vtxPos.back().vchBuyerAlias));
+			CSyscoinAddress buyerAddress = CSyscoinAddress(stringFromVch(vtxPos.back().vchBuyerAlias));
 			if(buyerAddress.IsValid() && buyerAddress.isAlias && buyerAddress.nExpireHeight >=  chainActive.Tip()->nHeight)
 				nLastHeight = chainActive.Tip()->nHeight;
 			else
 			{
-				sellerAddress = CSyscoinAddress(stringFromVch(vtxPos.back().vchSellerAlias));
+				CSyscoinAddress sellerAddress = CSyscoinAddress(stringFromVch(vtxPos.back().vchSellerAlias));
 				if(sellerAddress.IsValid() && sellerAddress.isAlias && sellerAddress.nExpireHeight >=  chainActive.Tip()->nHeight)
 					nLastHeight = chainActive.Tip()->nHeight;
 				else
 				{
-					arbiterAddress = CSyscoinAddress(stringFromVch(vtxPos.back().vchArbiterAlias));
+					CSyscoinAddress arbiterAddress = CSyscoinAddress(stringFromVch(vtxPos.back().vchArbiterAlias));
 					if(arbiterAddress.IsValid() && arbiterAddress.isAlias  && arbiterAddress.nExpireHeight >=  chainActive.Tip()->nHeight)
 						nLastHeight = chainActive.Tip()->nHeight;
 				}
