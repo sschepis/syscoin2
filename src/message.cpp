@@ -63,8 +63,7 @@ bool CMessage::UnserializeFromData(const vector<unsigned char> &vchData) {
         return false;
     }
 	// extra check to ensure data was parsed correctly
-	if(!IsSysCompressedOrUncompressedPubKey(vchPubKeyTo)
-		|| !IsSysCompressedOrUncompressedPubKey(vchPubKeyFrom))
+	if(!IsValidAliasName(vchAliasTo) || !IsValidAliasName(vchAliasFrom))
 	{
 		SetNull();
 		return false;
@@ -320,11 +319,11 @@ bool CheckMessageInputs(const CTransaction &tx, int op, int nOut, const vector<v
 	{
 		if (vvchArgs[0].size() > MAX_GUID_LENGTH)
 			return error("CheckMessageInputs(): message tx GUID too big");
-		if(!IsSysCompressedOrUncompressedPubKey(theMessage.vchPubKeyTo))
+		if(!IsSysCompressedOrUncompressedPubKey(theMessage.vchAliasTo))
 		{
 			return error("CheckMessageInputs(): message public key to, invalid length");
 		}
-		if(!IsSysCompressedOrUncompressedPubKey(theMessage.vchPubKeyFrom))
+		if(!IsSysCompressedOrUncompressedPubKey(theMessage.vchAliasFrom))
 		{
 			return error("CheckMessageInputs(): message public key from, invalid length");
 		}
@@ -347,13 +346,12 @@ bool CheckMessageInputs(const CTransaction &tx, int op, int nOut, const vector<v
 		if(op == OP_MESSAGE_ACTIVATE)
 		{
 			if(!IsAliasOp(prevAliasOp))
-				return error("CheckMessageInputs(): alias not provided as input");		
-			if(!GetTxOfAlias(vvchPrevAliasArgs[0], alias, aliastx, true))
-				return error("CheckMessageInputs(): failed to read alias from alias DB");
-			if(alias.vchPubKey != theMessage.vchPubKeyFrom)
-				return error("CheckMessageInputs() OP_MESSAGE_ACTIVATE: alias and message from pubkey's must match");	
+				return error("CheckMessageInputs(): alias not provided as input");	
+			if (theMessage.vchAliasFrom != vvchPrevAliasArgs[0])
+				return error("CheckMessageInputs(): OP_MESSAGE_ACTIVATE from guid mismatch");
 			if (theMessage.vchMessage != vvchArgs[0])
 				return error("CheckMessageInputs(): OP_MESSAGE_ACTIVATE guid mismatch");	
+
 		}
 		else
 			return error( "CheckMessageInputs() : message transaction has unknown op");
@@ -363,19 +361,20 @@ bool CheckMessageInputs(const CTransaction &tx, int op, int nOut, const vector<v
 
 
     if (!fJustCheck ) {
-		if((retError = CheckForAliasExpiry(theMessage.vchPubKeyTo, nHeight)) != "")
+		if(!GetTxOfAlias(theMessage.vchAliasTo, alias, aliasTx))
 		{
-			retError = string("CheckMessageInputs(): ") + retError;
+			retError = string("CheckMessageInputs(): ");
 			if(fDebug)
 				LogPrintf(retError.c_str());
 			return true;
 		}
-		if((retError = CheckForAliasExpiry(theMessage.vchPubKeyFrom, nHeight)) != "")
+		if(!GetTxOfAlias(theMessage.vchAliasFrom, alias, aliasTx))
 		{
-			retError = string("CheckMessageInputs(): ") + retError;
+			retError = string("CheckMessageInputs(): ");
 			if(fDebug)
 				LogPrintf(retError.c_str());
-			return true;		}
+			return true;		
+		}
 
 		vector<CMessage> vtxPos;
 		if (pmessagedb->ExistsMessage(vvchArgs[0])) {
@@ -423,21 +422,12 @@ UniValue messagenew(const UniValue& params, bool fHelp) {
 	boost::algorithm::to_lower(strFromAddress);
 	string strToAddress = params[3].get_str();
 	boost::algorithm::to_lower(strToAddress);
-	std::vector<unsigned char> vchFromPubKey;
-	std::vector<unsigned char> vchToPubKey;
-	CSyscoinAddress fromAddress, toAddress;
+
 	EnsureWalletIsUnlocked();
 
-
-	fromAddress = CSyscoinAddress(strFromAddress);
-	if (!fromAddress.IsValid())
-		throw runtime_error("Invalid syscoin address");
-	if (!fromAddress.isAlias)
-		throw runtime_error("Invalid alias");
-
-	CAliasIndex alias;
+	CAliasIndex aliasFrom, aliasTo;
 	CTransaction aliastx;
-	if (!GetTxOfAlias(vchFromString(strFromAddress), alias, aliastx))
+	if (!GetTxOfAlias(vchFromString(strFromAddress), aliasFrom, aliastx))
 		throw runtime_error("could not find an alias with this name");
 	// check for existing pending alias updates
 	if (ExistsInMempool(vchFromString(strFromAddress), OP_ALIAS_UPDATE)) {
@@ -449,37 +439,25 @@ UniValue messagenew(const UniValue& params, bool fHelp) {
 	const CWalletTx *wtxAliasIn = pwalletMain->GetWalletTx(aliastx.GetHash());
 	if (wtxAliasIn == NULL)
 		throw runtime_error("this alias is not in your wallet");
-	vchFromPubKey = alias.vchPubKey;
 	CScript scriptPubKeyOrig, scriptPubKeyAliasOrig, scriptPubKey, scriptPubKeyAlias;
 
-	CPubKey FromPubKey = CPubKey(vchFromPubKey);
+	CPubKey FromPubKey = CPubKey(aliasFrom.vchPubKey);
 	if(!FromPubKey.IsValid())
 	{
 		throw runtime_error("Invalid sending public key");
 	}
 	scriptPubKeyAliasOrig = GetScriptForDestination(FromPubKey.GetID());
-	scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << vchFromString(strFromAddress) <<  alias.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
+	scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << aliasFrom.vchAlias <<  aliasFrom.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
 	scriptPubKeyAlias += scriptPubKeyAliasOrig;		
 
 
-	toAddress = CSyscoinAddress(strToAddress);
-	if (!toAddress.IsValid())
-		throw runtime_error("Invalid syscoin address");
-	if (!toAddress.isAlias)
-		throw runtime_error("Invalid alias");
-	if(!GetTxOfAlias(vchFromString(toAddress.aliasName), alias, aliastx))
+	if(!GetTxOfAlias(vchFromString(strToAddress), alias, aliastx))
 		return error("failed to read to alias from alias DB");
-	vchToPubKey = alias.vchPubKey;
-	CPubKey ToPubKey = CPubKey(vchToPubKey);
+	CPubKey ToPubKey = CPubKey(aliasTo.vchPubKey);
 	if(!ToPubKey.IsValid())
 	{
 		throw runtime_error("Invalid recv public key");
 	}
-	
-
-	if (!IsMine(*pwalletMain, fromAddress.Get()))
-		throw runtime_error("fromalias must be yours");
-
 
     // gather inputs
 	int64_t rand = GetRand(std::numeric_limits<int64_t>::max());
@@ -492,12 +470,12 @@ UniValue messagenew(const UniValue& params, bool fHelp) {
 
 
 	string strCipherTextTo;
-	if(!EncryptMessage(vchToPubKey, vchMyMessage, strCipherTextTo))
+	if(!EncryptMessage(aliasTo.vchPubKey, vchMyMessage, strCipherTextTo))
 	{
 		throw runtime_error("Could not encrypt message data for receiver!");
 	}
 	string strCipherTextFrom;
-	if(!EncryptMessage(vchFromPubKey, vchMyMessage, strCipherTextFrom))
+	if(!EncryptMessage(aliasFrom.vchPubKey, vchMyMessage, strCipherTextFrom))
 	{
 		throw runtime_error("Could not encrypt message data for sender!");
 	}
@@ -513,8 +491,8 @@ UniValue messagenew(const UniValue& params, bool fHelp) {
 	newMessage.vchMessageFrom = vchFromString(strCipherTextFrom);
 	newMessage.vchMessageTo = vchFromString(strCipherTextTo);
 	newMessage.vchSubject = vchMySubject;
-	newMessage.vchPubKeyFrom = vchFromPubKey;
-	newMessage.vchPubKeyTo = vchToPubKey;
+	newMessage.vchAliasFrom = aliasFrom.vchAlias;
+	newMessage.vchAliasTo = aliasTo.vchAlias;
 	newMessage.nHeight = chainActive.Tip()->nHeight;
 
 	const vector<unsigned char> &data = newMessage.Serialize();
@@ -578,28 +556,19 @@ UniValue messageinfo(const UniValue& params, bool fHelp) {
 	if (pindex) {
 		sTime = strprintf("%llu", pindex->nTime);
 	}
-	CPubKey FromPubKey(ca.vchPubKeyFrom);
-	CSyscoinAddress fromaddress(FromPubKey.GetID());
-	fromaddress = CSyscoinAddress(fromaddress.ToString());
+	CAliasIndex aliasFrom, aliasTo;
+	CTransaction aliastx;
+	GetTxOfAlias(ca.vchAliasFrom, aliasFrom, aliastx);
+	GetTxOfAlias(ca.vchAliasTo, aliasTo, aliastx);
 	oMessage.push_back(Pair("time", sTime));
-	if(fromaddress.isAlias)
-		oMessage.push_back(Pair("from", fromaddress.aliasName));
-	else
-		oMessage.push_back(Pair("from", fromaddress.ToString()));
-
-	CPubKey ToPubKey(ca.vchPubKeyTo);
-	CSyscoinAddress toaddress(ToPubKey.GetID());
-	toaddress = CSyscoinAddress(toaddress.ToString());
-	if(toaddress.isAlias)
-		oMessage.push_back(Pair("to", toaddress.aliasName));
-	else
-		oMessage.push_back(Pair("to", toaddress.ToString()));
+	oMessage.push_back(Pair("from", ca.vchAliasFrom));
+	oMessage.push_back(Pair("to", ca.vchAliasTo));
 
 	oMessage.push_back(Pair("subject", stringFromVch(ca.vchSubject)));
 	string strDecrypted = "";
-	if(DecryptMessage(ca.vchPubKeyTo, ca.vchMessageTo, strDecrypted))
+	if(DecryptMessage(aliasTo.vchPubKey, ca.vchMessageTo, strDecrypted))
 		oMessage.push_back(Pair("message", strDecrypted));
-	else if(DecryptMessage(ca.vchPubKeyFrom, ca.vchMessageFrom, strDecrypted))
+	else if(DecryptMessage(aliasFrom.vchPubKey, ca.vchMessageFrom, strDecrypted))
 		oMessage.push_back(Pair("message", strDecrypted));
 	else
 		oMessage.push_back(Pair("message", stringFromVch(ca.vchMessageTo)));
@@ -614,10 +583,10 @@ UniValue messagelist(const UniValue& params, bool fHelp) {
     if (fHelp || 1 < params.size())
         throw runtime_error("messagelist [<message>]\n"
                 "list my own messages");
-	vector<unsigned char> vchName;
+	vector<unsigned char> vchMessage;
 
 	if (params.size() == 1)
-		vchName = vchFromValue(params[0]);
+		vchMessage = vchFromValue(params[0]);
 
     UniValue oRes(UniValue::VARR);
     uint256 hash;
@@ -638,11 +607,11 @@ UniValue messagelist(const UniValue& params, bool fHelp) {
 		int op, nOut;
 		if (!DecodeMessageTx(wtx, op, nOut, vvch) || !IsMessageOp(op))
 			continue;
-		vchName = vvch[0];
+		vchMessage = vvch[0];
 		vector<CMessage> vtxPos;
 		CMessage message;
 		int pending = 0;
-		if (!pmessagedb->ReadMessage(vchName, vtxPos) || vtxPos.empty())
+		if (!pmessagedb->ReadMessage(vchMessage, vtxPos) || vtxPos.empty())
 		{
 			pending = 1;
 		}
@@ -652,7 +621,7 @@ UniValue messagelist(const UniValue& params, bool fHelp) {
 
         // build the output
         UniValue oName(UniValue::VOBJ);
-        oName.push_back(Pair("GUID", stringFromVch(vchName)));
+        oName.push_back(Pair("GUID", stringFromVch(vchMessage)));
 
 		string sTime;
 		CBlockIndex *pindex = chainActive[message.nHeight];
@@ -661,30 +630,19 @@ UniValue messagelist(const UniValue& params, bool fHelp) {
 		}
         string strAddress = "";
 		oName.push_back(Pair("time", sTime));
-
-		CPubKey FromPubKey(message.vchPubKeyFrom);
-		CSyscoinAddress fromaddress(FromPubKey.GetID());
-		fromaddress = CSyscoinAddress(fromaddress.ToString());
-		if(fromaddress.isAlias)
-			oName.push_back(Pair("from", fromaddress.aliasName));
-		else
-			oName.push_back(Pair("from", fromaddress.ToString()));
-
-		CPubKey ToPubKey(message.vchPubKeyTo);
-		CSyscoinAddress toaddress(ToPubKey.GetID());
-		toaddress = CSyscoinAddress(toaddress.ToString());
-		if(toaddress.isAlias)
-			oName.push_back(Pair("to", toaddress.aliasName));
-		else
-			oName.push_back(Pair("to", toaddress.ToString()));
-
+		CAliasIndex aliasFrom, aliasTo;
+		CTransaction aliastx;
+		GetTxOfAlias(message.vchAliasFrom, aliasFrom, aliastx);
+		GetTxOfAlias(message.vchAliasTo, aliasTo, aliastx);
+		oName.push_back(Pair("from", message.vchAliasFrom));
+		oName.push_back(Pair("to", message.vchAliasTo));
 
 		oName.push_back(Pair("subject", stringFromVch(message.vchSubject)));
 		string strDecrypted = "";
 		string strData = string("Encrypted for owner of message");
-		if(DecryptMessage(message.vchPubKeyTo, message.vchMessageTo, strDecrypted))
+		if(DecryptMessage(aliasTo.vchPubKey, message.vchMessageTo, strDecrypted))
 			strData = strDecrypted;
-		else if(DecryptMessage(message.vchPubKeyFrom, message.vchMessageFrom, strDecrypted))
+		else if(DecryptMessage(aliasFrom.vchPubKey, message.vchMessageFrom, strDecrypted))
 			strData = strDecrypted;
 		oName.push_back(Pair("message", strData));
 		oRes.push_back(oName);
@@ -698,10 +656,10 @@ UniValue messagesentlist(const UniValue& params, bool fHelp) {
     if (fHelp || 1 < params.size())
         throw runtime_error("messagesentlist [<message>]\n"
                 "list my sent messages");
-	vector<unsigned char> vchName;
+	vector<unsigned char> vchMessage;
 
 	if (params.size() == 1)
-		vchName = vchFromValue(params[0]);
+		vchMessage = vchFromValue(params[0]);
 
     UniValue oRes(UniValue::VARR);
     uint256 hash;
@@ -720,12 +678,12 @@ UniValue messagesentlist(const UniValue& params, bool fHelp) {
 		int op, nOut;
 		if (!DecodeMessageTx(wtx, op, nOut, vvch) || !IsMessageOp(op))
 			continue;
-		vchName = vvch[0];
+		vchMessage = vvch[0];
 
 		vector<CMessage> vtxPos;
 		CMessage message;
 		int pending = 0;
-		if (!pmessagedb->ReadMessage(vchName, vtxPos) || vtxPos.empty())
+		if (!pmessagedb->ReadMessage(vchMessage, vtxPos) || vtxPos.empty())
 		{
 			pending = 1;
 			message = CMessage(wtx);
@@ -752,7 +710,7 @@ UniValue messagesentlist(const UniValue& params, bool fHelp) {
 		}
         // build the output
         UniValue oName(UniValue::VOBJ);
-        oName.push_back(Pair("GUID", stringFromVch(vchName)));
+        oName.push_back(Pair("GUID", stringFromVch(vchMessage)));
 
 		string sTime;
 		CBlockIndex *pindex = chainActive[message.nHeight];
@@ -761,28 +719,19 @@ UniValue messagesentlist(const UniValue& params, bool fHelp) {
 		}
         string strAddress = "";
 		oName.push_back(Pair("time", sTime));
-		CPubKey FromPubKey(message.vchPubKeyFrom);
-		CSyscoinAddress fromaddress(FromPubKey.GetID());
-		fromaddress = CSyscoinAddress(fromaddress.ToString());
-		if(fromaddress.isAlias)
-			oName.push_back(Pair("from", fromaddress.aliasName));
-		else
-			oName.push_back(Pair("from", fromaddress.ToString()));
-
-		CPubKey ToPubKey(message.vchPubKeyTo);
-		CSyscoinAddress toaddress(ToPubKey.GetID());
-		toaddress = CSyscoinAddress(toaddress.ToString());
-		if(toaddress.isAlias)
-			oName.push_back(Pair("to", toaddress.aliasName));
-		else
-			oName.push_back(Pair("to", toaddress.ToString()));
+		CAliasIndex aliasFrom, aliasTo;
+		CTransaction aliastx;
+		GetTxOfAlias(message.vchAliasFrom, aliasFrom, aliastx);
+		GetTxOfAlias(message.vchAliasTo, aliasTo, aliastx);
+		oName.push_back(Pair("from", message.vchAliasFrom));
+		oName.push_back(Pair("to", message.vchAliasTo));
 
 		oName.push_back(Pair("subject", stringFromVch(message.vchSubject)));
 		string strDecrypted = "";
 		string strData = string("Encrypted for owner of message");
-		if(DecryptMessage(message.vchPubKeyTo, message.vchMessageTo, strDecrypted))
+		if(DecryptMessage(aliasTo.vchPubKey, message.vchMessageTo, strDecrypted))
 			strData = strDecrypted;
-		else if(DecryptMessage(message.vchPubKeyFrom, message.vchMessageFrom, strDecrypted))
+		else if(DecryptMessage(aliasFrom.vchPubKey, message.vchMessageFrom, strDecrypted))
 			strData = strDecrypted;
 		oName.push_back(Pair("message", strData));
 		oRes.push_back(oName);
@@ -834,28 +783,20 @@ UniValue messagehistory(const UniValue& params, bool fHelp) {
 			}
 			oMessage.push_back(Pair("time", sTime));
 
-			CPubKey FromPubKey(txPos2.vchPubKeyFrom);
-			CSyscoinAddress fromaddress(FromPubKey.GetID());
-			fromaddress = CSyscoinAddress(fromaddress.ToString());
-			if(fromaddress.isAlias)
-				oMessage.push_back(Pair("from", fromaddress.aliasName));
-			else
-				oMessage.push_back(Pair("from", fromaddress.ToString()));
+			CAliasIndex aliasFrom, aliasTo;
+			CTransaction aliastx;
+			GetTxOfAlias(txPos2.vchAliasFrom, aliasFrom, aliastx);
+			GetTxOfAlias(txPos2.vchAliasTo, aliasTo, aliastx);
+			oMessage.push_back(Pair("from", txPos2.vchAliasFrom));
+			oMessage.push_back(Pair("to", txPos2.vchAliasTo));
 
-			CPubKey ToPubKey(txPos2.vchPubKeyTo);
-			CSyscoinAddress toaddress(ToPubKey.GetID());
-			toaddress = CSyscoinAddress(toaddress.ToString());
-			if(toaddress.isAlias)
-				oMessage.push_back(Pair("to", toaddress.aliasName));
-			else
-				oMessage.push_back(Pair("to", toaddress.ToString()));
 
 			oMessage.push_back(Pair("subject", stringFromVch(txPos2.vchSubject)));
 			string strDecrypted = "";
 			string strData = string("Encrypted for owner of message");
-			if(DecryptMessage(txPos2.vchPubKeyTo, txPos2.vchMessageTo, strDecrypted))
+			if(DecryptMessage(aliasTo.vchPubKey, txPos2.vchMessageTo, strDecrypted))
 				strData = strDecrypted;
-			else if(DecryptMessage(txPos2.vchPubKeyFrom, txPos2.vchMessageFrom, strDecrypted))
+			else if(DecryptMessage(aliasFrom.vchPubKey, txPos2.vchMessageFrom, strDecrypted))
 				strData = strDecrypted;
 
 			oMessage.push_back(Pair("message", strData));

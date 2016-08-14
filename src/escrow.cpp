@@ -81,7 +81,7 @@ bool CEscrow::UnserializeFromData(const vector<unsigned char> &vchData) {
         return false;
     }
 	// extra check to ensure data was parsed correctly
-	if(!IsSysCompressedOrUncompressedPubKey(vchBuyerKey))
+	if(!IsValidAliasName(vchBuyerAlias) || !IsValidAliasName(vchSellerAlias) || !IsValidAliasName(vchArbiterAlias))
 	{
 		SetNull();
 		return false;
@@ -135,20 +135,10 @@ bool CEscrowDB::ScanEscrows(const std::vector<unsigned char>& vchEscrow, const s
 				}   
 				const string &escrow = stringFromVch(vchEscrow);
 				const string &offerstr = stringFromVch(txPos.vchOffer);
-				CPubKey SellerPubKey(txPos.vchSellerKey);
-				CSyscoinAddress selleraddy(SellerPubKey.GetID());
-				selleraddy = CSyscoinAddress(selleraddy.ToString());
 
-				CPubKey ArbiterPubKey(txPos.vchArbiterKey);
-				CSyscoinAddress arbiteraddy(ArbiterPubKey.GetID());
-				arbiteraddy = CSyscoinAddress(arbiteraddy.ToString());
-
-				CPubKey BuyerPubKey(txPos.vchBuyerKey);
-				CSyscoinAddress buyeraddy(BuyerPubKey.GetID());
-				buyeraddy = CSyscoinAddress(buyeraddy.ToString());
-				string buyerAliasLower = buyeraddy.aliasName;
-				string sellerAliasLower = selleraddy.aliasName;
-				string arbiterAliasLower = arbiteraddy.aliasName;
+				string buyerAliasLower = stringFromVch(txPos.vchBuyerAlias);
+				string sellerAliasLower = stringFromVch(txPos.vchSellerAlias);
+				string arbiterAliasLower = astringFromVch(txPos.vchArbiterAlias);
 
 				if (strRegexp != "" && strRegexp != offerstr && strRegexp != escrow && strSearchLower != buyerAliasLower && strSearchLower != sellerAliasLower && strSearchLower != arbiterAliasLower)
 				{
@@ -395,6 +385,8 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 	}
 
 	vector<COffer> myVtxPos;
+	CAliasIndex alias;
+	CTransaction aliasTx;
     COffer theOffer;
 	string retError = "";
 	// null usually when pruned or when accept is done (in which case we skip this return and continue on so future feedbacks can be done)
@@ -411,18 +403,6 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 	{
 		if (vvchArgs[0].size() > MAX_GUID_LENGTH)
 			return error("CheckEscrowInputs(): escrow tx GUID too big");
-		if(!theEscrow.vchBuyerKey.empty() && !IsSysCompressedOrUncompressedPubKey(theEscrow.vchBuyerKey))
-		{
-			return error("CheckEscrowInputs(): escrow buyer pub key invalid length");
-		}
-		if(!theEscrow.vchSellerKey.empty() && !IsSysCompressedOrUncompressedPubKey(theEscrow.vchSellerKey))
-		{
-			return error("CheckEscrowInputs(): escrow seller pub key invalid length");
-		}
-		if(!theEscrow.vchArbiterKey.empty() && !IsSysCompressedOrUncompressedPubKey(theEscrow.vchArbiterKey))
-		{
-			return error("CheckEscrowInputs(): escrow arbiter pub key invalid length");
-		}
 		if(theEscrow.vchRedeemScript.size() > MAX_SCRIPT_ELEMENT_SIZE)
 		{
 			return error("CheckEscrowInputs(): escrow redeem script too long");
@@ -558,23 +538,23 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
     if (!fJustCheck ) {
 		if(op == OP_ESCROW_ACTIVATE) 
 		{
-			if((retError = CheckForAliasExpiry(theEscrow.vchBuyerKey, nHeight)) != "")
+			if(!GetTxOfAlias(theEscrow.vchBuyerAlias, alias, aliasTx))
 			{
-				retError = string("CheckEscrowInputs(): ") + retError;
+				retError = string("CheckEscrowInputs()");
 				if(fDebug)
 					LogPrintf(retError.c_str());
 				return true;
 			}
-			if((retError = CheckForAliasExpiry(theEscrow.vchSellerKey, nHeight)) != "")
+			if(!GetTxOfAlias(theEscrow.vchSellerAlias, alias, aliasTx))
 			{
 				retError = string("CheckEscrowInputs(): ") + retError;
 				if(fDebug)
 					LogPrintf(retError.c_str());
 				return true;
 			}	
-			if((retError = CheckForAliasExpiry(theEscrow.vchArbiterKey, nHeight)) != "")
+			if(!GetTxOfAlias(theEscrow.vchArbiterAlias, alias, aliasTx))
 			{
-				retError = string("CheckEscrowInputs(): ") + retError;
+				retError = string("CheckEscrowInputs(): ");
 				if(fDebug)
 					LogPrintf(retError.c_str());
 				return true;
@@ -802,9 +782,7 @@ void HandleEscrowFeedback(const CEscrow& escrow)
 {
 	if(escrow.buyerFeedback.nRating > 0)
 	{
-		CPubKey key(escrow.vchBuyerKey);
-		CSyscoinAddress address(key.GetID());
-		address = CSyscoinAddress(address.ToString());
+		CSyscoinAddress address = CSyscoinAddress(stringFromVch(escrow.vchBuyerAlias));
 		if(address.IsValid() && address.isAlias)
 		{
 			vector<CAliasIndex> vtxPos;
@@ -823,9 +801,7 @@ void HandleEscrowFeedback(const CEscrow& escrow)
 	}
 	if(escrow.sellerFeedback.nRating > 0)
 	{
-		CPubKey key(escrow.vchSellerKey);
-		CSyscoinAddress address(key.GetID());
-		address = CSyscoinAddress(address.ToString());
+		CSyscoinAddress address = CSyscoinAddress(stringFromVch(escrow.vchSellerAlias));
 		if(address.IsValid() && address.isAlias)
 		{
 			vector<CAliasIndex> vtxPos;
@@ -842,9 +818,7 @@ void HandleEscrowFeedback(const CEscrow& escrow)
 	}
 	if(escrow.arbiterFeedback.nRating > 0)
 	{
-		CPubKey key(escrow.vchArbiterKey);
-		CSyscoinAddress address(key.GetID());
-		address = CSyscoinAddress(address.ToString());
+		CSyscoinAddress address = CSyscoinAddress(stringFromVch(escrow.vchArbiterAlias));
 		if(address.IsValid() && address.isAlias)
 		{
 			vector<CAliasIndex> vtxPos;
@@ -1007,13 +981,15 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 		throw runtime_error("this alias is not in your wallet");
 
 	COffer theOffer, linkedOffer;
-	CTransaction txOffer;
+	
+	CTransaction txOffer, txAlias;
 	vector<unsigned char> vchSellerPubKey;
 	if (!GetTxOfOffer( vchOffer, theOffer, txOffer, true))
 		throw runtime_error("could not find an offer with this identifier");
-	string retError;
-	if((retError = CheckForAliasExpiry(theOffer.vchPubKey, chainActive.Tip()->nHeight)) != "")
-		throw runtime_error(retError);
+	CAliasIndex theAlias;
+	CTransaction txAlias;
+	if (!GetTxOfAlias( theOffer.vchAlias, theAlias, txAlias, true))
+		throw runtime_error("could not find an alias with this identifier");
 
 	unsigned int memPoolQty = QtyOfPendingAcceptsInMempool(vchOffer);
 	if(theOffer.nQty != -1 && theOffer.nQty < (nQty+memPoolQty))
@@ -1022,7 +998,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	if(theOffer.sCategory.size() > 0 && boost::algorithm::ends_with(stringFromVch(theOffer.sCategory), "wanted"))
 		throw runtime_error("Cannot purchase a wanted offer");
 
-	vchSellerPubKey = theOffer.vchPubKey;
+	vchSellerPubKey = theAlias.vchPubKey;
 	const CWalletTx *wtxAliasIn = NULL;
 
 	CScript scriptPubKeyAlias, scriptPubKeyAliasOrig;
@@ -1033,9 +1009,13 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 		CTransaction tmpTx;
 		if (!GetTxOfOffer( theOffer.vchLinkOffer, linkedOffer, tmpTx, true))
 			throw runtime_error("Trying to accept a linked offer but could not find parent offer");
+		CAliasIndex theLinkedAlias;
+		CTransaction txLinkedAlias;
+		if (!GetTxOfAlias( linkedOffer.vchAlias, theLinkedAlias, txLinkedAlias, true))
+			throw runtime_error("could not find an alias with this identifier");
 		if (linkedOffer.bOnlyAcceptBTC)
 			throw runtime_error("Linked offer only accepts Bitcoins, linked offers currently only work with Syscoin payments");
-		vchSellerPubKey = linkedOffer.vchPubKey;
+		vchSellerPubKey = theLinkedAlias.vchPubKey;
 		
 		// if offer is not linked, look for a discount for the buyer
 		CAliasIndex theAlias;
@@ -1162,11 +1142,11 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
     CEscrow newEscrow;
 	newEscrow.op = OP_ESCROW_ACTIVATE;
 	newEscrow.vchEscrow = vchEscrow;
-	newEscrow.vchBuyerKey = buyeralias.vchPubKey;
-	newEscrow.vchArbiterKey = arbiteralias.vchPubKey;
+	newEscrow.vchBuyerAlias = buyeralias.vchAlias;
+	newEscrow.vchArbiterAlias = arbiteralias.vchAlias;
 	newEscrow.vchRedeemScript = redeemScript;
 	newEscrow.vchOffer = vchOffer;
-	newEscrow.vchSellerKey = vchSellerPubKey;
+	newEscrow.vchSellerAlias = selleralias.vchAlias;
 	newEscrow.vchPaymentMessage = vchFromString(strCipherText);
 	newEscrow.nQty = nQty;
 	newEscrow.escrowInputTxHash = escrowWtx.GetHash();
@@ -1237,7 +1217,7 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
     CTransaction tx;
 	CEscrow escrow;
     if (!GetTxOfEscrow( vchEscrow, 
-		escrow, tx))
+		escrow, tx, true))
         throw runtime_error("could not find a escrow with this key");
     vector<vector<unsigned char> > vvch;
     int op, nOut;
@@ -1259,25 +1239,24 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	if (!GetSyscoinTransaction(vtxPos.front().nHeight, escrow.escrowInputTxHash, fundingTx, Params().GetConsensus()))
 		throw runtime_error("failed to find escrow transaction");
 
-
-	CPubKey arbiterKey(escrow.vchArbiterKey);
+	CAliasIndex arbiterAlias, buyerAlias, sellerAlias
+	CTransaction aliastx;
+	GetTxOfAlias(escrow.vchArbiterAlias, arbiterAlias, aliastx, true);
+	CPubKey arbiterKey(arbiterAlias.vchPubKey);
 	CSyscoinAddress arbiterAddress(arbiterKey.GetID());
-	if(!arbiterAddress.IsValid())
-		throw runtime_error("Arbiter address is invalid!");
 
-	CPubKey buyerKey(escrow.vchBuyerKey);
+	GetTxOfAlias(escrow.vchBuyerAlias, buyerAlias, aliastx, true);
+	CPubKey buyerKey(buyerAlias.vchPubKey);
 	CSyscoinAddress buyerAddress(buyerKey.GetID());
-	if(!buyerAddress.IsValid())
-		throw runtime_error("Buyer address is invalid!");
-	
-	CPubKey sellerKey(escrow.vchSellerKey);
+
+	GetTxOfAlias(escrow.vchSellerAlias, sellerAlias, aliastx, true);
+	CPubKey sellerKey(sellerAlias.vchPubKey);
 	CSyscoinAddress sellerAddress(sellerKey.GetID());
-	if(!sellerAddress.IsValid())
-		throw runtime_error("Seller address is invalid!");
+
 	bool foundSellerKey = false;
 	try
 	{
-		// if this is the seller calling release, try to claim the release
+		// if this is the seller calling release, try to claim the release	
 		CKeyID keyID;
 		if (!sellerAddress.GetKeyID(keyID))
 			throw runtime_error("Seller address does not refer to a key");
@@ -1480,6 +1459,14 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
     if (!GetTxOfEscrow( vchEscrow, 
 		escrow, tx))
         throw runtime_error("could not find a escrow with this key");
+
+	CAliasIndex sellerAlias
+	if(!GetTxOfAlias(escrow.vchSellerAlias, sellerAlias, aliastx, true))
+		throw runtime_error("Seller address is invalid!");
+	CPubKey sellerKey(sellerAlias.vchPubKey);
+	CSyscoinAddress sellerAddress(sellerKey.GetID());
+
+
 	vector<CEscrow> vtxPos;
 	if (!pescrowdb->ReadEscrow(vchEscrow, vtxPos) || vtxPos.empty())
 		  throw runtime_error("failed to read from escrow DB");
@@ -1520,10 +1507,6 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 	string strEscrowScriptPubKey = HexStr(fundingTx.vout[nOutMultiSig].scriptPubKey.begin(), fundingTx.vout[nOutMultiSig].scriptPubKey.end());
 	if(nAmount != nExpectedAmountWithFee)
 		throw runtime_error("Expected amount of escrow does not match what is held in escrow!");
-	// decode rawTx and check it pays enough and it pays to buyer/seller appropriately
-	// check that right amount is going to be sent to seller
-	bool foundSellerPayment = false;
-	bool foundFeePayment = false;
 	UniValue arrayDecodeParams(UniValue::VARR);
 	arrayDecodeParams.push_back(HexStr(escrow.rawTx));
 	UniValue decodeRes;
@@ -1537,78 +1520,16 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 	}
 	if (!decodeRes.isObject())
 		throw runtime_error("Could not decode escrow transaction: Invalid response from decoderawtransaction!");
-	const UniValue& decodeo = decodeRes.get_obj();
-	const UniValue& vout_value = find_value(decodeo, "vout");
-	if (!vout_value.isArray())
-		throw runtime_error("Could not decode escrow transaction: Can't find vout's from transaction!");	
-	const UniValue &vouts = vout_value.get_array();
-    for (unsigned int idx = 0; idx < vouts.size(); idx++) {
-        const UniValue& vout = vouts[idx];					
-		const UniValue &voutObj = vout.get_obj();					
-		const UniValue &voutValue = find_value(voutObj, "value");
-		if(!voutValue.isNum())
-			throw runtime_error("Could not decode escrow transaction: Invalid vout value!");
-		int64_t iVout = AmountFromValue(voutValue);
-		UniValue scriptPubKeyValue = find_value(voutObj, "scriptPubKey");
-		if(!scriptPubKeyValue.isObject())
-			throw runtime_error("Could not decode escrow transaction: Invalid scriptPubKey UniValue!");
-		const UniValue &scriptPubKeyValueObj = scriptPubKeyValue.get_obj();	
-		const UniValue &addressesValue = find_value(scriptPubKeyValueObj, "addresses");
-		if(!addressesValue.isArray())
-			throw runtime_error("Could not decode escrow transaction: Invalid addresses UniValue!");
-
-		const UniValue &addresses = addressesValue.get_array();
-		for (unsigned int idx = 0; idx < addresses.size(); idx++) {
-			const UniValue& address = addresses[idx];
-			if(!address.isStr())
-				throw runtime_error("Could not decode escrow transaction: Invalid address UniValue!");
-			const string &strAddress = address.get_str();
-			CSyscoinAddress payoutAddress(strAddress);
-			// check arb fee is paid to arbiter or buyer
-			if(!foundFeePayment)
-			{
-				CPubKey arbiterKey(escrow.vchArbiterKey);
-				CSyscoinAddress arbiterAddress(arbiterKey.GetID());
-				if(arbiterAddress == payoutAddress && iVout == nEscrowFee)
-					foundFeePayment = true;
-			}
-			if(!foundFeePayment)
-			{
-				CPubKey buyerKey(escrow.vchBuyerKey);
-				CSyscoinAddress buyerAddress(buyerKey.GetID());
-				if(buyerAddress == payoutAddress && iVout == nEscrowFee)
-					foundFeePayment = true;
-			}	
-			if(IsMine(*pwalletMain, payoutAddress.Get()))
-			{
-				if(!foundSellerPayment)
-				{
-					if(iVout == nExpectedAmount)
-					{
-						foundSellerPayment = true;
-					}
-				}
-			}
-		}
 	}
 
 
 	CKeyID keyID;
-	CPubKey sellerKey(escrow.vchSellerKey);
-	CSyscoinAddress sellerAddress(sellerKey.GetID());
-	if(!sellerAddress.IsValid())
-		throw runtime_error("Seller address is invalid!");
-
 	if (!sellerAddress.GetKeyID(keyID))
 		throw runtime_error("Seller address does not refer to a key");
 	CKey vchSecret;
 	if (!pwalletMain->GetKey(keyID, vchSecret))
 		throw runtime_error("Private key for seller address " + sellerAddress.ToString() + " is not known");
 	const string &strPrivateKey = CSyscoinSecret(vchSecret).ToString();
-	if(!foundSellerPayment)
-		throw runtime_error("Expected payment amount from escrow does not match what was expected by the seller!");	
-	if(!foundFeePayment)    
-		throw runtime_error("Expected fee payment to arbiter or buyer from escrow does not match what was expected!");	
 	// check for existing escrow 's
 	if (ExistsInMempool(vchEscrow, OP_ESCROW_ACTIVATE) || ExistsInMempool(vchEscrow, OP_ESCROW_RELEASE) || ExistsInMempool(vchEscrow, OP_ESCROW_REFUND) || ExistsInMempool(vchEscrow, OP_ESCROW_COMPLETE) ) {
 		throw runtime_error("there are pending operations on that escrow");
@@ -1736,13 +1657,8 @@ UniValue escrowcomplete(const UniValue& params, bool fHelp) {
 			throw runtime_error("there are pending operations on that escrow");
 			}
 	}
-	CPubKey buyerKey(escrow.vchBuyerKey);
-	CSyscoinAddress buyerAddress(buyerKey.GetID());
-	buyerAddress = CSyscoinAddress(buyerAddress.ToString());
-	if(!buyerAddress.IsValid() || !buyerAddress.isAlias )
-		throw runtime_error("Buyer address is invalid!");
 	UniValue acceptParams(UniValue::VARR);
-	acceptParams.push_back(buyerAddress.aliasName);
+	acceptParams.push_back(stringFromVch(escrow.vchBuyerAlias));
 	acceptParams.push_back(stringFromVch(escrow.vchOffer));
 	acceptParams.push_back(static_cast<ostringstream*>( &(ostringstream() << escrow.nQty) )->str());
 	acceptParams.push_back(stringFromVch(escrow.vchPaymentMessage));
@@ -1822,20 +1738,19 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 	if (!GetSyscoinTransaction(vtxPos.front().nHeight, escrow.escrowInputTxHash, fundingTx, Params().GetConsensus()))
 		throw runtime_error("failed to find escrow transaction");
 
-	CPubKey arbiterKey(escrow.vchArbiterKey);
+	CAliasIndex arbiterAlias, buyerAlias, sellerAlias
+	CTransaction aliastx;
+	GetTxOfAlias(escrow.vchArbiterAlias, arbiterAlias, aliastx, true);
+	CPubKey arbiterKey(arbiterAlias.vchPubKey);
 	CSyscoinAddress arbiterAddress(arbiterKey.GetID());
-	if(!arbiterAddress.IsValid())
-		throw runtime_error("Arbiter address is invalid!");
 
-	CPubKey buyerKey(escrow.vchBuyerKey);
+	GetTxOfAlias(escrow.vchBuyerAlias, buyerAlias, aliastx, true);
+	CPubKey buyerKey(buyerAlias.vchPubKey);
 	CSyscoinAddress buyerAddress(buyerKey.GetID());
-	if(!buyerAddress.IsValid())
-		throw runtime_error("Buyer address is invalid!");
-	
-	CPubKey sellerKey(escrow.vchSellerKey);
+
+	GetTxOfAlias(escrow.vchSellerAlias, sellerAlias, aliastx, true);
+	CPubKey sellerKey(sellerAlias.vchPubKey);
 	CSyscoinAddress sellerAddress(sellerKey.GetID());
-	if(!sellerAddress.IsValid())
-		throw runtime_error("Seller address is invalid!");
 	bool foundBuyerKey = false;
 	try
 	{
@@ -2023,6 +1938,21 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
     if (!GetTxOfEscrow( vchEscrow, 
 		escrow, tx))
         throw runtime_error("could not find a escrow with this key");
+
+	CAliasIndex arbiterAlias, buyerAlias, sellerAlias
+	CTransaction aliastx;
+	GetTxOfAlias(escrow.vchArbiterAlias, arbiterAlias, aliastx, true);
+	CPubKey arbiterKey(arbiterAlias.vchPubKey);
+	CSyscoinAddress arbiterAddress(arbiterKey.GetID());
+
+	GetTxOfAlias(escrow.vchBuyerAlias, buyerAlias, aliastx, true);
+	CPubKey buyerKey(buyerAlias.vchPubKey);
+	CSyscoinAddress buyerAddress(buyerKey.GetID());
+
+	GetTxOfAlias(escrow.vchSellerAlias, sellerAlias, aliastx, true);
+	CPubKey sellerKey(sellerAlias.vchPubKey);
+	CSyscoinAddress sellerAddress(sellerKey.GetID());
+
 	CWalletTx wtx;
 	const CWalletTx *wtxIn = pwalletMain->GetWalletTx(tx.GetHash());
 	if (wtxIn == NULL)
@@ -2072,51 +2002,10 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 	}
 	if (!decodeRes.isObject())
 		throw runtime_error("Could not decode escrow transaction: Invalid response from decoderawtransaction!");
-	const UniValue& decodeo = decodeRes.get_obj();
-	const UniValue& vout_value = find_value(decodeo, "vout");
-	if (!vout_value.isArray())
-		throw runtime_error("Could not decode escrow transaction: Can't find vout's from transaction!");	
-	UniValue vouts = vout_value.get_array();
-    for (unsigned int idx = 0; idx < vouts.size(); idx++) {
-        const UniValue& vout = vouts[idx];					
-		const UniValue &voutObj = vout.get_obj();					
-		const UniValue &voutValue = find_value(voutObj, "value");
-		if(!voutValue.isNum())
-			throw runtime_error("Could not decode escrow transaction: Invalid vout value!");
-		int64_t iVout = AmountFromValue(voutValue);
-		UniValue scriptPubKeyValue = find_value(voutObj, "scriptPubKey");
-		if(!scriptPubKeyValue.isObject())
-			throw runtime_error("Could not decode escrow transaction: Invalid scriptPubKey UniValue!");
-		const UniValue &scriptPubKeyValueObj = scriptPubKeyValue.get_obj();	
-		const UniValue &addressesValue = find_value(scriptPubKeyValueObj, "addresses");
-		if(!addressesValue.isArray())
-			throw runtime_error("Could not decode escrow transaction: Invalid addresses UniValue!");
-
-		UniValue addresses = addressesValue.get_array();
-		for (unsigned int idx = 0; idx < addresses.size(); idx++) {
-			const UniValue& address = addresses[idx];
-			if(!address.isStr())
-				throw runtime_error("Could not decode escrow transaction: Invalid address UniValue!");
-			string strAddress = address.get_str();
-			CSyscoinAddress payoutAddress(strAddress);
-			if(IsMine(*pwalletMain, payoutAddress.Get()))
-			{
-				if(!foundBuyerPayment)
-				{
-					if(iVout == (nExpectedAmount+nEscrowFee) || iVout == nExpectedAmount)
-					{
-						foundBuyerPayment = true;
-						break;
-					}
-				}
-			}
-		}
-	}
+	
 
 	// get buyer's private key for signing
 	CKeyID keyID;
-	CPubKey buyerKey(escrow.vchBuyerKey);
-	CSyscoinAddress buyerAddress(buyerKey.GetID());
 	if(!buyerAddress.IsValid())
 		throw runtime_error("Buyer address is invalid!");
 	if (!buyerAddress.GetKeyID(keyID))
@@ -2125,8 +2014,6 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 	if (!pwalletMain->GetKey(keyID, vchSecret))
 		throw runtime_error("Private key for buyer address " + buyerAddress.ToString() + " is not known");
 	string strPrivateKey = CSyscoinSecret(vchSecret).ToString();
-	if(!foundBuyerPayment)
-		throw runtime_error("Expected payment amount from escrow does not match what was expected by the buyer!");
       	// check for existing escrow 's
 	if (ExistsInMempool(vchEscrow, OP_ESCROW_ACTIVATE) || ExistsInMempool(vchEscrow, OP_ESCROW_RELEASE) || ExistsInMempool(vchEscrow, OP_ESCROW_REFUND) || ExistsInMempool(vchEscrow, OP_ESCROW_COMPLETE)  ) {
 		throw runtime_error("there are pending operations on that escrow");
@@ -2187,16 +2074,6 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 	if (!returnRes.isStr())
 		throw runtime_error("Could not send escrow transaction: Invalid response from sendrawtransaction!");
 
-	CPubKey sellerKey(escrow.vchSellerKey);
-	CSyscoinAddress sellerAddress(sellerKey.GetID());
-	if(!sellerAddress.IsValid())
-		throw runtime_error("Seller address is invalid!");
-
-	CPubKey arbiterKey(escrow.vchArbiterKey);
-	CSyscoinAddress arbiterAddress(sellerKey.GetID());
-	if(!arbiterAddress.IsValid())
-		throw runtime_error("Arbiter address is invalid!");
-
 	escrow.ClearEscrow();
 	escrow.op = OP_ESCROW_COMPLETE;
 	escrow.nHeight = chainActive.Tip()->nHeight;
@@ -2238,8 +2115,7 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 	const CWalletTx * wtxInOffer=NULL;
 	const CWalletTx * wtxInCert=NULL;
 	const CWalletTx * wtxInAlias=NULL;
-	if(IsSys21Fork(chainActive.Tip()->nHeight))
-		SendMoneySyscoin(vecSend, recipientBuyer.nAmount+recipientSeller.nAmount+recipientArbiter.nAmount+fee.nAmount, false, wtx, wtxInOffer, wtxInCert, wtxInAlias, wtxIn);
+	SendMoneySyscoin(vecSend, recipientBuyer.nAmount+recipientSeller.nAmount+recipientArbiter.nAmount+fee.nAmount, false, wtx, wtxInOffer, wtxInCert, wtxInAlias, wtxIn);
 	ret.push_back(wtx.GetHash().GetHex());
 	return ret;
 }
@@ -2306,20 +2182,19 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
 		throw runtime_error("this escrow is not in your wallet");
 	if(vvch[1] == vchFromString("1") && vchFeedbackPrimary.size() <= 0 && vchFeedbackSecondary.size() <= 0)
 		throw runtime_error("Feedback reply cannot be empty");
-	CPubKey arbiterKey(escrow.vchArbiterKey);
+	CAliasIndex arbiterAlias, buyerAlias, sellerAlias
+	CTransaction aliastx;
+	GetTxOfAlias(escrow.vchArbiterAlias, arbiterAlias, aliastx, true);
+	CPubKey arbiterKey(arbiterAlias.vchPubKey);
 	CSyscoinAddress arbiterAddress(arbiterKey.GetID());
-	if(!arbiterAddress.IsValid())
-		throw runtime_error("Arbiter address is invalid!");
 
-	CPubKey buyerKey(escrow.vchBuyerKey);
+	GetTxOfAlias(escrow.vchBuyerAlias, buyerAlias, aliastx, true);
+	CPubKey buyerKey(buyerAlias.vchPubKey);
 	CSyscoinAddress buyerAddress(buyerKey.GetID());
-	if(!buyerAddress.IsValid())
-		throw runtime_error("Buyer address is invalid!");
-	
-	CPubKey sellerKey(escrow.vchSellerKey);
+
+	GetTxOfAlias(escrow.vchSellerAlias, sellerAlias, aliastx, true);
+	CPubKey sellerKey(sellerAlias.vchPubKey);
 	CSyscoinAddress sellerAddress(sellerKey.GetID());
-	if(!sellerAddress.IsValid())
-		throw runtime_error("Seller address is invalid!");
 	bool foundBuyerKey = false;
 	try
 	{
@@ -2465,8 +2340,7 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
 	const CWalletTx * wtxInOffer=NULL;
 	const CWalletTx * wtxInCert=NULL;
 	const CWalletTx * wtxInAlias=NULL;
-	if(IsSys21Fork(chainActive.Tip()->nHeight))
-		SendMoneySyscoin(vecSend, recipientBuyer.nAmount+recipientSeller.nAmount+recipientArbiter.nAmount+fee.nAmount, false, wtx, wtxInOffer, wtxInCert, wtxInAlias, wtxIn);
+	SendMoneySyscoin(vecSend, recipientBuyer.nAmount+recipientSeller.nAmount+recipientArbiter.nAmount+fee.nAmount, false, wtx, wtxInOffer, wtxInCert, wtxInAlias, wtxIn);
 	UniValue ret(UniValue::VARR);
 	ret.push_back(wtx.GetHash().GetHex());
 	return ret;
@@ -2508,22 +2382,14 @@ UniValue escrowinfo(const UniValue& params, bool fHelp) {
 	GetFeedbackInEscrow(sellerFeedBacks, avgSellerRating, SELLER, vtxPos);
 	GetFeedbackInEscrow(arbiterFeedBacks, avgArbiterRating, ARBITER, vtxPos);
 		
-	CPubKey SellerPubKey(ca.vchSellerKey);
-	CSyscoinAddress selleraddy(SellerPubKey.GetID());
-	selleraddy = CSyscoinAddress(selleraddy.ToString());
-
-	CPubKey ArbiterPubKey(ca.vchArbiterKey);
-	CSyscoinAddress arbiteraddy(ArbiterPubKey.GetID());
-	arbiteraddy = CSyscoinAddress(arbiteraddy.ToString());
-
-	CPubKey BuyerPubKey(ca.vchBuyerKey);
-	CSyscoinAddress buyeraddy(BuyerPubKey.GetID());
-	buyeraddy = CSyscoinAddress(buyeraddy.ToString());
+	CAliasIndex theSellerAlias;
+	CTransaction aliastx;
+	GetTxOfAlias(ca.vchSellerAlias, theSellerAlias, aliastx, true);
 
 	oEscrow.push_back(Pair("time", sTime));
-	oEscrow.push_back(Pair("seller", selleraddy.aliasName));
-	oEscrow.push_back(Pair("arbiter", arbiteraddy.aliasName));
-	oEscrow.push_back(Pair("buyer", buyeraddy.aliasName));
+	oEscrow.push_back(Pair("seller", stringFromVch(ca.vchSellerAlias)));
+	oEscrow.push_back(Pair("arbiter", stringFromVch(ca.vchArbiterAlias)));
+	oEscrow.push_back(Pair("buyer", stringFromVch(ca.vchBuyerAlias)));
 	oEscrow.push_back(Pair("offer", stringFromVch(ca.vchOffer)));
 	oEscrow.push_back(Pair("offertitle", stringFromVch(offer.sTitle)));
 	oEscrow.push_back(Pair("offeracceptlink", stringFromVch(ca.vchOfferAcceptLink)));
@@ -2536,7 +2402,7 @@ UniValue escrowinfo(const UniValue& params, bool fHelp) {
     oEscrow.push_back(Pair("txid", ca.txHash.GetHex()));
     oEscrow.push_back(Pair("height", sHeight));
 	string strMessage = string("");
-	if(!DecryptMessage(ca.vchSellerKey, ca.vchPaymentMessage, strMessage))
+	if(!DecryptMessage(theSellerAlias.vchPubKey, ca.vchPaymentMessage, strMessage))
 		strMessage = string("Encrypted for owner of offer");
 	oEscrow.push_back(Pair("pay_message", strMessage));
 	oEscrow.push_back(Pair("rawpay_message", stringFromVch(ca.vchPaymentMessage)));
@@ -2615,39 +2481,14 @@ UniValue escrowinfo(const UniValue& params, bool fHelp) {
     return oEscrow;
 }
 
-UniValue escrowcipher(const UniValue& params, bool fHelp) {
-    if (fHelp || 2 < params.size())
-        throw runtime_error("escrowlist <alias> <message>\n"
-                "calculate a cipher based on an alias and a message");
-	vector<unsigned char> vchName = vchFromString(params[0].get_str());
-	vector<unsigned char> vchMessage = vchFromString(params[1].get_str());
-	EnsureWalletIsUnlocked();
-	CTransaction tx;
-	CAliasIndex theAlias;
-	if (!GetTxOfAlias(vchName, theAlias, tx))
-		throw runtime_error("could not find an alias with this name");
-	string strCipherText;
-	
-	// encrypt using alias pub key
-	if(!EncryptMessage(theAlias.vchPubKey, vchMessage, strCipherText))
-	{
-		throw runtime_error("Could not encrypt message!");
-	}
-	if (strCipherText.size() > MAX_ENCRYPTED_VALUE_LENGTH)
-		throw runtime_error("data length cannot exceed 1023 bytes!");
-
-	UniValue res(UniValue::VARR);
-	res.push_back(strCipherText);
-	return res;
-}
 UniValue escrowlist(const UniValue& params, bool fHelp) {
     if (fHelp || 1 < params.size())
         throw runtime_error("escrowlist [<escrow>]\n"
                 "list my own escrows");
-	vector<unsigned char> vchName;
+	vector<unsigned char> vchEscrow;
 
 	if (params.size() == 1)
-		vchName = vchFromValue(params[0]);
+		vchEscrow = vchFromValue(params[0]);
     vector<unsigned char> vchNameUniq;
     if (params.size() == 1)
         vchNameUniq = vchFromValue(params[0]);
@@ -2677,10 +2518,10 @@ UniValue escrowlist(const UniValue& params, bool fHelp) {
 		int op, nOut;
 		if (!DecodeEscrowTx(wtx, op, nOut, vvch) || !IsEscrowOp(op))
 			continue;
-		vchName = vvch[0];
+		vchEscrow = vvch[0];
 		vector<CEscrow> vtxPos;
 		CEscrow escrow;
-		if (!pescrowdb->ReadEscrow(vchName, vtxPos) || vtxPos.empty())
+		if (!pescrowdb->ReadEscrow(vchEscrow, vtxPos) || vtxPos.empty())
 		{
 			pending = 1;
 			escrow = CEscrow(wtx);
@@ -2703,16 +2544,16 @@ UniValue escrowlist(const UniValue& params, bool fHelp) {
 		GetTxOfOffer(escrow.vchOffer, offer, offertx, true);
 			
 		// skip this escrow if it doesn't match the given filter value
-		if (vchNameUniq.size() > 0 && vchNameUniq != vchName)
+		if (vchNameUniq.size() > 0 && vchNameUniq != vchEscrow)
 			continue;
 		// get last active name only
-		if (vNamesI.find(vchName) != vNamesI.end() && (escrow.nHeight <= vNamesI[vchName] || vNamesI[vchName] < 0))
+		if (vNamesI.find(vchEscrow) != vNamesI.end() && (escrow.nHeight <= vNamesI[vchEscrow] || vNamesI[vchEscrow] < 0))
 			continue;
 
 		nHeight = escrow.nHeight;
         // build the output
         UniValue oName(UniValue::VOBJ);
-        oName.push_back(Pair("escrow", stringFromVch(vchName)));
+        oName.push_back(Pair("escrow", stringFromVch(vchEscrow)));
 		string sTime;
 		CBlockIndex *pindex = chainActive[escrow.nHeight];
 		if (pindex) {
@@ -2724,22 +2565,12 @@ UniValue escrowlist(const UniValue& params, bool fHelp) {
 		GetFeedbackInEscrow(sellerFeedBacks, avgSellerRating, SELLER, vtxPos);
 		GetFeedbackInEscrow(arbiterFeedBacks, avgArbiterRating, ARBITER, vtxPos);
 		
-		CPubKey SellerPubKey(escrow.vchSellerKey);
-		CSyscoinAddress selleraddy(SellerPubKey.GetID());
-		selleraddy = CSyscoinAddress(selleraddy.ToString());
 
-		CPubKey ArbiterPubKey(escrow.vchArbiterKey);
-		CSyscoinAddress arbiteraddy(ArbiterPubKey.GetID());
-		arbiteraddy = CSyscoinAddress(arbiteraddy.ToString());
-
-		CPubKey BuyerPubKey(escrow.vchBuyerKey);
-		CSyscoinAddress buyeraddy(BuyerPubKey.GetID());
-		buyeraddy = CSyscoinAddress(buyeraddy.ToString());
 
 		oName.push_back(Pair("time", sTime));
-		oName.push_back(Pair("seller", selleraddy.aliasName));
-		oName.push_back(Pair("arbiter", arbiteraddy.aliasName));
-		oName.push_back(Pair("buyer", buyeraddy.aliasName));
+		oName.push_back(Pair("seller", stringFromVch(escrow.vchSellerAlias)));
+		oName.push_back(Pair("arbiter", stringFromVch(escrow.vchArbiterAlias)));
+		oName.push_back(Pair("buyer", stringFromVch(escrow.vchBuyerAlias)));
 		oName.push_back(Pair("offer", stringFromVch(escrow.vchOffer)));
 		oName.push_back(Pair("offertitle", stringFromVch(offer.sTitle)));
 		oName.push_back(Pair("offeracceptlink", stringFromVch(escrow.vchOfferAcceptLink)));
@@ -2838,8 +2669,8 @@ UniValue escrowlist(const UniValue& params, bool fHelp) {
 		oName.push_back(Pair("status", status));
 		oName.push_back(Pair("expired", expired));
  
-		vNamesI[vchName] = nHeight;
-		vNamesO[vchName] = oName;	
+		vNamesI[vchEscrow] = nHeight;
+		vNamesO[vchEscrow] = oName;	
 		
     
 	}
@@ -2890,22 +2721,11 @@ UniValue escrowhistory(const UniValue& params, bool fHelp) {
 			oEscrow.push_back(Pair("escrow", escrow));
 			string opName = escrowFromOp(op);
 			oEscrow.push_back(Pair("escrowtype", opName));
-			CPubKey SellerPubKey(txPos2.vchSellerKey);
-			CSyscoinAddress selleraddy(SellerPubKey.GetID());
-			selleraddy = CSyscoinAddress(selleraddy.ToString());
-
-			CPubKey ArbiterPubKey(txPos2.vchArbiterKey);
-			CSyscoinAddress arbiteraddy(ArbiterPubKey.GetID());
-			arbiteraddy = CSyscoinAddress(arbiteraddy.ToString());
-
-			CPubKey BuyerPubKey(txPos2.vchBuyerKey);
-			CSyscoinAddress buyeraddy(BuyerPubKey.GetID());
-			buyeraddy = CSyscoinAddress(buyeraddy.ToString());
 
 			oEscrow.push_back(Pair("txid", tx.GetHash().GetHex()));
-			oEscrow.push_back(Pair("seller", selleraddy.aliasName));
-			oEscrow.push_back(Pair("arbiter", arbiteraddy.aliasName));
-			oEscrow.push_back(Pair("buyer", buyeraddy.aliasName));
+			oEscrow.push_back(Pair("seller", stringFromVch(txPos2.vchSellerAlias)));
+			oEscrow.push_back(Pair("arbiter", stringFromVch(txPos2.vchArbiterAlias)));
+			oEscrow.push_back(Pair("buyer", stringFromVch(txPos2.vchBuyerAlias)));
 			oEscrow.push_back(Pair("offer", stringFromVch(txPos2.vchOffer)));
 			oEscrow.push_back(Pair("offertitle", stringFromVch(offer.sTitle)));
 			oEscrow.push_back(Pair("offeracceptlink", stringFromVch(txPos2.vchOfferAcceptLink)));
@@ -2998,18 +2818,6 @@ UniValue escrowfilter(const UniValue& params, bool fHelp) {
 		GetFeedbackInEscrow(sellerFeedBacks, avgSellerRating, SELLER, vtxPos);
 		GetFeedbackInEscrow(arbiterFeedBacks, avgArbiterRating, ARBITER, vtxPos);
 		
-		CPubKey SellerPubKey(txEscrow.vchSellerKey);
-		CSyscoinAddress selleraddy(SellerPubKey.GetID());
-		selleraddy = CSyscoinAddress(selleraddy.ToString());
-
-		CPubKey ArbiterPubKey(txEscrow.vchArbiterKey);
-		CSyscoinAddress arbiteraddy(ArbiterPubKey.GetID());
-		arbiteraddy = CSyscoinAddress(arbiteraddy.ToString());
-
-		CPubKey BuyerPubKey(txEscrow.vchBuyerKey);
-		CSyscoinAddress buyeraddy(BuyerPubKey.GetID());
-		buyeraddy = CSyscoinAddress(buyeraddy.ToString());
-	
         UniValue oEscrow(UniValue::VOBJ);
         oEscrow.push_back(Pair("escrow", escrow));
 		string sTime;
@@ -3019,9 +2827,9 @@ UniValue escrowfilter(const UniValue& params, bool fHelp) {
 		}
 		oEscrow.push_back(Pair("time", sTime));
 		
-		oEscrow.push_back(Pair("seller", selleraddy.aliasName));
-		oEscrow.push_back(Pair("arbiter", arbiteraddy.aliasName));
-		oEscrow.push_back(Pair("buyer", buyeraddy.aliasName));
+		oEscrow.push_back(Pair("seller", stringFromVch(txEscrow.vchSellerAlias)));
+		oEscrow.push_back(Pair("arbiter", stringFromVch(txEscrow.vchArbiterAlias)));
+		oEscrow.push_back(Pair("buyer", stringFromVch(txEscrow.vchBuyerAlias)));
 		oEscrow.push_back(Pair("offer", stringFromVch(txEscrow.vchOffer)));
 		oEscrow.push_back(Pair("offertitle", stringFromVch(offer.sTitle)));
 		oEscrow.push_back(Pair("offeracceptlink", stringFromVch(txEscrow.vchOfferAcceptLink)));

@@ -95,7 +95,7 @@ bool CCert::UnserializeFromData(const vector<unsigned char> &vchData) {
         return false;
     }
 	// extra check to ensure data was parsed correctly
-	if(!IsSysCompressedOrUncompressedPubKey(vchPubKey))
+	if(!IsValidAliasName(vchAlias))
 	{
 		SetNull();
 		return false;
@@ -171,28 +171,22 @@ bool CCertDB::ScanCerts(const std::vector<unsigned char>& vchCert, const string 
 				}
 				if(strCategory.size() > 0 && !boost::algorithm::starts_with(stringFromVch(txPos.sCategory), strCategory))
 				{
-					pcursor->Next();
+					pcursor->Next()
 					continue;
 				}
-				CPubKey OwnerPubKey(txPos.vchPubKey);
-				CSyscoinAddress owneraddy(OwnerPubKey.GetID());
-				owneraddy = CSyscoinAddress(owneraddy.ToString());
-				if(!owneraddy.IsValid() || !owneraddy.isAlias)
+				CAliasIndex theAlias;
+				CTransaction aliastx;
+				if(!GetTxOfAlias(cert.vchAlias, theAlias, aliastx))
 				{
 					pcursor->Next();
 					continue;
 				}
-				if(owneraddy.nExpireHeight < chainActive.Tip()->nHeight)
+				if(!theAlias.safeSearch && safeSearch)
 				{
 					pcursor->Next();
 					continue;
 				}
-				if(!owneraddy.safeSearch && safeSearch)
-				{
-					pcursor->Next();
-					continue;
-				}
-				if((safeSearch && owneraddy.safetyLevel > txPos.safetyLevel) || (!safeSearch && owneraddy.safetyLevel > SAFETY_LEVEL1))
+				if((safeSearch && theAlias.safetyLevel > txPos.safetyLevel) || (!safeSearch && theAlias.safetyLevel > SAFETY_LEVEL1))
 				{
 					pcursor->Next();
 					continue;
@@ -425,7 +419,8 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
         return true;
 	}
 	
-	vector<CAliasIndex> vtxAliasPos;
+	CAliasIndex alias;
+	CTransaction aliasTx;
 	vector<CCert> vtxPos;
 	string retError = "";
 	if(fJustCheck)
@@ -441,10 +436,6 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 		if(theCert.vchTitle.size() > MAX_NAME_LENGTH)
 		{
 			return error("CheckCertInputs(): cert title too big");
-		}
-		if(!theCert.vchPubKey.empty() && !IsSysCompressedOrUncompressedPubKey(theCert.vchPubKey))
-		{
-			return error("CheckCertInputs(): cert pub key invalid length");
 		}
 		if(!theCert.vchCert.empty() && theCert.vchCert != vvchArgs[0])
 		{
@@ -502,12 +493,12 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 
 			if(!vtxPos.empty())
 			{
-				if((retError = CheckForAliasExpiry(theCert.vchPubKey, nHeight)) != "")
+				if(!GetTxOfAlias(theCert.vchAlias, alias, aliasTx))
 				{
-					retError = string("CheckCertInputs(): cert update alias: ") + retError;
+					retError = string("CheckCertInputs(): cert update alias");
 					if(fDebug)
 						LogPrintf(retError.c_str());
-					theCert.vchPubKey = dbCert.vchPubKey;		
+					theCert.vchAlias = dbCert.vchAlias;		
 				}
 				if(theCert.IsNull())
 					theCert = vtxPos.back();
@@ -526,12 +517,11 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 					if(op == OP_CERT_TRANSFER)
 					{
 						// check from alias
-						if((retError = CheckForAliasExpiry(dbCert.vchPubKey, nHeight)) != "")
-						{
-							retError = string("CheckCertInputs(): transfer to alias: ") + retError;
+						if(!GetTxOfAlias(dbCert.vchAlias, alias, aliasTx))
+							retError = string("CheckCertInputs(): transfer to alias");
 							if(fDebug)
 								LogPrintf(retError.c_str());
-							theCert.vchPubKey = dbCert.vchPubKey;						
+							theCert.vchAlias = dbCert.vchAlias;						
 						}
 					}
 				}
@@ -541,9 +531,9 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 		}
 		else
 		{
-			if((retError = CheckForAliasExpiry(theCert.vchPubKey, nHeight)) != "")
+			if (!GetTxOfAlias(theCert.vchAlias, alias, aliasTx))
 			{
-				retError = string("CheckCertInputs(): cert activate: ") + retError;
+				retError = string("CheckCertInputs(): cert activate");
 				if(fDebug)
 					LogPrintf(retError.c_str());
 				return true;
@@ -594,22 +584,11 @@ UniValue certnew(const UniValue& params, bool fHelp) {
 						"<category> category, 255 chars max. Defaults to certificates\n"
 						+ HelpRequiringPassphrase());
 	vector<unsigned char> vchAlias = vchFromValue(params[0]);
-	CSyscoinAddress aliasAddress = CSyscoinAddress(stringFromVch(vchAlias));
-	if (!aliasAddress.IsValid())
-		throw runtime_error("Invalid syscoin address");
-	if (!aliasAddress.isAlias)
-		throw runtime_error("Offer must be a valid alias");
-
-	CAliasIndex alias;
+	CAliasIndex theAlias;
 	CTransaction aliastx;
-	if (!GetTxOfAlias(vchAlias, alias, aliastx))
+	if (!GetTxOfAlias(vchAlias, theAlias, aliastx))
 		throw runtime_error("could not find an alias with this name");
-    if(!IsSyscoinTxMine(aliastx, "alias")) {
-		throw runtime_error("This alias is not yours.");
-    }
-	const CWalletTx *wtxAliasIn = pwalletMain->GetWalletTx(aliastx.GetHash());
-	if (wtxAliasIn == NULL)
-		throw runtime_error("this alias is not in your wallet");
+
 	vector<unsigned char> vchTitle = vchFromString(params[1].get_str());
     vector<unsigned char> vchData = vchFromString(params[2].get_str());
 	vector<unsigned char> vchCat = vchFromString("certificates");
@@ -646,7 +625,7 @@ UniValue certnew(const UniValue& params, bool fHelp) {
 
 	EnsureWalletIsUnlocked();
     CScript scriptPubKeyOrig;
-	CPubKey aliasKey(alias.vchPubKey);
+	CPubKey aliasKey(theAlias.vchPubKey);
 	scriptPubKeyOrig = GetScriptForDestination(aliasKey.GetID());
     CScript scriptPubKey;
 
@@ -655,7 +634,7 @@ UniValue certnew(const UniValue& params, bool fHelp) {
 	if(bPrivate)
 	{
 		string strCipherText;
-		if(!EncryptMessage(alias.vchPubKey, vchData, strCipherText))
+		if(!EncryptMessage(theAlias.vchPubKey, vchData, strCipherText))
 		{
 			throw runtime_error("Could not encrypt certificate data!");
 		}
@@ -672,7 +651,7 @@ UniValue certnew(const UniValue& params, bool fHelp) {
     newCert.vchTitle = vchTitle;
 	newCert.vchData = vchData;
 	newCert.nHeight = chainActive.Tip()->nHeight;
-	newCert.vchPubKey = alias.vchPubKey;
+	newCert.vchAlias = alias.vchAlias;
 	newCert.bPrivate = bPrivate;
 	newCert.safetyLevel = 0;
 	newCert.safeSearch = strSafeSearch == "Yes"? true: false;
@@ -753,11 +732,12 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
 	
     if (!GetTxOfCert( vchCert, theCert, tx))
         throw runtime_error("could not find a certificate with this key");
+	// check for alias existence in DB
+	CTransaction tx;
+	CAliasIndex theAlias;
+	if (!GetTxOfAlias(theCert.vchAlias, theAlias, tx, true))
+		throw runtime_error("failed to read alias from alias DB");
 
-	string retError;
-	if((retError = CheckForAliasExpiry(theCert.vchPubKey, chainActive.Tip()->nHeight)) != "")
-		throw runtime_error(retError.c_str());
-	
 	
     // make sure cert is in wallet
 	wtxIn = pwalletMain->GetWalletTx(tx.GetHash());
@@ -770,7 +750,7 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
 
 	CCert copyCert = theCert;
 	theCert.ClearCert();
-	CPubKey currentKey(theCert.vchPubKey);
+	CPubKey currentKey(theAlias.vchPubKey);
 	scriptPubKeyOrig = GetScriptForDestination(currentKey.GetID());
     // create CERTUPDATE txn keys
     CScript scriptPubKey;
@@ -778,7 +758,7 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
 	if(bPrivate)
 	{
 		string strCipherText;
-		if(!EncryptMessage(copyCert.vchPubKey, vchData, strCipherText))
+		if(!EncryptMessage(theAlias.vchPubKey, vchData, strCipherText))
 		{
 			throw runtime_error("Could not encrypt certificate data!");
 		}
@@ -835,41 +815,15 @@ UniValue certtransfer(const UniValue& params, bool fHelp) {
 	vector<unsigned char> vchCert = vchFromValue(params[0]);
 
 	string strAddress = params[1].get_str();
-	CPubKey xferKey;
-	std::vector<unsigned char> vchPubKey;
-	std::vector<unsigned char> vchPubKeyByte;
-	try
-	{
-		vchPubKey = vchFromString(strAddress);		
-		boost::algorithm::unhex(vchPubKey.begin(), vchPubKey.end(), std::back_inserter(vchPubKeyByte));
-		xferKey  = CPubKey(vchPubKeyByte);
-		if(!xferKey.IsValid())
-		{
-			throw runtime_error("Invalid public key");
-		}
-	}
-	catch(...)
-	{
-		CSyscoinAddress myAddress = CSyscoinAddress(strAddress);
-		if (!myAddress.IsValid())
-			throw runtime_error("Invalid syscoin address");
-		if (!myAddress.isAlias)
-			throw runtime_error("You must transfer to a valid alias");
 
-		// check for alias existence in DB
-		vector<CAliasIndex> vtxAliasPos;
-		CAliasIndex xferAlias;
-		CTransaction tx;
-		if (!GetTxAndVtxOfAlias(vchFromString(myAddress.aliasName), xferAlias, tx, vtxAliasPos))
-			throw runtime_error("failed to read xfer alias from alias DB");
+	// check for alias existence in DB
+	CTransaction tx;
+	if (!GetTxOfAlias(vchFromString(strAddress), toAlias, tx, true))
+		throw runtime_error("failed to read xfer alias from alias DB");
+
+	xferKey = CPubKey(toAlias.vchPubKey);
+
 	
-		vchPubKeyByte = xferAlias.vchPubKey;
-		xferKey = CPubKey(vchPubKeyByte);
-		if(!xferKey.IsValid())
-		{
-			throw runtime_error("Invalid transfer public key");
-		}
-	}
 
 
 	CSyscoinAddress sendAddr;
@@ -881,21 +835,14 @@ UniValue certtransfer(const UniValue& params, bool fHelp) {
     EnsureWalletIsUnlocked();
     CTransaction tx, aliastx;
 	CCert theCert;
-    if (!GetTxOfCert( vchCert, theCert, tx))
+    if (!GetTxOfCert( vchCert, theCert, tx, true))
         throw runtime_error("could not find a certificate with this key");
-	string retError;
-	if((retError = CheckForAliasExpiry(theCert.vchPubKey, chainActive.Tip()->nHeight)) != "")
-		throw runtime_error(retError.c_str());
 
-	CPubKey aliasKey = CPubKey(theCert.vchPubKey);
-	if(!aliasKey.IsValid())
+	CAliasIndex fromAlias;
+	if(!GetTxOfAlias(theCert.vchAlias, fromAlias, aliastx, true))
 	{
-		throw runtime_error("Invalid cert alias public key");
+		 throw runtime_error("could not find the certificate alias");
 	}
-	CSyscoinAddress myAddress = CSyscoinAddress(aliasKey.GetID());
-	myAddress = CSyscoinAddress(myAddress.ToString());
-	if(!myAddress.IsValid() || !myAddress.isAlias)
-		throw runtime_error("Invalid cert alias");
 
 	// check to see if certificate in wallet
 	wtxIn = pwalletMain->GetWalletTx(theCert.txHash);
@@ -914,12 +861,12 @@ UniValue certtransfer(const UniValue& params, bool fHelp) {
 		string strCipherText;
 		
 		// decrypt using old key
-		if(DecryptMessage(theCert.vchPubKey, theCert.vchData, strData))
+		if(DecryptMessage(fromAlias.vchPubKey, theCert.vchData, strData))
 			strDecryptedData = strData;
 		else
 			throw runtime_error("Could not decrypt certificate data!");
 		// encrypt using new key
-		if(!EncryptMessage(vchPubKeyByte, vchFromString(strDecryptedData), strCipherText))
+		if(!EncryptMessage(toAlias.vchPubKey, vchFromString(strDecryptedData), strCipherText))
 		{
 			throw runtime_error("Could not encrypt certificate data!");
 		}
@@ -932,7 +879,7 @@ UniValue certtransfer(const UniValue& params, bool fHelp) {
     scriptPubKeyOrig= GetScriptForDestination(xferKey.GetID());
     CScript scriptPubKey;
 	theCert.nHeight = chainActive.Tip()->nHeight;
-	theCert.vchPubKey = vchPubKeyByte;
+	theCert.vchAlias = toAlias.vchAlias;
 	if(copyCert.vchData != vchData)
 		theCert.vchData = vchData;
 
@@ -990,15 +937,12 @@ UniValue certinfo(const UniValue& params, bool fHelp) {
 		throw runtime_error("cert has been banned");
 	if (!GetSyscoinTransaction(ca.nHeight, ca.txHash, tx, Params().GetConsensus()))
 		throw runtime_error("failed to read transaction from disk");   
-	// get owner alias
-	CPubKey SellerPubKey(vtxPos.back().vchPubKey);
-	CSyscoinAddress address(SellerPubKey.GetID());
-	address = CSyscoinAddress(address.ToString());
+
 
 	// check that the seller isn't banned level 2
 	CAliasIndex alias;
 	CTransaction aliastx;
-	if (!GetTxOfAlias(vchFromString(address.aliasName), alias, aliastx, true))
+	if (!GetTxOfAlias(ca.vchAlias, alias, aliastx, true))
 		throw runtime_error("failed to read xfer alias from alias DB");
 	
 	if(alias.safetyLevel >= SAFETY_LEVEL2)
@@ -1013,7 +957,7 @@ UniValue certinfo(const UniValue& params, bool fHelp) {
 	string strDecrypted = "";
 	if(ca.bPrivate)
 	{
-		if(DecryptMessage(ca.vchPubKey, ca.vchData, strDecrypted))
+		if(DecryptMessage(alias.vchPubKey, ca.vchData, strDecrypted))
 			strData = strDecrypted;		
 	}
     oCert.push_back(Pair("data", strData));
@@ -1025,8 +969,7 @@ UniValue certinfo(const UniValue& params, bool fHelp) {
 
     uint64_t nHeight;
 	nHeight = ca.nHeight;
-	oCert.push_back(Pair("address", address.ToString()));
-	oCert.push_back(Pair("alias", address.aliasName));
+	oCert.push_back(Pair("alias", stringFromVch(ca.vchAlias)));
 	expired_block = nHeight + GetCertExpirationDepth();
     if(expired_block < chainActive.Tip()->nHeight)
 	{
@@ -1043,10 +986,10 @@ UniValue certlist(const UniValue& params, bool fHelp) {
     if (fHelp || 1 < params.size())
         throw runtime_error("certlist [<cert>]\n"
                 "list my own Certificates");
-	vector<unsigned char> vchName;
+	vector<unsigned char> vchCert;
 
 	if (params.size() == 1)
-		vchName = vchFromValue(params[0]);
+		vchCert = vchFromValue(params[0]);
     vector<unsigned char> vchNameUniq;
     if (params.size() == 1)
         vchNameUniq = vchFromValue(params[0]);
@@ -1063,6 +1006,8 @@ UniValue certlist(const UniValue& params, bool fHelp) {
 	int pending = 0;
     BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet)
     {
+		CAliasIndex theAlias;
+		CTransaction aliastx;
 		const CWalletTx &wtx = item.second;
 		int expired = 0;
 		pending = 0;
@@ -1080,16 +1025,16 @@ UniValue certlist(const UniValue& params, bool fHelp) {
 		if (!DecodeCertTx(wtx, op, nOut, vvch))
 			continue;
 
-		vchName = vvch[0];
+		vchCert = vvch[0];
 		
 		
 		// skip this cert if it doesn't match the given filter value
-		if (vchNameUniq.size() > 0 && vchNameUniq != vchName)
+		if (vchNameUniq.size() > 0 && vchNameUniq != vchCert)
 			continue;
 			
 		vector<CCert> vtxPos;
 		CCert cert;
-		if (!pcertdb->ReadCert(vchName, vtxPos) || vtxPos.empty())
+		if (!pcertdb->ReadCert(vchCert, vtxPos) || vtxPos.empty())
 		{
 			pending = 1;
 			cert = CCert(wtx);
@@ -1115,22 +1060,22 @@ UniValue certlist(const UniValue& params, bool fHelp) {
 		}
 		nHeight = cert.nHeight;
 		// get last active name only
-		if (vNamesI.find(vchName) != vNamesI.end() && (nHeight <= vNamesI[vchName] || vNamesI[vchName] < 0))
+		if (vNamesI.find(vchCert) != vNamesI.end() && (nHeight <= vNamesI[vchCert] || vNamesI[vchCert] < 0))
 			continue;
 
 		
         // build the output object
 		UniValue oName(UniValue::VOBJ);
-        oName.push_back(Pair("cert", stringFromVch(vchName)));
+        oName.push_back(Pair("cert", stringFromVch(vchCert)));
         oName.push_back(Pair("title", stringFromVch(cert.vchTitle)));
 		
 		string strData = stringFromVch(cert.vchData);
-
+		GetTxOfAlias(cert.vchAlias, theAlias, aliastx, true);
 		string strDecrypted = "";
 		if(cert.bPrivate)
 		{
 			strData = "Encrypted for owner of certificate private data";
-			if(DecryptMessage(cert.vchPubKey, cert.vchData, strDecrypted))
+			if(DecryptMessage(theAlias.vchPubKey, cert.vchData, strDecrypted))
 				strData = strDecrypted;	
 		}
 		oName.push_back(Pair("private", cert.bPrivate? "Yes": "No"));
@@ -1138,11 +1083,7 @@ UniValue certlist(const UniValue& params, bool fHelp) {
 		oName.push_back(Pair("safetylevel", cert.safetyLevel));
 		oName.push_back(Pair("data", strData));
 		oName.push_back(Pair("category", stringFromVch(cert.sCategory)));
-		CPubKey PubKey(cert.vchPubKey);
-		CSyscoinAddress address(PubKey.GetID());
-		address = CSyscoinAddress(address.ToString());
-		oName.push_back(Pair("address", address.ToString()));
-		oName.push_back(Pair("alias", address.aliasName));
+		oName.push_back(Pair("alias", stringFromVch(cert.vchAlias)));
 		expired_block = nHeight + GetCertExpirationDepth();
         if(expired_block < chainActive.Tip()->nHeight)
 		{
@@ -1154,8 +1095,8 @@ UniValue certlist(const UniValue& params, bool fHelp) {
 		oName.push_back(Pair("expired", expired));
 		oName.push_back(Pair("pending", pending));
  
-		vNamesI[vchName] = nHeight;
-		vNamesO[vchName] = oName;	
+		vNamesI[vchCert] = nHeight;
+		vNamesO[vchCert] = oName;	
     
 	}
     BOOST_FOREACH(const PAIRTYPE(vector<unsigned char>, UniValue)& item, vNamesO)
@@ -1171,6 +1112,7 @@ UniValue certhistory(const UniValue& params, bool fHelp) {
 
     UniValue oRes(UniValue::VARR);
     vector<unsigned char> vchCert = vchFromValue(params[0]);
+	
     string cert = stringFromVch(vchCert);
 
     {
@@ -1182,7 +1124,6 @@ UniValue certhistory(const UniValue& params, bool fHelp) {
         uint256 txHash;
         BOOST_FOREACH(txPos2, vtxPos) {
             txHash = txPos2.txHash;
-			CTransaction tx;
 			if (!GetSyscoinTransaction(txPos2.nHeight, txHash, tx, Params().GetConsensus())) {
 				error("could not read txpos");
 				continue;
@@ -1205,10 +1146,13 @@ UniValue certhistory(const UniValue& params, bool fHelp) {
 			oCert.push_back(Pair("certtype", opName));
 			string strDecrypted = "";
 			string strData = "";
+			CTransaction aliastx;
+			CAliasIndex theAlias;
+			GetTxOfAlias(txPos2.vchAlias, theAlias, aliastx, true);
 			if(txPos2.bPrivate)
 			{
 				strData = "Encrypted for owner of certificate private data";
-				if(DecryptMessage(txPos2.vchPubKey, txPos2.vchData, strDecrypted))
+				if(DecryptMessage(theAlias.vchPubKey, txPos2.vchData, strDecrypted))
 					strData = strDecrypted;
 
 			}
@@ -1216,11 +1160,7 @@ UniValue certhistory(const UniValue& params, bool fHelp) {
 			oCert.push_back(Pair("data", strData));
 			oCert.push_back(Pair("category", stringFromVch(txPos2.sCategory)));
             oCert.push_back(Pair("txid", tx.GetHash().GetHex()));
-			CPubKey PubKey(txPos2.vchPubKey);
-			CSyscoinAddress address(PubKey.GetID());
-			address = CSyscoinAddress(address.ToString());
-			oCert.push_back(Pair("address", address.ToString()));
-			oCert.push_back(Pair("alias", address.aliasName));
+			oCert.push_back(Pair("alias", stringFromVch(txPos2.vchAlias)));
 			expired_block = nHeight + GetCertExpirationDepth();
             if(expired_block < chainActive.Tip()->nHeight)
 			{
@@ -1290,10 +1230,13 @@ UniValue certfilter(const UniValue& params, bool fHelp) {
 
 		string strData = stringFromVch(txCert.vchData);
 		string strDecrypted = "";
+		CTransaction aliastx;
+		CAliasIndex theAlias;
+		GetTxOfAlias(txPos2.vchAlias, theAlias, aliastx, true);
 		if(txCert.bPrivate)
 		{
 			strData = string("Encrypted for owner of certificate");
-			if(DecryptMessage(txCert.vchPubKey, txCert.vchData, strDecrypted))
+			if(DecryptMessage(theAlias.vchPubKey, txCert.vchData, strDecrypted))
 				strData = strDecrypted;
 			
 		}
@@ -1310,11 +1253,7 @@ UniValue certfilter(const UniValue& params, bool fHelp) {
 		oCert.push_back(Pair("expires_in", expires_in));
 		oCert.push_back(Pair("expires_on", expired_block));
 		oCert.push_back(Pair("expired", expired));
-		CPubKey PubKey(txCert.vchPubKey);
-		CSyscoinAddress address(PubKey.GetID());
-		address = CSyscoinAddress(address.ToString());
-		oCert.push_back(Pair("address", address.ToString()));
-		oCert.push_back(Pair("alias", address.aliasName));
+		oCert.push_back(Pair("alias", stringFromVch(txCert.vchAlias)));
         oRes.push_back(oCert);
 	}
 

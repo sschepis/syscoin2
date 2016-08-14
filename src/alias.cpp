@@ -110,23 +110,19 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 	const string &chainName = ChainNameFromCommandLine();
 	if(alias.UnserializeFromData(vchData))
 	{
-		if(alias.vchName == vchFromString("sys_rates") || alias.vchName == vchFromString("sys_ban") || alias.vchName == vchFromString("sys_category"))
+		if(alias.vchAlias == vchFromString("sys_rates") || alias.vchAlias == vchFromString("sys_ban") || alias.vchAlias == vchFromString("sys_category"))
 			return false;
 		vector<CAliasIndex> vtxPos;
 		// we only prune things that we have in our db and that we can verify the last tx is expired
 		// nHeight is set to the height at which data is pruned, if the tip is newer than nHeight it won't send data to other nodes
-		if (paliasdb->ReadAlias(alias.vchName, vtxPos))
-		{
-			// have to check the first tx in the service because if it was created before the fork, the chain has hashed the data, so we can't prune it
-			if(IsSys21Fork(vtxPos.front().nHeight))
-			{
-				uint64_t nLastHeight = vtxPos.back().nHeight;
-				// if we are renewing alias then prune based on nHeight of tx
-				if(!alias.vchGUID.empty() && vtxPos.back().vchGUID != alias.vchGUID)
-					nLastHeight = alias.nHeight;
-				nHeight = nLastHeight + (vtxPos.back().nRenewal*GetAliasExpirationDepth());
-				return true;	
-			}		
+		if (paliasdb->ReadAlias(alias.vchAlias, vtxPos))
+		{	
+			uint64_t nLastHeight = vtxPos.back().nHeight;
+			// if we are renewing alias then prune based on nHeight of tx
+			if(!alias.vchGUID.empty() && vtxPos.back().vchGUID != alias.vchGUID)
+				nLastHeight = alias.nHeight;
+			nHeight = nLastHeight + (vtxPos.back().nRenewal*GetAliasExpirationDepth());
+			return true;				
 		}
 		// this is a new service, either sent to us because it's not supposed to be expired yet or sent to ourselves as a new service, either way we keep the data and validate it into the service db
 		else
@@ -141,19 +137,13 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 		vector<COffer> vtxPos;
 		if (pofferdb->ReadOffer(offer.vchOffer, vtxPos))
 		{
-			// have to check the first tx in the service because if it was created before the fork, the chain has hashed the data, so we can't prune it
-			if(IsSys21Fork(vtxPos.front().nHeight))
-			{
-				uint64_t nLastHeight =  vtxPos.back().nHeight;
-				// if alises of offer is not expired then don't prune the offer yet
-				CPubKey sellerKey = CPubKey( vtxPos.back().vchPubKey);
-				CSyscoinAddress sellerAddress = CSyscoinAddress(sellerKey.GetID());
-				sellerAddress = CSyscoinAddress(sellerAddress.ToString());
-				if(sellerAddress.IsValid() && sellerAddress.isAlias && sellerAddress.nExpireHeight >=  chainActive.Tip()->nHeight)
-					nLastHeight = chainActive.Tip()->nHeight;
-				nHeight = nLastHeight + GetOfferExpirationDepth();
-				return true;	
-			}		
+			uint64_t nLastHeight =  vtxPos.back().nHeight;
+			// if alises of offer is not expired then don't prune the offer yet
+			sellerAddress = CSyscoinAddress(stringFromVch(vtxPos.back().vchAlias));
+			if(sellerAddress.IsValid() && sellerAddress.isAlias && sellerAddress.nExpireHeight >=  chainActive.Tip()->nHeight)
+				nLastHeight = chainActive.Tip()->nHeight;
+			nHeight = nLastHeight + GetOfferExpirationDepth();
+			return true;			
 		}
 		else
 		{
@@ -166,13 +156,9 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 		vector<CCert> vtxPos;
 		if (pcertdb->ReadCert(cert.vchCert, vtxPos))
 		{
-			// have to check the first tx in the service because if it was created before the fork, the chain has hashed the data, so we can't prune it
-			if(IsSys21Fork(vtxPos.front().nHeight))
-			{
-				uint64_t nLastHeight = vtxPos.back().nHeight;
-				nHeight = vtxPos.back().nHeight + GetCertExpirationDepth();
-				return true;	
-			}		
+			uint64_t nLastHeight = vtxPos.back().nHeight;
+			nHeight = vtxPos.back().nHeight + GetCertExpirationDepth();
+			return true;			
 		}
 		else
 		{	
@@ -185,38 +171,28 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 		vector<CEscrow> vtxPos;
 		if (pescrowdb->ReadEscrow(escrow.vchEscrow, vtxPos))
 		{
-			// if escrow is not refunded or complete don't prune otherwise escrow gets stuck (coins are still safe, just a GUI thing)
-			if(IsSys21Fork(vtxPos.front().nHeight))
+			uint64_t nLastHeight = vtxPos.back().nHeight;
+			if(vtxPos.back().op != OP_ESCROW_COMPLETE)
+				nLastHeight = chainActive.Tip()->nHeight;
+			// if alises of escrow are not expired then don't prune the escrow yet
+			buyerAddress = CSyscoinAddress(stringFromVch(vtxPos.back().vchBuyerAlias));
+			if(buyerAddress.IsValid() && buyerAddress.isAlias && buyerAddress.nExpireHeight >=  chainActive.Tip()->nHeight)
+				nLastHeight = chainActive.Tip()->nHeight;
+			else
 			{
-				uint64_t nLastHeight = vtxPos.back().nHeight;
-				if(vtxPos.back().op != OP_ESCROW_COMPLETE)
-					nLastHeight = chainActive.Tip()->nHeight;
-				// if alises of escrow are not expired then don't prune the escrow yet
-				CPubKey buyerKey = CPubKey( vtxPos.back().vchBuyerKey);
-				CSyscoinAddress buyerAddress = CSyscoinAddress(buyerKey.GetID());
-				buyerAddress = CSyscoinAddress(buyerAddress.ToString());
-				if(buyerAddress.IsValid() && buyerAddress.isAlias && buyerAddress.nExpireHeight >=  chainActive.Tip()->nHeight)
+				sellerAddress = CSyscoinAddress(stringFromVch(vtxPos.back().vchSellerAlias));
+				if(sellerAddress.IsValid() && sellerAddress.isAlias && sellerAddress.nExpireHeight >=  chainActive.Tip()->nHeight)
 					nLastHeight = chainActive.Tip()->nHeight;
 				else
 				{
-					CPubKey sellerKey = CPubKey( vtxPos.back().vchSellerKey);
-					CSyscoinAddress sellerAddress = CSyscoinAddress(sellerKey.GetID());
-					sellerAddress = CSyscoinAddress(sellerAddress.ToString());
-					if(sellerAddress.IsValid() && sellerAddress.isAlias && sellerAddress.nExpireHeight >=  chainActive.Tip()->nHeight)
+					arbiterAddress = CSyscoinAddress(stringFromVch(vtxPos.back().vchArbiterAlias));
+					if(arbiterAddress.IsValid() && arbiterAddress.isAlias  && arbiterAddress.nExpireHeight >=  chainActive.Tip()->nHeight)
 						nLastHeight = chainActive.Tip()->nHeight;
-					else
-					{
-						CPubKey arbiterKey = CPubKey( vtxPos.back().vchArbiterKey);
-						CSyscoinAddress arbiterAddress = CSyscoinAddress(arbiterKey.GetID());
-						arbiterAddress = CSyscoinAddress(arbiterAddress.ToString());
-						if(arbiterAddress.IsValid() && arbiterAddress.isAlias  && arbiterAddress.nExpireHeight >=  chainActive.Tip()->nHeight)
-							nLastHeight = chainActive.Tip()->nHeight;
-					}
 				}
-			
-				nHeight = nLastHeight + GetEscrowExpirationDepth();
-				return true;	
-			}			
+			}
+		
+			nHeight = nLastHeight + GetEscrowExpirationDepth();
+			return true;				
 		}
 		else 
 		{		
@@ -229,13 +205,9 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 		vector<CMessage> vtxPos;
 		if (pmessagedb->ReadMessage(message.vchMessage, vtxPos))
 		{
-			// have to check the first tx in the service because if it was created before the fork, the chain has hashed the data, so we can't prune it
-			if(IsSys21Fork(vtxPos.front().nHeight))
-			{
-				uint64_t nLastHeight = vtxPos.back().nHeight;
-				nHeight = vtxPos.back().nHeight + GetMessageExpirationDepth();
-				return true;	
-			}		
+			uint64_t nLastHeight = vtxPos.back().nHeight;
+			nHeight = vtxPos.back().nHeight + GetMessageExpirationDepth();
+			return true;		
 		}
 		else
 		{	
@@ -823,7 +795,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	// unserialize alias from txn, check for valid
 	CAliasIndex theAlias;
 	vector<unsigned char> vchData;
-	vector<unsigned char> vchName;
+	vector<unsigned char> vchAlias;
 	if(!GetSyscoinData(tx, vchData))
 	{
 		theAlias.SetNull();
@@ -835,25 +807,20 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 
 	if(fJustCheck)
 	{
-		if(IsSys21Fork(nHeight))
+		
+		if(vvchArgs.size() != 3)
+			return error("CheckAliasInputs(): sys 2.1 alias arguments wrong size");
+
+		if(!theAlias.IsNull())
 		{
-			if(vvchArgs.size() != 3)
-				return error("CheckAliasInputs(): sys 2.1 alias arguments wrong size");
-
-			if(!theAlias.IsNull())
+			uint256 calculatedHash = Hash(vchData.begin(), vchData.end());
+			vector<unsigned char> vchRand = CScriptNum(calculatedHash.GetCheapHash()).getvch();
+			vector<unsigned char> vchRandAlias = vchFromValue(HexStr(vchRand));
+			if(vchRandAlias != vvchArgs[2])
 			{
-				uint256 calculatedHash = Hash(vchData.begin(), vchData.end());
- 				vector<unsigned char> vchRand = CScriptNum(calculatedHash.GetCheapHash()).getvch();
-				vector<unsigned char> vchRandAlias = vchFromValue(HexStr(vchRand));
-				if(vchRandAlias != vvchArgs[2])
-				{
-					return error("CheckAliasInputs(): hash provided doesn't match the calculated hash the data");
-				}
+				return error("CheckAliasInputs(): hash provided doesn't match the calculated hash the data");
 			}
-		}
-		else if(vvchArgs.size() != 1)
-			return error("CheckAliasInputs(): sys 2.0 alias arguments wrong size");
-
+		}		
 			
 		// Strict check - bug disallowed
 		for (unsigned int i = 0; i < tx.vin.size(); i++) {
@@ -886,7 +853,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	string retError = "";
 	if(fJustCheck)
 	{
-		if(vvchArgs[0].size() > MAX_GUID_LENGTH || vvchArgs[0].size() < 3)
+		if(!IsValidAliasName(vvchArgs[0]))
 			return error("CheckAliasInputs(): alias name too long or too short");
 		if(theAlias.vchPublicValue.size() > MAX_VALUE_LENGTH && vvchArgs[0] != vchFromString("sys_rates") && vvchArgs[0] != vchFromString("sys_category"))
 		{
@@ -896,11 +863,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		{
 			return error("CheckAliasInputs(): alias priv value too big");
 		}
-		if(!theAlias.vchPubKey.empty() && !IsSysCompressedOrUncompressedPubKey(theAlias.vchPubKey))
-		{
-			return error("CheckAliasInputs(): alias pub key invalid length");
-		}
-		if((!IsSys21Fork(theAlias.nHeight) || theAlias.nHeight > nHeight))
+		if(theAlias.nHeight > nHeight)
 		{
 			return error("CheckAliasInputs(): bad alias height");
 		}
@@ -909,14 +872,14 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				// Check GUID
 				if (theAlias.vchGUID != vvchArgs[1])
 					return error("CheckAliasInputs(): OP_ALIAS_ACTIVATE GUID mismatch");
-				if(theAlias.vchName != vvchArgs[0])
+				if(theAlias.vchAlias != vvchArgs[0])
 					return error("CheckAliasInputs(): OP_ALIAS_ACTIVATE guid in data output doesn't match guid in tx");
 				
 				break;
 			case OP_ALIAS_UPDATE:
 				if (!IsAliasOp(prevOp))
 					return error("CheckAliasInputs() : OP_ALIAS_UPDATE previous tx not found");
-				if(!theAlias.IsNull() && theAlias.vchName != vvchArgs[0])
+				if(!theAlias.IsNull() && theAlias.vchAlias != vvchArgs[0])
 					return error("CheckAliasInputs() : OP_ALIAS_UPDATE guid in data output doesn't match guid in tx");
 				// Check name
 				if (vvchPrevArgs[0] != vvchArgs[0])
@@ -938,9 +901,9 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		CTransaction aliasTx;
 		string strName = stringFromVch(vvchArgs[0]);
 		boost::algorithm::to_lower(strName);
-		vchName = vchFromString(strName);
+		vchAlias = vchFromString(strName);
 		// get the alias from the DB
-		if(!GetTxAndVtxOfAlias(vchName, dbAlias, aliasTx, vtxPos))	
+		if(!GetTxAndVtxOfAlias(vchAlias, dbAlias, aliasTx, vtxPos))	
 		{
 			if(op == OP_ALIAS_ACTIVATE)
 			{
@@ -977,7 +940,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					theAlias.nRating = dbAlias.nRating;
 					theAlias.nRatingCount = dbAlias.nRatingCount;
 					theAlias.vchGUID = dbAlias.vchGUID;
-					theAlias.vchName = dbAlias.vchName;
+					theAlias.vchAlias = dbAlias.vchAlias;
 					if(theAlias.nRenewal > 5)
 						theAlias.nRenewal = 5;
 				}
@@ -1016,16 +979,16 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		PutToAliasList(vtxPos, theAlias);
 		CPubKey PubKey(theAlias.vchPubKey);
 		CSyscoinAddress address(PubKey.GetID());
-		if (!paliasdb->WriteAlias(vchName, vchFromString(address.ToString()), vtxPos))
+		if (!paliasdb->WriteAlias(vchAlias, vchFromString(address.ToString()), vtxPos))
 			return error( "CheckAliasInputs() :  failed to write to alias DB");
-		if(update && vchName == vchFromString("sys_ban"))
+		if(update && vchAlias == vchFromString("sys_ban"))
 		{
 			updateBans(theAlias.vchPublicValue);
 		}		
 		if(fDebug)
 			LogPrintf(
 				"CONNECTED ALIAS: name=%s  op=%s  hash=%s  height=%d\n",
-				stringFromVch(vchName).c_str(),
+				stringFromVch(vchAlias).c_str(),
 				aliasFromOp(op).c_str(),
 				tx.GetHash().ToString().c_str(), nHeight);
 	}
@@ -1066,6 +1029,10 @@ bool GetSyscoinData(const CTransaction &tx, vector<unsigned char> &vchData)
 
 	const CScript &scriptPubKey = tx.vout[nOut].scriptPubKey;
 	return GetSyscoinData(scriptPubKey, vchData);
+}
+bool IsValidAliasName(const std::vector<unsigned char> &vchAlias)
+{
+	return (vchAlias.size() <= MAX_GUID_LENGTH && vchAlias.size() >= 3);
 }
 bool GetSyscoinData(const CScript &scriptPubKey, vector<unsigned char> &vchData)
 {
@@ -1115,7 +1082,7 @@ const vector<unsigned char> CAliasIndex::Serialize() {
     return vchData;
 
 }
-bool CAliasDB::ScanNames(const std::vector<unsigned char>& vchName, const string& strRegexp, bool safeSearch, 
+bool CAliasDB::ScanNames(const std::vector<unsigned char>& vchAlias, const string& strRegexp, bool safeSearch, 
 		unsigned int nMax,
 		vector<pair<vector<unsigned char>, CAliasIndex> >& nameScan) {
 	int nMaxAge  = GetAliasExpirationDepth();
@@ -1127,13 +1094,13 @@ bool CAliasDB::ScanNames(const std::vector<unsigned char>& vchName, const string
 	boost::algorithm::to_lower(strRegexpLower);
 	sregex cregex = sregex::compile(strRegexpLower);
 	boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
-	pcursor->Seek(make_pair(string("namei"), vchName));
+	pcursor->Seek(make_pair(string("namei"), vchAlias));
     while (pcursor->Valid()) {
         boost::this_thread::interruption_point();
 		pair<string, vector<unsigned char> > key;
         try {
 			if (pcursor->GetKey(key) && key.first == "namei") {
-            	vector<unsigned char> vchName = key.second;
+            	vector<unsigned char> vchAlias = key.second;
 				
                 vector<CAliasIndex> vtxPos;
 				pcursor->GetValue(vtxPos);
@@ -1166,13 +1133,13 @@ bool CAliasDB::ScanNames(const std::vector<unsigned char>& vchName, const string
 					pcursor->Next();
 					continue;
 				}
-				string name = stringFromVch(vchName);
+				string name = stringFromVch(vchAlias);
 				if (strRegexp != "" && !regex_search(name, nameparts, cregex) && strRegexp != name)
 				{
 					pcursor->Next();
 					continue;
 				}
-                nameScan.push_back(make_pair(vchName, txPos));
+                nameScan.push_back(make_pair(vchAlias, txPos));
             }
             if (nameScan.size() >= nMax)
                 break;
@@ -1192,18 +1159,18 @@ int GetAliasExpirationDepth() {
     return 525600;
   #endif
 }
-bool GetTxOfAlias(const vector<unsigned char> &vchName, 
+bool GetTxOfAlias(const vector<unsigned char> &vchAlias, 
 				  CAliasIndex& txPos, CTransaction& tx, bool skipExpiresCheck) {
 	vector<CAliasIndex> vtxPos;
-	if (!paliasdb->ReadAlias(vchName, vtxPos) || vtxPos.empty())
+	if (!paliasdb->ReadAlias(vchAlias, vtxPos) || vtxPos.empty())
 		return false;
 	txPos = vtxPos.back();
 	int nHeight = txPos.nHeight;
-	if(vchName != vchFromString("sys_rates") && vchName != vchFromString("sys_ban") && vchName != vchFromString("sys_category"))
+	if(vchAlias != vchFromString("sys_rates") && vchAlias != vchFromString("sys_ban") && vchAlias != vchFromString("sys_category"))
 	{
 		if (!skipExpiresCheck && (nHeight + (txPos.nRenewal*GetAliasExpirationDepth())
 				< chainActive.Tip()->nHeight)) {
-			string name = stringFromVch(vchName);
+			string name = stringFromVch(vchAlias);
 			LogPrintf("GetTxOfAlias(%s) : expired", name.c_str());
 			return false;
 		}
@@ -1214,17 +1181,17 @@ bool GetTxOfAlias(const vector<unsigned char> &vchName,
 
 	return true;
 }
-bool GetTxAndVtxOfAlias(const vector<unsigned char> &vchName, 
+bool GetTxAndVtxOfAlias(const vector<unsigned char> &vchAlias, 
 						CAliasIndex& txPos, CTransaction& tx, std::vector<CAliasIndex> &vtxPos, bool skipExpiresCheck) {
-	if (!paliasdb->ReadAlias(vchName, vtxPos) || vtxPos.empty())
+	if (!paliasdb->ReadAlias(vchAlias, vtxPos) || vtxPos.empty())
 		return false;
 	txPos = vtxPos.back();
 	int nHeight = txPos.nHeight;
-	if(vchName != vchFromString("sys_rates") && vchName != vchFromString("sys_ban") && vchName != vchFromString("sys_category"))
+	if(vchAlias != vchFromString("sys_rates") && vchAlias != vchFromString("sys_ban") && vchAlias != vchFromString("sys_category"))
 	{
 		if (!skipExpiresCheck && (nHeight + (txPos.nRenewal*GetAliasExpirationDepth())
 				< chainActive.Tip()->nHeight)) {
-			string name = stringFromVch(vchName);
+			string name = stringFromVch(vchAlias);
 			LogPrintf("GetTxOfAlias(%s) : expired", name.c_str());
 			vtxPos.clear();
 			return false;
@@ -1451,13 +1418,28 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 						"<expire> Number of years before expiry. It affects the fees you pay, the cheapest being 1 year. The more years you specify the more fees you pay. Max is 5 years, Min is 1 year. Defaults to 1 year.\n"	
 						+ HelpRequiringPassphrase());
 
-	vector<unsigned char> vchName = vchFromString(params[0].get_str());
+	vector<unsigned char> vchAlias = vchFromString(params[0].get_str());
 	string strName = params[0].get_str();
-	if(vchName != vchFromString("sys_rates") && vchName != vchFromString("sys_ban") && vchName != vchFromString("sys_category"))
-	{
-		boost::algorithm::to_lower(strName);
-		vchName = vchFromString(strName);
-	}
+	//^((?!-)[a-z0-9-]{3,63}(?<!-)\\.)+[a-z]{0,6}$
+	/*Above pattern makes sure domain name matches the following criteria :
+
+	The domain name should be a-z | 0-9 and hyphen(-)
+	The domain name should between 3 and 63 characters long
+	Last Tld can be 0 to a maximum of 6 characters
+	The domain name should not start or end with hyphen (-) (e.g. -syscoin.org or syscoin-.org)
+	The domain name can be a subdomain (e.g. sys.blogspot.com)*/
+
+	boost::algorithm::to_lower(strName);
+	using namespace boost::xpressive;
+	smatch nameparts;
+	sregex cregex = sregex::compile("^((?!-)[a-z0-9-]{3,63}(?<!-)\\.)+[a-z]{0,6}$");
+	if (!regex_search(strName, nameparts, cregex))
+		throw runtime_error("Invalid Syscoin Identity. Must follow the domain name spec of 3 to 63 characters with a TLD of 0 to 6 characters.");
+
+	vchAlias = vchFromString(strName);
+	
+
+
 	vector<unsigned char> vchPublicValue;
 	vector<unsigned char> vchPrivateValue;
 	string strPublicValue = params[1].get_str();
@@ -1481,28 +1463,23 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 		throw runtime_error("alias public value cannot exceed 1023 bytes!");
 	if (vchPrivateValue.size() > MAX_VALUE_LENGTH)
 		throw runtime_error("alias private value cannot exceed 1023 bytes!");
-	if (vchName.size() > MAX_GUID_LENGTH)
+	if (vchAlias.size() > MAX_GUID_LENGTH)
 		throw runtime_error("alias name cannot exceed 63 characters!");
-	if (vchName.size() < 3)
+	if (vchAlias.size() < 3)
 		throw runtime_error("alias name cannot be less than 3 characters!");
-
-
-	CSyscoinAddress myAddress = CSyscoinAddress(stringFromVch(vchName));
-	if(myAddress.IsValid() && !myAddress.isAlias)
-		throw runtime_error("alias name cannot be a syscoin address!");
 
 	CWalletTx wtx;
 
 	CTransaction tx;
 	CAliasIndex theAlias;
-	if (GetTxOfAlias(vchName, theAlias, tx)) {
+	if (GetTxOfAlias(vchAlias, theAlias, tx)) {
 		throw runtime_error("this alias is already active");
 	}
 
 	EnsureWalletIsUnlocked();
 
 	// check for existing pending aliases
-	if (ExistsInMempool(vchName, OP_ALIAS_ACTIVATE)) {
+	if (ExistsInMempool(vchAlias, OP_ALIAS_ACTIVATE)) {
 		throw runtime_error("there are pending operations on that alias");
 	}
 	
@@ -1530,7 +1507,7 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
     // build alias
     CAliasIndex newAlias;
 	newAlias.vchGUID = vchRandAlias;
-	newAlias.vchName = vchName;
+	newAlias.vchAlias = vchAlias;
 	newAlias.nHeight = chainActive.Tip()->nHeight;
 	newAlias.vchPubKey = vchPubKey;
 	newAlias.vchPublicValue = vchPublicValue;
@@ -1544,7 +1521,7 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
     vector<unsigned char> vchHashAlias = vchFromValue(HexStr(vchHash));
 
 	CScript scriptPubKey;
-	scriptPubKey << CScript::EncodeOP_N(OP_ALIAS_ACTIVATE) << vchName << vchRandAlias << vchHashAlias << OP_2DROP << OP_2DROP;
+	scriptPubKey << CScript::EncodeOP_N(OP_ALIAS_ACTIVATE) << vchAlias << vchRandAlias << vchHashAlias << OP_2DROP << OP_2DROP;
 	scriptPubKey += scriptPubKeyOrig;
 
     vector<CRecipient> vecSend;
@@ -1581,14 +1558,14 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 						"<expire> Number of years before expiry. It affects the fees you pay, the cheapest being 1 year. The more years you specify the more fees you pay. Max is 5 years, Min is 1 year. Defaults to 1 year.\n"	
 						+ HelpRequiringPassphrase());
 
-	vector<unsigned char> vchName = vchFromString(params[0].get_str());
+	vector<unsigned char> vchAlias = vchFromString(params[0].get_str());
 	vector<unsigned char> vchPublicValue;
 	vector<unsigned char> vchPrivateValue;
 	string strPublicValue = params[1].get_str();
 	vchPublicValue = vchFromString(strPublicValue);
 	string strPrivateValue = params.size()>=3 && params[2].get_str().size() > 0?params[2].get_str():"";
 	vchPrivateValue = vchFromString(strPrivateValue);
-	if (vchPublicValue.size() > MAX_VALUE_LENGTH && vchName != vchFromString("sys_rates"))
+	if (vchPublicValue.size() > MAX_VALUE_LENGTH && vchAlias != vchFromString("sys_rates"))
 		throw runtime_error("alias public value cannot exceed 1023 bytes!");
 	if (vchPrivateValue.size() > MAX_VALUE_LENGTH)
 		throw runtime_error("alias public value cannot exceed 1023 bytes!");
@@ -1609,9 +1586,6 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 		CSyscoinAddress myAddress = CSyscoinAddress(xferKey.GetID());
 		if (paliasdb->ExistsAddress(vchFromString(myAddress.ToString())))
 			throw runtime_error("You must transfer to a public key that's not associated with any other alias");
-		string retError;
-		if((retError = CheckForAliasExpiry(vchPubKeyByte, chainActive.Tip()->nHeight)) != "")
-			throw runtime_error(retError);
 
 	}
 
@@ -1629,7 +1603,7 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 	EnsureWalletIsUnlocked();
 	CTransaction tx;
 	CAliasIndex theAlias;
-	if (!GetTxOfAlias(vchName, theAlias, tx))
+	if (!GetTxOfAlias(vchAlias, theAlias, tx))
 		throw runtime_error("could not find an alias with this name");
 
     if(!IsSyscoinTxMine(tx, "alias")) {
@@ -1639,7 +1613,7 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 	if (wtxIn == NULL)
 		throw runtime_error("this alias is not in your wallet");
 	// check for existing pending aliases
-	if (ExistsInMempool(vchName, OP_ALIAS_ACTIVATE) || ExistsInMempool(vchName, OP_ALIAS_UPDATE)) {
+	if (ExistsInMempool(vchAlias, OP_ALIAS_ACTIVATE) || ExistsInMempool(vchAlias, OP_ALIAS_UPDATE)) {
 		throw runtime_error("there are pending operations on that alias");
 	}
 
@@ -1679,7 +1653,7 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
     vector<unsigned char> vchHashAlias = vchFromValue(HexStr(vchHash));
 
 	CScript scriptPubKey;
-	scriptPubKey << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << vchName << copyAlias.vchGUID << vchHashAlias << OP_2DROP << OP_2DROP;
+	scriptPubKey << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << vchAlias << copyAlias.vchGUID << vchHashAlias << OP_2DROP << OP_2DROP;
 	scriptPubKey += scriptPubKeyOrig;
 
     vector<CRecipient> vecSend;
@@ -1710,10 +1684,10 @@ UniValue aliaslist(const UniValue& params, bool fHelp) {
 				"list my own aliases.\n"
 				"<aliasname> alias name to use as filter.\n");
 	
-	vector<unsigned char> vchName;
+	vector<unsigned char> vchAlias;
 
 	if (params.size() == 1)
-		vchName = vchFromValue(params[0]);
+		vchAlias = vchFromValue(params[0]);
 
 	vector<unsigned char> vchNameUniq;
 	if (params.size() == 1)
@@ -1743,15 +1717,15 @@ UniValue aliaslist(const UniValue& params, bool fHelp) {
 				continue;
 
 			// get the txn alias name
-			if (!GetAliasOfTx(wtx, vchName))
+			if (!GetAliasOfTx(wtx, vchAlias))
 				continue;
 
 			// skip this alias if it doesn't match the given filter value
-			if (vchNameUniq.size() > 0 && vchNameUniq != vchName)
+			if (vchNameUniq.size() > 0 && vchNameUniq != vchAlias)
 				continue;
 			vector<CAliasIndex> vtxPos;
 			CAliasIndex alias;
-			if (!paliasdb->ReadAlias(vchName, vtxPos) || vtxPos.empty())
+			if (!paliasdb->ReadAlias(vchAlias, vtxPos) || vtxPos.empty())
 			{
 				pending = 1;
 				alias = CAliasIndex(wtx);
@@ -1777,14 +1751,14 @@ UniValue aliaslist(const UniValue& params, bool fHelp) {
 			}
 			nHeight = alias.nHeight;
 			// get last active name only
-			if (vNamesI.find(vchName) != vNamesI.end() && (nHeight <= vNamesI[vchName] || vNamesI[vchName] < 0))
+			if (vNamesI.find(vchAlias) != vNamesI.end() && (nHeight <= vNamesI[vchAlias] || vNamesI[vchAlias] < 0))
 				continue;	
 			int expired = 0;
 			int expires_in = 0;
 			int expired_block = 0;
 			// build the output UniValue
 			UniValue oName(UniValue::VOBJ);
-			oName.push_back(Pair("name", stringFromVch(vchName)));
+			oName.push_back(Pair("name", stringFromVch(vchAlias)));
 			oName.push_back(Pair("value", stringFromVch(alias.vchPublicValue)));
 			string strPrivateValue = "";
 			if(alias.vchPrivateValue.size() > 0)
@@ -1801,7 +1775,7 @@ UniValue aliaslist(const UniValue& params, bool fHelp) {
 			oName.push_back(Pair("rating", (int)rating));
 			oName.push_back(Pair("ratingcount", alias.nRatingCount));
 			expired_block = nHeight + (alias.nRenewal*GetAliasExpirationDepth());
-			if(vchName != vchFromString("sys_rates") && vchName != vchFromString("sys_ban") && vchName != vchFromString("sys_category"))
+			if(vchAlias != vchFromString("sys_rates") && vchAlias != vchFromString("sys_ban") && vchAlias != vchFromString("sys_category"))
 			{
 				if(expired_block < chainActive.Tip()->nHeight)
 				{
@@ -1813,8 +1787,8 @@ UniValue aliaslist(const UniValue& params, bool fHelp) {
 			oName.push_back(Pair("expires_on", expired_block));
 			oName.push_back(Pair("expired", expired));
 			oName.push_back(Pair("pending", pending));
-			vNamesI[vchName] = nHeight;
-			vNamesO[vchName] = oName;					
+			vNamesI[vchAlias] = nHeight;
+			vNamesO[vchAlias] = oName;					
 
 		}
 	}
@@ -1919,7 +1893,7 @@ UniValue aliasinfo(const UniValue& params, bool fHelp) {
 	if (fHelp || 1 != params.size())
 		throw runtime_error("aliasinfo <aliasname>\n"
 				"Show values of an alias.\n");
-	vector<unsigned char> vchName = vchFromValue(params[0]);
+	vector<unsigned char> vchAlias = vchFromValue(params[0]);
 
 	CTransaction tx;
 	CAliasIndex alias;
@@ -1928,7 +1902,7 @@ UniValue aliasinfo(const UniValue& params, bool fHelp) {
 	{
 		// check for alias existence in DB
 		vector<CAliasIndex> vtxPos;
-		if (!GetTxAndVtxOfAlias(vchName, alias, tx, vtxPos, true))
+		if (!GetTxAndVtxOfAlias(vchAlias, alias, tx, vtxPos, true))
 			throw runtime_error("failed to read from alias DB");
 	
 
@@ -1938,7 +1912,7 @@ UniValue aliasinfo(const UniValue& params, bool fHelp) {
 		int expires_in = 0;
 		int expired_block = 0;
 		nHeight = alias.nHeight;
-		oName.push_back(Pair("name", stringFromVch(vchName)));
+		oName.push_back(Pair("name", stringFromVch(vchAlias)));
 
 		if(alias.safetyLevel >= SAFETY_LEVEL2)
 			throw runtime_error("alias has been banned");
@@ -1967,7 +1941,7 @@ UniValue aliasinfo(const UniValue& params, bool fHelp) {
 		oName.push_back(Pair("ratingcount", alias.nRatingCount));
         oName.push_back(Pair("lastupdate_height", nHeight));
 		expired_block = nHeight + (alias.nRenewal*GetAliasExpirationDepth());
-		if(vchName != vchFromString("sys_rates") && vchName != vchFromString("sys_ban") && vchName != vchFromString("sys_category"))
+		if(vchAlias != vchFromString("sys_rates") && vchAlias != vchFromString("sys_ban") && vchAlias != vchFromString("sys_category"))
 		{
 			if(expired_block < chainActive.Tip()->nHeight)
 			{
@@ -1994,12 +1968,12 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 		throw runtime_error("aliashistory <aliasname>\n"
 				"List all stored values of an alias.\n");
 	UniValue oRes(UniValue::VARR);
-	vector<unsigned char> vchName = vchFromValue(params[0]);
-	string name = stringFromVch(vchName);
+	vector<unsigned char> vchAlias = vchFromValue(params[0]);
+	string name = stringFromVch(vchAlias);
 
 	{
 		vector<CAliasIndex> vtxPos;
-		if (!paliasdb->ReadAlias(vchName, vtxPos) || vtxPos.empty())
+		if (!paliasdb->ReadAlias(vchAlias, vtxPos) || vtxPos.empty())
 			throw runtime_error("failed to read from alias DB");
 
 		CAliasIndex txPos2;
@@ -2046,7 +2020,7 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 			oName.push_back(Pair("rating", (int)rating));
 			oName.push_back(Pair("ratingcount", txPos2.nRatingCount));
 			expired_block = nHeight + (txPos2.nRenewal*GetAliasExpirationDepth()) ;
-			if(vchName != vchFromString("sys_rates") && vchName != vchFromString("sys_ban") && vchName != vchFromString("sys_category"))
+			if(vchAlias != vchFromString("sys_rates") && vchAlias != vchFromString("sys_ban") && vchAlias != vchFromString("sys_category"))
 			{
 				if(expired_block < chainActive.Tip()->nHeight)
 				{
@@ -2089,7 +2063,7 @@ UniValue aliasfilter(const UniValue& params, bool fHelp) {
 						"aliasfilter \"^alias\" # list all aliases starting with \"alias\"\n"
 						"aliasfilter 36000 0 0 stat # display stats (number of aliases) on active aliases\n");
 
-	vector<unsigned char> vchName;
+	vector<unsigned char> vchAlias;
 	string strRegexp;
 	string strName;
 	bool safeSearch = true;
@@ -2100,7 +2074,7 @@ UniValue aliasfilter(const UniValue& params, bool fHelp) {
 
 	if (params.size() > 1)
 	{
-		vchName = vchFromValue(params[1]);
+		vchAlias = vchFromValue(params[1]);
 		strName = params[1].get_str();
 	}
 
@@ -2112,8 +2086,8 @@ UniValue aliasfilter(const UniValue& params, bool fHelp) {
 	
 	vector<pair<vector<unsigned char>, CAliasIndex> > nameScan;
 	boost::algorithm::to_lower(strName);
-	vchName = vchFromString(strName);
-	if (!paliasdb->ScanNames(vchName, strRegexp, safeSearch, 25, nameScan))
+	vchAlias = vchFromString(strName);
+	if (!paliasdb->ScanNames(vchAlias, strRegexp, safeSearch, 25, nameScan))
 		throw runtime_error("scan failed");
 
 	pair<vector<unsigned char>, CAliasIndex> pairScan;
@@ -2154,26 +2128,4 @@ UniValue aliasfilter(const UniValue& params, bool fHelp) {
 
 
 	return oRes;
-}
-
-string CheckForAliasExpiry(const vector<unsigned char> &vchPubKey, const int nHeight)
-{
-	if(!vchPubKey.empty())
-	{
-	
-		CPubKey PubKey(vchPubKey);
-		vector<CAliasIndex> vtxAliasPos;
-		CSyscoinAddress alias(PubKey.GetID());
-		alias = CSyscoinAddress(alias.ToString());
-		if(!alias.IsValid())
-			return string("alias address is invalid");
-		if(alias.isAlias)
-		{
-			if(alias.nExpireHeight < nHeight)
-			{
-				return string("alias is expired");
-			}
-		}
-	}
-	return "";
 }

@@ -17,7 +17,7 @@ class CCoins;
 class CBlock;
 struct CRecipient;
 class CSyscoinAddress;
-static const unsigned int MAX_GUID_LENGTH = 63;
+static const unsigned int MAX_GUID_LENGTH = 70;
 static const unsigned int MAX_NAME_LENGTH = 255;
 static const unsigned int MAX_VALUE_LENGTH = 1023;
 static const unsigned int MAX_ID_LENGTH = 20;
@@ -29,7 +29,7 @@ static const unsigned int SYSCOIN_FORK1 = 50000;
 bool IsSys21Fork(const uint64_t& nHeight);
 class CAliasIndex {
 public:
-	 std::vector<unsigned char> vchName;
+	 std::vector<unsigned char> vchAlias;
 	 std::vector<unsigned char> vchGUID;
     uint256 txHash;
     int64_t nHeight;
@@ -62,19 +62,16 @@ public:
 		READWRITE(vchPublicValue);
 		READWRITE(vchPrivateValue);
 		READWRITE(vchPubKey);
-		if(IsSys21Fork(nHeight))
-		{
-			READWRITE(vchName);
-			READWRITE(vchGUID);
-			READWRITE(safetyLevel);
-			READWRITE(nRenewal);
-			READWRITE(safeSearch);
-			READWRITE(VARINT(nRating));
-			READWRITE(VARINT(nRatingCount));
-		}
+		READWRITE(vchAlias);
+		READWRITE(vchGUID);
+		READWRITE(safetyLevel);
+		READWRITE(nRenewal);
+		READWRITE(safeSearch);
+		READWRITE(VARINT(nRating));
+		READWRITE(VARINT(nRatingCount));
 	}
     friend bool operator==(const CAliasIndex &a, const CAliasIndex &b) {
-		return (a.nRenewal == b.nRenewal && a.vchGUID == b.vchGUID && a.vchName == b.vchName && a.nRatingCount == b.nRatingCount && a.nRating == b.nRating && a.safetyLevel == b.safetyLevel && a.safeSearch == b.safeSearch && a.nHeight == b.nHeight && a.txHash == b.txHash && a.vchPublicValue == b.vchPublicValue && a.vchPrivateValue == b.vchPrivateValue && a.vchPubKey == b.vchPubKey);
+		return (a.nRenewal == b.nRenewal && a.vchGUID == b.vchGUID && a.vchAlias == b.vchAlias && a.nRatingCount == b.nRatingCount && a.nRating == b.nRating && a.safetyLevel == b.safetyLevel && a.safeSearch == b.safeSearch && a.nHeight == b.nHeight && a.txHash == b.txHash && a.vchPublicValue == b.vchPublicValue && a.vchPrivateValue == b.vchPrivateValue && a.vchPubKey == b.vchPubKey);
     }
 
     friend bool operator!=(const CAliasIndex &a, const CAliasIndex &b) {
@@ -83,7 +80,7 @@ public:
     CAliasIndex operator=(const CAliasIndex &b) {
 		vchGUID = b.vchGUID;
 		nRenewal = b.nRenewal;
-		vchName = b.vchName;
+		vchAlias = b.vchAlias;
         txHash = b.txHash;
         nHeight = b.nHeight;
         vchPublicValue = b.vchPublicValue;
@@ -95,8 +92,8 @@ public:
 		nRatingCount = b.nRatingCount;
         return *this;
     }   
-    void SetNull() {nRenewal = 0; vchGUID.clear(); vchName.clear(); nRatingCount = 0; nRating = 0; safetyLevel = 0; safeSearch = false; txHash.SetNull(); nHeight = 0; vchPublicValue.clear(); vchPrivateValue.clear(); vchPubKey.clear(); }
-    bool IsNull() const { return (nRenewal == 0 && vchGUID.empty() && vchName.empty() && nRatingCount == 0 && nRating == 0 && safetyLevel == 0 && !safeSearch && nHeight == 0 && txHash.IsNull() && vchPublicValue.empty() && vchPrivateValue.empty() && vchPubKey.empty()); }
+    void SetNull() {nRenewal = 0; vchGUID.clear(); vchAlias.clear(); nRatingCount = 0; nRating = 0; safetyLevel = 0; safeSearch = false; txHash.SetNull(); nHeight = 0; vchPublicValue.clear(); vchPrivateValue.clear(); vchPubKey.clear(); }
+    bool IsNull() const { return (nRenewal == 0 && vchGUID.empty() && vchAlias.empty() && nRatingCount == 0 && nRating == 0 && safetyLevel == 0 && !safeSearch && nHeight == 0 && txHash.IsNull() && vchPublicValue.empty() && vchPrivateValue.empty() && vchPubKey.empty()); }
 	bool UnserializeFromTx(const CTransaction &tx);
 	bool UnserializeFromData(const std::vector<unsigned char> &vchData);
 	const std::vector<unsigned char> Serialize();
@@ -127,7 +124,7 @@ public:
 	    return Exists(make_pair(std::string("namea"), address));
 	}
     bool ScanNames(
-		const std::vector<unsigned char>& vchName, const std::string& strRegExp, bool safeSearch,
+		const std::vector<unsigned char>& vchAlias, const std::string& strRegExp, bool safeSearch,
             unsigned int nMax,
             std::vector<std::pair<std::vector<unsigned char>, CAliasIndex> >& nameScan);
 
@@ -152,7 +149,7 @@ std::string stringFromValue(const UniValue& value);
 bool IsSysCompressedOrUncompressedPubKey(const std::vector<unsigned char> &vchPubKey);
 int GetSyscoinTxVersion();
 const int SYSCOIN_TX_VERSION = 0x7400;
-std::string CheckForAliasExpiry(const std::vector<unsigned char> &vchPubKey, const int nHeight);
+bool IsValidAliasName(const std::vector<unsigned char> &vchAlias);
 bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const std::vector<std::vector<unsigned char> > &vvchArgs, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, const CBlock *block = NULL);
 void CreateRecipient(const CScript& scriptPubKey, CRecipient& recipient);
 void CreateFeeRecipient(const CScript& scriptPubKey, const std::vector<unsigned char>& data, CRecipient& recipient);
@@ -160,8 +157,8 @@ bool IsSyscoinTxMine(const CTransaction& tx,const std::string &type);
 bool IsAliasOp(int op);
 bool getCategoryList(std::vector<std::string>& categoryList);
 bool getBanList(const std::vector<unsigned char> &banData, std::map<std::string, unsigned char> &banAliasList,  std::map<std::string, unsigned char>& banCertList,  std::map<std::string, unsigned char>& banOfferList);
-bool GetTxOfAlias(const std::vector<unsigned char> &vchName, CAliasIndex& alias, CTransaction& tx, bool skipExpiresCheck=false);
-bool GetTxAndVtxOfAlias(const std::vector<unsigned char> &vchName, CAliasIndex& alias, CTransaction& tx, std::vector<CAliasIndex> &vtxPos, bool skipExpiresCheck=false);
+bool GetTxOfAlias(const std::vector<unsigned char> &vchAlias, CAliasIndex& alias, CTransaction& tx, bool skipExpiresCheck=false);
+bool GetTxAndVtxOfAlias(const std::vector<unsigned char> &vchAlias, CAliasIndex& alias, CTransaction& tx, std::vector<CAliasIndex> &vtxPos, bool skipExpiresCheck=false);
 int IndexOfAliasOutput(const CTransaction& tx);
 bool GetAliasOfTx(const CTransaction& tx, std::vector<unsigned char>& name);
 bool DecodeAliasTx(const CTransaction& tx, int& op, int& nOut, std::vector<std::vector<unsigned char> >& vvch);

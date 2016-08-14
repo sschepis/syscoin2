@@ -28,8 +28,8 @@ std::string messageFromOp(int op);
 class CMessage {
 public:
 	std::vector<unsigned char> vchMessage;
-	std::vector<unsigned char> vchPubKeyTo;
-	std::vector<unsigned char> vchPubKeyFrom;
+	std::vector<unsigned char> vchAliasTo;
+	std::vector<unsigned char> vchAliasFrom;
 	std::vector<unsigned char> vchSubject;
 	std::vector<unsigned char> vchMessageTo;
 	std::vector<unsigned char> vchMessageFrom;
@@ -45,24 +45,21 @@ public:
 	ADD_SERIALIZE_METHODS;
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-        READWRITE(vchPubKeyTo);
-		READWRITE(vchPubKeyFrom);
 		READWRITE(vchSubject);
 		READWRITE(vchMessageTo);
 		READWRITE(vchMessageFrom);
 		READWRITE(txHash);
 		READWRITE(VARINT(nHeight));
-		if(IsSys21Fork(nHeight))
-		{
-			READWRITE(vchMessage);
-		}
+		READWRITE(vchMessage);
+        READWRITE(vchAliasTo);
+		READWRITE(vchAliasFrom);		
 		
 	}
 
     friend bool operator==(const CMessage &a, const CMessage &b) {
         return (
-        a.vchPubKeyTo == b.vchPubKeyTo
-		&& a.vchPubKeyFrom == b.vchPubKeyFrom
+        a.vchAliasTo == b.vchAliasTo
+		&& a.vchAliasFrom == b.vchAliasFrom
 		&& a.vchSubject == b.vchSubject
 		&& a.vchMessageTo == b.vchMessageTo
 		&& a.vchMessageFrom == b.vchMessageFrom
@@ -73,8 +70,8 @@ public:
     }
 
     CMessage operator=(const CMessage &b) {
-        vchPubKeyTo = b.vchPubKeyTo;
-		vchPubKeyFrom = b.vchPubKeyFrom;
+        vchAliasTo = b.vchAliasTo;
+		vchAliasFrom = b.vchAliasFrom;
 		vchSubject = b.vchSubject;
 		vchMessageTo = b.vchMessageTo;
 		vchMessageFrom = b.vchMessageFrom;
@@ -88,8 +85,8 @@ public:
         return !(a == b);
     }
 
-    void SetNull() {vchMessage.clear(); txHash.SetNull(); nHeight = 0; vchPubKeyTo.clear(); vchPubKeyFrom.clear(); vchSubject.clear(); vchMessageTo.clear();vchMessageFrom.clear();}
-    bool IsNull() const { return (vchMessage.empty() && txHash.IsNull() && nHeight == 0 && vchPubKeyTo.empty() && vchPubKeyFrom.empty()); }
+    void SetNull() {vchMessage.clear(); txHash.SetNull(); nHeight = 0; vchAliasTo.clear(); vchAliasFrom.clear(); vchSubject.clear(); vchMessageTo.clear();vchMessageFrom.clear();}
+    bool IsNull() const { return (vchMessage.empty() && txHash.IsNull() && nHeight == 0 && vchAliasTo.empty() && vchAliasFrom.empty()); }
     bool UnserializeFromTx(const CTransaction &tx);
 	bool UnserializeFromData(const std::vector<unsigned char> &vchData);
 	const std::vector<unsigned char> Serialize();
@@ -117,7 +114,7 @@ public:
     }
 
     bool ScanMessages(
-            const std::vector<unsigned char>& vchName,
+            const std::vector<unsigned char>& vchMessage,
             unsigned int nMax,
             std::vector<std::pair<std::vector<unsigned char>, CMessage> >& MessageScan);
 

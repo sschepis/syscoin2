@@ -26,7 +26,7 @@ extern bool IsSys21Fork(const uint64_t& nHeight);
 class CCert {
 public:
 	std::vector<unsigned char> vchCert;
-	std::vector<unsigned char> vchPubKey;
+	std::vector<unsigned char> vchAlias;
     std::vector<unsigned char> vchTitle;
     std::vector<unsigned char> vchData;
 	std::vector<unsigned char> sCategory;
@@ -55,15 +55,12 @@ public:
 		READWRITE(vchData);
 		READWRITE(txHash);
 		READWRITE(VARINT(nHeight));
-		READWRITE(vchPubKey);
+		READWRITE(vchAlias);
 		READWRITE(bPrivate);
-		if(IsSys21Fork(nHeight))
-		{
-			READWRITE(vchCert);
-			READWRITE(safetyLevel);
-			READWRITE(safeSearch);
-			READWRITE(sCategory);
-		}		
+		READWRITE(vchCert);
+		READWRITE(safetyLevel);
+		READWRITE(safeSearch);
+		READWRITE(sCategory);				
 	}
     friend bool operator==(const CCert &a, const CCert &b) {
         return (
@@ -71,7 +68,7 @@ public:
         && a.vchData == b.vchData
         && a.txHash == b.txHash
         && a.nHeight == b.nHeight
-		&& a.vchPubKey == b.vchPubKey
+		&& a.vchAlias == b.vchAlias
 		&& a.bPrivate == b.bPrivate
 		&& a.safetyLevel == b.safetyLevel
 		&& a.safeSearch == b.safeSearch
@@ -85,7 +82,7 @@ public:
         vchData = b.vchData;
         txHash = b.txHash;
         nHeight = b.nHeight;
-		vchPubKey = b.vchPubKey;
+		vchAlias = b.vchAlias;
 		bPrivate = b.bPrivate;
 		safetyLevel = b.safetyLevel;
 		safeSearch = b.safeSearch;
@@ -98,8 +95,8 @@ public:
         return !(a == b);
     }
 
-    void SetNull() { sCategory.clear(); vchCert.clear(); safetyLevel = 0; safeSearch = false; nHeight = 0; txHash.SetNull(); vchPubKey.clear(); bPrivate = false; vchTitle.clear(); vchData.clear();}
-    bool IsNull() const { return (sCategory.empty() && vchCert.empty() && safetyLevel == 0 && !safeSearch && txHash.IsNull() &&  nHeight == 0 && vchPubKey.empty() && vchData.empty() && vchTitle.empty() && vchPubKey.empty()); }
+    void SetNull() { sCategory.clear(); vchCert.clear(); safetyLevel = 0; safeSearch = false; nHeight = 0; txHash.SetNull(); vchAlias.clear(); bPrivate = false; vchTitle.clear(); vchData.clear();}
+    bool IsNull() const { return (sCategory.empty() && vchCert.empty() && safetyLevel == 0 && !safeSearch && txHash.IsNull() &&  nHeight == 0 && vchAlias.empty() && vchData.empty() && vchTitle.empty() && vchAlias.empty()); }
     bool UnserializeFromTx(const CTransaction &tx);
 	bool UnserializeFromData(const std::vector<unsigned char> &vchData);
 	const std::vector<unsigned char> Serialize();
@@ -127,7 +124,7 @@ public:
     }
 
     bool ScanCerts(
-		const std::vector<unsigned char>& vchName, const std::string &strRegExp,  bool safeSearch, const std::string& strCategory,
+		const std::vector<unsigned char>& vchCert, const std::string &strRegExp,  bool safeSearch, const std::string& strCategory,
             unsigned int nMax,
             std::vector<std::pair<std::vector<unsigned char>, CCert> >& certScan);
 

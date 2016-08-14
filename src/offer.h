@@ -95,7 +95,7 @@ public:
 	unsigned int nQty;
 	float nPrice;
 	uint256 txBTCId;
-	std::vector<unsigned char> vchBuyerKey;	
+	std::vector<unsigned char> vchBuyerAlias;	
 	std::vector<unsigned char> vchLinkAccept;	
 	std::vector<unsigned char> vchLinkOffer;
 	std::vector<unsigned char> vchMessage;
@@ -113,7 +113,7 @@ public:
 		READWRITE(VARINT(nAcceptHeight));
         READWRITE(VARINT(nQty));
     	READWRITE(nPrice);
-		READWRITE(vchBuyerKey);	
+		READWRITE(vchBuyerAlias);	
 		READWRITE(txBTCId);	
 		READWRITE(vchEscrow);
 		READWRITE(feedback);
@@ -130,7 +130,7 @@ public:
 		&& a.nAcceptHeight == b.nAcceptHeight
         && a.nQty == b.nQty
         && a.nPrice == b.nPrice
-		&& a.vchBuyerKey == b.vchBuyerKey
+		&& a.vchBuyerAlias == b.vchBuyerAlias
 		&& a.txBTCId == b.txBTCId
 		&& a.vchEscrow == b.vchEscrow
 		&& a.feedback == b.feedback
@@ -147,7 +147,7 @@ public:
 		nAcceptHeight = b.nAcceptHeight;
         nQty = b.nQty;
         nPrice = b.nPrice;
-		vchBuyerKey = b.vchBuyerKey;
+		vchBuyerAlias = b.vchBuyerAlias;
 		txBTCId = b.txBTCId;
 		vchEscrow = b.vchEscrow;
 		feedback = b.feedback;
@@ -161,8 +161,8 @@ public:
         return !(a == b);
     }
 
-    void SetNull() { vchMessage.clear(); vchLinkAccept.clear(); vchLinkOffer.clear(); feedback.SetNull(); vchEscrow.clear(); vchAcceptRand.clear(); nHeight = nAcceptHeight = nPrice = nQty = 0; txHash.SetNull(); txBTCId.SetNull(); vchBuyerKey.clear();}
-    bool IsNull() const { return (vchMessage.empty() && vchLinkAccept.empty() && vchLinkOffer.empty() && feedback.IsNull() && vchEscrow.empty() && vchAcceptRand.empty() && txHash.IsNull() && nHeight == 0 && nAcceptHeight == 0 &&nPrice == 0 && nQty == 0 && txBTCId.IsNull() && vchBuyerKey.empty()); }
+    void SetNull() { vchMessage.clear(); vchLinkAccept.clear(); vchLinkOffer.clear(); feedback.SetNull(); vchEscrow.clear(); vchAcceptRand.clear(); nHeight = nAcceptHeight = nPrice = nQty = 0; txHash.SetNull(); txBTCId.SetNull(); vchBuyerAlias.clear();}
+    bool IsNull() const { return (vchMessage.empty() && vchLinkAccept.empty() && vchLinkOffer.empty() && feedback.IsNull() && vchEscrow.empty() && vchAcceptRand.empty() && txHash.IsNull() && nHeight == 0 && nAcceptHeight == 0 &&nPrice == 0 && nQty == 0 && txBTCId.IsNull() && vchBuyerAlias.empty()); }
 
 };
 class COfferLinkWhitelistEntry {
@@ -269,7 +269,7 @@ class COffer {
 
 public:
 	std::vector<unsigned char> vchOffer;
-	std::vector<unsigned char> vchPubKey;
+	std::vector<unsigned char> vchAlias;
     uint256 txHash;
     uint64_t nHeight;
 	std::vector<unsigned char> sCategory;
@@ -331,19 +331,17 @@ public:
 			READWRITE(sCurrencyCode);
 			READWRITE(nCommission);
 			READWRITE(offerLinks);
-			READWRITE(vchPubKey);
+			READWRITE(vchAlias);
 			READWRITE(vchCert);
 			READWRITE(bPrivate);
 			READWRITE(vchAliasPeg);
 			READWRITE(bOnlyAcceptBTC);
-			if(IsSys21Fork(nHeight))
-			{
-				READWRITE(vchOffer);
-				READWRITE(safetyLevel);
-				READWRITE(safeSearch);
-				READWRITE(vchGeoLocation);
-				READWRITE(vchLinkAlias);
-			}
+			READWRITE(vchOffer);
+			READWRITE(safetyLevel);
+			READWRITE(safeSearch);
+			READWRITE(vchGeoLocation);
+			READWRITE(vchLinkAlias);
+	
 				
 	}
 	float GetPrice(const COfferLinkWhitelistEntry& entry=COfferLinkWhitelistEntry()){
@@ -407,7 +405,7 @@ public:
 		&& a.linkWhitelist == b.linkWhitelist
 		&& a.sCurrencyCode == b.sCurrencyCode
 		&& a.nCommission == b.nCommission
-		&& a.vchPubKey == b.vchPubKey
+		&& a.vchAlias == b.vchAlias
 		&& a.vchCert == b.vchCert
 		&& a.bPrivate == b.bPrivate
 		&& a.bOnlyAcceptBTC == b.bOnlyAcceptBTC
@@ -434,7 +432,7 @@ public:
 		sCurrencyCode = b.sCurrencyCode;
 		offerLinks = b.offerLinks;
 		nCommission = b.nCommission;
-		vchPubKey = b.vchPubKey;
+		vchAlias = b.vchAlias;
 		vchCert = b.vchCert;
 		bPrivate = b.bPrivate;
 		bOnlyAcceptBTC = b.bOnlyAcceptBTC;
@@ -450,8 +448,8 @@ public:
         return !(a == b);
     }
     
-    void SetNull() { vchOffer.clear(); safetyLevel = nHeight = nPrice = nQty = 0; safeSearch = false; txHash.SetNull(); bPrivate = false; bOnlyAcceptBTC = false; accept.SetNull(); vchAliasPeg.clear(); sTitle.clear(); sDescription.clear();vchLinkOffer.clear();vchLinkAlias.clear();linkWhitelist.SetNull();sCurrencyCode.clear();offerLinks.clear();nCommission=0;vchPubKey.clear();vchCert.clear();vchGeoLocation.clear();}
-    bool IsNull() const { return (vchOffer.empty() && safetyLevel == 0 && !safeSearch && vchPubKey.empty() && txHash.IsNull() && nHeight == 0 && nPrice == 0 && nQty == 0 &&  linkWhitelist.IsNull() && sTitle.empty() && sDescription.empty() && vchAliasPeg.empty() && offerLinks.empty() && vchGeoLocation.empty() && nCommission == 0 && bPrivate == false && bOnlyAcceptBTC == false && sCurrencyCode.empty() && vchLinkOffer.empty() && vchLinkAlias.empty() && vchCert.empty() ); }
+    void SetNull() { vchOffer.clear(); safetyLevel = nHeight = nPrice = nQty = 0; safeSearch = false; txHash.SetNull(); bPrivate = false; bOnlyAcceptBTC = false; accept.SetNull(); vchAliasPeg.clear(); sTitle.clear(); sDescription.clear();vchLinkOffer.clear();vchLinkAlias.clear();linkWhitelist.SetNull();sCurrencyCode.clear();offerLinks.clear();nCommission=0;vchAlias.clear();vchCert.clear();vchGeoLocation.clear();}
+    bool IsNull() const { return (vchOffer.empty() && safetyLevel == 0 && !safeSearch && vchAlias.empty() && txHash.IsNull() && nHeight == 0 && nPrice == 0 && nQty == 0 &&  linkWhitelist.IsNull() && sTitle.empty() && sDescription.empty() && vchAliasPeg.empty() && offerLinks.empty() && vchGeoLocation.empty() && nCommission == 0 && bPrivate == false && bOnlyAcceptBTC == false && sCurrencyCode.empty() && vchLinkOffer.empty() && vchLinkAlias.empty() && vchCert.empty() ); }
 
     bool UnserializeFromTx(const CTransaction &tx);
 	bool UnserializeFromData(const std::vector<unsigned char> &vchData);
@@ -480,7 +478,7 @@ public:
 
 
     bool ScanOffers(
-		const std::vector<unsigned char>& vchName,const std::string &strRegExp, bool safeSearch,const std::string& strCategory,
+		const std::vector<unsigned char>& vchOffer,const std::string &strRegExp, bool safeSearch,const std::string& strCategory,
             unsigned int nMax,
             std::vector<std::pair<std::vector<unsigned char>, COffer> >& offerScan);
 
