@@ -1003,7 +1003,9 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 		if (linkedOffer.bOnlyAcceptBTC)
 			throw runtime_error("Linked offer only accepts Bitcoins, linked offers currently only work with Syscoin payments");
 		vchSellerPubKey = theLinkedAlias.vchPubKey;
-		
+	}
+	else
+	{
 		// if offer is not linked, look for a discount for the buyer
 		theOffer.linkWhitelist.GetLinkEntryByHash(buyeralias.vchAlias, foundEntry);
 
