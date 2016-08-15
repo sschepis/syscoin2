@@ -834,7 +834,7 @@ UniValue certtransfer(const UniValue& params, bool fHelp) {
     CScript scriptPubKeyOrig;
 
     EnsureWalletIsUnlocked();
-    CTransaction tx, aliastx;
+    CTransaction aliastx;
 	CCert theCert;
     if (!GetTxOfCert( vchCert, theCert, tx, true))
         throw runtime_error("could not find a certificate with this key");
