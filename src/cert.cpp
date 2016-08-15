@@ -652,7 +652,7 @@ UniValue certnew(const UniValue& params, bool fHelp) {
     newCert.vchTitle = vchTitle;
 	newCert.vchData = vchData;
 	newCert.nHeight = chainActive.Tip()->nHeight;
-	newCert.vchAlias = alias.vchAlias;
+	newCert.vchAlias = theAlias.vchAlias;
 	newCert.bPrivate = bPrivate;
 	newCert.safetyLevel = 0;
 	newCert.safeSearch = strSafeSearch == "Yes"? true: false;
@@ -734,9 +734,9 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
     if (!GetTxOfCert( vchCert, theCert, tx))
         throw runtime_error("could not find a certificate with this key");
 	// check for alias existence in DB
-	CTransaction tx;
+	CTransaction aliastx;
 	CAliasIndex theAlias;
-	if (!GetTxOfAlias(theCert.vchAlias, theAlias, tx, true))
+	if (!GetTxOfAlias(theCert.vchAlias, theAlias, aliastx, true))
 		throw runtime_error("failed to read alias from alias DB");
 
 	
@@ -822,7 +822,7 @@ UniValue certtransfer(const UniValue& params, bool fHelp) {
 	if (!GetTxOfAlias(vchAlias, toAlias, tx, true))
 		throw runtime_error("failed to read xfer alias from alias DB");
 
-	xferKey = CPubKey(toAlias.vchPubKey);
+	CPubKey xferKey = CPubKey(toAlias.vchPubKey);
 
 	
 
