@@ -2281,8 +2281,6 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	CAliasIndex alias;
 	CTransaction aliastx;
 	const CWalletTx *wtxAliasIn = NULL;
-
-	CTransaction aliastx;
 	if (!GetTxOfAlias(vchAlias, alias, aliastx, true))
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 523 - Could not find an alias with this name");
 
@@ -2633,7 +2631,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	// if not escrow accept then make sure you can't buy your own offer
 	if(vchEscrowTxHash.empty())
 	{
-		CPubKey sellerKey = CPubKey(alias.vchPubKey);
+		CPubKey sellerKey = CPubKey(theAlias.vchPubKey);
 		CSyscoinAddress sellerAddress(sellerKey.GetID());
 		if(!sellerAddress.IsValid())
 			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 541 - Seller address is invalid");
