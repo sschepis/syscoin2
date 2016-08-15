@@ -138,7 +138,7 @@ bool CEscrowDB::ScanEscrows(const std::vector<unsigned char>& vchEscrow, const s
 
 				string buyerAliasLower = stringFromVch(txPos.vchBuyerAlias);
 				string sellerAliasLower = stringFromVch(txPos.vchSellerAlias);
-				string arbiterAliasLower = astringFromVch(txPos.vchArbiterAlias);
+				string arbiterAliasLower = stringFromVch(txPos.vchArbiterAlias);
 
 				if (strRegexp != "" && strRegexp != offerstr && strRegexp != escrow && strSearchLower != buyerAliasLower && strSearchLower != sellerAliasLower && strSearchLower != arbiterAliasLower)
 				{
@@ -987,7 +987,6 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	if (!GetTxOfOffer( vchOffer, theOffer, txOffer, true))
 		throw runtime_error("could not find an offer with this identifier");
 	CAliasIndex theAlias;
-	CTransaction txAlias;
 	if (!GetTxOfAlias( theOffer.vchAlias, theAlias, txAlias, true))
 		throw runtime_error("could not find an alias with this identifier");
 
@@ -1217,7 +1216,7 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
     CTransaction tx;
 	CEscrow escrow;
     if (!GetTxOfEscrow( vchEscrow, 
-		escrow, tx, true))
+		escrow, tx))
         throw runtime_error("could not find a escrow with this key");
     vector<vector<unsigned char> > vvch;
     int op, nOut;
@@ -1460,7 +1459,7 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 		escrow, tx))
         throw runtime_error("could not find a escrow with this key");
 
-	CAliasIndex sellerAlias
+	CAliasIndex sellerAlias;
 	if(!GetTxOfAlias(escrow.vchSellerAlias, sellerAlias, aliastx, true))
 		throw runtime_error("Seller address is invalid!");
 	CPubKey sellerKey(sellerAlias.vchPubKey);
@@ -1519,6 +1518,7 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 		throw runtime_error(find_value(objError, "message").get_str());
 	}
 	if (!decodeRes.isObject())
+	{
 		throw runtime_error("Could not decode escrow transaction: Invalid response from decoderawtransaction!");
 	}
 
@@ -1577,7 +1577,7 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 
 	// broadcast the payment transaction
 	UniValue arraySendParams(UniValue::VARR);
-	arraySendParams.push_back(hex_str);
+	 xcarraySendParams.push_back(hex_str);
 	try
 	{
 		res = tableRPC.execute("sendrawtransaction", arraySendParams);
