@@ -2305,7 +2305,7 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	if (!GetTxOfOffer( vchOffer, theOffer, tx, true))
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 524 - Could not find an offer with this guid");
 	
-	CPubKey currentKey(theAlias.vchPubKey);
+	CPubKey currentKey(alias.vchPubKey);
 	scriptPubKeyOrig = GetScriptForDestination(currentKey.GetID());
 
 	// create OFFERUPDATE, CERTUPDATE, ALIASUPDATE txn keys
