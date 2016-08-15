@@ -550,7 +550,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4030 - Invalid arbiter rating, must be less than or equal to 5 and greater than or equal to 0";
 						return error(errorMessage.c_str());
 					}
-						
+				}		
 				else
 				{
 					if(prevOp != OP_ESCROW_RELEASE)
