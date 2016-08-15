@@ -630,6 +630,14 @@ UniValue certnew(const UniValue& params, bool fHelp) {
 	vector<unsigned char> vchTitle = vchFromString(params[1].get_str());
     vector<unsigned char> vchData = vchFromString(params[2].get_str());
 	vector<unsigned char> vchCat = vchFromString("certificates");
+	// check for alias existence in DB
+	CTransaction aliastx;
+	CAliasIndex theAlias;
+	if (!GetTxOfAlias(theCert.vchAlias, theAlias, aliastx, true))
+		throw runtime_error("SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2023 - failed to read alias from alias DB");
+
+	
+
 	if(params.size() >= 6)
 		vchCat = vchFromValue(params[5]);
 	bool bPrivate = false;
@@ -669,7 +677,7 @@ UniValue certnew(const UniValue& params, bool fHelp) {
 		string strCipherText;
 		if(!EncryptMessage(theAlias.vchPubKey, vchData, strCipherText))
 		{
-			throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2023 - Could not encrypt certificate data");
+			throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2024 - Could not encrypt certificate data");
 		}
 		vchData = vchFromString(strCipherText);
 	}
@@ -758,16 +766,21 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
 	CCert theCert;
 	
     if (!GetTxOfCert( vchCert, theCert, tx, true))
-        throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2024 - Could not find a certificate with this key");
+        throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2025 - Could not find a certificate with this key");
 
-	
+	CTransaction aliastx;
+	CAliasIndex theAlias;
+	if (!GetTxOfAlias(theCert.vchAlias, theAlias, aliastx, true))
+		throw runtime_error("SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2026 - failed to read alias from alias DB");
+
+		
     // make sure cert is in wallet
 	wtxIn = pwalletMain->GetWalletTx(tx.GetHash());
 	if (wtxIn == NULL || !IsSyscoinTxMine(tx, "cert"))
-		throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2025 - This cert is not in your wallet");
+		throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2027 - This cert is not in your wallet");
       	// check for existing cert 's
 	if (ExistsInMempool(vchCert, OP_CERT_ACTIVATE) || ExistsInMempool(vchCert, OP_CERT_UPDATE) || ExistsInMempool(vchCert, OP_CERT_TRANSFER)) {
-		throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2026 - There are pending operations on that cert");
+		throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2028 - There are pending operations on that cert");
 	}
 
 	CCert copyCert = theCert;
@@ -782,7 +795,7 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
 		string strCipherText;
 		if(!EncryptMessage(theAlias.vchPubKey, vchData, strCipherText))
 		{
-			throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2027 - Could not encrypt certificate data!");
+			throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2029 - Could not encrypt certificate data!");
 		}
 		vchData = vchFromString(strCipherText);
 	}
@@ -839,7 +852,7 @@ UniValue certtransfer(const UniValue& params, bool fHelp) {
 	CTransaction tx;
 	CAliasIndex toAlias;
 	if (!GetTxOfAlias(vchAlias, toAlias, tx, true))
-		throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2028 - Failed to read xfer alias from DB");
+		throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2030 - Failed to read xfer alias from DB");
 
 	CPubKey xferKey = CPubKey(toAlias.vchPubKey);
 
@@ -856,21 +869,21 @@ UniValue certtransfer(const UniValue& params, bool fHelp) {
     CTransaction aliastx;
 	CCert theCert;
     if (!GetTxOfCert( vchCert, theCert, tx, true))
-        throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2029 - Could not find a certificate with this key");
+        throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2031 - Could not find a certificate with this key");
 
 	CAliasIndex fromAlias;
 	if(!GetTxOfAlias(theCert.vchAlias, fromAlias, aliastx, true))
 	{
-		 throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2030 - Could not find the certificate alias");
+		 throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2032 - Could not find the certificate alias");
 	}
 
 	// check to see if certificate in wallet
 	wtxIn = pwalletMain->GetWalletTx(theCert.txHash);
 	if (wtxIn == NULL || !IsSyscoinTxMine(*wtxIn, "cert"))
-		throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2031 - This certificate is not in your wallet");
+		throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2033 - This certificate is not in your wallet");
 
 	if (ExistsInMempool(vchCert, OP_CERT_UPDATE) || ExistsInMempool(vchCert, OP_CERT_TRANSFER)) {
-		throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2032 - There are pending operations on that cert");
+		throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2034 - There are pending operations on that cert");
 	}
 	// if cert is private, decrypt the data
 	vector<unsigned char> vchData = theCert.vchData;
@@ -884,11 +897,11 @@ UniValue certtransfer(const UniValue& params, bool fHelp) {
 		if(DecryptMessage(fromAlias.vchPubKey, theCert.vchData, strData))
 			strDecryptedData = strData;
 		else
-			throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2033 - Could not decrypt certificate data");
+			throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2035 - Could not decrypt certificate data");
 		// encrypt using new key
 		if(!EncryptMessage(toAlias.vchPubKey, vchFromString(strDecryptedData), strCipherText))
 		{
-			throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2034 - Could not encrypt certificate data");
+			throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2036 - Could not encrypt certificate data");
 		}
 		vchData = vchFromString(strCipherText);
 	}	
