@@ -2279,6 +2279,7 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	}
 
 	CAliasIndex alias;
+	CTransaction aliastx;
 	const CWalletTx *wtxAliasIn = NULL;
 
 	CTransaction aliastx;
@@ -2305,11 +2306,7 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	COffer theOffer, linkOffer;
 	if (!GetTxOfOffer( vchOffer, theOffer, tx, true))
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 524 - Could not find an offer with this guid");
-	CTransaction aliastx;
-	CAliasIndex theAlias;
-	if (!GetTxOfAlias( vchAlias, theAlias, aliastx, true))
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 565 - Could not find an alias with this guid");
-
+	
 	CPubKey currentKey(theAlias.vchPubKey);
 	scriptPubKeyOrig = GetScriptForDestination(currentKey.GetID());
 
@@ -2596,7 +2593,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 			// update height if it is bigger than escrow creation height, we want earlier of two, linked height or escrow creation to index into sysrates check
 			if(nHeight > fundingEscrow.nHeight)
 				nHeight = fundingEscrow.nHeight;
-			CAliasIndex arbiterAlias, buyerAlias, sellerAlias
+			CAliasIndex arbiterAlias, buyerAlias, sellerAlias;
 			CTransaction aliastx;
 			GetTxOfAlias(fundingEscrow.vchArbiterAlias, arbiterAlias, aliastx, true);
 			CPubKey arbiterKey(arbiterAlias.vchPubKey);
@@ -2628,6 +2625,10 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	theOffer.nHeight = nHeight;
 	theOffer.GetOfferFromList(vtxPos);
 
+	CTransaction aliastx;
+	CAliasIndex theAlias;
+	if (!GetTxOfAlias( vchAlias, theAlias, aliastx, true))
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 566 - Could not find an alias with this guid");
 
 	// if not escrow accept then make sure you can't buy your own offer
 	if(vchEscrowTxHash.empty())
@@ -2643,10 +2644,6 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 		if (pwalletMain->GetKey(keyID, vchSecret))
 			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 543 - Cannot purchase your own offer");
 	}
-	CTransaction aliastx;
-	CAliasIndex theAlias;
-	if (!GetTxOfAlias( vchAlias, theAlias, aliastx, true))
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 566 - Could not find an alias with this guid");
 
 
 	const CWalletTx *wtxAliasIn = NULL;

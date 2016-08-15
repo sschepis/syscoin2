@@ -1239,7 +1239,7 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	if (!GetSyscoinTransaction(vtxPos.front().nHeight, escrow.escrowInputTxHash, fundingTx, Params().GetConsensus()))
 		throw runtime_error("failed to find escrow transaction");
 
-	CAliasIndex arbiterAlias, buyerAlias, sellerAlias
+	CAliasIndex arbiterAlias, buyerAlias, sellerAlias;
 	CTransaction aliastx;
 	GetTxOfAlias(escrow.vchArbiterAlias, arbiterAlias, aliastx, true);
 	CPubKey arbiterKey(arbiterAlias.vchPubKey);
@@ -1738,7 +1738,7 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 	if (!GetSyscoinTransaction(vtxPos.front().nHeight, escrow.escrowInputTxHash, fundingTx, Params().GetConsensus()))
 		throw runtime_error("failed to find escrow transaction");
 
-	CAliasIndex arbiterAlias, buyerAlias, sellerAlias
+	CAliasIndex arbiterAlias, buyerAlias, sellerAlias;
 	CTransaction aliastx;
 	GetTxOfAlias(escrow.vchArbiterAlias, arbiterAlias, aliastx, true);
 	CPubKey arbiterKey(arbiterAlias.vchPubKey);
@@ -1939,7 +1939,7 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 		escrow, tx))
         throw runtime_error("could not find a escrow with this key");
 
-	CAliasIndex arbiterAlias, buyerAlias, sellerAlias
+	CAliasIndex arbiterAlias, buyerAlias, sellerAlias;
 	CTransaction aliastx;
 	GetTxOfAlias(escrow.vchArbiterAlias, arbiterAlias, aliastx, true);
 	CPubKey arbiterKey(arbiterAlias.vchPubKey);
@@ -2182,7 +2182,7 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
 		throw runtime_error("this escrow is not in your wallet");
 	if(vvch[1] == vchFromString("1") && vchFeedbackPrimary.size() <= 0 && vchFeedbackSecondary.size() <= 0)
 		throw runtime_error("Feedback reply cannot be empty");
-	CAliasIndex arbiterAlias, buyerAlias, sellerAlias
+	CAliasIndex arbiterAlias, buyerAlias, sellerAlias;
 	CTransaction aliastx;
 	GetTxOfAlias(escrow.vchArbiterAlias, arbiterAlias, aliastx, true);
 	CPubKey arbiterKey(arbiterAlias.vchPubKey);
