@@ -77,7 +77,7 @@ string makeTransferCertTX(const COffer& theOffer, const COfferAccept& theOfferAc
 	string strMethod = string("certtransfer");
 	UniValue params(UniValue::VARR);
 	params.push_back(stringFromVch(theOffer.vchCert));
-	params.push_back(theOfferAccept.vchBuyerAlias);
+	params.push_back(stringFromVch(theOfferAccept.vchBuyerAlias));
     try {
         tableRPC.execute(strMethod, params);
 	}
