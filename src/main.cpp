@@ -866,7 +866,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, const CCoinsViewCache& inputs, i
 			}
 			if(DecodeAliasTx(tx, op, nOut, vvchArgs))
 			{
-				good = CheckAliasInputs(tx, op, nOut, vvchArgs, inputs, fJustCheck, nHeight);
+				good = CheckAliasInputs(tx, op, nOut, vvchArgs, inputs, fJustCheck, nHeight, errorMessage);
 			}
 			if(DecodeOfferTx(tx, op, nOut, vvchArgs))
 			{	

@@ -30,7 +30,7 @@ extern bool DecodeOfferTx(const CTransaction& tx, int& op, int& nOut, vector<vec
 extern bool DecodeCertTx(const CTransaction& tx, int& op, int& nOut, vector<vector<unsigned char> >& vvch);
 extern bool DecodeMessageTx(const CTransaction& tx, int& op, int& nOut, vector<vector<unsigned char> >& vvch);
 extern bool DecodeEscrowTx(const CTransaction& tx, int& op, int& nOut, vector<vector<unsigned char> >& vvch);
-extern bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, const CBlock *block);
+extern bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, string &errorMessage, const CBlock* block, bool dontaddtodb);
 extern bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, string &errorMessage, const CBlock *block, bool dontaddtodb);
 extern bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, const CBlock *block);
 extern bool CheckMessageInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, const CBlock *block);
@@ -429,8 +429,12 @@ void SendMoneySyscoin(const vector<CRecipient> &vecSend, CAmount nValue, bool fS
 	CCoinsViewCache inputs(pcoinsTip);
 	if(DecodeAliasTx(wtxNew, op, nOut, vvch))
 	{
-		if(!CheckAliasInputs(wtxNew, op, nOut, vvch, inputs, fJustCheck, chainActive.Tip()->nHeight, NULL))
-			 throw runtime_error("Error: The transaction was rejected! Alias Inputs were invalid!");
+		CheckAliasInputs(wtxNew, op, nOut, vvch, inputs, fJustCheck, chainActive.Tip()->nHeight+1, errorMessage, NULL, true);
+		if(!errorMessage.empty())
+			throw runtime_error(errorMessage.c_str());
+		CheckAliasInputs(wtxNew,  op, nOut, vvch, inputs, !fJustCheck, chainActive.Tip()->nHeight+1, errorMessage, NULL, true);
+		if(!errorMessage.empty())
+			throw runtime_error(errorMessage.c_str());
 	}
 	if(DecodeCertTx(wtxNew, op, nOut, vvch))
 	{
