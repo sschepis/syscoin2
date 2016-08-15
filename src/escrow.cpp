@@ -302,7 +302,7 @@ CScript RemoveEscrowScriptPrefix(const CScript& scriptIn) {
 	
     return CScript(pc, scriptIn.end());
 }
-bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, string &errorMessage, const CBlock* block, bool dontaddtodb) {
+bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, string &errorMessage, const CBlock* block, bool dontaddtodb, string justcheck) {
 	if(!IsSys21Fork(nHeight))
 		return true;	
 	if (tx.IsCoinBase())
@@ -553,7 +553,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				}		
 				else
 				{
-					if(prevOp != OP_ESCROW_RELEASE)
+					if(prevOp != OP_ESCROW_RELEASE && justcheck != "1")
 					{
 						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4031 - Can only complete a released escrow";
 						return error(errorMessage.c_str());
