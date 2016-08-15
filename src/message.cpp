@@ -237,7 +237,7 @@ CScript RemoveMessageScriptPrefix(const CScript& scriptIn) {
     return CScript(pc, scriptIn.end());
 }
 
-bool CheckMessageInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, const CBlock* block) {
+bool CheckMessageInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, string &errorMessage, const CBlock* block, bool dontaddtodb) {
 	if(!IsSys21Fork(nHeight))
 		return true;	
 	if (tx.IsCoinBase())
@@ -250,9 +250,9 @@ bool CheckMessageInputs(const CTransaction &tx, int op, int nOut, const vector<v
     CCoins prevCoins;
 
 	int prevAliasOp = 0;
-	if (tx.nVersion != SYSCOIN_TX_VERSION) {
-		if(fDebug)
-			LogPrintf("CheckMessageInputs() : non-syscoin transaction\n");
+	if (tx.nVersion != SYSCOIN_TX_VERSION)
+	{
+		errorMessage = "SYSCOIN_MESSAGE_CONSENSUS_ERROR: ERRCODE: 3000 - Non-Syscoin transaction found";
 		return true;
 	}
 	// unserialize msg from txn, check for valid
@@ -277,8 +277,10 @@ bool CheckMessageInputs(const CTransaction &tx, int op, int nOut, const vector<v
 	{
 		
 		if(vvchArgs.size() != 2)
-			return error("CheckMessageInputs(): sys 2.1 msg arguments wrong size");
-
+		{
+			errorMessage = "SYSCOIN_MESSAGE_CONSENSUS_ERROR: ERRCODE: 3001 - Message arguments incorrect size";
+			return error(errorMessage.c_str());
+		}
 		if(!theMessage.IsNull())
 		{
 			uint256 calculatedHash = Hash(vchData.begin(), vchData.end());
@@ -286,7 +288,8 @@ bool CheckMessageInputs(const CTransaction &tx, int op, int nOut, const vector<v
 			vector<unsigned char> vchRandMsg = vchFromValue(HexStr(vchRand));
 			if(vchRandMsg != vvchArgs[1])
 			{
-				return error("CheckMessageInputs(): hash provided doesn't match the calculated hash the data");
+				errorMessage = "SYSCOIN_MESSAGE_CONSENSUS_ERROR: ERRCODE: 3002 - Hash provided doesn't match the calculated hash the data";
+				return error(errorMessage.c_str());
 			}
 		}
 		
@@ -318,35 +321,53 @@ bool CheckMessageInputs(const CTransaction &tx, int op, int nOut, const vector<v
 	if(fJustCheck)
 	{
 		if (vvchArgs[0].size() > MAX_GUID_LENGTH)
-			return error("CheckMessageInputs(): message tx GUID too big");
+		{
+			errorMessage = "SYSCOIN_MESSAGE_CONSENSUS_ERROR: ERRCODE: 3003 - Message transaction guid too big";
+			return error(errorMessage.c_str());
+		}
 		if(theMessage.vchSubject.size() > MAX_NAME_LENGTH)
 		{
-			return error("CheckMessageInputs(): message subject too big");
+			errorMessage = "SYSCOIN_MESSAGE_CONSENSUS_ERROR: ERRCODE: 3004 - Message subject too long";
+			return error(errorMessage.c_str());
 		}
 		if(theMessage.vchMessageTo.size() > MAX_ENCRYPTED_VALUE_LENGTH)
 		{
-			return error("CheckMessageInputs(): message data to too big");
+			errorMessage = "SYSCOIN_MESSAGE_CONSENSUS_ERROR: ERRCODE: 3005 - Message too long";
+			return error(errorMessage.c_str());
 		}
 		if(theMessage.vchMessageFrom.size() > MAX_ENCRYPTED_VALUE_LENGTH)
 		{
-			return error("CheckMessageInputs(): message data from too big");
+			errorMessage = "SYSCOIN_MESSAGE_CONSENSUS_ERROR: ERRCODE: 3006 - Message too long";
+			return error(errorMessage.c_str());
 		}
 		if(!theMessage.vchMessage.empty() && theMessage.vchMessage != vvchArgs[0])
 		{
-			return error("CheckMessageInputs(): guid in data output doesn't match guid in tx");
+			errorMessage = "SYSCOIN_MESSAGE_CONSENSUS_ERROR: ERRCODE: 3007 - Message guid in data output does not match guid in transaction";
+			return error(errorMessage.c_str());
 		}
 		if(op == OP_MESSAGE_ACTIVATE)
 		{
 			if(!IsAliasOp(prevAliasOp))
-				return error("CheckMessageInputs(): alias not provided as input");	
+			{
+				errorMessage = "SYSCOIN_MESSAGE_CONSENSUS_ERROR: ERRCODE: 3008 - Alias not provided as input";
+				return error(errorMessage.c_str());
+			}
 			if (theMessage.vchAliasFrom != vvchPrevAliasArgs[0])
-				return error("CheckMessageInputs(): OP_MESSAGE_ACTIVATE from guid mismatch");
+			{
+				errorMessage = "SYSCOIN_MESSAGE_CONSENSUS_ERROR: ERRCODE: 3009 - Alias guid mismatch";
+				return error(errorMessage.c_str());
+			}
 			if (theMessage.vchMessage != vvchArgs[0])
-				return error("CheckMessageInputs(): OP_MESSAGE_ACTIVATE guid mismatch");	
+			{
+				errorMessage = "SYSCOIN_MESSAGE_CONSENSUS_ERROR: ERRCODE: 3010 - Message guid mismatch";
+				return error(errorMessage.c_str());
+			}
 
 		}
-		else
-			return error( "CheckMessageInputs() : message transaction has unknown op");
+		else{
+				errorMessage = "SYSCOIN_MESSAGE_CONSENSUS_ERROR: ERRCODE: 3011 - Message transaction has unknown op";
+				return error(errorMessage.c_str());
+		}
 	}
 	// save serialized message for later use
 	CMessage serializedMessage = theMessage;
@@ -355,23 +376,18 @@ bool CheckMessageInputs(const CTransaction &tx, int op, int nOut, const vector<v
     if (!fJustCheck ) {
 		if(!GetTxOfAlias(theMessage.vchAliasTo, alias, aliasTx))
 		{
-			retError = string("CheckMessageInputs(): ");
-			if(fDebug)
-				LogPrintf(retError.c_str());
+			errorMessage = "SYSCOIN_MESSAGE_CONSENSUS_ERROR: ERRCODE: 3012 - Cannot find alias for the recipient of this message. It may be expired";
 			return true;
 		}
 		if(!GetTxOfAlias(theMessage.vchAliasFrom, alias, aliasTx))
 		{
-			retError = string("CheckMessageInputs(): ");
-			if(fDebug)
-				LogPrintf(retError.c_str());
+			errorMessage = "SYSCOIN_MESSAGE_CONSENSUS_ERROR: ERRCODE: 3013 - Cannot find alias for the sender of this message. It may be expired";
 			return true;		
 		}
 
 		vector<CMessage> vtxPos;
 		if (pmessagedb->ExistsMessage(vvchArgs[0])) {
-			if(fDebug)
-				LogPrintf("CheckMessageInputs() : message already exists with this guid");
+			errorMessage = "SYSCOIN_MESSAGE_CONSENSUS_ERROR: ERRCODE: 3014 - This message already exists";
 			return true;
 		}      
         // set the message's txn-dependent values
@@ -380,8 +396,11 @@ bool CheckMessageInputs(const CTransaction &tx, int op, int nOut, const vector<v
 		PutToMessageList(vtxPos, theMessage);
         // write message  
 
-		if(!pmessagedb->WriteMessage(vvchArgs[0], vtxPos))
-            return error( "CheckMessageInputs() : failed to write to message DB");
+		if(!dontaddtodb && !pmessagedb->WriteMessage(vvchArgs[0], vtxPos))
+		{
+			errorMessage = "SYSCOIN_MESSAGE_CONSENSUS_ERROR: ERRCODE: 3015 - Failed to write to message DB";
+            return error(errorMessage.c_str());
+		}
 	
 		
       			
@@ -406,9 +425,6 @@ UniValue messagenew(const UniValue& params, bool fHelp) {
 						"<toalias> Alias to send message to.\n"					
                         + HelpRequiringPassphrase());
 	vector<unsigned char> vchMySubject = vchFromValue(params[0]);
-    if (vchMySubject.size() > MAX_NAME_LENGTH)
-        throw runtime_error("Subject cannot exceed 255 bytes!");
-
 	vector<unsigned char> vchMyMessage = vchFromValue(params[1]);
 	string strFromAddress = params[2].get_str();
 	boost::algorithm::to_lower(strFromAddress);
@@ -419,37 +435,30 @@ UniValue messagenew(const UniValue& params, bool fHelp) {
 
 	CAliasIndex aliasFrom, aliasTo;
 	CTransaction aliastx;
-	if (!GetTxOfAlias(vchFromString(strFromAddress), aliasFrom, aliastx))
-		throw runtime_error("could not find an alias with this name");
+	if (!GetTxOfAlias(vchFromString(strFromAddress), aliasFrom, aliastx, true))
+		throw runtime_error("SYSCOIN_MESSAGE_RPC_ERROR: ERRCODE: 3016 - Could not find an alias with this name");
 	// check for existing pending alias updates
 	if (ExistsInMempool(vchFromString(strFromAddress), OP_ALIAS_UPDATE)) {
-		throw runtime_error("there are pending operations on that alias");
+		throw runtime_error("SYSCOIN_MESSAGE_RPC_ERROR: ERRCODE: 3017 - There are pending operations on that alias");
 	}
     if(!IsSyscoinTxMine(aliastx, "alias")) {
-		throw runtime_error("This alias is not yours.");
+		throw runtime_error("SYSCOIN_MESSAGE_RPC_ERROR: ERRCODE: 3018 - This alias is not yours");
     }
 	const CWalletTx *wtxAliasIn = pwalletMain->GetWalletTx(aliastx.GetHash());
 	if (wtxAliasIn == NULL)
-		throw runtime_error("this alias is not in your wallet");
+		throw runtime_error("SYSCOIN_MESSAGE_RPC_ERROR: ERRCODE: 3019 - This alias is not in your wallet");
 	CScript scriptPubKeyOrig, scriptPubKeyAliasOrig, scriptPubKey, scriptPubKeyAlias;
 
 	CPubKey FromPubKey = CPubKey(aliasFrom.vchPubKey);
-	if(!FromPubKey.IsValid())
-	{
-		throw runtime_error("Invalid sending public key");
-	}
 	scriptPubKeyAliasOrig = GetScriptForDestination(FromPubKey.GetID());
 	scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << aliasFrom.vchAlias <<  aliasFrom.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
 	scriptPubKeyAlias += scriptPubKeyAliasOrig;		
 
 
-	if(!GetTxOfAlias(vchFromString(strToAddress), aliasTo, aliastx))
-		return error("failed to read to alias from alias DB");
+	if(!GetTxOfAlias(vchFromString(strToAddress), aliasTo, aliastx, true))
+		return error("SYSCOIN_MESSAGE_RPC_ERROR: ERRCODE: 3020 - Failed to read to alias from alias DB");
 	CPubKey ToPubKey = CPubKey(aliasTo.vchPubKey);
-	if(!ToPubKey.IsValid())
-	{
-		throw runtime_error("Invalid recv public key");
-	}
+
 
     // gather inputs
 	int64_t rand = GetRand(std::numeric_limits<int64_t>::max());
@@ -464,18 +473,13 @@ UniValue messagenew(const UniValue& params, bool fHelp) {
 	string strCipherTextTo;
 	if(!EncryptMessage(aliasTo.vchPubKey, vchMyMessage, strCipherTextTo))
 	{
-		throw runtime_error("Could not encrypt message data for receiver!");
+		throw runtime_error("SYSCOIN_MESSAGE_RPC_ERROR: ERRCODE: 3021 - Could not encrypt message data for receiver");
 	}
 	string strCipherTextFrom;
 	if(!EncryptMessage(aliasFrom.vchPubKey, vchMyMessage, strCipherTextFrom))
 	{
-		throw runtime_error("Could not encrypt message data for sender!");
+		throw runtime_error("SYSCOIN_MESSAGE_RPC_ERROR: ERRCODE: 3022 - Could not encrypt message data for sender");
 	}
-
-    if (strCipherTextFrom.size() > MAX_ENCRYPTED_VALUE_LENGTH)
-        throw runtime_error("Message data cannot exceed 1023 bytes!");
-    if (strCipherTextTo.size() > MAX_ENCRYPTED_VALUE_LENGTH)
-        throw runtime_error("Message data cannot exceed 1023 bytes!");
 
     // build message
     CMessage newMessage;
@@ -501,9 +505,7 @@ UniValue messagenew(const UniValue& params, bool fHelp) {
 	vecSend.push_back(recipient);
 	CRecipient aliasRecipient;
 	CreateRecipient(scriptPubKeyAlias, aliasRecipient);
-	// we attach alias input here so noone can create an offer under anyone elses alias/pubkey
-	if(wtxAliasIn != NULL)
-		vecSend.push_back(aliasRecipient);
+	vecSend.push_back(aliasRecipient);
 
 	CScript scriptData;
 	scriptData << OP_RETURN << data;

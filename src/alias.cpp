@@ -26,6 +26,7 @@
 #include <boost/foreach.hpp>
 #include <boost/thread.hpp>
 #include <boost/algorithm/hex.hpp>
+#include <boost/algorithm/string/find.hpp>
 using namespace std;
 CAliasDB *paliasdb = NULL;
 COfferDB *pofferdb = NULL;
@@ -1460,12 +1461,11 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 
 	vector<unsigned char> vchAlias = vchFromString(params[0].get_str());
 	string strName = params[0].get_str();
-	//^((?!-)[a-z0-9-]{3,63}(?<!-)\\.)+[a-z]{0,6}$
 	/*Above pattern makes sure domain name matches the following criteria :
 
 	The domain name should be a-z | 0-9 and hyphen(-)
 	The domain name should between 3 and 63 characters long
-	Last Tld can be 0 to a maximum of 6 characters
+	Last Tld can be 2 to a maximum of 6 characters
 	The domain name should not start or end with hyphen (-) (e.g. -syscoin.org or syscoin-.org)
 	The domain name can be a subdomain (e.g. sys.blogspot.com)*/
 

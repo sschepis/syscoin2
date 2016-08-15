@@ -302,7 +302,7 @@ CScript RemoveEscrowScriptPrefix(const CScript& scriptIn) {
 	
     return CScript(pc, scriptIn.end());
 }
-bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, const CBlock* block) {
+bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, string &errorMessage, const CBlock* block, bool dontaddtodb) {
 	if(!IsSys21Fork(nHeight))
 		return true;	
 	if (tx.IsCoinBase())
@@ -319,11 +319,11 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 			fJustCheck ? "JUSTCHECK" : "BLOCK");
 
     // Make sure escrow outputs are not spent by a regular transaction, or the escrow would be lost
-    if (tx.nVersion != SYSCOIN_TX_VERSION) {
-		if(fDebug)
-			LogPrintf("CheckEscrowInputs() : non-syscoin transaction\n");
-        return true;
-    }
+    if (tx.nVersion != SYSCOIN_TX_VERSION)
+	{
+		errorMessage = "SYSCOIN_ESCROW_MESSAGE_ERROR: ERRCODE: 4000 - Non-Syscoin transaction found";
+		return true;
+	}
 	 // unserialize escrow UniValue from txn, check for valid
     CEscrow theEscrow;
 	vector<unsigned char> vchData;
@@ -341,8 +341,10 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 	{
 		
 		if(vvchArgs.size() != 3)
-			return error("CheckEscrowInputs(): sys 2.1 escrow arguments wrong size");
-
+		{
+			errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4001 - Escrow arguments incorrect size";
+			return error(errorMessage.c_str());
+		}
 		if(!theEscrow.IsNull())
 		{
 			uint256 calculatedHash = Hash(vchData.begin(), vchData.end());
@@ -350,7 +352,8 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 			vector<unsigned char> vchRandEscrow = vchFromValue(HexStr(vchRand));
 			if(vchRandEscrow != vvchArgs[2])
 			{
-				return error("CheckEscrowInputs(): hash provided doesn't match the calculated hash the data");
+				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 4002 - Hash provided doesn't match the calculated hash the data";
+				return error(errorMessage.c_str());
 			}
 		}
 
@@ -600,7 +603,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 										myLinkOffer.nQty = 0;
 									nQty = myLinkOffer.nQty;
 									myLinkOffer.PutToOfferList(myLinkVtxPos);
-									if (!pofferdb->WriteOffer(dbOffer.vchLinkOffer, myLinkVtxPos))
+									if (!dontaddtodb && !pofferdb->WriteOffer(dbOffer.vchLinkOffer, myLinkVtxPos))
 											return error( "CheckEscrowInputs() : failed to write to offer link to DB");
 									
 								}
@@ -609,7 +612,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 							if(dbOffer.nQty < 0)
 								dbOffer.nQty = 0;
 							dbOffer.PutToOfferList(myVtxPos);
-							if (!pofferdb->WriteOffer(theEscrow.vchOffer, myVtxPos))
+							if (!dontaddtodb && !pofferdb->WriteOffer(theEscrow.vchOffer, myVtxPos))
 								return error( "CheckEscrowInputs() : failed to write to offer to DB");
 						}			
 					}
@@ -687,7 +690,8 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 							LogPrintf( "CheckEscrowInputs() : Arbiter cannot exceed 10 feedback entries for this escrow");
 							return true;
 						}
-						HandleEscrowFeedback(theEscrow);	
+						if(!dontaddtodb)
+							HandleEscrowFeedback(theEscrow);	
 					
 					}
 					else
@@ -740,7 +744,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 								myLinkOffer.nQty = 0;
 							nQty = myLinkOffer.nQty;
 							myLinkOffer.PutToOfferList(myLinkVtxPos);
-							if (!pofferdb->WriteOffer(dbOffer.vchLinkOffer, myLinkVtxPos))
+							if (!dontaddtodb && !pofferdb->WriteOffer(dbOffer.vchLinkOffer, myLinkVtxPos))
 								return error( "CheckEscrowInputs() : failed to write to offer link to DB");
 							
 						}
@@ -749,7 +753,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 					if(dbOffer.nQty < 0)
 						dbOffer.nQty = 0;
 					dbOffer.PutToOfferList(myVtxPos);
-					if (!pofferdb->WriteOffer(theEscrow.vchOffer, myVtxPos))
+					if (!dontaddtodb && !pofferdb->WriteOffer(theEscrow.vchOffer, myVtxPos))
 						return error( "CheckEscrowInputs() : failed to write to offer to DB");					
 				}
 			}
@@ -763,7 +767,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 		PutToEscrowList(vtxPos, theEscrow);
         // write escrow  
 		
-        if (!pescrowdb->WriteEscrow(vvchArgs[0], vtxPos))
+        if (!dontaddtodb && !pescrowdb->WriteEscrow(vvchArgs[0], vtxPos))
             return error( "CheckEscrowInputs() : failed to write to escrow DB");
 		
 
