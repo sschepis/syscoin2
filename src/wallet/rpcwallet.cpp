@@ -400,7 +400,7 @@ UniValue getaddressesbyaccount(const UniValue& params, bool fHelp)
     return ret;
 }
 // SYSCOIN: Send service transactions
-void SendMoneySyscoin(const vector<CRecipient> &vecSend, CAmount nValue, bool fSubtractFeeFromAmount, CWalletTx& wtxNew, const CWalletTx* wtxOfferIn=NULL,  const CWalletTx* wtxCertIn=NULL, const CWalletTx* wtxAliasIn=NULL, const CWalletTx* wtxEscrowIn=NULL, bool syscoinTx=true)
+void SendMoneySyscoin(const vector<CRecipient> &vecSend, CAmount nValue, bool fSubtractFeeFromAmount, CWalletTx& wtxNew, const CWalletTx* wtxOfferIn=NULL,  const CWalletTx* wtxCertIn=NULL, const CWalletTx* wtxAliasIn=NULL, const CWalletTx* wtxEscrowIn=NULL, bool syscoinTx=true, string justcheck="0")
 {
     CAmount curBalance = pwalletMain->GetBalance();
 
@@ -474,8 +474,7 @@ void SendMoneySyscoin(const vector<CRecipient> &vecSend, CAmount nValue, bool fS
 			throw runtime_error(errorMessage.c_str());
 	}
 	
-
-    if (!pwalletMain->CommitTransaction(wtxNew, reservekey))
+    if (justcheck != "1" && !pwalletMain->CommitTransaction(wtxNew, reservekey))
         throw runtime_error("Error: The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.");
 }
 void SendMoney(const CTxDestination &address, CAmount nValue, bool fSubtractFeeFromAmount, CWalletTx& wtxNew)
