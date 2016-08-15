@@ -319,14 +319,6 @@ bool CheckMessageInputs(const CTransaction &tx, int op, int nOut, const vector<v
 	{
 		if (vvchArgs[0].size() > MAX_GUID_LENGTH)
 			return error("CheckMessageInputs(): message tx GUID too big");
-		if(!IsSysCompressedOrUncompressedPubKey(theMessage.vchAliasTo))
-		{
-			return error("CheckMessageInputs(): message public key to, invalid length");
-		}
-		if(!IsSysCompressedOrUncompressedPubKey(theMessage.vchAliasFrom))
-		{
-			return error("CheckMessageInputs(): message public key from, invalid length");
-		}
 		if(theMessage.vchSubject.size() > MAX_NAME_LENGTH)
 		{
 			return error("CheckMessageInputs(): message subject too big");

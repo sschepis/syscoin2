@@ -2625,7 +2625,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 
 	CTransaction aliastx;
 	CAliasIndex theAlias;
-	if (!GetTxOfAlias( vchAlias, theAlias, aliastx, true))
+	if (!GetTxOfAlias( theOffer.vchAlias, theAlias, aliastx, true))
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 566 - Could not find an alias with this guid");
 
 	// if not escrow accept then make sure you can't buy your own offer
