@@ -974,8 +974,8 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	vector<unsigned char> vchSellerPubKey;
 	if (!GetTxOfOffer( vchOffer, theOffer, txOffer, true))
 		throw runtime_error("could not find an offer with this identifier");
-	CAliasIndex sellerlias;
-	if (!GetTxOfAlias( theOffer.vchAlias, sellerlias, txAlias, true))
+	CAliasIndex selleralias;
+	if (!GetTxOfAlias( theOffer.vchAlias, selleralias, txAlias, true))
 		throw runtime_error("could not find seller alias with this identifier");
 
 	unsigned int memPoolQty = QtyOfPendingAcceptsInMempool(vchOffer);
@@ -985,7 +985,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	if(theOffer.sCategory.size() > 0 && boost::algorithm::ends_with(stringFromVch(theOffer.sCategory), "wanted"))
 		throw runtime_error("Cannot purchase a wanted offer");
 
-	vchSellerPubKey = sellerlias.vchPubKey;
+	vchSellerPubKey = selleralias.vchPubKey;
 	const CWalletTx *wtxAliasIn = NULL;
 
 	CScript scriptPubKeyAlias, scriptPubKeyAliasOrig;
