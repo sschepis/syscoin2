@@ -947,6 +947,20 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				// if transfer
 				if(dbAlias.vchPubKey != theAlias.vchPubKey)
 				{
+					bool found = false;
+					for (unsigned int i = 0; i < tx.vout.size(); i++) {
+						const CTxOut& out = tx.vout[i];
+						vector<vector<unsigned char> > vvchRead;
+						if (DecodeAliasScript(out.scriptPubKey, op, vvchRead) && vvchRead[0] == vvchArgs[0]) {
+							if(found)
+							{
+								LogPrintf("CheckAliasInputs() : OP_ALIAS_UPDATE Too many alias outputs found in a transfer, only 1 allowed");
+								return true;
+							}
+							found = true; 
+						}
+					}
+
 					update = false;
 					CPubKey xferKey  = CPubKey(theAlias.vchPubKey);	
 					CSyscoinAddress myAddress = CSyscoinAddress(xferKey.GetID());

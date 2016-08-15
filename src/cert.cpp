@@ -477,6 +477,22 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 	}
 
     if (!fJustCheck ) {
+		if(op == OP_CERT_TRANSFER)
+		{
+			bool found = false;
+			for (unsigned int i = 0; i < tx.vout.size(); i++) {
+				const CTxOut& out = tx.vout[i];
+				vector<vector<unsigned char> > vvchRead;
+				if (DecodeCertScript(out.scriptPubKey, op, vvchRead) && vvchRead[0] == vvchArgs[0]) {
+					if(found)
+					{
+						LogPrintf("CheckCertInputs() : OP_CERT_TRANSFER Too many certificate outputs found in a transfer, only 1 allowed");
+						return true;
+					}
+					found = true; 
+				}
+			}
+		}
 		if(op != OP_CERT_ACTIVATE) 
 		{
 			// if not an certnew, load the cert data from the DB
