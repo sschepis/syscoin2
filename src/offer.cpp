@@ -1164,7 +1164,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 79 - Cannot link to an offer that only accepts Bitcoins as payment";
 						theOffer.vchLinkOffer.clear();	
 					}
-					else
+					if(!theOffer.vchLinkOffer.empty())
 					{
 						// max links are 100 per offer
 						if(linkOffer.offerLinks.size() < 100)
