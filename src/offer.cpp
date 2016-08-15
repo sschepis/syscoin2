@@ -2623,11 +2623,17 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	theOffer.nHeight = nHeight;
 	theOffer.GetOfferFromList(vtxPos);
 
-	CTransaction aliastx;
-	CAliasIndex theAlias;
+	CTransaction aliastx,buyeraliastx;
+	CAliasIndex theAlias,tmpAlias;
 	if (!GetTxOfAlias( theOffer.vchAlias, theAlias, aliastx, true))
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 566 - Could not find an alias with this guid");
-
+	CAliasIndex buyerAlias;
+	if (!GetTxOfAlias(vchBuyerAlias, buyerAlias, aliastx, true))
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 532 - Could not find buyer alias with this name");
+	// get buyer passed into rpc (not necessarily actual buyer which for linked offers is the buyer of the linked offer accept)
+	CAliasIndex buyerAlias1;
+	if (!GetTxOfAlias(vchAlias, buyerAlias1, buyeraliastx, true))
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 532a - Could not find buyer alias with this name");
 	// if not escrow accept then make sure you can't buy your own offer
 	if(vchEscrowTxHash.empty())
 	{
@@ -2656,12 +2662,12 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 544 - There is are pending operations on that alias");
 		}
 		// make sure its in your wallet (you control this alias)
-		if (IsSyscoinTxMine(aliastx, "alias")) 
+		if (IsSyscoinTxMine(buyeraliastx, "alias")) 
 		{
-			wtxAliasIn = pwalletMain->GetWalletTx(aliastx.GetHash());		
-			CPubKey currentKey(theAlias.vchPubKey);
+			wtxAliasIn = pwalletMain->GetWalletTx(buyeraliastx.GetHash());		
+			CPubKey currentKey(buyerAlias1.vchPubKey);
 			scriptPubKeyAliasOrig = GetScriptForDestination(currentKey.GetID());
-			scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << vchAlias  << theAlias.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
+			scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << vchAlias  << buyerAlias1.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
 			scriptPubKeyAlias += scriptPubKeyAliasOrig;
 		}		
 		
@@ -2716,9 +2722,6 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 550 - There is a pending transfer operation on that cert");
 		}	
 	}
-	CAliasIndex buyerAlias;
-	if (!GetTxOfAlias(vchBuyerAlias, buyerAlias, aliastx, true))
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 532 - Could not find buyer alias with this name");
 	txAccept.vchAcceptRand = vchAccept;
 	txAccept.nQty = nQty;
 	txAccept.nPrice = theOffer.GetPrice(foundEntry);
