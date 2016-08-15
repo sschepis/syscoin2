@@ -208,7 +208,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpiredbuyback)
 	BOOST_CHECK_THROW(CallRPC("node1", "aliasnew aliasexpirebuyback data"), runtime_error);
 	BOOST_CHECK_THROW(CallRPC("node1", "aliasupdate aliasexpirebuyback changedata1 pvtdata"), runtime_error);
 
-	// this time steal the alias and original recreate at the same time
+	// this time steal the alias and try to recreate at the same time
 	GenerateBlocks(110);
 	AliasNew("node1", "aliasexpirebuyback", "somedata", "data");
 	GenerateBlocks(110);

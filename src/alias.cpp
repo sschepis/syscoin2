@@ -1234,7 +1234,6 @@ bool GetTxAndVtxOfAlias(const vector<unsigned char> &vchAlias,
 				< chainActive.Tip()->nHeight)) {
 			string name = stringFromVch(vchAlias);
 			LogPrintf("GetTxOfAlias(%s) : expired", name.c_str());
-			vtxPos.clear();
 			return false;
 		}
 	}
