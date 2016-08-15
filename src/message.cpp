@@ -634,8 +634,8 @@ UniValue messagelist(const UniValue& params, bool fHelp) {
 		CTransaction aliastx;
 		GetTxOfAlias(message.vchAliasFrom, aliasFrom, aliastx);
 		GetTxOfAlias(message.vchAliasTo, aliasTo, aliastx);
-		oName.push_back(Pair("from", message.vchAliasFrom));
-		oName.push_back(Pair("to", message.vchAliasTo));
+		oName.push_back(Pair("from", stringFromVch(message.vchAliasFrom)));
+		oName.push_back(Pair("to", stringFromVch(message.vchAliasTo)));
 
 		oName.push_back(Pair("subject", stringFromVch(message.vchSubject)));
 		string strDecrypted = "";
@@ -723,8 +723,8 @@ UniValue messagesentlist(const UniValue& params, bool fHelp) {
 		CTransaction aliastx;
 		GetTxOfAlias(message.vchAliasFrom, aliasFrom, aliastx);
 		GetTxOfAlias(message.vchAliasTo, aliasTo, aliastx);
-		oName.push_back(Pair("from", message.vchAliasFrom));
-		oName.push_back(Pair("to", message.vchAliasTo));
+		oName.push_back(Pair("from", stringFromVch(message.vchAliasFrom)));
+		oName.push_back(Pair("to", stringFromVch(message.vchAliasTo)));
 
 		oName.push_back(Pair("subject", stringFromVch(message.vchSubject)));
 		string strDecrypted = "";
