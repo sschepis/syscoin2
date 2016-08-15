@@ -794,6 +794,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	}
 	// unserialize alias from txn, check for valid
 	CAliasIndex theAlias;
+	bool found = false;
 	vector<unsigned char> vchData;
 	vector<unsigned char> vchAlias;
 	if(!GetSyscoinData(tx, vchData))
@@ -821,7 +822,17 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				return error("CheckAliasInputs(): hash provided doesn't match the calculated hash the data");
 			}
 		}		
-			
+		for (unsigned int i = 0; i < tx.vout.size(); i++) {
+			const CTxOut& out = tx.vout[i];
+			vector<vector<unsigned char> > vvchRead;
+			if (DecodeAliasScript(out.scriptPubKey, op, vvchRead) && vvchRead[0] == vvchArgs[0]) {
+				if(found)
+				{
+					return error("CheckAliasInputs() : OP_ALIAS_UPDATE Too many alias outputs found in a transaction, only 1 allowed");
+				}
+				found = true; 
+			}
+		}			
 		// Strict check - bug disallowed
 		for (unsigned int i = 0; i < tx.vin.size(); i++) {
 			vector<vector<unsigned char> > vvch;
@@ -947,20 +958,6 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				// if transfer
 				if(dbAlias.vchPubKey != theAlias.vchPubKey)
 				{
-					bool found = false;
-					for (unsigned int i = 0; i < tx.vout.size(); i++) {
-						const CTxOut& out = tx.vout[i];
-						vector<vector<unsigned char> > vvchRead;
-						if (DecodeAliasScript(out.scriptPubKey, op, vvchRead) && vvchRead[0] == vvchArgs[0]) {
-							if(found)
-							{
-								LogPrintf("CheckAliasInputs() : OP_ALIAS_UPDATE Too many alias outputs found in a transfer, only 1 allowed");
-								return true;
-							}
-							found = true; 
-						}
-					}
-
 					update = false;
 					CPubKey xferKey  = CPubKey(theAlias.vchPubKey);	
 					CSyscoinAddress myAddress = CSyscoinAddress(xferKey.GetID());

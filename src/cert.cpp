@@ -363,6 +363,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 	// unserialize cert from txn, check for valid
 	CCert theCert;
 	vector<unsigned char> vchData;
+	bool found = false;
 	if(!GetSyscoinData(tx, vchData))
 	{
 		theCert.SetNull();
@@ -388,7 +389,17 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 			}
 		}
 		
-	
+		for (unsigned int i = 0; i < tx.vout.size(); i++) {
+			const CTxOut& out = tx.vout[i];
+			vector<vector<unsigned char> > vvchRead;
+			if (DecodeCertScript(out.scriptPubKey, op, vvchRead) && vvchRead[0] == vvchArgs[0]) {
+				if(found)
+				{
+					return error("CheckCertInputs() : Too many certificate outputs found in a transaction, only 1 allowed");
+				}
+				found = true; 
+			}
+		}	
 		// Strict check - bug disallowed
 		for (unsigned int i = 0; i < tx.vin.size(); i++) {
 			vector<vector<unsigned char> > vvch;
@@ -477,22 +488,6 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 	}
 
     if (!fJustCheck ) {
-		if(op == OP_CERT_TRANSFER)
-		{
-			bool found = false;
-			for (unsigned int i = 0; i < tx.vout.size(); i++) {
-				const CTxOut& out = tx.vout[i];
-				vector<vector<unsigned char> > vvchRead;
-				if (DecodeCertScript(out.scriptPubKey, op, vvchRead) && vvchRead[0] == vvchArgs[0]) {
-					if(found)
-					{
-						LogPrintf("CheckCertInputs() : OP_CERT_TRANSFER Too many certificate outputs found in a transfer, only 1 allowed");
-						return true;
-					}
-					found = true; 
-				}
-			}
-		}
 		if(op != OP_CERT_ACTIVATE) 
 		{
 			// if not an certnew, load the cert data from the DB
