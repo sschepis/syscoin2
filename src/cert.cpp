@@ -633,7 +633,7 @@ UniValue certnew(const UniValue& params, bool fHelp) {
 	// check for alias existence in DB
 	CTransaction aliastx;
 	CAliasIndex theAlias;
-	if (!GetTxOfAlias(theCert.vchAlias, theAlias, aliastx, true))
+	if (!GetTxOfAlias(vchAlias, theAlias, aliastx, true))
 		throw runtime_error("SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2023 - failed to read alias from alias DB");
 
 	
