@@ -859,7 +859,7 @@ UniValue certtransfer(const UniValue& params, bool fHelp) {
 	CTransaction tx;
 	CAliasIndex toAlias;
 	if (!GetTxOfAlias(vchAlias, toAlias, tx, true))
-		throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2030 - Failed to read xfer alias from DB");
+		throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2030 - Failed to read transfer alias from DB");
 
 	CPubKey xferKey = CPubKey(toAlias.vchPubKey);
 
