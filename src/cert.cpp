@@ -171,12 +171,12 @@ bool CCertDB::ScanCerts(const std::vector<unsigned char>& vchCert, const string 
 				}
 				if(strCategory.size() > 0 && !boost::algorithm::starts_with(stringFromVch(txPos.sCategory), strCategory))
 				{
-					pcursor->Next()
+					pcursor->Next();
 					continue;
 				}
 				CAliasIndex theAlias;
 				CTransaction aliastx;
-				if(!GetTxOfAlias(cert.vchAlias, theAlias, aliastx))
+				if(!GetTxOfAlias(txPos.vchAlias, theAlias, aliastx))
 				{
 					pcursor->Next();
 					continue;
