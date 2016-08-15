@@ -81,7 +81,7 @@ bool CEscrow::UnserializeFromData(const vector<unsigned char> &vchData) {
         return false;
     }
 	// extra check to ensure data was parsed correctly
-	if(!IsValidAliasName(vchBuyerAlias) || !IsValidAliasName(vchSellerAlias) || !IsValidAliasName(vchArbiterAlias))
+	if(!IsValidAliasName(vchBuyerAlias))
 	{
 		SetNull();
 		return false;
