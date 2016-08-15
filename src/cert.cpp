@@ -1124,6 +1124,7 @@ UniValue certhistory(const UniValue& params, bool fHelp) {
         CCert txPos2;
         uint256 txHash;
         BOOST_FOREACH(txPos2, vtxPos) {
+			CTransaction tx;
             txHash = txPos2.txHash;
 			if (!GetSyscoinTransaction(txPos2.nHeight, txHash, tx, Params().GetConsensus())) {
 				error("could not read txpos");
@@ -1233,7 +1234,7 @@ UniValue certfilter(const UniValue& params, bool fHelp) {
 		string strDecrypted = "";
 		CTransaction aliastx;
 		CAliasIndex theAlias;
-		GetTxOfAlias(txPos2.vchAlias, theAlias, aliastx, true);
+		GetTxOfAlias(txCert.vchAlias, theAlias, aliastx, true);
 		if(txCert.bPrivate)
 		{
 			strData = string("Encrypted for owner of certificate");
