@@ -538,15 +538,15 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 
 			if(!vtxPos.empty())
 			{
-				if(!GetTxOfAlias(theCert.vchAlias, alias, aliasTx))
-				{
-					errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2018 - Cannot find alias for this certificate. It may be expired";
-					theCert.vchAlias = dbCert.vchAlias;		
-				}
 				if(theCert.IsNull())
 					theCert = vtxPos.back();
 				else
 				{
+					if(!GetTxOfAlias(theCert.vchAlias, alias, aliasTx))
+					{
+						errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2018 - Cannot find alias for this certificate. It may be expired";
+						theCert.vchAlias = dbCert.vchAlias;		
+					}
 					if(theCert.vchData.empty())
 						theCert.vchData = dbCert.vchData;
 					if(theCert.vchTitle.empty())
