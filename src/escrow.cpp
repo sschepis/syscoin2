@@ -1460,6 +1460,7 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
         throw runtime_error("could not find a escrow with this key");
 
 	CAliasIndex sellerAlias;
+	CTransaction aliastx;
 	if(!GetTxOfAlias(escrow.vchSellerAlias, sellerAlias, aliastx, true))
 		throw runtime_error("Seller address is invalid!");
 	CPubKey sellerKey(sellerAlias.vchPubKey);
@@ -1577,7 +1578,7 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 
 	// broadcast the payment transaction
 	UniValue arraySendParams(UniValue::VARR);
-	 xcarraySendParams.push_back(hex_str);
+	arraySendParams.push_back(hex_str);
 	try
 	{
 		res = tableRPC.execute("sendrawtransaction", arraySendParams);
