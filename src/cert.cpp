@@ -814,7 +814,7 @@ UniValue certtransfer(const UniValue& params, bool fHelp) {
 
     // gather & validate inputs
 	vector<unsigned char> vchCert = vchFromValue(params[0]);
-	ector<unsigned char> vchAlias = vchFromValue(params[1]);
+	vector<unsigned char> vchAlias = vchFromValue(params[1]);
 
 	// check for alias existence in DB
 	CTransaction tx;
