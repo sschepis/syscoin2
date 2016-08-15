@@ -450,11 +450,6 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 			errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2005 - Certificate data too big";
 			return error(errorMessage.c_str());
 		}
-		if(!theCert.IsNull() && (theCert.vchTitle.size() > MAX_NAME_LENGTH || theCert.vchTitle.empty()))
-		{
-			errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2006 - Certificate title too big or is empty";
-			return error(errorMessage.c_str());
-		}
 		if(!theCert.vchCert.empty() && theCert.vchCert != vvchArgs[0])
 		{
 			errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2007 - Guid in data output doesn't match guid in transaction";
@@ -477,6 +472,11 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2010 - Certificate guid mismatch";
 				return error(errorMessage.c_str());
 			}
+			if((theCert.vchTitle.size() > MAX_NAME_LENGTH || theCert.vchTitle.empty()))
+			{
+				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2006 - Certificate title too big or is empty";
+				return error(errorMessage.c_str());
+			}
 			break;
 
 		case OP_CERT_UPDATE:
@@ -491,11 +491,19 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2012 - Certificate input guid mismatch";
 				return error(errorMessage.c_str());
 			}
-			if (!theCert.IsNull() && theCert.vchCert != vvchArgs[0])
+			if(!theCert.IsNull())
 			{
-				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2013 - Certificate guid mismatch";
-				return error(errorMessage.c_str());
-			}		
+				if (theCert.vchCert != vvchArgs[0])
+				{
+					errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2013 - Certificate guid mismatch";
+					return error(errorMessage.c_str());
+				}
+				if((theCert.vchTitle.size() > MAX_NAME_LENGTH || theCert.vchTitle.empty()))
+				{
+					errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2006a - Certificate title too big or is empty";
+					return error(errorMessage.c_str());
+				}
+			}
 			break;
 
 		case OP_CERT_TRANSFER:
