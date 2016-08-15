@@ -352,7 +352,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 			vector<unsigned char> vchRandEscrow = vchFromValue(HexStr(vchRand));
 			if(vchRandEscrow != vvchArgs[2])
 			{
-				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 4002 - Hash provided doesn't match the calculated hash the data";
+				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4002 - Hash provided doesn't match the calculated hash the data";
 				return error(errorMessage.c_str());
 			}
 		}
