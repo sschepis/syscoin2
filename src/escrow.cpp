@@ -938,7 +938,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	boost::algorithm::to_lower(strArbiter);
 	// check for alias existence in DB
 	CAliasIndex arbiteralias;
-	CTransaction aliastx;
+	CTransaction aliastx, buyeraliastx;
 	if (!GetTxOfAlias(vchFromString(strArbiter), arbiteralias, aliastx))
 		throw runtime_error("failed to read arbiter alias from DB");
 	
@@ -959,13 +959,13 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 
 
 	CAliasIndex buyeralias;
-	if (!GetTxOfAlias(vchAlias, buyeralias, aliastx))
+	if (!GetTxOfAlias(vchAlias, buyeralias, buyeraliastx))
 		throw runtime_error("could not find buyer alias with this name");
 
-    if(!IsSyscoinTxMine(aliastx, "alias")) {
+    if(!IsSyscoinTxMine(buyeraliastx, "alias")) {
 		throw runtime_error("This alias is not yours.");
     }
-	if (pwalletMain->GetWalletTx(aliastx.GetHash()) == NULL)
+	if (pwalletMain->GetWalletTx(buyeraliastx.GetHash()) == NULL)
 		throw runtime_error("this alias is not in your wallet");
 
 	COffer theOffer, linkedOffer;
@@ -1005,30 +1005,23 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 		vchSellerPubKey = theLinkedAlias.vchPubKey;
 		
 		// if offer is not linked, look for a discount for the buyer
-		CAliasIndex theAlias;
-		
-		theOffer.linkWhitelist.GetLinkEntryByHash(vchAlias, foundEntry);
+		theOffer.linkWhitelist.GetLinkEntryByHash(buyeralias.vchAlias, foundEntry);
 
 		if(!foundEntry.IsNull())
 		{
-			CTransaction txAlias;	
-			// make sure this alias is still valid
-			if (GetTxOfAlias(vchAlias, theAlias, txAlias, true))
-			{
-				// check for existing alias updates/transfers
-				if (ExistsInMempool(vchAlias, OP_ALIAS_UPDATE)) {
-					throw runtime_error("there is are pending operations on that alias");
-				}
-				// make sure its in your wallet (you control this alias)
-				if (IsSyscoinTxMine(txAlias, "alias")) 
-				{
-					wtxAliasIn = pwalletMain->GetWalletTx(txAlias.GetHash());		
-					CPubKey currentKey(theAlias.vchPubKey);
-					scriptPubKeyAliasOrig = GetScriptForDestination(currentKey.GetID());
-					scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << vchAlias  << theAlias.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
-					scriptPubKeyAlias += scriptPubKeyAliasOrig;
-				}		
+			// check for existing alias updates/transfers
+			if (ExistsInMempool(buyeralias.vchAlias, OP_ALIAS_UPDATE)) {
+				throw runtime_error("there is are pending operations on that alias");
 			}
+			// make sure its in your wallet (you control this alias)
+			if (IsSyscoinTxMine(buyeraliastx, "alias")) 
+			{
+				wtxAliasIn = pwalletMain->GetWalletTx(buyeraliastx.GetHash());		
+				CPubKey currentKey(buyeralias.vchPubKey);
+				scriptPubKeyAliasOrig = GetScriptForDestination(currentKey.GetID());
+				scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << buyeralias.vchAlias  << buyeralias.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
+				scriptPubKeyAlias += scriptPubKeyAliasOrig;
+			}			
 		}
 	}
 
@@ -1056,11 +1049,6 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 		throw runtime_error("offeraccept message length cannot exceed 1023 bytes!");
 
 	CPubKey ArbiterPubKey(arbiteralias.vchPubKey);
-	CSyscoinAddress arbiteraddy(ArbiterPubKey.GetID());
-	arbiteraddy = CSyscoinAddress(arbiteraddy.ToString());
-	if(!arbiteraddy.IsValid() || !arbiteraddy.isAlias)
-		throw runtime_error("Invalid arbiter alias or address");
-
 	CPubKey SellerPubKey(vchSellerPubKey);
 	CSyscoinAddress selleraddy(SellerPubKey.GetID());
 	selleraddy = CSyscoinAddress(selleraddy.ToString());
@@ -1068,7 +1056,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 		throw runtime_error("Invalid seller alias or address");
 	CKeyID keyID;
 	if (!selleraddy.GetKeyID(keyID))
-		throw runtime_error("Buyer address does not refer to a key");
+		throw runtime_error("Seller address does not refer to a key");
 	CKey vchSecret;
 	if (pwalletMain->GetKey(keyID, vchSecret))
 		throw runtime_error("Cannot purchase your own offer");
@@ -1133,7 +1121,8 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	newEscrow.vchArbiterAlias = arbiteralias.vchAlias;
 	newEscrow.vchRedeemScript = redeemScript;
 	newEscrow.vchOffer = vchOffer;
-	newEscrow.vchSellerAlias = selleralias.vchAlias;
+	// could be a reseller, thus we need to use selleraddy and not selleralias
+	newEscrow.vchSellerAlias = selleraddy.aliasName;
 	newEscrow.vchPaymentMessage = vchFromString(strCipherText);
 	newEscrow.nQty = nQty;
 	newEscrow.escrowInputTxHash = escrowWtx.GetHash();
