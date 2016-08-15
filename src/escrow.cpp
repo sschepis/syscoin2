@@ -535,17 +535,17 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4027 - Feedback reply must leave a message";
 						return error(errorMessage.c_str());
 					}
-					if(theEscrow.buyerFeedback.nRatingPrimary < 0 || theEscrow.buyerFeedback.nRatingPrimary > 5)
+					if(theEscrow.buyerFeedback.nRating < 0 || theEscrow.buyerFeedback.nRating > 5)
 					{
 						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4028 - Invalid buyer rating, must be less than or equal to 5 and greater than or equal to 0";
 						return error(errorMessage.c_str());
 					}
-					if(theEscrow.sellerFeedback.nRatingPrimary < 0 || theEscrow.sellerFeedback.nRatingPrimary > 5)
+					if(theEscrow.sellerFeedback.nRating < 0 || theEscrow.sellerFeedback.nRating > 5)
 					{
 						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4029 - Invalid seller rating, must be less than or equal to 5 and greater than or equal to 0";
 						return error(errorMessage.c_str());
 					}
-					if(theEscrow.arbiterFeedback.nRatingPrimary < 0 || theEscrow.arbiterFeedback.nRatingPrimary > 5)
+					if(theEscrow.arbiterFeedback.nRating < 0 || theEscrow.arbiterFeedback.nRating > 5)
 					{
 						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4030 - Invalid arbiter rating, must be less than or equal to 5 and greater than or equal to 0";
 						return error(errorMessage.c_str());
