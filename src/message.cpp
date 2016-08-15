@@ -258,7 +258,7 @@ bool CheckMessageInputs(const CTransaction &tx, int op, int nOut, const vector<v
 	// unserialize msg from txn, check for valid
 	CMessage theMessage;
 	CAliasIndex alias;
-	CTransaction aliastx;
+	CTransaction aliasTx;
 	vector<unsigned char> vchData;
 	if(!GetSyscoinData(tx, vchData))
 	{
@@ -451,7 +451,7 @@ UniValue messagenew(const UniValue& params, bool fHelp) {
 	scriptPubKeyAlias += scriptPubKeyAliasOrig;		
 
 
-	if(!GetTxOfAlias(vchFromString(strToAddress), alias, aliastx))
+	if(!GetTxOfAlias(vchFromString(strToAddress), aliasTo, aliastx))
 		return error("failed to read to alias from alias DB");
 	CPubKey ToPubKey = CPubKey(aliasTo.vchPubKey);
 	if(!ToPubKey.IsValid())
