@@ -1009,6 +1009,11 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		}
 		else
 		{
+			if(vtxPos.size() > 0)
+			{
+				errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1015a - Trying to renew an alias that isn't expired";
+				return true;
+			}
 			theAlias.nRating = 0;
 			theAlias.nRatingCount = 0;
 		}
@@ -1234,6 +1239,7 @@ bool GetTxAndVtxOfAlias(const vector<unsigned char> &vchAlias,
 				< chainActive.Tip()->nHeight)) {
 			string name = stringFromVch(vchAlias);
 			LogPrintf("GetTxOfAlias(%s) : expired", name.c_str());
+			vtxPos.clear();
 			return false;
 		}
 	}
