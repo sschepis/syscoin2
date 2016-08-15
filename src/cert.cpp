@@ -814,12 +814,12 @@ UniValue certtransfer(const UniValue& params, bool fHelp) {
 
     // gather & validate inputs
 	vector<unsigned char> vchCert = vchFromValue(params[0]);
-
-	string strAddress = params[1].get_str();
+	ector<unsigned char> vchAlias = vchFromValue(params[1]);
 
 	// check for alias existence in DB
 	CTransaction tx;
-	if (!GetTxOfAlias(vchFromString(strAddress), toAlias, tx, true))
+	CAliasIndex toAlias;
+	if (!GetTxOfAlias(vchAlias, toAlias, tx, true))
 		throw runtime_error("failed to read xfer alias from alias DB");
 
 	xferKey = CPubKey(toAlias.vchPubKey);
