@@ -20,7 +20,7 @@
 #include <boost/algorithm/string/predicate.hpp>
 using namespace std;
 extern void SendMoney(const CTxDestination &address, CAmount nValue, bool fSubtractFeeFromAmount, CWalletTx& wtxNew);
-extern void SendMoneySyscoin(const vector<CRecipient> &vecSend, CAmount nValue, bool fSubtractFeeFromAmount, CWalletTx& wtxNew, const CWalletTx* wtxInOffer=NULL, const CWalletTx* wtxInCert=NULL, const CWalletTx* wtxInAlias=NULL, const CWalletTx* wtxInEscrow=NULL, bool syscoinTx=true, string justcheck="0");
+extern void SendMoneySyscoin(const vector<CRecipient> &vecSend, CAmount nValue, bool fSubtractFeeFromAmount, CWalletTx& wtxNew, const CWalletTx* wtxInOffer=NULL, const CWalletTx* wtxInCert=NULL, const CWalletTx* wtxInAlias=NULL, const CWalletTx* wtxInEscrow=NULL, bool syscoinTx=true);
 bool DisconnectAlias(const CBlockIndex *pindex, const CTransaction &tx, int op, vector<vector<unsigned char> > &vvchArgs );
 bool DisconnectOffer(const CBlockIndex *pindex, const CTransaction &tx, int op, vector<vector<unsigned char> > &vvchArgs );
 bool DisconnectCertificate(const CBlockIndex *pindex, const CTransaction &tx, int op, vector<vector<unsigned char> > &vvchArgs );
@@ -2479,8 +2479,8 @@ bool CreateLinkedOfferAcceptRecipients(vector<CRecipient> &vecSend, const CAmoun
 }
 
 UniValue offeraccept(const UniValue& params, bool fHelp) {
-	if (fHelp || 1 > params.size() || params.size() > 8)
-		throw runtime_error("offeraccept <alias> <guid> [quantity] [message] [BTC TxId] [linkedacceptguidtxhash] [escrowTxHash] [justcheck]\n"
+	if (fHelp || 1 > params.size() || params.size() > 7)
+		throw runtime_error("offeraccept <alias> <guid> [quantity] [message] [BTC TxId] [linkedacceptguidtxhash] [escrowTxHash]\n"
 				"Accept&Pay for a confirmed offer.\n"
 				"<alias> An alias of the buyer.\n"
 				"<guid> guidkey from offer.\n"
@@ -2489,7 +2489,6 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 				"<BTC TxId> If you have paid in Bitcoin and the offer is in Bitcoin, enter the transaction ID here. Default is empty.\n"
 				"<linkedacceptguidtxhash> transaction id of the linking offer accept. For internal use only, leave blank\n"
 				"<escrowTxHash> If this offer accept is done by an escrow release. For internal use only, leave blank\n"
-				"<justcheck> Do not send transaction. For validation only. For internal use only, leave blank\n"
 				+ HelpRequiringPassphrase());
 	CSyscoinAddress refundAddr;	
 	vector<unsigned char> vchAlias = vchFromValue(params[0]);
@@ -2499,7 +2498,6 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	vector<unsigned char> vchLinkOfferAcceptTxHash = vchFromValue(params.size()>= 6? params[5]:"");
 	vector<unsigned char> vchMessage = vchFromValue(params.size()>=4?params[3]:"");
 	vector<unsigned char> vchEscrowTxHash = vchFromValue(params.size()>=7?params[6]:"");
-	string justCheck = params.size()>=8?params[7].get_str():"0";
 	int64_t nHeight = chainActive.Tip()->nHeight;
 	unsigned int nQty = 1;
 	if (params.size() >= 3) {
@@ -2831,7 +2829,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 
 	// if making a purchase and we are using an alias from the whitelist of the offer, we may need to prove that we own that alias so in that case we attach an input from the alias
 	// if purchasing an escrow, we adjust the height to figure out pricing of the accept so we may also attach escrow inputs to the tx
-	SendMoneySyscoin(vecSend, recipientBuyer.nAmount+acceptRecipient.nAmount+paymentRecipient.nAmount+fee.nAmount+escrowBuyerRecipient.nAmount+escrowArbiterRecipient.nAmount+escrowSellerRecipient.nAmount+aliasRecipient.nAmount, false, wtx, wtxOfferIn, wtxInCert, wtxAliasIn, wtxEscrowIn, true, justCheck);
+	SendMoneySyscoin(vecSend, recipientBuyer.nAmount+acceptRecipient.nAmount+paymentRecipient.nAmount+fee.nAmount+escrowBuyerRecipient.nAmount+escrowArbiterRecipient.nAmount+escrowSellerRecipient.nAmount+aliasRecipient.nAmount, false, wtx, wtxOfferIn, wtxInCert, wtxAliasIn, wtxEscrowIn, true);
 	
 	UniValue res(UniValue::VARR);
 	res.push_back(wtx.GetHash().GetHex());
