@@ -518,6 +518,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 					{
 						// check from alias
 						if(!GetTxOfAlias(dbCert.vchAlias, alias, aliasTx))
+						{
 							retError = string("CheckCertInputs(): transfer to alias");
 							if(fDebug)
 								LogPrintf(retError.c_str());
