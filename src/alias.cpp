@@ -1469,8 +1469,10 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	The domain name should not start or end with hyphen (-) (e.g. -syscoin.org or syscoin-.org)
 	The domain name can be a subdomain (e.g. sys.blogspot.com)*/
 
-	boost::algorithm::to_lower(strName);
+	
 	using namespace boost::xpressive;
+	using namespace boost::algorithm;
+	to_lower(strName);
 	smatch nameparts;
 	sregex domainwithtldregex = sregex::compile("^((?!-)[a-z0-9-]{3,63}(?<!-)\\.)+[a-z]{2,6}$");
 	sregex domainwithouttldregex = sregex::compile("^((?!-)[a-z0-9-]{3,63}(?<!-))");
