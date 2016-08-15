@@ -289,7 +289,13 @@ bool COfferDB::ScanOffers(const std::vector<unsigned char>& vchOffer, const stri
 				boost::algorithm::to_lower(title);
 				string description = stringFromVch(txPos.sDescription);
 				boost::algorithm::to_lower(description);
-c
+				CAliasIndex theAlias;
+				CTransaction aliastx;
+				if(!GetTxOfAlias(txPos.vchAlias, theAlias, aliastx))
+				{
+					pcursor->Next();
+					continue;
+				}
 				if(!theAlias.safeSearch && safeSearch)
 				{
 					pcursor->Next();
@@ -2637,7 +2643,12 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 		if (pwalletMain->GetKey(keyID, vchSecret))
 			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 543 - Cannot purchase your own offer");
 	}
+	CTransaction aliastx;
 	CAliasIndex theAlias;
+	if (!GetTxOfAlias( vchAlias, theAlias, aliastx, true))
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 566 - Could not find an alias with this guid");
+
+
 	const CWalletTx *wtxAliasIn = NULL;
 
 	COfferLinkWhitelistEntry foundEntry;
@@ -2645,24 +2656,20 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	// only non linked offers can have discounts applied via whitelist for buyer
 	if(theOffer.vchLinkOffer.empty() && !foundEntry.IsNull())
 	{
-		CTransaction txAlias;	
-		// make sure this alias is still valid
-		if (GetTxOfAlias(vchAlias, theAlias, txAlias, true))
-		{
-			// check for existing alias updates/transfers
-			if (ExistsInMempool(vchAlias, OP_ALIAS_UPDATE)) {
-				throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 544 - There is are pending operations on that alias");
-			}
-			// make sure its in your wallet (you control this alias)
-			if (IsSyscoinTxMine(txAlias, "alias")) 
-			{
-				wtxAliasIn = pwalletMain->GetWalletTx(txAlias.GetHash());		
-				CPubKey currentKey(theAlias.vchPubKey);
-				scriptPubKeyAliasOrig = GetScriptForDestination(currentKey.GetID());
-				scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << vchAlias  << theAlias.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
-				scriptPubKeyAlias += scriptPubKeyAliasOrig;
-			}		
+		// check for existing alias updates/transfers
+		if (ExistsInMempool(vchAlias, OP_ALIAS_UPDATE)) {
+			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 544 - There is are pending operations on that alias");
 		}
+		// make sure its in your wallet (you control this alias)
+		if (IsSyscoinTxMine(aliastx, "alias")) 
+		{
+			wtxAliasIn = pwalletMain->GetWalletTx(aliastx.GetHash());		
+			CPubKey currentKey(theAlias.vchPubKey);
+			scriptPubKeyAliasOrig = GetScriptForDestination(currentKey.GetID());
+			scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << vchAlias  << theAlias.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
+			scriptPubKeyAlias += scriptPubKeyAliasOrig;
+		}		
+		
 	}
 
 	unsigned int memPoolQty = QtyOfPendingAcceptsInMempool(vchOffer);
@@ -2674,12 +2681,6 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	if(nPrice == 0)
 		throw runtime_error(strprintf("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 546 - %s currency not found in offer's alias peg %s", stringFromVch(theOffer.sCurrencyCode), stringFromVch(theOffer.vchAliasPeg)));
 	string strCipherText = "";
-	CTransaction aliastx;
-	CAliasIndex theAlias;
-	if (!GetTxOfAlias( vchAlias, theAlias, aliastx, true))
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 566 - Could not find an alias with this guid");
-
-
 	// encryption should only happen once even when not a resell or not an escrow accept. It is already encrypted in both cases.
 	if(vchLinkOfferAcceptTxHash.empty() && vchEscrowTxHash.empty())
 	{
@@ -2721,7 +2722,6 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 		}	
 	}
 	CAliasIndex buyerAlias;
-	CTransaction aliastx;
 	if (!GetTxOfAlias(vchBuyerAlias, buyerAlias, aliastx, true))
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 532 - Could not find buyer alias with this name");
 	txAccept.vchAcceptRand = vchAccept;
@@ -2955,7 +2955,7 @@ UniValue offeracceptfeedback(const UniValue& params, bool fHelp) {
     	|| op != OP_OFFER_ACCEPT)
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 555 - Could not decode offer accept tx");
 	
-	CAliasIndex buyerAlias, sellerAlias
+	CAliasIndex buyerAlias, sellerAlias;
 	CTransaction aliastx;
 
 	GetTxOfAlias(theOfferAccept.vchBuyerAlias, buyerAlias, aliastx, true);
@@ -3300,7 +3300,6 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 	oOffer.push_back(Pair("expired_block", expired_block));
 	oOffer.push_back(Pair("expired", expired));
 	oOffer.push_back(Pair("height", strprintf("%llu", nHeight)));
-	oOffer.push_back(Pair("address", selleraddy.ToString()));
 	oOffer.push_back(Pair("category", stringFromVch(theOffer.sCategory)));
 	oOffer.push_back(Pair("title", stringFromVch(theOffer.sTitle)));
 	if(theOffer.nQty == -1)
@@ -3718,7 +3717,7 @@ UniValue offerhistory(const UniValue& params, bool fHelp) {
 			paliasdb->ReadAlias(theOfferA.vchAlias, vtxAliasPos);
 			oOffer.push_back(Pair("alias", stringFromVch(theOfferA.vchAlias)));
 			float rating = 0;
-			if(!vtxAliasPos.empty() && (vtxAliasPos.back().nRatingCount > 0)
+			if(!vtxAliasPos.empty() && vtxAliasPos.back().nRatingCount > 0)
 				rating = roundf(vtxAliasPos.back().nRating/(float)vtxAliasPos.back().nRatingCount);
 			oOffer.push_back(Pair("alias_rating",(int)rating));
 			oOffer.push_back(Pair("expires_in", expires_in));
