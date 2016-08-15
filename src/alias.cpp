@@ -1433,8 +1433,8 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	using namespace boost::xpressive;
 	smatch nameparts;
 	sregex cregex = sregex::compile("^((?!-)[a-z0-9-]{3,63}(?<!-)\\.)+[a-z]{0,6}$");
-	if (!regex_search(strName, nameparts, cregex))
-		throw runtime_error("Invalid Syscoin Identity. Must follow the domain name spec of 3 to 63 characters with a TLD of 0 to 6 characters.");
+	//if (!regex_search(strName, nameparts, cregex))
+	//	throw runtime_error("Invalid Syscoin Identity. Must follow the domain name spec of 3 to 63 characters with a TLD of 0 to 6 characters.");
 
 	vchAlias = vchFromString(strName);
 	
