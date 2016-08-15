@@ -2001,7 +2001,7 @@ UniValue offeraddwhitelist(const UniValue& params, bool fHelp) {
 
 	CTransaction aliastx;
 	CAliasIndex theAlias;
-	if (!GetTxOfAlias( vchAlias, theAlias, aliastx, true))
+	if (!GetTxOfAlias( theOffer.vchAlias, theAlias, aliastx, true))
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 562 - Could not find an alias with this guid");
 
 	CPubKey currentKey(theAlias.vchPubKey);
@@ -2081,7 +2081,7 @@ UniValue offerremovewhitelist(const UniValue& params, bool fHelp) {
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 515 - Could not find an offer with this guid");
 	CTransaction aliastx;
 	CAliasIndex theAlias;
-	if (!GetTxOfAlias( vchAlias, theAlias, aliastx, true))
+	if (!GetTxOfAlias( theOffer.vchAlias, theAlias, aliastx, true))
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 563 - Could not find an alias with this guid");
 
 	CPubKey currentKey(theAlias.vchPubKey);
@@ -2151,7 +2151,7 @@ UniValue offerclearwhitelist(const UniValue& params, bool fHelp) {
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 519 - Could not find an offer with this guid");
 	CTransaction aliastx;
 	CAliasIndex theAlias;
-	if (!GetTxOfAlias( vchAlias, theAlias, aliastx, true))
+	if (!GetTxOfAlias(theOffer.vchAlias, theAlias, aliastx, true))
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 564 - Could not find an alias with this guid");
 
 	CPubKey currentKey(theAlias.vchPubKey);
