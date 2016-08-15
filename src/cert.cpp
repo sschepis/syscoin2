@@ -498,9 +498,9 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 					errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2013 - Certificate guid mismatch";
 					return error(errorMessage.c_str());
 				}
-				if((theCert.vchTitle.size() > MAX_NAME_LENGTH || theCert.vchTitle.empty()))
+				if(theCert.vchTitle.size() > MAX_NAME_LENGTH)
 				{
-					errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2006a - Certificate title too big or is empty";
+					errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2006a - Certificate title too big";
 					return error(errorMessage.c_str());
 				}
 			}
