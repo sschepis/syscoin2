@@ -900,6 +900,7 @@ bool AddSyscoinServicesToDB(const CBlock& block, const CCoinsViewCache& inputs, 
 	int op;
 	int nOut;	
 	bool fJustCheck = false;
+	string errorMessage;
 	// first pass check cert/escrow/alias inputs which are dependent to other services, second pass do the rest
 	for (unsigned int i = 0; i < block.vtx.size(); i++)
     {
@@ -923,6 +924,8 @@ bool AddSyscoinServicesToDB(const CBlock& block, const CCoinsViewCache& inputs, 
 			{
 				good = CheckMessageInputs(tx, op, nOut, vvchArgs, inputs, fJustCheck, nHeight, errorMessage, &block);		
 			}
+			if(fDebug && !errorMessage.empty())
+				LogPrintf("%s\n", errorMessage.c_str());
 			// remove tx's that don't pass our check
 			if(!good)
 			{
@@ -934,7 +937,6 @@ bool AddSyscoinServicesToDB(const CBlock& block, const CCoinsViewCache& inputs, 
 			}	
 		}
 	}
-	string errorMessage;
 	for (unsigned int i = 0; i < block.vtx.size(); i++)
     {
         const CTransaction &tx = block.vtx[i];
