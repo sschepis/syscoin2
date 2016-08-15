@@ -1122,7 +1122,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	newEscrow.vchRedeemScript = redeemScript;
 	newEscrow.vchOffer = vchOffer;
 	// could be a reseller, thus we need to use selleraddy and not selleralias
-	newEscrow.vchSellerAlias = selleraddy.aliasName;
+	newEscrow.vchSellerAlias = vchFromString(selleraddy.aliasName);
 	newEscrow.vchPaymentMessage = vchFromString(strCipherText);
 	newEscrow.nQty = nQty;
 	newEscrow.escrowInputTxHash = escrowWtx.GetHash();
