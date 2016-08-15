@@ -936,17 +936,10 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	vector<unsigned char> vchOffer = vchFromValue(params[1]);
 	string strArbiter = params[4].get_str();
 	boost::algorithm::to_lower(strArbiter);
-	CSyscoinAddress arbiterAddress = CSyscoinAddress(strArbiter);
-	if (!arbiterAddress.IsValid())
-		throw runtime_error("Invalid arbiter syscoin address");
-	if (!arbiterAddress.isAlias)
-		throw runtime_error("Arbiter must be a valid alias");
-	if(IsMine(*pwalletMain, arbiterAddress.Get()))
-		throw runtime_error("Arbiter alias must not be yours");
 	// check for alias existence in DB
 	CAliasIndex arbiteralias;
 	CTransaction aliastx;
-	if (!GetTxOfAlias(vchFromString(arbiterAddress.aliasName), arbiteralias, aliastx))
+	if (!GetTxOfAlias(vchFromString(strArbiter), arbiteralias, aliastx))
 		throw runtime_error("failed to read arbiter alias from DB");
 	
 
@@ -964,11 +957,6 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
     if (vchMessage.size() <= 0)
         vchMessage = vchFromString("ESCROW");
 
-	CSyscoinAddress aliasAddress = CSyscoinAddress(stringFromVch(vchAlias));
-	if (!aliasAddress.IsValid())
-		throw runtime_error("Invalid syscoin address");
-	if (!aliasAddress.isAlias)
-		throw runtime_error("Offer must be a valid alias");
 
 	CAliasIndex buyeralias;
 	if (!GetTxOfAlias(vchAlias, buyeralias, aliastx))
@@ -986,9 +974,9 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	vector<unsigned char> vchSellerPubKey;
 	if (!GetTxOfOffer( vchOffer, theOffer, txOffer, true))
 		throw runtime_error("could not find an offer with this identifier");
-	CAliasIndex theAlias;
-	if (!GetTxOfAlias( theOffer.vchAlias, theAlias, txAlias, true))
-		throw runtime_error("could not find an alias with this identifier");
+	CAliasIndex sellerlias;
+	if (!GetTxOfAlias( theOffer.vchAlias, sellerlias, txAlias, true))
+		throw runtime_error("could not find seller alias with this identifier");
 
 	unsigned int memPoolQty = QtyOfPendingAcceptsInMempool(vchOffer);
 	if(theOffer.nQty != -1 && theOffer.nQty < (nQty+memPoolQty))
@@ -997,7 +985,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	if(theOffer.sCategory.size() > 0 && boost::algorithm::ends_with(stringFromVch(theOffer.sCategory), "wanted"))
 		throw runtime_error("Cannot purchase a wanted offer");
 
-	vchSellerPubKey = theAlias.vchPubKey;
+	vchSellerPubKey = sellerlias.vchPubKey;
 	const CWalletTx *wtxAliasIn = NULL;
 
 	CScript scriptPubKeyAlias, scriptPubKeyAliasOrig;
