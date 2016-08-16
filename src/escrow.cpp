@@ -19,7 +19,7 @@
 #include <boost/algorithm/string/predicate.hpp>
 using namespace std;
 extern void SendMoney(const CTxDestination &address, CAmount nValue, bool fSubtractFeeFromAmount, CWalletTx& wtxNew);
-extern void SendMoneySyscoin(const vector<CRecipient> &vecSend, CAmount nValue, bool fSubtractFeeFromAmount, CWalletTx& wtxNew, const CWalletTx* wtxInOffer=NULL, const CWalletTx* wtxInCert=NULL, const CWalletTx* wtxInAlias=NULL, const CWalletTx* wtxInEscrow=NULL, bool syscoinTx=true);
+extern void SendMoneySyscoin(const vector<CRecipient> &vecSend, CAmount nValue, bool fSubtractFeeFromAmount, CWalletTx& wtxNew, const CWalletTx* wtxInOffer=NULL, const CWalletTx* wtxInCert=NULL, const CWalletTx* wtxInAlias=NULL, const CWalletTx* wtxInEscrow=NULL, bool syscoinTx=true, string justcheck="0");
 void PutToEscrowList(std::vector<CEscrow> &escrowList, CEscrow& index) {
 	int i = escrowList.size() - 1;
 	BOOST_REVERSE_FOREACH(CEscrow &o, escrowList) {
@@ -302,7 +302,7 @@ CScript RemoveEscrowScriptPrefix(const CScript& scriptIn) {
 	
     return CScript(pc, scriptIn.end());
 }
-bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, string &errorMessage, const CBlock* block, bool dontaddtodb) {
+bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, string &errorMessage, const CBlock* block, bool dontaddtodb, string justcheck) {
 	if(!IsSys21Fork(nHeight))
 		return true;	
 	if (tx.IsCoinBase())
@@ -553,7 +553,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				}		
 				else
 				{
-					if(prevOp != OP_ESCROW_RELEASE)
+					if(prevOp != OP_ESCROW_RELEASE && justcheck != "1")
 					{
 						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4031 - Can only complete a released escrow";
 						return error(errorMessage.c_str());
@@ -1396,6 +1396,19 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	if (ExistsInMempool(vchEscrow, OP_ESCROW_ACTIVATE) || ExistsInMempool(vchEscrow, OP_ESCROW_RELEASE) || ExistsInMempool(vchEscrow, OP_ESCROW_REFUND) || ExistsInMempool(vchEscrow, OP_ESCROW_COMPLETE)) {
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4094 - There are pending operations on that escrow");
 	}
+	// ensure that all is ok before trying to do the offer accept
+	UniValue arrayAcceptParams(UniValue::VARR);
+	arrayAcceptParams.push_back(stringFromVch(vchEscrow));
+	arrayAcceptParams.push_back("1");
+	try
+	{
+		tableRPC.execute("escrowcomplete", arrayAcceptParams);
+	}
+	catch (UniValue& objError)
+	{
+		throw runtime_error(find_value(objError, "message").get_str());
+	}
+
 	// create a raw tx that sends escrow amount to seller and collateral to buyer
     // inputs buyer txHash
 	UniValue arrayCreateParams(UniValue::VARR);
@@ -1533,7 +1546,20 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 	if (!GetSyscoinTransaction(vtxPos.front().nHeight, escrow.escrowInputTxHash, fundingTx, Params().GetConsensus()))
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4101 - Failed to find escrow transaction");
 
-	
+	// make sure you can actually accept it before going through claim
+	UniValue arrayAcceptParamsCheck(UniValue::VARR);
+	arrayAcceptParamsCheck.push_back(stringFromVch(vchEscrow));
+	arrayAcceptParamsCheck.push_back("1");
+	try
+	{
+		tableRPC.execute("escrowcomplete", arrayAcceptParamsCheck);
+	}
+	catch (UniValue& objError)
+	{
+		throw runtime_error(find_value(objError, "message").get_str());
+	}
+
+
  	int nOutMultiSig = 0;
 	CScript redeemScriptPubKey = CScript(escrow.vchRedeemScript.begin(), escrow.vchRedeemScript.end());
 	CRecipient recipientFee;
@@ -1668,13 +1694,15 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 	
 }
 UniValue escrowcomplete(const UniValue& params, bool fHelp) {
-    if (fHelp || params.size()  != 1)
+    if (fHelp || params.size()  < 1 || params.size() > 2)
         throw runtime_error(
 		"escrowcomplete <escrow guid> [justcheck]\n"
                          "Accepts an offer that's in escrow, to complete the escrow process.\n"
                         + HelpRequiringPassphrase());
     // gather & validate inputs
     vector<unsigned char> vchEscrow = vchFromValue(params[0]);
+	string justCheck = params.size()>=2?params[1].get_str():"0";
+
 	EnsureWalletIsUnlocked();
 
     // look for a transaction with this key
@@ -1684,23 +1712,24 @@ UniValue escrowcomplete(const UniValue& params, bool fHelp) {
 	if (!GetTxOfEscrow( vchEscrow, 
 			escrow, tx))
 			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4113 - Could not find a escrow with this key");
-
-	uint256 hash;
-	vector<vector<unsigned char> > vvch;
-	int op, nOut;
-	if (!DecodeEscrowTx(tx, op, nOut, vvch) 
-		|| !IsEscrowOp(op) 
-		|| (op != OP_ESCROW_RELEASE))
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4114 - Can only complete an escrow that has been released to you");
-	const CWalletTx *wtxIn = pwalletMain->GetWalletTx(tx.GetHash());
-	if (wtxIn == NULL)
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4115 - This escrow is not in your wallet");
-	
-  		// check for existing escrow 's
-	if (ExistsInMempool(vchEscrow, OP_ESCROW_ACTIVATE) || ExistsInMempool(vchEscrow, OP_ESCROW_RELEASE) || ExistsInMempool(vchEscrow, OP_ESCROW_REFUND) || ExistsInMempool(vchEscrow, OP_ESCROW_COMPLETE) ) {
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4116 - There are pending operations on that escrow");
-		}
-	
+	if(justCheck != "1")
+	{
+		uint256 hash;
+		vector<vector<unsigned char> > vvch;
+		int op, nOut;
+		if (!DecodeEscrowTx(tx, op, nOut, vvch) 
+    		|| !IsEscrowOp(op) 
+    		|| (op != OP_ESCROW_RELEASE))
+			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4114 - Can only complete an escrow that has been released to you");
+		const CWalletTx *wtxIn = pwalletMain->GetWalletTx(tx.GetHash());
+		if (wtxIn == NULL)
+			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4115 - This escrow is not in your wallet");
+		
+      		// check for existing escrow 's
+		if (ExistsInMempool(vchEscrow, OP_ESCROW_ACTIVATE) || ExistsInMempool(vchEscrow, OP_ESCROW_RELEASE) || ExistsInMempool(vchEscrow, OP_ESCROW_REFUND) || ExistsInMempool(vchEscrow, OP_ESCROW_COMPLETE) ) {
+			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4116 - There are pending operations on that escrow");
+			}
+	}
 	UniValue acceptParams(UniValue::VARR);
 	acceptParams.push_back(stringFromVch(escrow.vchBuyerAlias));
 	acceptParams.push_back(stringFromVch(escrow.vchOffer));
@@ -1709,6 +1738,7 @@ UniValue escrowcomplete(const UniValue& params, bool fHelp) {
 	acceptParams.push_back("");
 	acceptParams.push_back("");
 	acceptParams.push_back(tx.GetHash().GetHex());
+	acceptParams.push_back(justCheck);
 
 	UniValue res;
 	try
@@ -1727,14 +1757,20 @@ UniValue escrowcomplete(const UniValue& params, bool fHelp) {
 	const string &acceptGUID = arr[1].get_str();
 	const CWalletTx *wtxAcceptIn;
 	wtxAcceptIn = pwalletMain->GetWalletTx(acceptTxHash);
-	
-	if (wtxAcceptIn == NULL)
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4118 - Offer accept is not in your wallet");
-	UniValue ret(UniValue::VARR);
-	ret.push_back(wtxAcceptIn->GetHash().GetHex());
-	return ret;
-	
-
+	if(justCheck != "1")
+	{
+		if (wtxAcceptIn == NULL)
+			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4118 - Offer accept is not in your wallet");
+		UniValue ret(UniValue::VARR);
+		ret.push_back(wtxAcceptIn->GetHash().GetHex());
+		return ret;
+	}
+	else
+	{
+		UniValue ret(UniValue::VARR);
+		ret.push_back("1");
+		return ret;
+	}
 	
 }
 UniValue escrowrefund(const UniValue& params, bool fHelp) {
