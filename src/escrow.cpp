@@ -1311,6 +1311,7 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4085 - Failed to find escrow transaction");
 
 	CAliasIndex arbiterAlias, buyerAlias, sellerAlias;
+	vector<CAliasIndex> aliasVtxPos;
 	CTransaction aliastx;
 	GetTxAndVtxOfAlias(escrow.vchArbiterAlias, arbiterAlias, aliastx, aliasVtxPos, true);
 	arbiterAlias.nHeight = vtxPos.front().nHeight;
@@ -1822,6 +1823,7 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4124 - Failed to find escrow transaction");
 
 	CAliasIndex arbiterAlias, buyerAlias, sellerAlias;
+	vector<CAliasIndex> aliasVtxPos;
 	CTransaction aliastx;
 	GetTxAndVtxOfAlias(escrow.vchArbiterAlias, arbiterAlias, aliastx, aliasVtxPos, true);
 	arbiterAlias.nHeight = vtxPos.front().nHeight;
@@ -2026,11 +2028,13 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
     // look for a transaction with this key
     CTransaction tx;
 	CEscrow escrow;
-    if (!GetTxOfEscrow( vchEscrow, 
-		escrow, tx))
+	vector<CEscrow> vtxPos;
+    if (!GetTxAndVtxOfEscrow( vchEscrow, 
+		escrow, tx, vtxPos))
         throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4137 - Could not find a escrow with this key");
 
 	CAliasIndex arbiterAlias, buyerAlias, sellerAlias;
+	vector<CAliasIndex> aliasVtxPos;
 	CTransaction aliastx;
 	GetTxAndVtxOfAlias(escrow.vchArbiterAlias, arbiterAlias, aliastx, aliasVtxPos, true);
 	arbiterAlias.nHeight = vtxPos.front().nHeight;
@@ -2264,8 +2268,8 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
     // look for a transaction with this key
     CTransaction tx;
 	CEscrow escrow;
-    if (!GetTxOfEscrow( vchEscrow, 
-		escrow, tx))
+    if (!GetTxAndVtxOfEscrow( vchEscrow, 
+		escrow, tx, vtxPos))
         throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4153 - Could not find a escrow with this key");
     vector<vector<unsigned char> > vvch;
     int op, nOut;
