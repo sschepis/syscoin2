@@ -1230,7 +1230,7 @@ bool GetTxOfAlias(const vector<unsigned char> &vchAlias,
 	return true;
 }
 bool GetTxAndVtxOfAlias(const vector<unsigned char> &vchAlias, 
-						CAliasIndex& txPos, CTransaction& tx, std::vector<CAliasIndex> &vtxPos, bool skipExpiresCheck, bool &isExpired) {
+						CAliasIndex& txPos, CTransaction& tx, std::vector<CAliasIndex> &vtxPos, bool isExpired,  bool skipExpiresCheck) {
 	if (!paliasdb->ReadAlias(vchAlias, vtxPos) || vtxPos.empty())
 		return false;
 	txPos = vtxPos.back();
