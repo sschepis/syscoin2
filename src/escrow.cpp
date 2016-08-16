@@ -1064,7 +1064,6 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	COffer theOffer, linkedOffer;
 	
 	CTransaction txOffer, txAlias;
-	vector<unsigned char> vchSellerPubKey;
 	if (!GetTxOfOffer( vchOffer, theOffer, txOffer, true))
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4064 - Could not find an offer with this identifier");
 	CAliasIndex selleralias;
@@ -1078,7 +1077,6 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	if(theOffer.sCategory.size() > 0 && boost::algorithm::ends_with(stringFromVch(theOffer.sCategory), "wanted"))
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4067 - Cannot purchase a wanted offer");
 
-	vchSellerPubKey = selleralias.vchPubKey;
 	const CWalletTx *wtxAliasIn = NULL;
 
 	CScript scriptPubKeyAlias, scriptPubKeyAliasOrig;
@@ -1095,7 +1093,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4069 - Could not find an alias with this identifier");
 		if (linkedOffer.bOnlyAcceptBTC)
 			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4070 - Linked offer only accepts Bitcoins, linked offers currently only work with Syscoin payments");
-		sellerAlias = theLinkedAlias;
+		selleralias = theLinkedAlias;
 	}
 	else
 	{
@@ -1137,14 +1135,14 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 
 	string strCipherText = "";
 	// encrypt to offer owner
-	if(!EncryptMessage(vchSellerPubKey, vchMessage, strCipherText))
+	if(!EncryptMessage(sellerAlias.vchPubKey, vchMessage, strCipherText))
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4073 - Could not encrypt message to seller");
 	
 	if (strCipherText.size() > MAX_ENCRYPTED_VALUE_LENGTH)
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4074 - Payment message length cannot exceed 1023 bytes!");
 
 	CPubKey ArbiterPubKey(arbiteralias.vchPubKey);
-	CPubKey SellerPubKey(sellerAlias.vchPubKey);
+	CPubKey SellerPubKey(selleralias.vchPubKey);
 	CSyscoinAddress selleraddy(SellerPubKey.GetID());
 	CKeyID keyID;
 	if (!selleraddy.GetKeyID(keyID))
@@ -1213,8 +1211,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	newEscrow.vchArbiterAlias = arbiteralias.vchAlias;
 	newEscrow.vchRedeemScript = redeemScript;
 	newEscrow.vchOffer = vchOffer;
-	// could be a reseller, thus we need to use selleraddy and not selleralias
-	newEscrow.vchSellerAlias = vchFromString(selleraddy.aliasName);
+	newEscrow.vchSellerAlias = selleralias.vchAlias;
 	newEscrow.vchPaymentMessage = vchFromString(strCipherText);
 	newEscrow.nQty = nQty;
 	newEscrow.escrowInputTxHash = escrowWtx.GetHash();
