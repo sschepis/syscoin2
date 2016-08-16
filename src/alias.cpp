@@ -955,7 +955,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		{
 			if(op == OP_ALIAS_ACTIVATE)
 			{
-				if(!isExpired && !vtxPos.empty())
+				if(!isExpired && vtxPos.size() > 0)
 				{
 					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1015 - Trying to renew an alias that isn't expired";
 					return true;
@@ -1011,7 +1011,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		}
 		else
 		{
-			if(!isExpired && !vtxPos.empty())
+			if(!isExpired && vtxPos.size() > 0)
 			{
 				errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1015a - Trying to renew an alias that isn't expired";
 				return true;
