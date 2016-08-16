@@ -1552,7 +1552,6 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 	CSyscoinAddress sellerAddress(sellerKey.GetID());
 
 
-	vector<CEscrow> vtxPos;
 	if (!pescrowdb->ReadEscrow(vchEscrow, vtxPos) || vtxPos.empty())
 		  throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4100 - Failed to read from escrow DB");
     CTransaction fundingTx;
