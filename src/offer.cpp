@@ -2625,8 +2625,18 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 
 	CTransaction aliastx,buyeraliastx;
 	CAliasIndex theAlias,tmpAlias;
-	if (!GetTxOfAlias( theOffer.vchAlias, theAlias, aliastx, true))
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 566 - Could not find an alias with this guid");
+	bool isExpired = false;
+	vector<CAliasIndex> aliasVtxPos;
+	if(GetTxAndVtxOfAlias(theOffer.vchAlias, theAlias, aliastx, aliasVtxPos, isExpired, true))
+	{
+		// find the alias (for the right pubkey) at the time of linked accept/escrow if applicable
+		// need this because alias can be transferred and the payment message ends up going to new alias pubkey if we dont do this. 
+		// should be sent to same person that owned the offer when payment was made by buyer
+		theAlias.nHeight = nHeight;
+		theAlias.GetAliasFromList(aliasVtxPos);
+	}
+	else
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 566 - Could not find the alias associated with this offer");
 	CAliasIndex buyerAlias;
 	if (!GetTxOfAlias(vchBuyerAlias, buyerAlias, aliastx, true))
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 532 - Could not find buyer alias with this name");
