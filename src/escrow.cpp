@@ -2494,8 +2494,13 @@ UniValue escrowinfo(const UniValue& params, bool fHelp) {
 		
 	CAliasIndex theSellerAlias;
 	CTransaction aliastx;
-	GetTxOfAlias(ca.vchSellerAlias, theSellerAlias, aliastx, true);
-
+	bool isExpired = false;
+	vector<CAliasIndex> aliasVtxPos;
+	if(GetTxAndVtxOfAlias(ca.vchSellerAlias, theSellerAlias, aliastx, aliasVtxPos, isExpired, true))
+	{
+		theSellerAlias.nHeight = ca.nHeight;
+		theSellerAlias.GetAliasFromList(aliasVtxPos);
+	}
 	oEscrow.push_back(Pair("time", sTime));
 	oEscrow.push_back(Pair("seller", stringFromVch(ca.vchSellerAlias)));
 	oEscrow.push_back(Pair("arbiter", stringFromVch(ca.vchArbiterAlias)));

@@ -3218,7 +3218,13 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 			oOfferAccept.push_back(Pair("paid","true"));
 		CAliasIndex theAlias;
 		CTransaction aliastx;
-		GetTxOfAlias(acceptOffer.vchAlias, theAlias, aliastx, true);
+		bool isExpired = false;
+		vector<CAliasIndex> aliasVtxPos;
+		if(GetTxAndVtxOfAlias(acceptOffer.vchAlias, theAlias, aliastx, aliasVtxPos, isExpired, true))
+		{
+			theAlias.nHeight = acceptOffer.nHeight;
+			theAlias.GetAliasFromList(aliasVtxPos);
+		}
 		string strMessage = string("");
 		if(!DecryptMessage(theAlias.vchPubKey, ca.vchMessage, strMessage))
 			strMessage = string("Encrypted for owner of offer");
@@ -3477,8 +3483,13 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 
 				CAliasIndex theAlias;
 				CTransaction aliastx;
-				GetTxOfAlias(theOffer.vchAlias, theAlias, aliastx, true);
-				
+				bool isExpired = false;
+				vector<CAliasIndex> aliasVtxPos;
+				if(GetTxAndVtxOfAlias(theOffer.vchAlias, theAlias, aliastx, aliasVtxPos, isExpired, true))
+				{
+					theAlias.nHeight = theOffer.nHeight;
+					theAlias.GetAliasFromList(aliasVtxPos);
+				}
 				string strMessage = string("");
 				if(!DecryptMessage(theAlias.vchPubKey, theOfferAccept.vchMessage, strMessage))
 					strMessage = string("Encrypted for owner of offer");
