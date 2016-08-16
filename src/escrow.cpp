@@ -1095,7 +1095,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4069 - Could not find an alias with this identifier");
 		if (linkedOffer.bOnlyAcceptBTC)
 			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4070 - Linked offer only accepts Bitcoins, linked offers currently only work with Syscoin payments");
-		vchSellerPubKey = theLinkedAlias.vchPubKey;
+		sellerAlias = theLinkedAlias;
 	}
 	else
 	{
@@ -1144,7 +1144,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4074 - Payment message length cannot exceed 1023 bytes!");
 
 	CPubKey ArbiterPubKey(arbiteralias.vchPubKey);
-	CPubKey SellerPubKey(vchSellerPubKey);
+	CPubKey SellerPubKey(sellerAlias.vchPubKey);
 	CSyscoinAddress selleraddy(SellerPubKey.GetID());
 	CKeyID keyID;
 	if (!selleraddy.GetKeyID(keyID))
@@ -1162,7 +1162,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	// standard 2 of 3 multisig
 	arrayParams.push_back(2);
 	arrayOfKeys.push_back(HexStr(arbiteralias.vchPubKey));
-	arrayOfKeys.push_back(HexStr(vchSellerPubKey));
+	arrayOfKeys.push_back(HexStr(selleralias.vchPubKey));
 	arrayOfKeys.push_back(HexStr(buyeralias.vchPubKey));
 	arrayParams.push_back(arrayOfKeys);
 	UniValue resCreate;
