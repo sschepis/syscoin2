@@ -1402,7 +1402,7 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4093 - Buyer or Arbiter private keys not known");
 		strPrivateKey = CSyscoinSecret(vchSecret).ToString();
 	}
-     	// check for existing escrow 's
+    // check for existing escrow 's
 	if (ExistsInMempool(vchEscrow, OP_ESCROW_ACTIVATE) || ExistsInMempool(vchEscrow, OP_ESCROW_RELEASE) || ExistsInMempool(vchEscrow, OP_ESCROW_REFUND) || ExistsInMempool(vchEscrow, OP_ESCROW_COMPLETE)) {
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4094 - There are pending operations on that escrow");
 	}

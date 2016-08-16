@@ -1532,7 +1532,7 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	// if renewing an alias you already had and its yours, just use the old pubkey
 	CAliasIndex theAlias;
 	CTransaction aliastx;
-	if(GetTxOfAlias(vchAlias, theAlias, aliastx))
+	if(GetTxOfAlias(vchAlias, theAlias, aliastx, true))
 	{
 		if(IsSyscoinTxMine(aliastx, "alias")) {
 			defaultKey = CPubKey(theAlias.vchPubKey);
