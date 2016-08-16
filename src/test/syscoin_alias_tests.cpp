@@ -719,7 +719,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	// able to release and claim release on escrow with expired aliases
 	BOOST_CHECK_NO_THROW(CallRPC("node2", "escrowrelease " + escrowguid));
 	BOOST_CHECK_NO_THROW(CallRPC("node2", "generate 5")); 
-	illiSleep(2500);
+	MilliSleep(2500);
 	AliasNew("node2", "aliasexpirenode2", "somedata");
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "certupdate " + certgoodguid + " newdata privdata 0"));
 	// able to release and claim release on escrow with non-expired aliases and expired escrow (not complete or refunded)
