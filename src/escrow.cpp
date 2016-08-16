@@ -2498,7 +2498,7 @@ UniValue escrowinfo(const UniValue& params, bool fHelp) {
 	vector<CAliasIndex> aliasVtxPos;
 	if(GetTxAndVtxOfAlias(ca.vchSellerAlias, theSellerAlias, aliastx, aliasVtxPos, isExpired, true))
 	{
-		theSellerAlias.nHeight = ca.nHeight;
+		theSellerAlias.nHeight = vtxPos.front().nHeight;
 		theSellerAlias.GetAliasFromList(aliasVtxPos);
 	}
 	oEscrow.push_back(Pair("time", sTime));
