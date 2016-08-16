@@ -943,17 +943,18 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	
 	if (!fJustCheck ) {
 		bool update = false;
+		bool isExpired = false;
 		CAliasIndex dbAlias;
 		CTransaction aliasTx;
 		string strName = stringFromVch(vvchArgs[0]);
 		boost::algorithm::to_lower(strName);
 		vchAlias = vchFromString(strName);
 		// get the alias from the DB
-		if(!GetTxAndVtxOfAlias(vchAlias, dbAlias, aliasTx, vtxPos))	
+		if(!GetTxAndVtxOfAlias(vchAlias, dbAlias, aliasTx, vtxPos, false, isExpired))	
 		{
 			if(op == OP_ALIAS_ACTIVATE)
 			{
-				if(vtxPos.size() > 0)
+				if(!isExpired)
 				{
 					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1015 - Trying to renew an alias that isn't expired";
 					return true;
@@ -1009,7 +1010,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		}
 		else
 		{
-			if(vtxPos.size() > 0)
+			if(!isExpired)
 			{
 				errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1015a - Trying to renew an alias that isn't expired";
 				return true;
@@ -1228,7 +1229,7 @@ bool GetTxOfAlias(const vector<unsigned char> &vchAlias,
 	return true;
 }
 bool GetTxAndVtxOfAlias(const vector<unsigned char> &vchAlias, 
-						CAliasIndex& txPos, CTransaction& tx, std::vector<CAliasIndex> &vtxPos, bool skipExpiresCheck) {
+						CAliasIndex& txPos, CTransaction& tx, std::vector<CAliasIndex> &vtxPos, bool skipExpiresCheck, bool &isExpired) {
 	if (!paliasdb->ReadAlias(vchAlias, vtxPos) || vtxPos.empty())
 		return false;
 	txPos = vtxPos.back();
@@ -1239,7 +1240,7 @@ bool GetTxAndVtxOfAlias(const vector<unsigned char> &vchAlias,
 				< chainActive.Tip()->nHeight)) {
 			string name = stringFromVch(vchAlias);
 			LogPrintf("GetTxOfAlias(%s) : expired", name.c_str());
-			vtxPos.clear();
+			isExpired = true;
 			return false;
 		}
 	}
