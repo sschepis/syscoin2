@@ -955,7 +955,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		{
 			if(op == OP_ALIAS_ACTIVATE)
 			{
-				if(!isExpired && vtxPos.size() > 0)
+				if(!isExpired && !vtxPos.empty())
 				{
 					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1015 - Trying to renew an alias that isn't expired";
 					return true;
@@ -1011,7 +1011,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		}
 		else
 		{
-			if(!isExpired && vtxPos.size() > 0)
+			if(!isExpired && !vtxPos.empty())
 			{
 				errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1015a - Trying to renew an alias that isn't expired";
 				return true;
@@ -1230,7 +1230,7 @@ bool GetTxOfAlias(const vector<unsigned char> &vchAlias,
 	return true;
 }
 bool GetTxAndVtxOfAlias(const vector<unsigned char> &vchAlias, 
-						CAliasIndex& txPos, CTransaction& tx, std::vector<CAliasIndex> &vtxPos, bool isExpired, bool skipExpiresCheck) {
+						CAliasIndex& txPos, CTransaction& tx, std::vector<CAliasIndex> &vtxPos, bool &isExpired, bool skipExpiresCheck) {
 	isExpired = false;
 	if (!paliasdb->ReadAlias(vchAlias, vtxPos) || vtxPos.empty())
 		return false;
