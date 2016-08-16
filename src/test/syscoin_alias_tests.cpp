@@ -716,15 +716,13 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	BOOST_CHECK_NO_THROW(CallRPC("node3", "escrowinfo " + escrowguid));
 	// and node2
 	BOOST_CHECK_NO_THROW(CallRPC("node2", "escrowinfo " + escrowguid));
-	// able to release and claim release on escrow with expired aliases
+	// able to release and claim release on escrow with expired aliases and expired escrow (not complete or refunded)
 	BOOST_CHECK_NO_THROW(CallRPC("node2", "escrowrelease " + escrowguid));
-	BOOST_CHECK_NO_THROW(CallRPC("node2", "generate 5")); 
-	MilliSleep(2500);
+	// this will recreate the alias and give it a new pubkey.. we need to use the old pubkey to sign the multisig, the escrow rpc call must check for the right pubkey
 	AliasNew("node2", "aliasexpirenode2", "somedata");
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "certupdate " + certgoodguid + " newdata privdata 0"));
 	// able to release and claim release on escrow with non-expired aliases and expired escrow (not complete or refunded)
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 5")); 
-	MilliSleep(2500);
+	EscrowRelease("node2", escrowguid);	 
 	EscrowClaimRelease("node1", escrowguid); 
 
 	// should fail: update cert with expired alias

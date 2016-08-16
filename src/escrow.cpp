@@ -1312,17 +1312,26 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 
 	CAliasIndex arbiterAlias, buyerAlias, sellerAlias;
 	CTransaction aliastx;
-	GetTxOfAlias(escrow.vchArbiterAlias, arbiterAlias, aliastx, true);
+	GetTxAndVtxOfAlias(escrow.vchArbiterAlias, arbiterAlias, aliastx, aliasVtxPos, true);
+	arbiterAlias.nHeight = vtxPos.front().nHeight;
+	arbiterAlias.GetAliasFromList(aliasVtxPos);
 	CPubKey arbiterKey(arbiterAlias.vchPubKey);
 	CSyscoinAddress arbiterAddress(arbiterKey.GetID());
 
-	GetTxOfAlias(escrow.vchBuyerAlias, buyerAlias, aliastx, true);
+	aliasVtxPos.clear();
+	GetTxAndVtxOfAlias(escrow.vchBuyerAlias, buyerAlias, aliastx, aliasVtxPos, true);
+	buyerAlias.nHeight = vtxPos.front().nHeight;
+	buyerAlias.GetAliasFromList(aliasVtxPos);
 	CPubKey buyerKey(buyerAlias.vchPubKey);
 	CSyscoinAddress buyerAddress(buyerKey.GetID());
 
-	GetTxOfAlias(escrow.vchSellerAlias, sellerAlias, aliastx, true);
+	aliasVtxPos.clear();
+	GetTxAndVtxOfAlias(escrow.vchSellerAlias, sellerAlias, aliastx, aliasVtxPos, true);
+	sellerAlias.nHeight = vtxPos.front().nHeight;
+	sellerAlias.GetAliasFromList(aliasVtxPos);
 	CPubKey sellerKey(sellerAlias.vchPubKey);
 	CSyscoinAddress sellerAddress(sellerKey.GetID());
+
 
 	bool foundSellerKey = false;
 	try
@@ -1533,8 +1542,9 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 
 	CAliasIndex sellerAlias;
 	CTransaction aliastx;
-	if(!GetTxOfAlias(escrow.vchSellerAlias, sellerAlias, aliastx, true))
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4099 - Seller address is invalid!");
+	GetTxAndVtxOfAlias(escrow.vchSellerAlias, sellerAlias, aliastx, aliasVtxPos, true);
+	sellerAlias.nHeight = vtxPos.front().nHeight;
+	sellerAlias.GetAliasFromList(aliasVtxPos);
 	CPubKey sellerKey(sellerAlias.vchPubKey);
 	CSyscoinAddress sellerAddress(sellerKey.GetID());
 
@@ -1813,15 +1823,23 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 
 	CAliasIndex arbiterAlias, buyerAlias, sellerAlias;
 	CTransaction aliastx;
-	GetTxOfAlias(escrow.vchArbiterAlias, arbiterAlias, aliastx, true);
+	GetTxAndVtxOfAlias(escrow.vchArbiterAlias, arbiterAlias, aliastx, aliasVtxPos, true);
+	arbiterAlias.nHeight = vtxPos.front().nHeight;
+	arbiterAlias.GetAliasFromList(aliasVtxPos);
 	CPubKey arbiterKey(arbiterAlias.vchPubKey);
 	CSyscoinAddress arbiterAddress(arbiterKey.GetID());
 
-	GetTxOfAlias(escrow.vchBuyerAlias, buyerAlias, aliastx, true);
+	aliasVtxPos.clear();
+	GetTxAndVtxOfAlias(escrow.vchBuyerAlias, buyerAlias, aliastx, aliasVtxPos, true);
+	buyerAlias.nHeight = vtxPos.front().nHeight;
+	buyerAlias.GetAliasFromList(aliasVtxPos);
 	CPubKey buyerKey(buyerAlias.vchPubKey);
 	CSyscoinAddress buyerAddress(buyerKey.GetID());
 
-	GetTxOfAlias(escrow.vchSellerAlias, sellerAlias, aliastx, true);
+	aliasVtxPos.clear();
+	GetTxAndVtxOfAlias(escrow.vchSellerAlias, sellerAlias, aliastx, aliasVtxPos, true);
+	sellerAlias.nHeight = vtxPos.front().nHeight;
+	sellerAlias.GetAliasFromList(aliasVtxPos);
 	CPubKey sellerKey(sellerAlias.vchPubKey);
 	CSyscoinAddress sellerAddress(sellerKey.GetID());
 	bool foundBuyerKey = false;
@@ -2014,15 +2032,23 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 
 	CAliasIndex arbiterAlias, buyerAlias, sellerAlias;
 	CTransaction aliastx;
-	GetTxOfAlias(escrow.vchArbiterAlias, arbiterAlias, aliastx, true);
+	GetTxAndVtxOfAlias(escrow.vchArbiterAlias, arbiterAlias, aliastx, aliasVtxPos, true);
+	arbiterAlias.nHeight = vtxPos.front().nHeight;
+	arbiterAlias.GetAliasFromList(aliasVtxPos);
 	CPubKey arbiterKey(arbiterAlias.vchPubKey);
 	CSyscoinAddress arbiterAddress(arbiterKey.GetID());
 
-	GetTxOfAlias(escrow.vchBuyerAlias, buyerAlias, aliastx, true);
+	aliasVtxPos.clear();
+	GetTxAndVtxOfAlias(escrow.vchBuyerAlias, buyerAlias, aliastx, aliasVtxPos, true);
+	buyerAlias.nHeight = vtxPos.front().nHeight;
+	buyerAlias.GetAliasFromList(aliasVtxPos);
 	CPubKey buyerKey(buyerAlias.vchPubKey);
 	CSyscoinAddress buyerAddress(buyerKey.GetID());
 
-	GetTxOfAlias(escrow.vchSellerAlias, sellerAlias, aliastx, true);
+	aliasVtxPos.clear();
+	GetTxAndVtxOfAlias(escrow.vchSellerAlias, sellerAlias, aliastx, aliasVtxPos, true);
+	sellerAlias.nHeight = vtxPos.front().nHeight;
+	sellerAlias.GetAliasFromList(aliasVtxPos);
 	CPubKey sellerKey(sellerAlias.vchPubKey);
 	CSyscoinAddress sellerAddress(sellerKey.GetID());
 
@@ -2091,7 +2117,7 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 	if (ExistsInMempool(vchEscrow, OP_ESCROW_ACTIVATE) || ExistsInMempool(vchEscrow, OP_ESCROW_RELEASE) || ExistsInMempool(vchEscrow, OP_ESCROW_REFUND) || ExistsInMempool(vchEscrow, OP_ESCROW_COMPLETE)  ) {
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4146 - There are pending operations on that escrow");
 	}
-    // Seller signs it
+    // buyer signs it
 	UniValue arraySignParams(UniValue::VARR);
 	UniValue arraySignInputs(UniValue::VARR);
 	UniValue arrayPrivateKeys(UniValue::VARR);
