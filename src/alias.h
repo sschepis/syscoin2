@@ -59,7 +59,7 @@ public:
 		CAliasIndex myAlias = aliasList.front();
 		// find the closest alias without going over in height, assuming aliasList orders entries by nHeight ascending
         for(std::vector<CAliasIndex>::reverse_iterator it = aliasList.rbegin(); it != aliasList.rend(); ++it) {
-            const myAlias &a = *it;
+            const CAliasIndex &a = *it;
 			// skip if this height is greater than our alias height
 			if(a.nHeight > nHeight)
 				continue;
