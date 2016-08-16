@@ -1537,11 +1537,13 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
     // look for a transaction with this key
     CTransaction tx;
 	CEscrow escrow;
-    if (!GetTxOfEscrow( vchEscrow, 
-		escrow, tx))
+	vector<CEscrow> vtxPos;
+    if (!GetTxAndVtxOfEscrow( vchEscrow, 
+		escrow, tx, vtxPos))
         throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4098 - Could not find a escrow with this key");
 
 	CAliasIndex sellerAlias;
+	vector<CAliasIndex> aliasVtxPos;
 	CTransaction aliastx;
 	GetTxAndVtxOfAlias(escrow.vchSellerAlias, sellerAlias, aliastx, aliasVtxPos, true);
 	sellerAlias.nHeight = vtxPos.front().nHeight;
@@ -2061,9 +2063,6 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 	if (wtxIn == NULL)
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4138 - This escrow is not in your wallet");
 
-	vector<CEscrow> vtxPos;
-	if (!pescrowdb->ReadEscrow(vchEscrow, vtxPos) || vtxPos.empty())
-		  throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4139 - Failed to read from escrow DB");
     CTransaction fundingTx;
 	if (!GetSyscoinTransaction(vtxPos.front().nHeight, escrow.escrowInputTxHash, fundingTx, Params().GetConsensus()))
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4140 - Failed to find escrow transaction");
@@ -2268,8 +2267,8 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
     // look for a transaction with this key
     CTransaction tx;
 	CEscrow escrow;
-    if (!GetTxAndVtxOfEscrow( vchEscrow, 
-		escrow, tx, vtxPos))
+    if (!GetTxOfEscrow( vchEscrow, 
+		escrow, tx))
         throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4153 - Could not find a escrow with this key");
     vector<vector<unsigned char> > vvch;
     int op, nOut;
