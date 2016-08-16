@@ -1307,21 +1307,24 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	CAliasIndex arbiterAlias, buyerAlias, sellerAlias;
 	vector<CAliasIndex> aliasVtxPos;
 	CTransaction aliastx;
-	GetTxAndVtxOfAlias(escrow.vchArbiterAlias, arbiterAlias, aliastx, aliasVtxPos, true);
+	if(!GetTxAndVtxOfAlias(escrow.vchArbiterAlias, arbiterAlias, aliastx, aliasVtxPos, true))
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4085a - Could not find arbiter alias in the alias DB");
 	arbiterAlias.nHeight = vtxPos.front().nHeight;
 	arbiterAlias.GetAliasFromList(aliasVtxPos);
 	CPubKey arbiterKey(arbiterAlias.vchPubKey);
 	CSyscoinAddress arbiterAddress(arbiterKey.GetID());
 
 	aliasVtxPos.clear();
-	GetTxAndVtxOfAlias(escrow.vchBuyerAlias, buyerAlias, aliastx, aliasVtxPos, true);
+	if(!GetTxAndVtxOfAlias(escrow.vchBuyerAlias, buyerAlias, aliastx, aliasVtxPos, true))
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4085b - Could not find buyer alias in the alias DB");
 	buyerAlias.nHeight = vtxPos.front().nHeight;
 	buyerAlias.GetAliasFromList(aliasVtxPos);
 	CPubKey buyerKey(buyerAlias.vchPubKey);
 	CSyscoinAddress buyerAddress(buyerKey.GetID());
 
 	aliasVtxPos.clear();
-	GetTxAndVtxOfAlias(escrow.vchSellerAlias, sellerAlias, aliastx, aliasVtxPos, true);
+	if(!GetTxAndVtxOfAlias(escrow.vchSellerAlias, sellerAlias, aliastx, aliasVtxPos, true))
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4085c - Could not find seller alias in the alias DB");
 	sellerAlias.nHeight = vtxPos.front().nHeight;
 	sellerAlias.GetAliasFromList(aliasVtxPos);
 	CPubKey sellerKey(sellerAlias.vchPubKey);
@@ -1539,7 +1542,8 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 	CAliasIndex sellerAlias;
 	vector<CAliasIndex> aliasVtxPos;
 	CTransaction aliastx;
-	GetTxAndVtxOfAlias(escrow.vchSellerAlias, sellerAlias, aliastx, aliasVtxPos, true);
+	if(!GetTxAndVtxOfAlias(escrow.vchSellerAlias, sellerAlias, aliastx, aliasVtxPos, true))
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4099 - Could not find seller alias in the alias DB");
 	sellerAlias.nHeight = vtxPos.front().nHeight;
 	sellerAlias.GetAliasFromList(aliasVtxPos);
 	CPubKey sellerKey(sellerAlias.vchPubKey);
@@ -1814,28 +1818,24 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 	if (!GetSyscoinTransaction(vtxPos.front().nHeight, escrow.escrowInputTxHash, fundingTx, Params().GetConsensus()))
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4124 - Failed to find escrow transaction");
 
-	CAliasIndex arbiterAlias, buyerAlias, sellerAlias;
+	CAliasIndex arbiterAlias, buyerAlias;
 	vector<CAliasIndex> aliasVtxPos;
 	CTransaction aliastx;
-	GetTxAndVtxOfAlias(escrow.vchArbiterAlias, arbiterAlias, aliastx, aliasVtxPos, true);
+	if(!GetTxAndVtxOfAlias(escrow.vchArbiterAlias, arbiterAlias, aliastx, aliasVtxPos, true))
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4124a - Could not find arbiter alias in the alias DB");
 	arbiterAlias.nHeight = vtxPos.front().nHeight;
 	arbiterAlias.GetAliasFromList(aliasVtxPos);
 	CPubKey arbiterKey(arbiterAlias.vchPubKey);
 	CSyscoinAddress arbiterAddress(arbiterKey.GetID());
 
 	aliasVtxPos.clear();
-	GetTxAndVtxOfAlias(escrow.vchBuyerAlias, buyerAlias, aliastx, aliasVtxPos, true);
+	if(!GetTxAndVtxOfAlias(escrow.vchBuyerAlias, buyerAlias, aliastx, aliasVtxPos, true))
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4124b - Could not find buyer alias in the alias DB");
 	buyerAlias.nHeight = vtxPos.front().nHeight;
 	buyerAlias.GetAliasFromList(aliasVtxPos);
 	CPubKey buyerKey(buyerAlias.vchPubKey);
 	CSyscoinAddress buyerAddress(buyerKey.GetID());
 
-	aliasVtxPos.clear();
-	GetTxAndVtxOfAlias(escrow.vchSellerAlias, sellerAlias, aliastx, aliasVtxPos, true);
-	sellerAlias.nHeight = vtxPos.front().nHeight;
-	sellerAlias.GetAliasFromList(aliasVtxPos);
-	CPubKey sellerKey(sellerAlias.vchPubKey);
-	CSyscoinAddress sellerAddress(sellerKey.GetID());
 	bool foundBuyerKey = false;
 	try
 	{
@@ -2028,21 +2028,24 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 	CAliasIndex arbiterAlias, buyerAlias, sellerAlias;
 	vector<CAliasIndex> aliasVtxPos;
 	CTransaction aliastx;
-	GetTxAndVtxOfAlias(escrow.vchArbiterAlias, arbiterAlias, aliastx, aliasVtxPos, true);
+	if(!GetTxAndVtxOfAlias(escrow.vchArbiterAlias, arbiterAlias, aliastx, aliasVtxPos, true))
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4137a - Could not find arbiter alias in the alias DB");
 	arbiterAlias.nHeight = vtxPos.front().nHeight;
 	arbiterAlias.GetAliasFromList(aliasVtxPos);
 	CPubKey arbiterKey(arbiterAlias.vchPubKey);
 	CSyscoinAddress arbiterAddress(arbiterKey.GetID());
 
 	aliasVtxPos.clear();
-	GetTxAndVtxOfAlias(escrow.vchBuyerAlias, buyerAlias, aliastx, aliasVtxPos, true);
+	if(!GetTxAndVtxOfAlias(escrow.vchBuyerAlias, buyerAlias, aliastx, aliasVtxPos, true))
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4137b - Could not find buyer alias in the alias DB");
 	buyerAlias.nHeight = vtxPos.front().nHeight;
 	buyerAlias.GetAliasFromList(aliasVtxPos);
 	CPubKey buyerKey(buyerAlias.vchPubKey);
 	CSyscoinAddress buyerAddress(buyerKey.GetID());
 
 	aliasVtxPos.clear();
-	GetTxAndVtxOfAlias(escrow.vchSellerAlias, sellerAlias, aliastx, aliasVtxPos, true);
+	if(!GetTxAndVtxOfAlias(escrow.vchSellerAlias, sellerAlias, aliastx, aliasVtxPos, true))
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4137c - Could not find seller alias in the alias DB");
 	sellerAlias.nHeight = vtxPos.front().nHeight;
 	sellerAlias.GetAliasFromList(aliasVtxPos);
 	CPubKey sellerKey(sellerAlias.vchPubKey);
