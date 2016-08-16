@@ -1525,11 +1525,22 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	}
 	
 
-	CPubKey newDefaultKey;
-	pwalletMain->GetKeyFromPool(newDefaultKey);
+	CPubKey defaultKey;
+	pwalletMain->GetKeyFromPool(defaultKey);
 	CScript scriptPubKeyOrig;
-	scriptPubKeyOrig = GetScriptForDestination(newDefaultKey.GetID());
-	std::vector<unsigned char> vchPubKey(newDefaultKey.begin(), newDefaultKey.end());
+
+	// if renewing an alias you already had and its yours, just use the old pubkey
+	CAliasIndex theAlias;
+	CTransaction aliastx;
+	if(GetTxOfAlias(vchAlias, theAlias, aliastx))
+	{
+		if(IsSyscoinTxMine(aliastx, "alias")) {
+			defaultKey = CPubKey(theAlias.vchPubKey);
+		}
+	}
+
+	scriptPubKeyOrig = GetScriptForDestination(defaultKey.GetID());
+	std::vector<unsigned char> vchPubKey(defaultKey.begin(), defaultKey.end());
 
 	if(vchPrivateValue.size() > 0)
 	{

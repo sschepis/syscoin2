@@ -1146,9 +1146,6 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	CPubKey ArbiterPubKey(arbiteralias.vchPubKey);
 	CPubKey SellerPubKey(vchSellerPubKey);
 	CSyscoinAddress selleraddy(SellerPubKey.GetID());
-	selleraddy = CSyscoinAddress(selleraddy.ToString());
-	if(!selleraddy.IsValid() || !selleraddy.isAlias)
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4075 - Invalid seller alias or address");
 	CKeyID keyID;
 	if (!selleraddy.GetKeyID(keyID))
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4076 - Seller address does not refer to a key");
@@ -1551,9 +1548,6 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 	CPubKey sellerKey(sellerAlias.vchPubKey);
 	CSyscoinAddress sellerAddress(sellerKey.GetID());
 
-
-	if (!pescrowdb->ReadEscrow(vchEscrow, vtxPos) || vtxPos.empty())
-		  throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4100 - Failed to read from escrow DB");
     CTransaction fundingTx;
 	if (!GetSyscoinTransaction(vtxPos.front().nHeight, escrow.escrowInputTxHash, fundingTx, Params().GetConsensus()))
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4101 - Failed to find escrow transaction");
