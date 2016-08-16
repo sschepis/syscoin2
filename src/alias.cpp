@@ -399,7 +399,8 @@ string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchAliasPeg, const
 	vector<CAliasIndex> vtxPos;
 	CAliasIndex tmpAlias;
 	CTransaction aliastx;
-	if (!GetTxAndVtxOfAlias(vchAliasPeg, tmpAlias, aliastx, vtxPos))
+	bool isExpired;
+	if (!GetTxAndVtxOfAlias(vchAliasPeg, tmpAlias, aliastx, vtxPos, isExpired))
 	{
 		if(fDebug)
 			LogPrintf("getCurrencyToSYSFromAlias() Could not find %s alias\n", stringFromVch(vchAliasPeg).c_str());
@@ -950,7 +951,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		boost::algorithm::to_lower(strName);
 		vchAlias = vchFromString(strName);
 		// get the alias from the DB
-		if(!GetTxAndVtxOfAlias(vchAlias, dbAlias, aliasTx, vtxPos, false, isExpired))	
+		if(!GetTxAndVtxOfAlias(vchAlias, dbAlias, aliasTx, vtxPos, isExpired))	
 		{
 			if(op == OP_ALIAS_ACTIVATE)
 			{
@@ -1938,7 +1939,8 @@ UniValue aliasinfo(const UniValue& params, bool fHelp) {
 	{
 		// check for alias existence in DB
 		vector<CAliasIndex> vtxPos;
-		if (!GetTxAndVtxOfAlias(vchAlias, alias, tx, vtxPos, true))
+		bool isExpired = false;
+		if (!GetTxAndVtxOfAlias(vchAlias, alias, tx, vtxPos, isExpired, true))
 			throw runtime_error("failed to read from alias DB");
 	
 

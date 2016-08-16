@@ -1307,7 +1307,8 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	CAliasIndex arbiterAlias, buyerAlias, sellerAlias;
 	vector<CAliasIndex> aliasVtxPos;
 	CTransaction aliastx;
-	if(GetTxAndVtxOfAlias(escrow.vchArbiterAlias, arbiterAlias, aliastx, aliasVtxPos, true))
+	bool isExpired;
+	if(GetTxAndVtxOfAlias(escrow.vchArbiterAlias, arbiterAlias, aliastx, aliasVtxPos, isExpired, true))
 	{
 		arbiterAlias.nHeight = vtxPos.front().nHeight;
 		arbiterAlias.GetAliasFromList(aliasVtxPos);
@@ -1316,7 +1317,7 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	CSyscoinAddress arbiterAddress(arbiterKey.GetID());
 
 	aliasVtxPos.clear();
-	if(GetTxAndVtxOfAlias(escrow.vchBuyerAlias, buyerAlias, aliastx, aliasVtxPos, true))
+	if(GetTxAndVtxOfAlias(escrow.vchBuyerAlias, buyerAlias, aliastx, aliasVtxPos, isExpired, true))
 	{
 		buyerAlias.nHeight = vtxPos.front().nHeight;
 		buyerAlias.GetAliasFromList(aliasVtxPos);
@@ -1325,7 +1326,7 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	CSyscoinAddress buyerAddress(buyerKey.GetID());
 
 	aliasVtxPos.clear();
-	if(GetTxAndVtxOfAlias(escrow.vchSellerAlias, sellerAlias, aliastx, aliasVtxPos, true))
+	if(GetTxAndVtxOfAlias(escrow.vchSellerAlias, sellerAlias, aliastx, aliasVtxPos, isExpired, true))
 	{
 		sellerAlias.nHeight = vtxPos.front().nHeight;
 		sellerAlias.GetAliasFromList(aliasVtxPos);
@@ -1545,7 +1546,8 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 	CAliasIndex sellerAlias;
 	vector<CAliasIndex> aliasVtxPos;
 	CTransaction aliastx;
-	if(GetTxAndVtxOfAlias(escrow.vchSellerAlias, sellerAlias, aliastx, aliasVtxPos, true))
+	bool isExpired;
+	if(GetTxAndVtxOfAlias(escrow.vchSellerAlias, sellerAlias, aliastx, aliasVtxPos, isExpired, true))
 	{
 		sellerAlias.nHeight = vtxPos.front().nHeight;
 		sellerAlias.GetAliasFromList(aliasVtxPos);
@@ -1825,7 +1827,8 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 	CAliasIndex arbiterAlias, buyerAlias, sellerAlias;
 	vector<CAliasIndex> aliasVtxPos;
 	CTransaction aliastx;
-	if(GetTxAndVtxOfAlias(escrow.vchArbiterAlias, arbiterAlias, aliastx, aliasVtxPos, true))
+	bool isExpired;
+	if(GetTxAndVtxOfAlias(escrow.vchArbiterAlias, arbiterAlias, aliastx, aliasVtxPos, isExpired, true))
 	{
 		arbiterAlias.nHeight = vtxPos.front().nHeight;
 		arbiterAlias.GetAliasFromList(aliasVtxPos);
@@ -1834,7 +1837,7 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 	CSyscoinAddress arbiterAddress(arbiterKey.GetID());
 
 	aliasVtxPos.clear();
-	if(GetTxAndVtxOfAlias(escrow.vchBuyerAlias, buyerAlias, aliastx, aliasVtxPos, true))
+	if(GetTxAndVtxOfAlias(escrow.vchBuyerAlias, buyerAlias, aliastx, aliasVtxPos, isExpired, true))
 	{
 		buyerAlias.nHeight = vtxPos.front().nHeight;
 		buyerAlias.GetAliasFromList(aliasVtxPos);
@@ -1843,7 +1846,7 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 	CSyscoinAddress buyerAddress(buyerKey.GetID());
 
 	aliasVtxPos.clear();
-	if(GetTxAndVtxOfAlias(escrow.vchSellerAlias, sellerAlias, aliastx, aliasVtxPos, true))
+	if(GetTxAndVtxOfAlias(escrow.vchSellerAlias, sellerAlias, aliastx, aliasVtxPos, isExpired, true))
 	{
 		sellerAlias.nHeight = vtxPos.front().nHeight;
 		sellerAlias.GetAliasFromList(aliasVtxPos);
@@ -2042,7 +2045,8 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 	CAliasIndex arbiterAlias, buyerAlias, sellerAlias;
 	vector<CAliasIndex> aliasVtxPos;
 	CTransaction aliastx;
-	if(GetTxAndVtxOfAlias(escrow.vchArbiterAlias, arbiterAlias, aliastx, aliasVtxPos, true))
+	bool isExpired;
+	if(GetTxAndVtxOfAlias(escrow.vchArbiterAlias, arbiterAlias, aliastx, aliasVtxPos, isExpired, true))
 	{
 		arbiterAlias.nHeight = vtxPos.front().nHeight;
 		arbiterAlias.GetAliasFromList(aliasVtxPos);
@@ -2051,7 +2055,7 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 	CSyscoinAddress arbiterAddress(arbiterKey.GetID());
 
 	aliasVtxPos.clear();
-	if(GetTxAndVtxOfAlias(escrow.vchBuyerAlias, buyerAlias, aliastx, aliasVtxPos, true))
+	if(GetTxAndVtxOfAlias(escrow.vchBuyerAlias, buyerAlias, aliastx, aliasVtxPos, isExpired, true))
 	{
 		buyerAlias.nHeight = vtxPos.front().nHeight;
 		buyerAlias.GetAliasFromList(aliasVtxPos);
@@ -2060,7 +2064,7 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 	CSyscoinAddress buyerAddress(buyerKey.GetID());
 
 	aliasVtxPos.clear();
-	if(GetTxAndVtxOfAlias(escrow.vchSellerAlias, sellerAlias, aliastx, aliasVtxPos, true))
+	if(GetTxAndVtxOfAlias(escrow.vchSellerAlias, sellerAlias, aliastx, aliasVtxPos, isExpired, true))
 	{
 		sellerAlias.nHeight = vtxPos.front().nHeight;
 		sellerAlias.GetAliasFromList(aliasVtxPos);
