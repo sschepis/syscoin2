@@ -1208,7 +1208,7 @@ void EscrowClaimRelease(const string& node, const string& guid)
 	const string &offerguid = find_value(r.get_obj(), "offer").get_str();
 	const string &pay_message = find_value(r.get_obj(), "pay_message").get_str();
 	// check that you as the seller who claims the release can see the payment message
-	BOOST_CHECK_EQUAL(pay_message,string("Encrypted for owner of offer"));
+	BOOST_CHECK(pay_message != string("Encrypted for owner of offer"));
 	CAmount escrowtotal = AmountFromValue(find_value(r.get_obj(), "systotal"));
 	const UniValue &acceptValue = FindOfferAccept(node, offerguid, acceptguid);
 	BOOST_CHECK(find_value(acceptValue, "escrowlink").get_str() == guid);
