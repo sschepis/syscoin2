@@ -1135,7 +1135,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 
 	string strCipherText = "";
 	// encrypt to offer owner
-	if(!EncryptMessage(sellerAlias.vchPubKey, vchMessage, strCipherText))
+	if(!EncryptMessage(selleralias.vchPubKey, vchMessage, strCipherText))
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4073 - Could not encrypt message to seller");
 	
 	if (strCipherText.size() > MAX_ENCRYPTED_VALUE_LENGTH)
