@@ -1139,7 +1139,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						}
 						else if(theOffer.nCommission <= -entry.nDiscountPct)
 						{
-							errorMessage = strprintf("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 76a - You cannot re-sell at a lower price than the discount you received as an affiliate (current discount received: %d%%)", entry.nDiscountPct));
+							errorMessage = strprintf("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 76a - You cannot re-sell at a lower price than the discount you received as an affiliate (current discount received: %d%%)", entry.nDiscountPct);
 							theOffer.vchLinkOffer.clear();
 						}
 						else if (!GetTxOfAlias(theOffer.vchAlias, theAlias, aliasTx))
@@ -2007,7 +2007,7 @@ UniValue offeraddwhitelist(const UniValue& params, bool fHelp) {
 	CPubKey currentKey(theAlias.vchPubKey);
 	scriptPubKeyOrig = GetScriptForDestination(currentKey.GetID());
 	CScript scriptPubKeyAlias;
-	scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << theOffer.vchAlias << theOffer.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
+	scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << theOffer.vchAlias << theAlias.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
 	scriptPubKeyAlias += scriptPubKeyOrig;
 
 	const CWalletTx* wtxIn = pwalletMain->GetWalletTx(tx.GetHash());
