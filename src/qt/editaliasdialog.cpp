@@ -121,7 +121,7 @@ bool EditAliasDialog::saveCurrentRow()
         }
 		strMethod = string("aliasnew");
         params.push_back(ui->aliasEdit->text().trimmed().toStdString());
-		params.push_back(ui->nameEdit->currentText().toStdString());
+		params.push_back(ui->nameEdit->toPlainText().toStdString());
 		params.push_back("");
 		params.push_back(ui->safeSearchEdit->currentText().toStdString());
 		params.push_back(ui->expiryEdit->itemData(ui->expiryEdit->currentIndex()).toString().toStdString());
@@ -129,7 +129,7 @@ bool EditAliasDialog::saveCurrentRow()
             UniValue result = tableRPC.execute(strMethod, params);
 			if (result.type() != UniValue::VNULL)
 			{
-				alias = ui->nameEdit->currentText() + ui->aliasEdit->text();
+				alias = ui->nameEdit->toPlainText() + ui->aliasEdit->text();
 					
 			}
 		}
@@ -156,7 +156,7 @@ bool EditAliasDialog::saveCurrentRow()
         {
 			strMethod = string("aliasupdate");
 			params.push_back(ui->aliasEdit->text().toStdString());
-			params.push_back(ui->nameEdit->currentText().toStdString());
+			params.push_back(ui->nameEdit->toPlainText().toStdString());
 			params.push_back("");
 			params.push_back(ui->safeSearchEdit->currentText().toStdString());	
 			params.push_back("");
@@ -166,7 +166,7 @@ bool EditAliasDialog::saveCurrentRow()
 				if (result.type() != UniValue::VNULL)
 				{
 				
-					alias = ui->nameEdit->currentText() + ui->aliasEdit->text();
+					alias = ui->nameEdit->toPlainText() + ui->aliasEdit->text();
 						
 				}
 			}
@@ -192,7 +192,7 @@ bool EditAliasDialog::saveCurrentRow()
         {
 			strMethod = string("aliasupdate");
 			params.push_back(ui->aliasEdit->text().toStdString());
-			params.push_back(ui->nameEdit->currentText().toStdString());
+			params.push_back(ui->nameEdit->toPlainText().toStdString());
 			params.push_back("");
 			params.push_back(ui->safeSearchEdit->currentText().toStdString());
 			params.push_back(ui->transferEdit->text().toStdString());
@@ -202,7 +202,7 @@ bool EditAliasDialog::saveCurrentRow()
 				if (result.type() != UniValue::VNULL)
 				{
 
-					alias = ui->nameEdit->currentText() + ui->aliasEdit->text()+ui->transferEdit->text();
+					alias = ui->nameEdit->toPlainText() + ui->aliasEdit->text()+ui->transferEdit->text();
 						
 				}
 			}
