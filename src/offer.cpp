@@ -742,24 +742,14 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 23 - Offer input and offer guid mismatch";
 				return error(errorMessage.c_str());
-			}
+			}	
+			if(!IsAliasOp(prevAliasOp) || theOffer.vchAlias != vvchPrevAliasArgs[0])
+			{
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 25 - Alias input mismatch";
+				return error(errorMessage.c_str());
+			}				
 			if(!theOffer.vchLinkOffer.empty())
 			{
-				if (theOffer.vchLinkAlias.empty())
-				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 24 - No link alias given to create a linked offer";
-					return error(errorMessage.c_str());
-				}
-
-				if(IsAliasOp(prevAliasOp))
-				{
-					if(theOffer.vchLinkAlias != vvchPrevAliasArgs[0])
-					{
-						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 25 - Alias link and alias input mismatch";
-						return error(errorMessage.c_str());
-					}
-				}	
-
 				if(theOffer.nCommission > 255)
 				{
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 26 - Commission must be less than 256";
@@ -921,6 +911,11 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 54 - Prev offer input and link accept guid mismatch";
 				return error(errorMessage.c_str());
 			}
+			if (!IsOfferOp(prevOp) && !theOfferAccept.vchLinkAccept.empty() && !theOfferAccept.vchLinkOffer.empty())
+			{
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 54a - Prev offer input missing";
+				return error(errorMessage.c_str());
+			}
 			if (IsEscrowOp(prevEscrowOp) && !theOfferAccept.txBTCId.IsNull())
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 55 - Cannot use BTC for escrow transactions";
@@ -931,9 +926,19 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 56 - Escrow guid mismatch";
 				return error(errorMessage.c_str());
 			}
+			if (!IsEscrowOp(prevEscrowOp) && !theOfferAccept.vchEscrow.empty())
+			{
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 56a - Escrow input is missing";
+				return error(errorMessage.c_str());
+			}
 			if (IsAliasOp(prevAliasOp) && theOffer.vchLinkAlias != vvchPrevAliasArgs[0])
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 57 - Whitelist alias guid mismatch";
+				return error(errorMessage.c_str());
+			}
+			if (!IsAliasOp(prevAliasOp) && !theOffer.vchLinkAlias.empty())
+			{
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 57a - Whitelist alias input missing";
 				return error(errorMessage.c_str());
 			}
 			if (vvchArgs[1].size() > MAX_GUID_LENGTH)
@@ -1120,43 +1125,32 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			// if this is a linked offer activate, then add it to the parent offerLinks list
 			if(!theOffer.vchLinkOffer.empty())
 			{
-
-				if(!theOffer.vchLinkAlias.empty())
-				{
-					if (theOffer.vchLinkAlias != theOffer.vchAlias)
-					{
-						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 75 - Alias input and offer alias mismatch";
-						return true;
-					}
-				}
-
 				CTransaction txOffer;
 				vector<COffer> myVtxPos;
 				if (GetTxAndVtxOfOffer( theOffer.vchLinkOffer, linkOffer, txOffer, myVtxPos))
 				{					
 					// if alias input is given then make sure it exists in the root offer affiliate list if root offer is in exclusive mode
-					if (!theOffer.vchLinkAlias.empty() && linkOffer.linkWhitelist.bExclusiveResell)
+					if (linkOffer.linkWhitelist.bExclusiveResell)
 					{
-						if(!linkOffer.linkWhitelist.GetLinkEntryByHash(theOffer.vchLinkAlias, entry))
+						if(!linkOffer.linkWhitelist.GetLinkEntryByHash(theOffer.vchAlias, entry))
 						{
 							errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 76 - Cannot find this alias in the parent offer affiliate list";
 							theOffer.vchLinkOffer.clear();	
 						}
-						else if (!GetTxOfAlias(theOffer.vchLinkAlias, theAlias, aliasTx))
+						else if(theOffer.nCommission <= -entry.nDiscountPct)
 						{
-							errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 76 - Cannot find alias used to create linked offer. Perhaps it is expired";
+							errorMessage = strprintf("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 76a - You cannot re-sell at a lower price than the discount you received as an affiliate (current discount received: %d%%)", entry.nDiscountPct));
 							theOffer.vchLinkOffer.clear();
 						}
-					}						
+						else if (!GetTxOfAlias(theOffer.vchAlias, theAlias, aliasTx))
+						{
+							errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 78 - Cannot find alias used to create linked offer. Perhaps it is expired";
+							theOffer.vchLinkOffer.clear();
+						}
+					}
 					else if (!linkOffer.vchLinkOffer.empty())
 					{
 						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 77 - Cannot link to an offer that is already linked to another offer";
-						theOffer.vchLinkOffer.clear();	
-					}
-					// if alias input is not given yet root offer is in exclusive mode then we can't link this offer
-					else if (theOffer.vchLinkAlias.empty() && linkOffer.linkWhitelist.bExclusiveResell)
-					{
-						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 78 - Parent offer set to exlusive resell but no alias input given to linked offer";
 						theOffer.vchLinkOffer.clear();	
 					}
 					else if(linkOffer.bOnlyAcceptBTC)
@@ -1672,6 +1666,9 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 	wtxAliasIn = pwalletMain->GetWalletTx(aliastx.GetHash());
 	if (wtxAliasIn == NULL)
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 502 - This alias is not in your wallet");
+	if (ExistsInMempool(vchAlias, OP_ALIAS_ACTIVATE) || ExistsInMempool(vchAlias, OP_ALIAS_UPDATE)) {
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 502a - There are pending operations on that alias");
+	}
 	vector<unsigned char> vchCat = vchFromValue(params[2]);
 	vector<unsigned char> vchTitle = vchFromValue(params[3]);
 	vector<unsigned char> vchCurrency = vchFromValue(params[7]);
@@ -1797,13 +1794,19 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 	scriptPubKey << CScript::EncodeOP_N(OP_OFFER_ACTIVATE) << vchOffer << vchHashOffer << OP_2DROP << OP_DROP;
 	scriptPubKey += scriptPubKeyOrig;
 
+	CScript scriptPubKeyAlias;
+	scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << vchAlias << alias.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
+	scriptPubKeyAlias += scriptPubKeyOrig;
+
 	vector<CRecipient> vecSend;
 	CRecipient recipient;
 	CreateRecipient(scriptPubKey, recipient);
 	vecSend.push_back(recipient);
 	CRecipient certRecipient;
 	CreateRecipient(scriptPubKeyCert, certRecipient);
-
+	CRecipient aliasRecipient;
+	CreateRecipient(scriptPubKeyAlias, aliasRecipient);
+	vecSend.push_back(aliasRecipient);
 	// if we use a cert as input to this offer tx, we need another utxo for further cert transactions on this cert, so we create one here
 	if(wtxCertIn != NULL)
 		vecSend.push_back(certRecipient);
@@ -1813,10 +1816,9 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 	CRecipient fee;
 	CreateFeeRecipient(scriptData, data, fee);
 	vecSend.push_back(fee);
-	const CWalletTx * wtxInAlias=NULL;
 	const CWalletTx * wtxInOffer=NULL;
 	const CWalletTx * wtxInEscrow=NULL;
-	SendMoneySyscoin(vecSend, recipient.nAmount+fee.nAmount, false, wtx, wtxInOffer, wtxCertIn, wtxInAlias, wtxInEscrow);
+	SendMoneySyscoin(vecSend, recipient.nAmount+fee.nAmount, false, wtx, wtxInOffer, wtxCertIn, wtxAliasIn, wtxInEscrow);
 	UniValue res(UniValue::VARR);
 	res.push_back(wtx.GetHash().GetHex());
 	res.push_back(HexStr(vchRand));
@@ -1840,13 +1842,19 @@ UniValue offerlink(const UniValue& params, bool fHelp) {
 
 	CTransaction aliastx;
 	CAliasIndex alias;
+	const CWalletTx *wtxAliasIn = NULL;
 	if (!GetTxOfAlias(vchAlias, alias, aliastx, true))
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 506 - Could not find an alias with this name");
     if(!IsSyscoinTxMine(aliastx, "alias")) {
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 507 - This alias is not yours");
     }
-	if (pwalletMain->GetWalletTx(aliastx.GetHash()) == NULL)
+	wtxAliasIn = pwalletMain->GetWalletTx(aliastx.GetHash());
+	if (wtxAliasIn == NULL)
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 508 - This alias is not in your wallet");
+	if (ExistsInMempool(vchAlias, OP_ALIAS_ACTIVATE) || ExistsInMempool(vchAlias, OP_ALIAS_UPDATE)) {
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 508a - There are pending operations on that alias");
+	}
+
 	vector<unsigned char> vchLinkOffer = vchFromValue(params[1]);
 	vector<unsigned char> vchDesc;
 	// look for a transaction with this key
@@ -1872,28 +1880,9 @@ UniValue offerlink(const UniValue& params, bool fHelp) {
 
 
 	COfferLinkWhitelistEntry entry, foundEntry;
-	CScript scriptPubKeyOrig, scriptPubKeyAliasOrig;
-	CScript scriptPubKey, scriptPubKeyAlias;
-	const CWalletTx *wtxAliasIn = NULL;
+	CScript scriptPubKeyOrig;
+	CScript scriptPubKey;
 
-	linkOffer.linkWhitelist.GetLinkEntryByHash(alias.vchAlias, entry);	
-	CAliasIndex tmpAlias;
-	CTransaction txAlias;
-	if (!entry.IsNull() && GetTxOfAlias(entry.aliasLinkVchRand, tmpAlias, txAlias, true))
-	{
-		// make sure its in your wallet (you control this alias)
-		if (IsSyscoinTxMine(txAlias, "alias")) 
-		{
-			wtxAliasIn = pwalletMain->GetWalletTx(txAlias.GetHash());
-			foundEntry = entry;
-			CPubKey currentAliasKey(alias.vchPubKey);
-			scriptPubKeyAliasOrig = GetScriptForDestination(currentAliasKey.GetID());
-			if(commissionInteger <= -foundEntry.nDiscountPct)
-				throw runtime_error(strprintf("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 510 - You cannot re-sell at a lower price than the discount you received as an affiliate (current discount received: %d%%)", foundEntry.nDiscountPct));
-			scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << foundEntry.aliasLinkVchRand <<  alias.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
-			scriptPubKeyAlias += scriptPubKeyAliasOrig;			
-		}
-	}
 	
 	// this is a syscoin transaction
 	CWalletTx wtx;
@@ -1922,8 +1911,6 @@ UniValue offerlink(const UniValue& params, bool fHelp) {
 	newOffer.SetPrice(price);
 	newOffer.nCommission = commissionInteger;
 	newOffer.vchLinkOffer = vchLinkOffer;
-	// need this for inputs check if root offer is in exclusive mode
-	newOffer.vchLinkAlias = vchAlias;
 	newOffer.nHeight = chainActive.Tip()->nHeight;
 	//create offeractivate txn keys
 
@@ -1936,6 +1923,9 @@ UniValue offerlink(const UniValue& params, bool fHelp) {
 	scriptPubKey << CScript::EncodeOP_N(OP_OFFER_ACTIVATE) << vchOffer << vchHashOffer << OP_2DROP << OP_DROP;
 	scriptPubKey += scriptPubKeyOrig;
 
+	CScript scriptPubKeyAlias;
+	scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << vchAlias << alias.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
+	scriptPubKeyAlias += scriptPubKeyOrig;
 
 	string strError;
 
@@ -1945,9 +1935,7 @@ UniValue offerlink(const UniValue& params, bool fHelp) {
 	vecSend.push_back(recipient);
 	CRecipient aliasRecipient;
 	CreateRecipient(scriptPubKeyAlias, aliasRecipient);
-	// if we use a alias as input to this offer tx, we need another utxo for further alias transactions on this alias, so we create one here
-	if(wtxAliasIn != NULL)
-		vecSend.push_back(aliasRecipient);
+	vecSend.push_back(aliasRecipient);
 
 
 	CScript scriptData;
@@ -2003,11 +1991,24 @@ UniValue offeraddwhitelist(const UniValue& params, bool fHelp) {
 
 	CTransaction aliastx;
 	CAliasIndex theAlias;
-	if (!GetTxOfAlias( theOffer.vchAlias, theAlias, aliastx, true))
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 562 - Could not find an alias with this guid");
+	const CWalletTx *wtxAliasIn = NULL;
+	if (!GetTxOfAlias(theOffer.vchAlias, theAlias, aliastx, true))
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 511a - Could not find an alias with this guid");
 
+	if(!IsSyscoinTxMine(aliastx, "alias")) {
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 511b - This alias is not yours");
+	}
+	wtxAliasIn = pwalletMain->GetWalletTx(aliastx.GetHash());
+	if (wtxAliasIn == NULL)
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 511c - This alias is not in your wallet");
+	if (ExistsInMempool(vchAlias, OP_ALIAS_ACTIVATE) || ExistsInMempool(vchAlias, OP_ALIAS_UPDATE)) {
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 511d - There are pending operations on that alias");
+	}
 	CPubKey currentKey(theAlias.vchPubKey);
 	scriptPubKeyOrig = GetScriptForDestination(currentKey.GetID());
+	CScript scriptPubKeyAlias;
+	scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << theOffer.vchAlias << theOffer.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
+	scriptPubKeyAlias += scriptPubKeyOrig;
 
 	const CWalletTx* wtxIn = pwalletMain->GetWalletTx(tx.GetHash());
 	if (wtxIn == NULL)
@@ -2039,16 +2040,17 @@ UniValue offeraddwhitelist(const UniValue& params, bool fHelp) {
 	CRecipient recipient;
 	CreateRecipient(scriptPubKey, recipient);
 	vecSend.push_back(recipient);
-
+	CRecipient aliasRecipient;
+	CreateRecipient(scriptPubKeyAlias, aliasRecipient);
+	vecSend.push_back(aliasRecipient);
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
 	CRecipient fee;
 	CreateFeeRecipient(scriptData, data, fee);
 	vecSend.push_back(fee);
-	const CWalletTx * wtxInAlias=NULL;
 	const CWalletTx * wtxInCert=NULL;
 	const CWalletTx * wtxInEscrow=NULL;
-	SendMoneySyscoin(vecSend, recipient.nAmount+fee.nAmount, false, wtx, wtxIn, wtxInCert, wtxInAlias, wtxInEscrow);
+	SendMoneySyscoin(vecSend, recipient.nAmount+fee.nAmount, false, wtx, wtxIn, wtxInCert, wtxAliasIn, wtxInEscrow);
 
 	UniValue res(UniValue::VARR);
 	res.push_back(wtx.GetHash().GetHex());
@@ -2083,12 +2085,24 @@ UniValue offerremovewhitelist(const UniValue& params, bool fHelp) {
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 515 - Could not find an offer with this guid");
 	CTransaction aliastx;
 	CAliasIndex theAlias;
-	if (!GetTxOfAlias( theOffer.vchAlias, theAlias, aliastx, true))
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 563 - Could not find an alias with this guid");
+	const CWalletTx *wtxAliasIn = NULL;
+	if (!GetTxOfAlias(theOffer.vchAlias, theAlias, aliastx, true))
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 515a - Could not find an alias with this guid");
 
+	if(!IsSyscoinTxMine(aliastx, "alias")) {
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 515b - This alias is not yours");
+	}
+	wtxAliasIn = pwalletMain->GetWalletTx(aliastx.GetHash());
+	if (wtxAliasIn == NULL)
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 515c - This alias is not in your wallet");
+	if (ExistsInMempool(vchAlias, OP_ALIAS_ACTIVATE) || ExistsInMempool(vchAlias, OP_ALIAS_UPDATE)) {
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 515d - There are pending operations on that alias");
+	}
 	CPubKey currentKey(theAlias.vchPubKey);
 	scriptPubKeyOrig = GetScriptForDestination(currentKey.GetID());
-
+	CScript scriptPubKeyAlias;
+	scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << theOffer.vchAlias << theAlias.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
+	scriptPubKeyAlias += scriptPubKeyOrig;
 	wtxIn = pwalletMain->GetWalletTx(tx.GetHash());
 	if (wtxIn == NULL)
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 516 - This offer is not in your wallet");
@@ -2115,16 +2129,17 @@ UniValue offerremovewhitelist(const UniValue& params, bool fHelp) {
 	CRecipient recipient;
 	CreateRecipient(scriptPubKey, recipient);
 	vecSend.push_back(recipient);
-
+	CRecipient aliasRecipient;
+	CreateRecipient(scriptPubKeyAlias, aliasRecipient);
+	vecSend.push_back(aliasRecipient);
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
 	CRecipient fee;
 	CreateFeeRecipient(scriptData, data, fee);
 	vecSend.push_back(fee);
-	const CWalletTx * wtxInAlias=NULL;
 	const CWalletTx * wtxInEscrow=NULL;
 	const CWalletTx * wtxInCert=NULL;
-	SendMoneySyscoin(vecSend, recipient.nAmount+fee.nAmount, false, wtx, wtxIn, wtxInCert, wtxInAlias, wtxInEscrow);
+	SendMoneySyscoin(vecSend, recipient.nAmount+fee.nAmount, false, wtx, wtxIn, wtxInCert, wtxAliasIn, wtxInEscrow);
 
 	UniValue res(UniValue::VARR);
 	res.push_back(wtx.GetHash().GetHex());
@@ -2153,11 +2168,27 @@ UniValue offerclearwhitelist(const UniValue& params, bool fHelp) {
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 519 - Could not find an offer with this guid");
 	CTransaction aliastx;
 	CAliasIndex theAlias;
+	const CWalletTx *wtxAliasIn = NULL;
 	if (!GetTxOfAlias(theOffer.vchAlias, theAlias, aliastx, true))
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 564 - Could not find an alias with this guid");
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 519a - Could not find an alias with this guid");
+
+	if(!IsSyscoinTxMine(aliastx, "alias")) {
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 519b - This alias is not yours");
+	}
+	wtxAliasIn = pwalletMain->GetWalletTx(aliastx.GetHash());
+	if (wtxAliasIn == NULL)
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 519c - This alias is not in your wallet");
+	if (ExistsInMempool(vchAlias, OP_ALIAS_ACTIVATE) || ExistsInMempool(vchAlias, OP_ALIAS_UPDATE)) {
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 519d - There are pending operations on that alias");
+	}
+
 
 	CPubKey currentKey(theAlias.vchPubKey);
 	scriptPubKeyOrig = GetScriptForDestination(currentKey.GetID());
+
+	CScript scriptPubKeyAlias;
+	scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << theOffer.vchAlias << theAlias.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
+	scriptPubKeyAlias += scriptPubKeyOrig;
 
 	wtxIn = pwalletMain->GetWalletTx(tx.GetHash());
 	if (wtxIn == NULL)
@@ -2187,15 +2218,19 @@ UniValue offerclearwhitelist(const UniValue& params, bool fHelp) {
 	CRecipient recipient;
 	CreateRecipient(scriptPubKey, recipient);
 	vecSend.push_back(recipient);
+
+	CRecipient aliasRecipient;
+	CreateRecipient(scriptPubKeyAlias, aliasRecipient);
+	vecSend.push_back(aliasRecipient);
+
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
 	CRecipient fee;
 	CreateFeeRecipient(scriptData, data, fee);
 	vecSend.push_back(fee);
 	const CWalletTx * wtxInCert=NULL;
-	const CWalletTx * wtxInAlias=NULL;
 	const CWalletTx * wtxInEscrow=NULL;
-	SendMoneySyscoin(vecSend, recipient.nAmount+fee.nAmount, false, wtx, wtxIn, wtxInCert, wtxInAlias, wtxInEscrow);
+	SendMoneySyscoin(vecSend, recipient.nAmount+fee.nAmount, false, wtx, wtxIn, wtxInCert, wtxAliasIn, wtxInEscrow);
 
 	UniValue res(UniValue::VARR);
 	res.push_back(wtx.GetHash().GetHex());
@@ -2760,11 +2795,9 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	COffer copyOffer = theOffer;
 	theOffer.ClearOffer();
 	theOffer.accept = txAccept;
-	// use the linkalias in offer for our whitelist alias inputs check
+	theOffer.nHeight = chainActive.Tip()->nHeight;
 	if(wtxAliasIn != NULL)
 		theOffer.vchLinkAlias = vchAlias;
-	theOffer.nHeight = chainActive.Tip()->nHeight;
-
 	const vector<unsigned char> &data = theOffer.Serialize();
     uint256 hash = Hash(data.begin(), data.end());
  	vector<unsigned char> vchHash = CScriptNum(hash.GetCheapHash()).getvch();
