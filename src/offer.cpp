@@ -2859,7 +2859,7 @@ void HandleAcceptFeedback(const COfferAccept& accept, const COffer& offer)
 			aliasVch = accept.vchBuyerAlias;
 		else if(accept.feedback.nFeedbackUser == ACCEPTSELLER)
 			aliasVch = offer.vchAlias;
-		vector<COffer> vtxPos;
+		vector<CAliasIndex> vtxPos;
 		if (paliasdb->ReadAlias(aliasVch, vtxPos) && !vtxPos.empty())
 		{
 			
