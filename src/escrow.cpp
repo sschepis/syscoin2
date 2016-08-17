@@ -500,7 +500,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4020 - Guid mismatch";
 					return error(errorMessage.c_str());
 				}
-				if(!IsAliasOp(prevAliasOp) || (theEscrow.vchSellerAlias != vvchPrevAliasArgs[0]) && theEscrow.vchArbiterAlias != vvchPrevAliasArgs[0]))
+				if(!IsAliasOp(prevAliasOp) || (theEscrow.vchSellerAlias != vvchPrevAliasArgs[0] && theEscrow.vchArbiterAlias != vvchPrevAliasArgs[0]))
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4020a - Alias input mismatch";
 					return error(errorMessage.c_str());
@@ -560,7 +560,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4030 - Invalid arbiter rating, must be less than or equal to 5 and greater than or equal to 0";
 						return error(errorMessage.c_str());
 					}
-					if(!IsAliasOp(prevAliasOp) || (theEscrow.vchBuyerAlias != vvchPrevAliasArgs[0]) && theEscrow.vchSellerAlias != vvchPrevAliasArgs[0]) && theEscrow.vchArbiterAlias != vvchPrevAliasArgs[0]))
+					if(!IsAliasOp(prevAliasOp) || (theEscrow.vchBuyerAlias != vvchPrevAliasArgs[0] && theEscrow.vchSellerAlias != vvchPrevAliasArgs[0]) && theEscrow.vchArbiterAlias != vvchPrevAliasArgs[0]))
 					{
 						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4040a - Alias input mismatch";
 						return error(errorMessage.c_str());
@@ -579,7 +579,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4032 - Cannot leave feedback in escrow complete";
 						return error(errorMessage.c_str());
 					}
-					if(!IsAliasOp(prevAliasOp) || (theEscrow.vchBuyerAlias != vvchPrevAliasArgs[0]) && theEscrow.vchSellerAlias != vvchPrevAliasArgs[0]))
+					if(!IsAliasOp(prevAliasOp) || (theEscrow.vchBuyerAlias != vvchPrevAliasArgs[0] && theEscrow.vchSellerAlias != vvchPrevAliasArgs[0]))
 					{
 						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4032a - Alias input mismatch";
 						return error(errorMessage.c_str());
@@ -635,7 +635,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4040 - Cannot leave feedback in escrow refund";
 					return error(errorMessage.c_str());
 				}
-				if(!IsAliasOp(prevAliasOp) || (theEscrow.vchSellerAlias != vvchPrevAliasArgs[0]) && theEscrow.vchArbiterAlias != vvchPrevAliasArgs[0]))
+				if(!IsAliasOp(prevAliasOp) || (theEscrow.vchSellerAlias != vvchPrevAliasArgs[0] && theEscrow.vchArbiterAlias != vvchPrevAliasArgs[0]))
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4040a - Alias input mismatch";
 					return error(errorMessage.c_str());
