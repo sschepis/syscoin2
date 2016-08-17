@@ -1620,6 +1620,7 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 	if(copyAlias.vchPrivateValue != vchPrivateValue)
 		theAlias.vchPrivateValue = vchPrivateValue;
 	
+	theAlias.vchPubKey = vchPubKeyByte;
 	theAlias.nRenewal = nRenewal;
 	theAlias.safeSearch = strSafeSearch == "Yes"? true: false;
 	CPubKey currentKey(vchPubKeyByte);
