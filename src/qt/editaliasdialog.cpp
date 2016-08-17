@@ -20,6 +20,10 @@ EditAliasDialog::EditAliasDialog(Mode mode, QWidget *parent) :
 
 	ui->transferEdit->setVisible(false);
 	ui->transferLabel->setVisible(false);
+	ui->transferKeyEdit->setVisible(false);
+	ui->transferKeyLabel->setVisible(false);
+	ui->transferKeyDisclaimer->setVisible(false);
+	ui->transferKeyDisclaimer->setText(tr("<font color='blue'>Do you want to transfer the private key associated with this alias? Select yes if you want to transfer ownership all of your encrypted messages/data, certificates and offers to the new owner of the alias after they import the alias key.</font>"));
 	ui->safeSearchDisclaimer->setText(tr("<font color='blue'>Is this alias safe to search? Anything that can be considered offensive to someone should be set to <b>No</b> here. If you do create an alias that is offensive and do not set this option to <b>No</b> your alias will be banned!</font>"));
 	ui->expiryEdit->clear();
 	ui->expiryEdit->addItem(tr("1 Year"),"1");
@@ -30,8 +34,15 @@ EditAliasDialog::EditAliasDialog(Mode mode, QWidget *parent) :
 	ui->expiryDisclaimer->setText(tr("<font color='blue'>Set the length of time to keep your alias from expiring. The longer you wish to keep it alive the more fees you will pay to create or update this alias. The formula for the fee is 0.2 SYS * years * years.</font>"));
     switch(mode)
     {
+    case NewDataAlias:
+        setWindowTitle(tr("New Data Alias"));
+        break;
     case NewAlias:
         setWindowTitle(tr("New Alias"));
+        break;
+    case EditDataAlias:
+        setWindowTitle(tr("Edit Data Alias"));
+		ui->aliasEdit->setEnabled(false);
         break;
     case EditAlias:
         setWindowTitle(tr("Edit Alias"));
@@ -43,6 +54,9 @@ EditAliasDialog::EditAliasDialog(Mode mode, QWidget *parent) :
 		ui->nameEdit->setEnabled(false);
 		ui->transferEdit->setVisible(true);
 		ui->transferLabel->setVisible(true);
+		ui->transferKeyEdit->setVisible(true);
+		ui->transferKeyLabel->setVisible(true);
+		ui->transferKeyDisclaimer->setVisible(true);
         break;
     }
     mapper = new QDataWidgetMapper(this);
@@ -63,7 +77,6 @@ void EditAliasDialog::setModel(WalletModel* walletModel, AliasTableModel *model)
     mapper->setModel(model);
 	mapper->addMapping(ui->aliasEdit, AliasTableModel::Name);
     mapper->addMapping(ui->nameEdit, AliasTableModel::Value);
-	mapper->addMapping(ui->privateEdit, AliasTableModel::PrivValue);
 	
     
 }
@@ -97,6 +110,7 @@ bool EditAliasDialog::saveCurrentRow()
 	string strMethod;
     switch(mode)
     {
+    case NewDataAlias:
     case NewAlias:
         if (ui->aliasEdit->text().trimmed().isEmpty()) {
             ui->aliasEdit->setText("");
@@ -108,7 +122,7 @@ bool EditAliasDialog::saveCurrentRow()
 		strMethod = string("aliasnew");
         params.push_back(ui->aliasEdit->text().trimmed().toStdString());
 		params.push_back(ui->nameEdit->text().toStdString());
-		params.push_back(ui->privateEdit->text().toStdString());
+		params.push_back("");
 		params.push_back(ui->safeSearchEdit->currentText().toStdString());
 		params.push_back(ui->expiryEdit->itemData(ui->expiryEdit->currentIndex()).toString().toStdString());
 		try {
@@ -136,14 +150,16 @@ bool EditAliasDialog::saveCurrentRow()
 		}							
 
         break;
+    case EditDataAlias:
     case EditAlias:
         if(mapper->submit())
         {
 			strMethod = string("aliasupdate");
 			params.push_back(ui->aliasEdit->text().toStdString());
 			params.push_back(ui->nameEdit->text().toStdString());
-			params.push_back(ui->privateEdit->text().toStdString());
+			params.push_back("");
 			params.push_back(ui->safeSearchEdit->currentText().toStdString());	
+			params.push_back("");
 			params.push_back(ui->expiryEdit->itemData(ui->expiryEdit->currentIndex()).toString().toStdString());
 			try {
 				UniValue result = tableRPC.execute(strMethod, params);
