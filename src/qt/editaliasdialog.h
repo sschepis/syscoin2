@@ -20,9 +20,7 @@ class EditAliasDialog : public QDialog
 
 public:
     enum Mode {
-        NewDataAlias,
         NewAlias,
-        EditDataAlias,
         EditAlias
     };
 

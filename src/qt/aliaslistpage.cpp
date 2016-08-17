@@ -243,6 +243,7 @@ void AliasListPage::on_searchAlias_clicked(string GUID)
 		string lastAlias = "";
 		string name_str;
 		string value_str;
+		string privvalue_str;
 		string expires_in_str;
 		string expires_on_str;
 		string expired_str;
@@ -293,6 +294,7 @@ void AliasListPage::on_searchAlias_clicked(string GUID)
 				const UniValue &o = input.get_obj();
 				name_str = "";
 				value_str = "";
+				privvalue_str = "";
 				expires_in_str = "";
 				expires_on_str = "";
 				expired = 0;
@@ -310,6 +312,9 @@ void AliasListPage::on_searchAlias_clicked(string GUID)
 				const UniValue& value_value = find_value(o, "value");
 				if (value_value.type() == UniValue::VSTR)
 					value_str = value_value.get_str();
+				const UniValue& privvalue_value = find_value(o, "privatevalue");
+				if (privvalue_value.type() == UniValue::VSTR)
+					privvalue_str = privvalue_value.get_str();
 				const UniValue& expires_on_value = find_value(o, "expires_on");
 				if (expires_on_value.type() == UniValue::VNUM)
 					expires_on = expires_on_value.get_int();
@@ -340,6 +345,7 @@ void AliasListPage::on_searchAlias_clicked(string GUID)
 				model->addRow(AliasTableModel::Alias,
 						QString::fromStdString(name_str),
 						QString::fromStdString(value_str),
+						QString::fromStdString(privvalue_str),
 						QString::fromStdString(expires_on_str),
 						QString::fromStdString(expires_in_str),
 						QString::fromStdString(expired_str),
@@ -347,6 +353,7 @@ void AliasListPage::on_searchAlias_clicked(string GUID)
 						rating, ratingcount);
 					this->model->updateEntry(QString::fromStdString(name_str),
 						QString::fromStdString(value_str),
+						QString::fromStdString(privvalue_str),
 						QString::fromStdString(expires_on_str),
 						QString::fromStdString(expires_in_str),
 						QString::fromStdString(expired_str), 

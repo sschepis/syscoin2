@@ -28,15 +28,8 @@ EditAliasDialog::EditAliasDialog(Mode mode, QWidget *parent) :
 	ui->expiryDisclaimer->setText(tr("<font color='blue'>Set the length of time to keep your alias from expiring. The longer you wish to keep it alive the more fees you will pay to create or update this alias. The formula for the fee is 0.2 SYS * years * years.</font>"));
     switch(mode)
     {
-    case NewDataAlias:
-        setWindowTitle(tr("New Data Alias"));
-        break;
     case NewAlias:
         setWindowTitle(tr("New Alias"));
-        break;
-    case EditDataAlias:
-        setWindowTitle(tr("Edit Data Alias"));
-		ui->aliasEdit->setEnabled(false);
         break;
     case EditAlias:
         setWindowTitle(tr("Edit Alias"));
@@ -60,6 +53,7 @@ void EditAliasDialog::setModel(WalletModel* walletModel, AliasTableModel *model)
     mapper->setModel(model);
 	mapper->addMapping(ui->aliasEdit, AliasTableModel::Name);
     mapper->addMapping(ui->nameEdit, AliasTableModel::Value);
+	mapper->addMapping(ui->privateEdit, AliasTableModel::PrivValue);
 	
     
 }
@@ -93,7 +87,6 @@ bool EditAliasDialog::saveCurrentRow()
 	string strMethod;
     switch(mode)
     {
-    case NewDataAlias:
     case NewAlias:
         if (ui->aliasEdit->text().trimmed().isEmpty()) {
             ui->aliasEdit->setText("");
@@ -133,7 +126,6 @@ bool EditAliasDialog::saveCurrentRow()
 		}							
 
         break;
-    case EditDataAlias:
     case EditAlias:
         if(mapper->submit())
         {
