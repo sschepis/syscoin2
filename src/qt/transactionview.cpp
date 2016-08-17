@@ -95,7 +95,6 @@ TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *pa
     // SYSCOIN
 	typeWidget->addItem(tr("Alias Activated"), TransactionFilterProxy::TYPE(TransactionRecord::AliasActivate));
     typeWidget->addItem(tr("Alias Updated"), TransactionFilterProxy::TYPE(TransactionRecord::AliasUpdate));
-    typeWidget->addItem(tr("Alias Transferred"), TransactionFilterProxy::TYPE(TransactionRecord::AliasTransfer));
 	typeWidget->addItem(tr("Alias Received"), TransactionFilterProxy::TYPE(TransactionRecord::AliasRecv));
    
     typeWidget->addItem(tr("Offer Activated"), TransactionFilterProxy::TYPE(TransactionRecord::OfferActivate));

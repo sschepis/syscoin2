@@ -66,36 +66,6 @@ BOOST_AUTO_TEST_CASE (generate_sendmoneytoalias)
 	CAmount balanceAfter = AmountFromValue(find_value(r.get_obj(), "balance"));
 	BOOST_CHECK_EQUAL(balanceBefore, balanceAfter);
 }
-BOOST_AUTO_TEST_CASE (generate_aliastransfer)
-{
-	printf("Running generate_aliastransfer...\n");
-	GenerateBlocks(5, "node2");
-	GenerateBlocks(5, "node3");
-	UniValue r;
-	string strPubKey1 = AliasNew("node1", "jagnode1", "changeddata1");
-	string strPubKey2 = AliasNew("node2", "jagnode2", "changeddata2");
-	UniValue pkr = CallRPC("node2", "generatepublickey");
-	BOOST_CHECK(pkr.type() == UniValue::VARR);
-	const UniValue &resultArray = pkr.get_array();
-	string newPubkey = resultArray[0].get_str();	
-	AliasTransfer("node1", "jagnode1", "node2", "changeddata1", "pvtdata");
-
-	// xfer an alias that isn't yours
-	BOOST_CHECK_THROW(r = CallRPC("node1", "aliasupdate jagnode1 changedata1 pvtdata Yes " + newPubkey), runtime_error);
-
-	// trasnfer alias and update it at the same time
-	AliasTransfer("node2", "jagnode2", "node3", "changeddata4", "pvtdata");
-
-	// update xferred alias
-	AliasUpdate("node2", "jagnode1", "changeddata5", "pvtdata1");
-
-	// retransfer alias
-	AliasTransfer("node2", "jagnode1", "node3", "changeddata5", "pvtdata2");
-
-	// xfer an alias to another alias is prohibited
-	BOOST_CHECK_THROW(r = CallRPC("node2", "aliasupdate jagnode2 changedata1 pvtdata Yes " + strPubKey1), runtime_error);
-	
-}
 BOOST_AUTO_TEST_CASE (generate_aliassafesearch)
 {
 	printf("Running generate_aliassafesearch...\n");

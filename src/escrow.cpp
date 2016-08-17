@@ -875,56 +875,37 @@ void HandleEscrowFeedback(const CEscrow& escrow)
 {
 	if(escrow.buyerFeedback.nRating > 0)
 	{
-		CSyscoinAddress address = CSyscoinAddress(stringFromVch(escrow.vchBuyerAlias));
-		if(address.IsValid() && address.isAlias)
-		{
-			vector<CAliasIndex> vtxPos;
-			const vector<unsigned char> &vchAlias = vchFromString(address.aliasName);
-			if (paliasdb->ReadAlias(vchAlias, vtxPos) && !vtxPos.empty())
-			{
-				
-				CAliasIndex alias = vtxPos.back();
-				alias.nRatingCount++;
-				alias.nRating += escrow.buyerFeedback.nRating;
-				PutToAliasList(vtxPos, alias);
-				paliasdb->WriteAlias(vchAlias, vchFromString(address.ToString()), vtxPos);
-			}
-		}
-			
+		vector<CAliasIndex> vtxPos;
+		if (paliasdb->ReadAlias(escrow.vchBuyerAlias, vtxPos) && !vtxPos.empty())
+		{	
+			CAliasIndex alias = vtxPos.back();
+			alias.nRatingCount++;
+			alias.nRating += escrow.buyerFeedback.nRating;
+			PutToAliasList(vtxPos, alias);
+			paliasdb->WriteAlias(escrow.vchBuyerAlias, vtxPos);
+		}				
 	}
 	if(escrow.sellerFeedback.nRating > 0)
 	{
-		CSyscoinAddress address = CSyscoinAddress(stringFromVch(escrow.vchSellerAlias));
-		if(address.IsValid() && address.isAlias)
+		if (paliasdb->ReadAlias(escrow.vchSellerAlias, vtxPos) && !vtxPos.empty())
 		{
-			vector<CAliasIndex> vtxPos;
-			const vector<unsigned char> &vchAlias = vchFromString(address.aliasName);
-			if (paliasdb->ReadAlias(vchAlias, vtxPos) && !vtxPos.empty())
-			{
-				CAliasIndex alias = vtxPos.back();
-				alias.nRatingCount++;
-				alias.nRating += escrow.sellerFeedback.nRating;
-				PutToAliasList(vtxPos, alias);
-				paliasdb->WriteAlias(vchAlias, vchFromString(address.ToString()), vtxPos);
-			}
-		}
+			CAliasIndex alias = vtxPos.back();
+			alias.nRatingCount++;
+			alias.nRating += escrow.sellerFeedback.nRating;
+			PutToAliasList(vtxPos, alias);
+			paliasdb->WriteAlias(escrow.vchSellerAlias, vtxPos);
+		}	
 	}
 	if(escrow.arbiterFeedback.nRating > 0)
 	{
-		CSyscoinAddress address = CSyscoinAddress(stringFromVch(escrow.vchArbiterAlias));
-		if(address.IsValid() && address.isAlias)
+		if (paliasdb->ReadAlias(escrow.vchArbiterAlias, vtxPos) && !vtxPos.empty())
 		{
-			vector<CAliasIndex> vtxPos;
-			const vector<unsigned char> &vchAlias = vchFromString(address.aliasName);
-			if (paliasdb->ReadAlias(vchAlias, vtxPos) && !vtxPos.empty())
-			{
-				CAliasIndex alias = vtxPos.back();
-				alias.nRatingCount++;
-				alias.nRating += escrow.arbiterFeedback.nRating;
-				PutToAliasList(vtxPos, alias);
-				paliasdb->WriteAlias(vchAlias, vchFromString(address.ToString()), vtxPos);
-			}
-		}
+			CAliasIndex alias = vtxPos.back();
+			alias.nRatingCount++;
+			alias.nRating += escrow.arbiterFeedback.nRating;
+			PutToAliasList(vtxPos, alias);
+			paliasdb->WriteAlias(escrow.vchArbiterAlias, vtxPos);
+		}	
 	}
 }
 int FindFeedbackInEscrow(const unsigned char nFeedbackUser, const EscrowUser type, const vector<CEscrow> &vtxPos, int &numRatings)

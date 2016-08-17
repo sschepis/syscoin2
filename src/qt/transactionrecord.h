@@ -80,7 +80,6 @@ public:
 		// SYSCOIN
         AliasActivate,
         AliasUpdate,
-        AliasTransfer,
 		AliasRecv,
         
         OfferActivate,

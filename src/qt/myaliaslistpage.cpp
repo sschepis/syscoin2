@@ -64,19 +64,15 @@ MyAliasListPage::MyAliasListPage(const PlatformStyle *platformStyle, QWidget *pa
     // Context menu actions
     QAction *copyAliasAction = new QAction(ui->copyAlias->text(), this);
     QAction *editAction = new QAction(tr("&Edit"), this);
-    QAction *transferAliasAction = new QAction(tr("&Transfer"), this);
-
     // Build context menu
     contextMenu = new QMenu();
     contextMenu->addAction(copyAliasAction);
     contextMenu->addAction(editAction);
     contextMenu->addSeparator();
-    contextMenu->addAction(transferAliasAction);
 
     // Connect signals for context menu actions
     connect(copyAliasAction, SIGNAL(triggered()), this, SLOT(on_copyAlias_clicked()));
     connect(editAction, SIGNAL(triggered()), this, SLOT(on_editButton_clicked()));
-    connect(transferAliasAction, SIGNAL(triggered()), this, SLOT(on_transferButton_clicked()));
 
 	connect(ui->tableView, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(on_editButton_clicked()));
     connect(ui->tableView, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(contextualMenu(QPoint)));
@@ -181,35 +177,6 @@ void MyAliasListPage::on_editButton_clicked()
     dlg.loadRow(origIndex.row());
     dlg.exec();
 }
-
-void MyAliasListPage::on_transferButton_clicked()
-{
-    if(!ui->tableView->selectionModel())
-        return;
-    QModelIndexList indexes = ui->tableView->selectionModel()->selectedRows();
-    if(indexes.isEmpty())
-        return;
-	QString status = indexes.at(0).data(AliasTableModel::ExpiredRole).toString();
-	if(status == QString("pending"))
-	{
-           QMessageBox::information(this, windowTitle(),
-           tr("This alias is still pending, click the refresh button once the alias confirms and try again"),
-               QMessageBox::Ok, QMessageBox::Ok);
-		   return;
-	}
-	if(status == QString("expired"))
-	{
-           QMessageBox::information(this, windowTitle(),
-           tr("You cannot transfer this alias because it has expired"),
-               QMessageBox::Ok, QMessageBox::Ok);
-		   return;
-	}
-    EditAliasDialog dlg(EditAliasDialog::TransferAlias);
-    dlg.setModel(walletModel, model);
-    QModelIndex origIndex = proxyModel->mapToSource(indexes.at(0));
-    dlg.loadRow(origIndex.row());
-    dlg.exec();
-}
 void MyAliasListPage::on_refreshButton_clicked()
 {
     if(!model)
@@ -234,27 +201,7 @@ void MyAliasListPage::on_newAlias_clicked()
         newAliasToSelect = dlg.getAlias();
     }
 }
-void MyAliasListPage::on_newPubKey_clicked()
-{
-	UniValue params;
-	UniValue result = tableRPC.execute("generatepublickey", params);
-	if (result.type() == UniValue::VARR)
-	{
-		const UniValue &resultArray = result.get_array();
-		const QString  &resQStr = QString::fromStdString(resultArray[0].get_str());
-		QApplication::clipboard()->setText(resQStr, QClipboard::Clipboard);
-		QApplication::clipboard()->setText(resQStr, QClipboard::Selection);
-		QMessageBox::information(this, tr("New Public Key For Alias Transfer"),
-			resQStr + tr(" has been copied to your clipboard! IMPORTANT: This key is for one-time use only! Do not re-use public keys for multiple aliases or transfers."),
-			QMessageBox::Ok, QMessageBox::Ok);
-		
-	}
-	else
-	 	QMessageBox::critical(this, tr("New Public Key For Alias Transfer"),
-			tr("Could not generate a new public key!"),
-			QMessageBox::Ok, QMessageBox::Ok);
-				
-}
+
 void MyAliasListPage::selectionChanged()
 {
     // Set button states based on selected tab and selection
