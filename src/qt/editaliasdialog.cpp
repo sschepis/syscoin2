@@ -105,7 +105,7 @@ bool EditAliasDialog::saveCurrentRow()
 		strMethod = string("aliasnew");
         params.push_back(ui->aliasEdit->text().trimmed().toStdString());
 		params.push_back(ui->nameEdit->text().toStdString());
-		params.push_back("");
+		params.push_back(ui->privateEdit->text().toStdString());
 		params.push_back(ui->safeSearchEdit->currentText().toStdString());
 		params.push_back(ui->expiryEdit->itemData(ui->expiryEdit->currentIndex()).toString().toStdString());
 		try {
@@ -140,9 +140,8 @@ bool EditAliasDialog::saveCurrentRow()
 			strMethod = string("aliasupdate");
 			params.push_back(ui->aliasEdit->text().toStdString());
 			params.push_back(ui->nameEdit->text().toStdString());
-			params.push_back("");
+			params.push_back(ui->privateEdit->text().toStdString());
 			params.push_back(ui->safeSearchEdit->currentText().toStdString());	
-			params.push_back("");
 			params.push_back(ui->expiryEdit->itemData(ui->expiryEdit->currentIndex()).toString().toStdString());
 			try {
 				UniValue result = tableRPC.execute(strMethod, params);
