@@ -887,7 +887,6 @@ void HandleEscrowFeedback(const CEscrow& escrow)
 	}
 	if(escrow.sellerFeedback.nRating > 0)
 	{
-		vector<CAliasIndex> vtxPos;
 		if (paliasdb->ReadAlias(escrow.vchSellerAlias, vtxPos) && !vtxPos.empty())
 		{
 			CAliasIndex alias = vtxPos.back();
@@ -899,7 +898,6 @@ void HandleEscrowFeedback(const CEscrow& escrow)
 	}
 	if(escrow.arbiterFeedback.nRating > 0)
 	{
-		vector<CAliasIndex> vtxPos;
 		if (paliasdb->ReadAlias(escrow.vchArbiterAlias, vtxPos) && !vtxPos.empty())
 		{
 			CAliasIndex alias = vtxPos.back();
