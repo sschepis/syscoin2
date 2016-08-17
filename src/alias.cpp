@@ -1622,7 +1622,7 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 	
 	theAlias.nRenewal = nRenewal;
 	theAlias.safeSearch = strSafeSearch == "Yes"? true: false;
-	CPubKey currentKey(vchPubKeyByte);
+	CPubKey currentKey(theAlias.vchPubKey);
 	scriptPubKeyOrig = GetScriptForDestination(currentKey.GetID());
 
 	const vector<unsigned char> &data = theAlias.Serialize();
