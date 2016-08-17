@@ -2147,15 +2147,18 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 		buyerAlias.nHeight = vtxPos.front().nHeight;
 		buyerAlias.GetAliasFromList(aliasVtxPos);
 	}
+	if(!IsSyscoinTxMine(buyeraliastx, "alias")) {
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR ERRCODE: 4137b - This alias is not yours");
+	}
 	if (ExistsInMempool(escrow.vchBuyerAlias, OP_ALIAS_ACTIVATE) || ExistsInMempool(escrow.vchBuyerAlias, OP_ALIAS_UPDATE)) {
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR ERRCODE: 4137b - There are pending operations on that alias");
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR ERRCODE: 4137c - There are pending operations on that alias");
 	}
 	const CWalletTx *wtxAliasIn = NULL;
 	wtxAliasIn = pwalletMain->GetWalletTx(buyeraliastx.GetHash());
 	if (wtxAliasIn == NULL)
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR ERRCODE: 4137c - This alias is not in your wallet");
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR ERRCODE: 4137d - This alias is not in your wallet");
 	if (ExistsInMempool(buyerAlias.vchAlias, OP_ALIAS_ACTIVATE) || ExistsInMempool(buyerAlias.vchAlias, OP_ALIAS_UPDATE)) {
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR ERRCODE: 4137d - There are pending operations on that alias");
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR ERRCODE: 4137e - There are pending operations on that alias");
 	}
 
 	CPubKey buyerKey(buyerAlias.vchPubKey);
