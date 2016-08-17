@@ -2001,7 +2001,7 @@ UniValue offeraddwhitelist(const UniValue& params, bool fHelp) {
 	wtxAliasIn = pwalletMain->GetWalletTx(aliastx.GetHash());
 	if (wtxAliasIn == NULL)
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 511c - This alias is not in your wallet");
-	if (ExistsInMempool(vchAlias, OP_ALIAS_ACTIVATE) || ExistsInMempool(vchAlias, OP_ALIAS_UPDATE)) {
+	if (ExistsInMempool(theOffer.vchAlias, OP_ALIAS_ACTIVATE) || ExistsInMempool(theOffer.vchAlias, OP_ALIAS_UPDATE)) {
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 511d - There are pending operations on that alias");
 	}
 	CPubKey currentKey(theAlias.vchPubKey);
@@ -2095,7 +2095,7 @@ UniValue offerremovewhitelist(const UniValue& params, bool fHelp) {
 	wtxAliasIn = pwalletMain->GetWalletTx(aliastx.GetHash());
 	if (wtxAliasIn == NULL)
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 515c - This alias is not in your wallet");
-	if (ExistsInMempool(vchAlias, OP_ALIAS_ACTIVATE) || ExistsInMempool(vchAlias, OP_ALIAS_UPDATE)) {
+	if (ExistsInMempool(theOffer.vchAlias, OP_ALIAS_ACTIVATE) || ExistsInMempool(theOffer.vchAlias, OP_ALIAS_UPDATE)) {
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 515d - There are pending operations on that alias");
 	}
 	CPubKey currentKey(theAlias.vchPubKey);
@@ -2178,7 +2178,7 @@ UniValue offerclearwhitelist(const UniValue& params, bool fHelp) {
 	wtxAliasIn = pwalletMain->GetWalletTx(aliastx.GetHash());
 	if (wtxAliasIn == NULL)
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 519c - This alias is not in your wallet");
-	if (ExistsInMempool(vchAlias, OP_ALIAS_ACTIVATE) || ExistsInMempool(vchAlias, OP_ALIAS_UPDATE)) {
+	if (ExistsInMempool(theOffer.vchAlias, OP_ALIAS_ACTIVATE) || ExistsInMempool(theOffer.vchAlias, OP_ALIAS_UPDATE)) {
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 519d - There are pending operations on that alias");
 	}
 
