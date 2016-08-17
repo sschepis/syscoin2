@@ -807,11 +807,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 
 			break;
 		case OP_OFFER_UPDATE:
-			if(!theOffer.accept.IsNull())
-			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 47 - Cannot have accept information on offer update";
-				return error(errorMessage.c_str());
-			}
 			if (!IsOfferOp(prevOp) )
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 36 - Offerupdate previous op is invalid";
@@ -861,6 +856,16 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			if(theOffer.nPrice <= 0)
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 45 - Offer price must be greater than 0";
+				return error(errorMessage.c_str());
+			}
+			if(!IsAliasOp(prevAliasOp) || theOffer.vchAlias != vvchPrevAliasArgs[0])
+			{
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 46 - Alias input mismatch";
+				return error(errorMessage.c_str());
+			}
+			if(!theOffer.accept.IsNull())
+			{
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 47 - Cannot have accept information on offer update";
 				return error(errorMessage.c_str());
 			}
 			if(theOffer.bOnlyAcceptBTC && !theOffer.vchCert.empty())

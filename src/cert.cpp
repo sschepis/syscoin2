@@ -358,6 +358,8 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 		errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2000 - Non-Syscoin transaction found";
 		return true;
 	}
+	int prevOp, prevAliasOp;
+	prevOp = prevAliasOp = 0;
 	vector<vector<unsigned char> > vvchPrevArgs, vvchPrevAliasArgs;
 	// unserialize cert from txn, check for valid
 	CCert theCert;
@@ -417,11 +419,19 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 			if(prevCoins.vout.size() <= prevOutput->n || !IsSyscoinScript(prevCoins.vout[prevOutput->n].scriptPubKey, pop, vvch))
 				continue;
 
+			if(foundCert && foundAlias)
+				break;
 			if (!foundCert && IsCertOp(pop)) {
 				foundCert = true; 
 				prevOp = pop;
 				vvchPrevArgs = vvch;
 				break;
+			}
+			else if (!foundAlias && IsAliasOp(pop))
+			{
+				foundAlias = true; 
+				prevAliasOp = pop;
+				vvchPrevAliasArgs = vvch;
 			}
 		}
 	}
@@ -472,6 +482,11 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2010 - Certificate guid mismatch";
 				return error(errorMessage.c_str());
 			}
+			if(!IsAliasOp(prevAliasOp) || theCert.vchAlias != vvchPrevAliasArgs[0])
+			{
+				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2010a - Alias input mismatch";
+				return error(errorMessage.c_str());
+			}
 			if((theCert.vchTitle.size() > MAX_NAME_LENGTH || theCert.vchTitle.empty()))
 			{
 				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2006 - Certificate title too big or is empty";
@@ -498,6 +513,11 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 					errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2013 - Certificate guid mismatch";
 					return error(errorMessage.c_str());
 				}
+				if(!IsAliasOp(prevAliasOp) || theCert.vchAlias != vvchPrevAliasArgs[0])
+				{
+					errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2013a - Alias input mismatch";
+					return error(errorMessage.c_str());
+				}
 				if(theCert.vchTitle.size() > MAX_NAME_LENGTH)
 				{
 					errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2006a - Certificate title too big";
@@ -521,6 +541,11 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 			if (theCert.vchCert != vvchArgs[0])
 			{
 				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2016 - Certificate guid mismatch";
+				return error(errorMessage.c_str());
+			}
+			if(!IsAliasOp(prevAliasOp) || theCert.vchAlias != vvchPrevAliasArgs[0])
+			{
+				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2016a - Alias input mismatch";
 				return error(errorMessage.c_str());
 			}
 			break;
