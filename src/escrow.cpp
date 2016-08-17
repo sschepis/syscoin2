@@ -1128,7 +1128,6 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	if(theOffer.sCategory.size() > 0 && boost::algorithm::ends_with(stringFromVch(theOffer.sCategory), "wanted"))
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4067 - Cannot purchase a wanted offer");
 
-	const CWalletTx *wtxAliasIn = NULL;
 
 	CScript scriptPubKeyAlias, scriptPubKeyAliasOrig;
 	COfferLinkWhitelistEntry foundEntry;
@@ -1956,6 +1955,9 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 	bool arbiterSigning = false;
 	CScript scriptPubKeyAlias;
 	const CWalletTx *wtxAliasIn = NULL;
+    CScript scriptPubKeyArbiter,scriptPubKeySeller;
+	scriptPubKeyArbiter= GetScriptForDestination(arbiterKey.GetID());
+	scriptPubKeySeller= GetScriptForDestination(sellerKey.GetID());
 	// who is initiating refund arbiter or seller?
 	try
 	{
@@ -2140,10 +2142,21 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 	{
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4137a - Could not find buyer alias");
 	}
+	else
+	{
+		buyerAlias.nHeight = vtxPos.front().nHeight;
+		buyerAlias.GetAliasFromList(aliasVtxPos);
+	}
 	if (ExistsInMempool(escrow.vchBuyerAlias, OP_ALIAS_ACTIVATE) || ExistsInMempool(escrow.vchBuyerAlias, OP_ALIAS_UPDATE)) {
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR ERRCODE: 4137b - There are pending operations on that alias");
 	}
-
+	const CWalletTx *wtxAliasIn = NULL;
+	wtxAliasIn = pwalletMain->GetWalletTx(buyeraliastx.GetHash());
+	if (wtxAliasIn == NULL)
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR ERRCODE: 4137c - This alias is not in your wallet");
+	if (ExistsInMempool(buyerAlias.vchAlias, OP_ALIAS_ACTIVATE) || ExistsInMempool(buyerAlias.vchAlias, OP_ALIAS_UPDATE)) {
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR ERRCODE: 4137d - There are pending operations on that alias");
+	}
 
 	CPubKey buyerKey(buyerAlias.vchPubKey);
 	CSyscoinAddress buyerAddress(buyerKey.GetID());
