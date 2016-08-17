@@ -2125,7 +2125,10 @@ bool DisconnectAlias(const CBlockIndex *pindex, const CTransaction &tx, int op, 
 	while (vtxPos.back().txHash == tx.GetHash())	
 		vtxPos.pop_back();
 	
-	if(!paliasdb->WriteAlias(vvchArgs[0], vtxPos))
+	CPubKey PubKey(foundAlias.vchPubKey);
+	CSyscoinAddress address(PubKey.GetID());
+
+	if(!paliasdb->WriteAlias(vvchArgs[0], vchFromString(address.ToString()), vtxPos))
 		return error("DisconnectBlock() : failed to write to alias DB");
 	if(fDebug)
 		LogPrintf("DISCONNECTED ALIAS TXN: alias=%s op=%s hash=%s  height=%d\n",

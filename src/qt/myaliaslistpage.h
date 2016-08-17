@@ -59,7 +59,10 @@ private Q_SLOTS:
     void on_editButton_clicked();
     /** Export button clicked */
     void on_exportButton_clicked();
+    /** transfer the alias to a syscoin address  */
+    void on_transferButton_clicked();
 	void on_refreshButton_clicked();
+	void on_newPubKey_clicked();
 	void on_whitelistButton_clicked();
     /** Set button states based onf selected tab and selection */
     void selectionChanged();
@@ -68,6 +71,8 @@ private Q_SLOTS:
     /** New entry/entries were added to alias table */
     void selectNewAlias(const QModelIndex &parent, int begin, int /*end*/);
 
+Q_SIGNALS:
+    void transferAlias(QString addr);
 };
 
 #endif // MYALIASLISTPAGE_H

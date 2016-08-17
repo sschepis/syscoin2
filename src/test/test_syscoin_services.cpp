@@ -347,7 +347,32 @@ string AliasNew(const string& node, const string& aliasname, const string& pubda
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "expired").get_int(), 0);
 	return pubkey;
 }
+void AliasTransfer(const string& node, const string& aliasname, const string& tonode, const string& pubdata, const string& privdata, string pubkey)
+{
+	UniValue r;
+	if(pubkey.size() <= 0)
+	{
+		UniValue pkr = CallRPC(tonode, "generatepublickey");
+		if (pkr.type() != UniValue::VARR)
+			throw runtime_error("Could not parse rpc results");
 
+		const UniValue &resultArray = pkr.get_array();
+		pubkey = resultArray[0].get_str();		
+	}
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "aliasupdate " + aliasname + " " + pubdata + " " + privdata + " Yes " + pubkey));
+	GenerateBlocks(10, tonode);
+	GenerateBlocks(10, node);	
+	// check its not mine anymore
+	r = CallRPC(node, "aliasinfo " + aliasname);
+	BOOST_CHECK(find_value(r.get_obj(), "ismine").get_bool() == false);
+	BOOST_CHECK(find_value(r.get_obj(), "value").get_str() == pubdata);
+	BOOST_CHECK(find_value(r.get_obj(), "privatevalue").get_str() == "Encrypted for alias owner");
+	// check xferred right person and data changed
+	r = CallRPC(tonode, "aliasinfo " + aliasname);
+	BOOST_CHECK(find_value(r.get_obj(), "value").get_str() == pubdata);
+	BOOST_CHECK(find_value(r.get_obj(), "privatevalue").get_str() == privdata);
+	BOOST_CHECK(find_value(r.get_obj(), "ismine").get_bool() == true);
+}
 void AliasUpdate(const string& node, const string& aliasname, const string& pubdata, const string& privdata, string safesearch)
 {
 	string otherNode1 = "node2";

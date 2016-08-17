@@ -34,6 +34,16 @@ BOOST_AUTO_TEST_CASE (generate_big_msgsubject)
 	MessageNew("node1", "node2", goodtitle, "data", "jagmsg1", "jagmsg2");
 	BOOST_CHECK_THROW(CallRPC("node1", "messagenew " + badtitle + " 3d jagmsg1 jagmsg2"), runtime_error);
 }
+BOOST_AUTO_TEST_CASE (generate_msgaliastransfer)
+{
+	printf("Running generate_msgaliastransfer...\n");
+	MessageNew("node1", "node2", "title", "data", "jagmsg1", "jagmsg2");
+	// transfer an alias and send a message, the new node owner can now read messages to that alias
+	BOOST_CHECK_NO_THROW(AliasTransfer("node2", "jagmsg2", "node3", "changeddata2", "pvtdata"));
+	GenerateBlocks(1, "node2");
+	// send message to new node owning alias
+	MessageNew("node1", "node3", "title", "data", "jagmsg1", "jagmsg2");
+}
 BOOST_AUTO_TEST_CASE (generate_messagepruning)
 {
 	UniValue r;

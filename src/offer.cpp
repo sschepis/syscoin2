@@ -2853,22 +2853,28 @@ void HandleAcceptFeedback(const COfferAccept& accept, const COffer& offer)
 {
 	if(accept.feedback.nRating > 0)
 	{
-		vector<unsigned char> aliasVch;
+		string aliasStr;
 		CPubKey key;
 		if(accept.feedback.nFeedbackUser == ACCEPTBUYER)
-			aliasVch = accept.vchBuyerAlias;
+			aliasStr = stringFromVch(accept.vchBuyerAlias);
 		else if(accept.feedback.nFeedbackUser == ACCEPTSELLER)
-			aliasVch = offer.vchAlias;
-		vector<COffer> vtxPos;
-		if (paliasdb->ReadAlias(aliasVch, vtxPos) && !vtxPos.empty())
+			aliasStr = stringFromVch(offer.vchAlias);
+		CSyscoinAddress address = CSyscoinAddress(aliasStr);
+		if(address.IsValid() && address.isAlias)
 		{
+			vector<CAliasIndex> vtxPos;
+			const vector<unsigned char> &vchAlias = vchFromString(address.aliasName);
+			if (paliasdb->ReadAlias(vchAlias, vtxPos) && !vtxPos.empty())
+			{
+				
+				CAliasIndex alias = vtxPos.back();
+				alias.nRatingCount++;
+				alias.nRating += accept.feedback.nRating;
+				PutToAliasList(vtxPos, alias);
+				paliasdb->WriteAlias(vchAlias, vchFromString(address.ToString()), vtxPos);
+			}
+		}
 			
-			CAliasIndex alias = vtxPos.back();
-			alias.nRatingCount++;
-			alias.nRating += accept.feedback.nRating;
-			PutToAliasList(vtxPos, alias);
-			paliasdb->WriteAlias(aliasVch, vtxPos);
-		}					
 	}
 }
 int FindFeedbackInAccept(const vector<unsigned char> &vchAccept, const unsigned char nFeedbackUser, const vector<COffer> &vtxPos, int& numRatings)

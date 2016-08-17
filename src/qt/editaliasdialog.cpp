@@ -18,6 +18,8 @@ EditAliasDialog::EditAliasDialog(Mode mode, QWidget *parent) :
 {
     ui->setupUi(this);
 
+	ui->transferEdit->setVisible(false);
+	ui->transferLabel->setVisible(false);
 	ui->safeSearchDisclaimer->setText(tr("<font color='blue'>Is this alias safe to search? Anything that can be considered offensive to someone should be set to <b>No</b> here. If you do create an alias that is offensive and do not set this option to <b>No</b> your alias will be banned!</font>"));
 	ui->expiryEdit->clear();
 	ui->expiryEdit->addItem(tr("1 Year"),"1");
@@ -35,6 +37,14 @@ EditAliasDialog::EditAliasDialog(Mode mode, QWidget *parent) :
         setWindowTitle(tr("Edit Alias"));
 		ui->aliasEdit->setEnabled(false);
         break;
+    case TransferAlias:
+        setWindowTitle(tr("Transfer Alias"));
+		ui->aliasEdit->setEnabled(false);
+		ui->nameEdit->setEnabled(false);
+		ui->transferEdit->setVisible(true);
+		ui->transferLabel->setVisible(true);
+        break;
+    }
     mapper = new QDataWidgetMapper(this);
     mapper->setSubmitPolicy(QDataWidgetMapper::ManualSubmit);
 }
@@ -156,6 +166,42 @@ bool EditAliasDialog::saveCurrentRow()
 			{
 				QMessageBox::critical(this, windowTitle(),
 					tr("General exception updating Alias"),
+					QMessageBox::Ok, QMessageBox::Ok);
+				break;
+			}	
+        }
+        break;
+    case TransferAlias:
+        if(mapper->submit())
+        {
+			strMethod = string("aliasupdate");
+			params.push_back(ui->aliasEdit->text().toStdString());
+			params.push_back(ui->nameEdit->text().toStdString());
+			params.push_back("");
+			params.push_back(ui->safeSearchEdit->currentText().toStdString());
+			params.push_back(ui->transferEdit->text().toStdString());
+			params.push_back(ui->expiryEdit->itemData(ui->expiryEdit->currentIndex()).toString().toStdString());
+			try {
+				UniValue result = tableRPC.execute(strMethod, params);
+				if (result.type() != UniValue::VNULL)
+				{
+
+					alias = ui->nameEdit->text() + ui->aliasEdit->text()+ui->transferEdit->text();
+						
+				}
+			}
+			catch (UniValue& objError)
+			{
+				string strError = find_value(objError, "message").get_str();
+				QMessageBox::critical(this, windowTitle(),
+                tr("Error transferring Alias: \"%1\"").arg(QString::fromStdString(strError)),
+					QMessageBox::Ok, QMessageBox::Ok);
+				break;
+			}
+			catch(std::exception& e)
+			{
+				QMessageBox::critical(this, windowTitle(),
+                    tr("General exception transferring Alias"),
 					QMessageBox::Ok, QMessageBox::Ok);
 				break;
 			}	

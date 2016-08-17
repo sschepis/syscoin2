@@ -21,7 +21,9 @@ class EditAliasDialog : public QDialog
 public:
     enum Mode {
         NewAlias,
-        EditAlias
+        EditDataAlias,
+        EditAlias,
+		TransferAlias
     };
 
     explicit EditAliasDialog(Mode mode, QWidget *parent = 0);

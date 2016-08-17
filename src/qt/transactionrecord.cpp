@@ -46,7 +46,7 @@ static bool CreateSyscoinTransactionRecord(TransactionRecord& sub, int op, const
 		break;
 	case OP_ALIAS_UPDATE:
 		if(type == SEND)
-			sub.type = TransactionRecord::AliasUpdate;	
+			sub.type = (IsSyscoinTxMine(wtx, "alias")) ? TransactionRecord::AliasUpdate : TransactionRecord::AliasTransfer;	
 		else if(type == RECV)
 			sub.type = TransactionRecord::AliasRecv;
 		break;
@@ -205,8 +205,13 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
 					{
 						// Received by Syscoin Address
 						sub.type = TransactionRecord::RecvWithAddress;
+						// SYSCOIN show alias in record
 						CSyscoinAddress sysAddress = CSyscoinAddress(address);
-						sub.address = sysAddress.ToString();
+						sysAddress = CSyscoinAddress(sysAddress.ToString());
+						if(sysAddress.isAlias)
+							sub.address = sysAddress.aliasName;
+						else
+							sub.address = sysAddress.ToString();
 					}
 					else
 					{
@@ -282,7 +287,11 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
 						sub.type = TransactionRecord::SendToAddress;
 						// SYSCOIN show alias in record
 						CSyscoinAddress sysAddress = CSyscoinAddress(address);
-						sub.address = sysAddress.ToString();
+						sysAddress = CSyscoinAddress(sysAddress.ToString());
+						if(sysAddress.isAlias)
+							sub.address = sysAddress.aliasName;
+						else
+							sub.address = sysAddress.ToString();
 					}
 					else
 					{
