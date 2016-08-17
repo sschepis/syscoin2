@@ -54,21 +54,6 @@ public:
 		vchPrivateValue.clear();
 		vchGUID.clear();
 	}
-    bool GetAliasFromList(std::vector<CAliasIndex> &aliasList) {
-        if(aliasList.size() == 0) return false;
-		CAliasIndex myAlias = aliasList.front();
-		// find the closest alias without going over in height, assuming aliasList orders entries by nHeight ascending
-        for(std::vector<CAliasIndex>::reverse_iterator it = aliasList.rbegin(); it != aliasList.rend(); ++it) {
-            const CAliasIndex &a = *it;
-			// skip if this height is greater than our alias height
-			if(a.nHeight > nHeight)
-				continue;
-            myAlias = a;
-			break;
-        }
-        *this = myAlias;
-        return true;
-    }
 	ADD_SERIALIZE_METHODS;
     template <typename Stream, typename Operation>
 	inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {        

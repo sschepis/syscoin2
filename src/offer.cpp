@@ -2625,18 +2625,10 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 
 	CTransaction aliastx,buyeraliastx;
 	CAliasIndex theAlias,tmpAlias;
-	bool isExpired = false;
-	vector<CAliasIndex> aliasVtxPos;
-	if(GetTxAndVtxOfAlias(theOffer.vchAlias, theAlias, aliastx, aliasVtxPos, isExpired, true))
+	if(!GetTxOfAlias(theOffer.vchAlias, theAlias, aliastx, true)
 	{
-		// find the alias (for the right pubkey) at the time of linked accept/escrow if applicable
-		// need this because alias can be transferred and the payment message ends up going to new alias pubkey if we dont do this. 
-		// should be sent to same person that owned the offer when payment was made by buyer
-		theAlias.nHeight = nHeight;
-		theAlias.GetAliasFromList(aliasVtxPos);
-	}
-	else
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 566 - Could not find the alias associated with this offer");
+	}
 	CAliasIndex buyerAlias;
 	if (!GetTxOfAlias(vchBuyerAlias, buyerAlias, aliastx, true))
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 532 - Could not find buyer alias with this name");
@@ -3222,13 +3214,8 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 			oOfferAccept.push_back(Pair("paid","true"));
 		CAliasIndex theAlias;
 		CTransaction aliastx;
-		bool isExpired = false;
-		vector<CAliasIndex> aliasVtxPos;
-		if(GetTxAndVtxOfAlias(acceptOffer.vchAlias, theAlias, aliastx, aliasVtxPos, isExpired, true))
-		{
-			theAlias.nHeight = acceptOffer.nHeight;
-			theAlias.GetAliasFromList(aliasVtxPos);
-		}
+		GetTxOfAlias(acceptOffer.vchAlias, theAlias, aliastx, true);
+
 		string strMessage = string("");
 		if(!DecryptMessage(theAlias.vchPubKey, ca.vchMessage, strMessage))
 			strMessage = string("Encrypted for owner of offer");
@@ -3487,13 +3474,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 
 				CAliasIndex theAlias;
 				CTransaction aliastx;
-				bool isExpired = false;
-				vector<CAliasIndex> aliasVtxPos;
-				if(GetTxAndVtxOfAlias(theOffer.vchAlias, theAlias, aliastx, aliasVtxPos, isExpired, true))
-				{
-					theAlias.nHeight = theOffer.nHeight;
-					theAlias.GetAliasFromList(aliasVtxPos);
-				}
+				GetTxOfAlias(theOffer.vchAlias, theAlias, aliastx, true);
 				string strMessage = string("");
 				if(!DecryptMessage(theAlias.vchPubKey, theOfferAccept.vchMessage, strMessage))
 					strMessage = string("Encrypted for owner of offer");

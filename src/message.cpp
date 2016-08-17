@@ -626,19 +626,10 @@ UniValue messagelist(const UniValue& params, bool fHelp) {
 		oName.push_back(Pair("time", sTime));
 		CAliasIndex aliasFrom, aliasTo;
 		CTransaction aliastx;
-		bool isExpired = false;
-		vector<CAliasIndex> aliasVtxPos;
-		if(GetTxAndVtxOfAlias(message.vchAliasFrom, aliasFrom, aliastx, aliasVtxPos, isExpired, true))
-		{
-			aliasFrom.nHeight = message.nHeight;
-			aliasFrom.GetAliasFromList(aliasVtxPos);
-		}
-		aliasVtxPos.clear();
-		if(GetTxAndVtxOfAlias(message.vchAliasTo, aliasTo, aliastx, aliasVtxPos, isExpired, true))
-		{
-			aliasTo.nHeight = message.nHeight;
-			aliasTo.GetAliasFromList(aliasVtxPos);
-		}
+
+		GetTxOfAlias(message.vchAliasFrom, aliasFrom, aliastx, true);
+		GetTxOfAlias(message.vchAliasTo, aliasTo, aliastx, true);
+
 		oName.push_back(Pair("from", stringFromVch(message.vchAliasFrom)));
 		oName.push_back(Pair("to", stringFromVch(message.vchAliasTo)));
 
@@ -726,19 +717,10 @@ UniValue messagesentlist(const UniValue& params, bool fHelp) {
 		oName.push_back(Pair("time", sTime));
 		CAliasIndex aliasFrom, aliasTo;
 		CTransaction aliastx;
-		bool isExpired = false;
-		vector<CAliasIndex> aliasVtxPos;
-		if(GetTxAndVtxOfAlias(message.vchAliasFrom, aliasFrom, aliastx, aliasVtxPos, isExpired, true))
-		{
-			aliasFrom.nHeight = message.nHeight;
-			aliasFrom.GetAliasFromList(aliasVtxPos);
-		}
-		aliasVtxPos.clear();
-		if(GetTxAndVtxOfAlias(message.vchAliasTo, aliasTo, aliastx, aliasVtxPos, isExpired, true))
-		{
-			aliasTo.nHeight = message.nHeight;
-			aliasTo.GetAliasFromList(aliasVtxPos);
-		}
+
+		GetTxOfAlias(message.vchAliasFrom, aliasFrom, aliastx, true);
+		GetTxOfAlias(message.vchAliasTo, aliasTo, aliastx, true);
+
 		oName.push_back(Pair("from", stringFromVch(message.vchAliasFrom)));
 		oName.push_back(Pair("to", stringFromVch(message.vchAliasTo)));
 
@@ -801,19 +783,9 @@ UniValue messagehistory(const UniValue& params, bool fHelp) {
 
 			CAliasIndex aliasFrom, aliasTo;
 			CTransaction aliastx;
-			bool isExpired = false;
-			vector<CAliasIndex> aliasVtxPos;
-			if(GetTxAndVtxOfAlias(txPos2.vchAliasFrom, aliasFrom, aliastx, aliasVtxPos, isExpired, true))
-			{
-				aliasFrom.nHeight = txPos2.nHeight;
-				aliasFrom.GetAliasFromList(aliasVtxPos);
-			}
-			aliasVtxPos.clear();
-			if(GetTxAndVtxOfAlias(txPos2.vchAliasTo, aliasTo, aliastx, aliasVtxPos, isExpired, true))
-			{
-				aliasTo.nHeight = txPos2.nHeight;
-				aliasTo.GetAliasFromList(aliasVtxPos);
-			}
+			GetTxOfAlias(txPos2.vchAliasFrom, aliasFrom, aliastx, true);
+			GetTxOfAlias(txPos2.vchAliasTo, aliasTo, aliastx, true);
+
 			oMessage.push_back(Pair("from", stringFromVch(txPos2.vchAliasFrom)));
 			oMessage.push_back(Pair("to", stringFromVch(txPos2.vchAliasTo)));
 

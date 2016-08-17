@@ -1108,13 +1108,7 @@ UniValue certlist(const UniValue& params, bool fHelp) {
         oName.push_back(Pair("title", stringFromVch(cert.vchTitle)));
 		
 		string strData = stringFromVch(cert.vchData);
-		bool isExpired = false;
-		vector<CAliasIndex> aliasVtxPos;
-		if(GetTxAndVtxOfAlias(cert.vchAlias, theAlias, aliastx, aliasVtxPos, isExpired, true))
-		{
-			theAlias.nHeight = cert.nHeight;
-			theAlias.GetAliasFromList(aliasVtxPos);
-		}
+		GetTxOfAlias(cert.vchAlias, theAlias, aliastx, true);
 		string strDecrypted = "";
 		if(cert.bPrivate)
 		{
@@ -1193,13 +1187,8 @@ UniValue certhistory(const UniValue& params, bool fHelp) {
 			string strData = "";
 			CTransaction aliastx;
 			CAliasIndex theAlias;
-			bool isExpired = false;
-			vector<CAliasIndex> aliasVtxPos;
-			if(GetTxAndVtxOfAlias(txPos2.vchAlias, theAlias, aliastx, aliasVtxPos, isExpired, true))
-			{
-				theAlias.nHeight = txPos2.nHeight;
-				theAlias.GetAliasFromList(aliasVtxPos);
-			}
+			GetTxAndVtxOfAlias(txPos2.vchAlias, theAlias, aliastx, true);
+
 			if(txPos2.bPrivate)
 			{
 				strData = "Encrypted for owner of certificate private data";
@@ -1283,13 +1272,8 @@ UniValue certfilter(const UniValue& params, bool fHelp) {
 		string strDecrypted = "";
 		CTransaction aliastx;
 		CAliasIndex theAlias;
-		bool isExpired = false;
-		vector<CAliasIndex> aliasVtxPos;
-		if(GetTxAndVtxOfAlias(txCert.vchAlias, theAlias, aliastx, aliasVtxPos, isExpired, true))
-		{
-			theAlias.nHeight = txCert.nHeight;
-			theAlias.GetAliasFromList(aliasVtxPos);
-		}
+
+		GetTxOfAlias(txCert.vchAlias, theAlias, aliastx, true);
 		if(txCert.bPrivate)
 		{
 			strData = string("Encrypted for owner of certificate");
