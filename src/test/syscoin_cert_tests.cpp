@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE (generate_certtransfer)
 	guid = CertNew("node1", "jagcert1", certtitle, certdata);
 	// private cert
 	pvtguid = CertNew("node1", "jagcert1", certtitle, certdata);
-	CertUpdate("node1", pvtguid, certtitle, certdata, true);
+	CertUpdate("node1", pvtguid, "jagcert1", certtitle, certdata, true);
 	UniValue r;
 	CertTransfer("node1", guid, "jagcert2");
 	CertTransfer("node1", pvtguid, "jagcert3");
