@@ -734,7 +734,9 @@ void updateBans(const vector<unsigned char> &banData)
 					CAliasIndex aliasBan = vtxAliasPos.back();
 					aliasBan.safetyLevel = severity;
 					PutToAliasList(vtxAliasPos, aliasBan);
-					paliasdb->WriteAlias(vchGUID, vtxAliasPos);
+					CPubKey PubKey(aliasBan.vchPubKey);
+					CSyscoinAddress address(PubKey.GetID());
+					paliasdb->WriteAlias(vchGUID, vchFromString(address.ToString()), vtxAliasPos);
 					
 				}		
 			}
@@ -986,6 +988,20 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					theAlias.vchGUID = dbAlias.vchGUID;
 					theAlias.vchAlias = dbAlias.vchAlias;
 				}
+				// if transfer
+				if(dbAlias.vchPubKey != theAlias.vchPubKey)
+				{
+					update = false;
+					CPubKey xferKey  = CPubKey(theAlias.vchPubKey);	
+					CSyscoinAddress myAddress = CSyscoinAddress(xferKey.GetID());
+					// make sure xfer to pubkey doesn't point to an alias already, otherwise don't assign pubkey to alias
+					// we want to avoid aliases with duplicate public keys (addresses)
+					if (paliasdb->ExistsAddress(vchFromString(myAddress.ToString())))
+					{
+						theAlias.vchPubKey = dbAlias.vchPubKey;
+						errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1017 - Cannot transfer an alias that points to another alias";
+					}
+				}
 			}
 			else
 			{
@@ -1006,7 +1022,9 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		theAlias.nHeight = nHeight;
 		theAlias.txHash = tx.GetHash();
 		PutToAliasList(vtxPos, theAlias);
-		if (!dontaddtodb && !paliasdb->WriteAlias(vchAlias, vtxPos))
+		CPubKey PubKey(theAlias.vchPubKey);
+		CSyscoinAddress address(PubKey.GetID());
+		if (!dontaddtodb && !paliasdb->WriteAlias(vchAlias, vchFromString(address.ToString()), vtxPos))
 		{
 			errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1019 - Failed to write to alias DB";
 			return error(errorMessage.c_str());
@@ -1268,6 +1286,36 @@ void GetAddressFromAlias(const std::string& strAlias, std::string& strAddress, u
 	catch(...)
 	{
 		throw runtime_error("could not read alias");
+	}
+}
+
+void GetAliasFromAddress(const std::string& strAddress, std::string& strAlias, unsigned char& safetyLevel, bool& safeSearch, int64_t& nExpireHeight) {
+	try
+	{
+		const vector<unsigned char> &vchAddress = vchFromValue(strAddress);
+		if (paliasdb && !paliasdb->ExistsAddress(vchAddress))
+			throw runtime_error("Alias address mapping not found");
+
+		// check for alias address mapping existence in DB
+		vector<unsigned char> vchAlias;
+		if (paliasdb && !paliasdb->ReadAddress(vchAddress, vchAlias))
+			throw runtime_error("failed to read from alias DB");
+		if (vchAlias.empty())
+			throw runtime_error("no alias address mapping result returned");
+		vector<CAliasIndex> vtxPos;
+		if (paliasdb && !paliasdb->ReadAlias(vchAlias, vtxPos))
+			throw runtime_error("failed to read from alias DB");
+		if (vtxPos.size() < 1)
+			throw runtime_error("no alias result returned");
+		const CAliasIndex &alias = vtxPos.back();
+		strAlias = stringFromVch(vchAlias);
+		safetyLevel = alias.safetyLevel;
+		safeSearch = alias.safeSearch;
+		nExpireHeight = alias.nHeight + alias.nRenewal*GetAliasExpirationDepth();
+	}
+	catch(...)
+	{
+		throw runtime_error("could not read alias address mapping");
 	}
 }
 int IndexOfAliasOutput(const CTransaction& tx) {
@@ -1550,14 +1598,15 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	return res;
 }
 UniValue aliasupdate(const UniValue& params, bool fHelp) {
-	if (fHelp || 2 > params.size() || 5 < params.size())
+	if (fHelp || 2 > params.size() || 6 < params.size())
 		throw runtime_error(
-		"aliasupdate <aliasname> <public value> [private value=''] [safesearch=Yes] [expire=1]\n"
+		"aliasupdate <aliasname> <public value> [private value=''] [safesearch=Yes] [toalias_pubkey=''] [expire=1]\n"
 						"Update and possibly transfer an alias.\n"
 						"<aliasname> alias name.\n"
 						"<public value> alias public profile data, 1023 chars max.\n"
 						"<private value> alias private profile data, 1023 chars max. Will be private and readable by owner only.\n"				
 						"<safesearch> is this alias safe to search. Defaults to Yes, No for not safe and to hide in GUI search queries\n"
+						"<toalias_pubkey> receiver syscoin alias pub key, if transferring alias.\n"
 						"<expire> Number of years before expiry. It affects the fees you pay, the cheapest being 1 year. The more years you specify the more fees you pay. Max is 5 years, Min is 1 year. Defaults to 1 year.\n"	
 						+ HelpRequiringPassphrase());
 
@@ -1568,11 +1617,18 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 	vchPublicValue = vchFromString(strPublicValue);
 	string strPrivateValue = params.size()>=3 && params[2].get_str().size() > 0?params[2].get_str():"";
 	vchPrivateValue = vchFromString(strPrivateValue);
+	vector<unsigned char> vchPubKeyByte;
 	unsigned char nRenewal = 1;
 	CWalletTx wtx;
 	CAliasIndex updateAlias;
 	const CWalletTx* wtxIn;
 	CScript scriptPubKeyOrig;
+	string strPubKey;
+    if (params.size() >= 5 && params[4].get_str().size() > 0) {
+		vector<unsigned char> vchPubKey;
+		vchPubKey = vchFromString(params[4].get_str());
+		boost::algorithm::unhex(vchPubKey.begin(), vchPubKey.end(), std::back_inserter(vchPubKeyByte));
+	}
 
 	string strSafeSearch = "Yes";
 	if(params.size() >= 4)
@@ -1600,12 +1656,14 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 1027 - There are pending operations on that alias");
 	}
 
+	if(vchPubKeyByte.empty())
+		vchPubKeyByte = theAlias.vchPubKey;
 	if(vchPrivateValue.size() > 0)
 	{
 		string strCipherText;
 		
 		// encrypt using new key
-		if(!EncryptMessage(theAlias.vchPubKey, vchPrivateValue, strCipherText))
+		if(!EncryptMessage(vchPubKeyByte, vchPrivateValue, strCipherText))
 		{
 			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 1028 - Could not encrypt alias private data!");
 		}
@@ -1620,7 +1678,7 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 	if(copyAlias.vchPrivateValue != vchPrivateValue)
 		theAlias.vchPrivateValue = vchPrivateValue;
 	
-	theAlias.vchPubKey = copyAlias.vchPubKey;
+	theAlias.vchPubKey = vchPubKeyByte;
 	theAlias.nRenewal = nRenewal;
 	theAlias.safeSearch = strSafeSearch == "Yes"? true: false;
 	CPubKey currentKey(vchPubKeyByte);
@@ -2016,7 +2074,15 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 	}
 	return oRes;
 }
-
+UniValue generatepublickey(const UniValue& params, bool fHelp) {
+	if(!pwalletMain)
+		throw runtime_error("No wallet defined!");
+	CPubKey PubKey = pwalletMain->GenerateNewKey();
+	std::vector<unsigned char> vchPubKey(PubKey.begin(), PubKey.end());
+	UniValue res(UniValue::VARR);
+	res.push_back(HexStr(vchPubKey));
+	return res;
+}
 /**
  * [aliasfilter description]
  * @param  params [description]
