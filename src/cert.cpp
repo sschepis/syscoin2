@@ -855,14 +855,16 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
 	CRecipient recipient;
 	CreateRecipient(scriptPubKey, recipient);
 	vecSend.push_back(recipient);
+	CScript scriptPubKeyAlias;
+	scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << vchAlias << theAlias.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
+	scriptPubKeyAlias += scriptPubKeyOrig;
+	CRecipient aliasRecipient;
+	CreateRecipient(scriptPubKeyAlias, aliasRecipient);
 	if(wtxAliasIn != NULL && !theCert.vchLinkAlias.empty())
 	{
 		if (ExistsInMempool(theCert.vchLinkAlias, OP_ALIAS_ACTIVATE) || ExistsInMempool(theCert.vchLinkAlias, OP_ALIAS_UPDATE)) {
 			throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR ERRCODE: 2029a - There are pending operations on that alias");
 		}
-		CScript scriptPubKeyAlias;
-		scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << vchAlias << theAlias.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
-		scriptPubKeyAlias += scriptPubKeyOrig;
 		vecSend.push_back(aliasRecipient);
 	}
 	else
@@ -875,7 +877,7 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
 	vecSend.push_back(fee);
 	const CWalletTx * wtxInOffer=NULL;
 	const CWalletTx * wtxInEscrow=NULL;
-	SendMoneySyscoin(vecSend, recipient.nAmount+fee.nAmount, false, wtx, wtxInOffer, wtxIn, wtxAliasIn, wtxInEscrow);	
+	SendMoneySyscoin(vecSend, recipient.nAmount+aliasRecipient.nAmount+fee.nAmount, false, wtx, wtxInOffer, wtxIn, wtxAliasIn, wtxInEscrow);	
  	UniValue res(UniValue::VARR);
 	res.push_back(wtx.GetHash().GetHex());
 	return res;

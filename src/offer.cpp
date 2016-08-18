@@ -2437,29 +2437,32 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	vecSend.push_back(recipient);
 	CRecipient certRecipient;
 	CreateRecipient(scriptPubKeyCert, certRecipient);
-
 	// if we use a cert as input to this offer tx, we need another utxo for further cert transactions on this cert, so we create one here
 	if(wtxCertIn != NULL)
 		vecSend.push_back(certRecipient);
+
+	CScript scriptPubKeyAlias;
+	scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << vchAlias << alias.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
+	scriptPubKeyAlias += scriptPubKeyOrig;
+	CRecipient aliasRecipient;
+	CreateRecipient(scriptPubKeyAlias, aliasRecipient);
 	if(wtxAliasIn != NULL && !theOffer.vchLinkAlias.empty())
 	{
 		if (ExistsInMempool(theOffer.vchLinkAlias, OP_ALIAS_ACTIVATE) || ExistsInMempool(theOffer.vchLinkAlias, OP_ALIAS_UPDATE)) {
 			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 529a - There are pending operations on that alias");
 		}
-		CScript scriptPubKeyAlias;
-		scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << vchAlias << alias.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
-		scriptPubKeyAlias += scriptPubKeyOrig;
 		vecSend.push_back(aliasRecipient);
 	}
 	else
 		wtxAliasIn = NULL;
+
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
 	CRecipient fee;
 	CreateFeeRecipient(scriptData, data, fee);
 	vecSend.push_back(fee);
 	const CWalletTx * wtxInEscrow=NULL;
-	SendMoneySyscoin(vecSend, recipient.nAmount+fee.nAmount, false, wtx, wtxIn, wtxCertIn, wtxAliasIn, wtxInEscrow);
+	SendMoneySyscoin(vecSend, recipient.nAmount+aliasRecipient.nAmount+fee.nAmount, false, wtx, wtxIn, wtxCertIn, wtxAliasIn, wtxInEscrow);
 	UniValue res(UniValue::VARR);
 	res.push_back(wtx.GetHash().GetHex());
 	return res;
