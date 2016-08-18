@@ -472,6 +472,11 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2010 - Certificate guid mismatch";
 				return error(errorMessage.c_str());
 			}
+			if(!theCert.vchLinkAlias.empty())
+			{
+				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2010a - Certificate linked alias not allowed in activate";
+				return error(errorMessage.c_str());
+			}
 			if((theCert.vchTitle.size() > MAX_NAME_LENGTH || theCert.vchTitle.empty()))
 			{
 				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2006 - Certificate title too big or is empty";
@@ -523,6 +528,11 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2016 - Certificate guid mismatch";
 				return error(errorMessage.c_str());
 			}
+			if(!theCert.vchLinkAlias.empty())
+			{
+				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2016a - Certificate linked alias not allowed in transfer";
+				return error(errorMessage.c_str());
+			}
 			break;
 
 		default:
@@ -550,11 +560,6 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 					theCert = vtxPos.back();
 				else
 				{
-					if(!GetTxOfAlias(theCert.vchAlias, alias, aliasTx))
-					{
-						errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2018 - Cannot find alias for this certificate. It may be expired";
-						theCert.vchAlias = dbCert.vchAlias;		
-					}
 					if(theCert.vchData.empty())
 						theCert.vchData = dbCert.vchData;
 					if(theCert.vchTitle.empty())
@@ -564,6 +569,19 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 					// user can't update safety level after creation
 					theCert.safetyLevel = dbCert.safetyLevel;
 					theCert.vchCert = dbCert.vchCert;
+					if(!theCert.vchLinkAlias.empty())
+					{
+						theCert.vchAlias = theCert.vchLinkAlias;
+					}
+					else
+					{
+						theCert.vchAlias = dbOffer.vchAlias;
+					}
+					if(!GetTxOfAlias(theCert.vchAlias, alias, aliasTx))
+					{
+						errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2018 - Cannot find alias for this certificate. It may be expired";
+						theCert.vchAlias = dbCert.vchAlias;		
+					}
 					// ensure an expired tx for alias transfer doesn't actually do the transfer
 					if(op == OP_CERT_TRANSFER)
 					{
@@ -779,6 +797,12 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
 	CAliasIndex theAlias;
 	if (!GetTxOfAlias(theCert.vchAlias, theAlias, aliastx, true))
 		throw runtime_error("SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2026 - failed to read alias from alias DB");
+	if(!IsSyscoinTxMine(aliastx, "alias")) {
+		throw runtime_error("SYSCOIN_CERTIFICATE_CONSENSUS_ERROR ERRCODE: 2026a - This alias is not yours");
+	}
+	wtxAliasIn = pwalletMain->GetWalletTx(aliastx.GetHash());
+	if (wtxAliasIn == NULL)
+		throw runtime_error("SYSCOIN_CERTIFICATE_CONSENSUS_ERROR ERRCODE: 2026b - This alias is not in your wallet");
 
 		
     // make sure cert is in wallet
@@ -813,6 +837,9 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
 		theCert.vchData = vchData;
 	if(copyCert.sCategory != vchCat)
 		theCert.sCategory = vchCat;
+	// if we are changing the alias for this offer set it in vchLinkAlias and pass the alias as input to prove you own it	
+	if(copyCert.vchAlias != vchAlias)
+		theCert.vchLinkAlias = vchAlias;
 	theCert.nHeight = chainActive.Tip()->nHeight;
 	theCert.bPrivate = bPrivate;
 	theCert.safeSearch = strSafeSearch == "Yes"? true: false;
@@ -828,15 +855,27 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
 	CRecipient recipient;
 	CreateRecipient(scriptPubKey, recipient);
 	vecSend.push_back(recipient);
+	if(wtxAliasIn != NULL && !theCert.vchLinkAlias.empty())
+	{
+		if (ExistsInMempool(theCert.vchLinkAlias, OP_ALIAS_ACTIVATE) || ExistsInMempool(theCert.vchLinkAlias, OP_ALIAS_UPDATE)) {
+			throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR ERRCODE: 2029a - There are pending operations on that alias");
+		}
+		CScript scriptPubKeyAlias;
+		scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << vchAlias << theAlias.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
+		scriptPubKeyAlias += scriptPubKeyOrig;
+		vecSend.push_back(aliasRecipient);
+	}
+	else
+
+		wtxAliasIn = NULL;
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
 	CRecipient fee;
 	CreateFeeRecipient(scriptData, data, fee);
 	vecSend.push_back(fee);
 	const CWalletTx * wtxInOffer=NULL;
-	const CWalletTx * wtxInAlias=NULL;
 	const CWalletTx * wtxInEscrow=NULL;
-	SendMoneySyscoin(vecSend, recipient.nAmount+fee.nAmount, false, wtx, wtxInOffer, wtxIn, wtxInAlias, wtxInEscrow);	
+	SendMoneySyscoin(vecSend, recipient.nAmount+fee.nAmount, false, wtx, wtxInOffer, wtxIn, wtxAliasIn, wtxInEscrow);	
  	UniValue res(UniValue::VARR);
 	res.push_back(wtx.GetHash().GetHex());
 	return res;
