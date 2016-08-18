@@ -575,7 +575,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 					}
 					else
 					{
-						theCert.vchAlias = dbOffer.vchAlias;
+						theCert.vchAlias = dbCert.vchAlias;
 					}
 					if(!GetTxOfAlias(theCert.vchAlias, alias, aliasTx))
 					{
