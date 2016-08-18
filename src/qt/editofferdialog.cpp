@@ -73,8 +73,6 @@ EditOfferDialog::EditOfferDialog(Mode mode, const QString &strCert,  const QStri
 		ui->currencyDisclaimer->setText(tr("<font color='blue'>You will receive payment in Syscoin equivalent to the Market-value of the currency you have selected.</font>"));
         break;
     case EditOffer:
-		ui->aliasEdit->setEnabled(false);
-		ui->aliasDisclaimer->setVisible(false);
         setWindowTitle(tr("Edit Offer"));
         break;
     case NewCertOffer:

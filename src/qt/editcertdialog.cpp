@@ -58,8 +58,6 @@ EditCertDialog::EditCertDialog(Mode mode, QWidget *parent) :
         setWindowTitle(tr("New Cert"));
         break;
     case EditCert:
-		ui->aliasDisclaimer->setVisible(false);
-		ui->aliasEdit->setEnabled(false);
         setWindowTitle(tr("Edit Cert"));
 		
         break;
@@ -398,6 +396,7 @@ bool EditCertDialog::saveCurrentRow()
         {
 			strMethod = string("certupdate");
 			params.push_back(ui->certEdit->text().toStdString());
+			params.push_back(ui->aliasEdit->currentText().toStdString());
 			params.push_back(ui->nameEdit->text().toStdString());
 			params.push_back(ui->certDataEdit->toPlainText().toStdString());
 			params.push_back(ui->privateBox->currentText() == QString("Yes")? "1": "0");

@@ -753,11 +753,12 @@ UniValue certnew(const UniValue& params, bool fHelp) {
 }
 
 UniValue certupdate(const UniValue& params, bool fHelp) {
-    if (fHelp || params.size() < 4 || params.size() > 6)
+    if (fHelp || params.size() < 5 || params.size() > 7)
         throw runtime_error(
-		"certupdate <guid> <title> <data> <private> [safesearch=Yes] [category=certificates]\n"
+		"certupdate <guid> <alias> <title> <data> <private> [safesearch=Yes] [category=certificates]\n"
                         "Perform an update on an certificate you control.\n"
                         "<guid> certificate guidkey.\n"
+						"<alias> an alias you own to associate with this certificate.\n"
                         "<title> certificate title, 255 bytes max.\n"
                         "<data> certificate data, 1KB max.\n"
 						"<private> set to 1 if you only want to make the cert data private, only the owner of the cert can view it.\n"
@@ -765,16 +766,17 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
                         + HelpRequiringPassphrase());
     // gather & validate inputs
     vector<unsigned char> vchCert = vchFromValue(params[0]);
-    vector<unsigned char> vchTitle = vchFromValue(params[1]);
-    vector<unsigned char> vchData = vchFromValue(params[2]);
+	vector<unsigned char> vchAlias = vchFromValue(params[1]);
+    vector<unsigned char> vchTitle = vchFromValue(params[2]);
+    vector<unsigned char> vchData = vchFromValue(params[3]);
 	vector<unsigned char> vchCat = vchFromString("certificates");
-	if(params.size() >= 6)
-		vchCat = vchFromValue(params[5]);
-	bool bPrivate = atoi(params[3].get_str().c_str()) == 1? true: false;
+	if(params.size() >= 7)
+		vchCat = vchFromValue(params[6]);
+	bool bPrivate = atoi(params[4].get_str().c_str()) == 1? true: false;
 	string strSafeSearch = "Yes";
-	if(params.size() >= 5)
+	if(params.size() >= 6)
 	{
-		strSafeSearch = params[4].get_str();
+		strSafeSearch = params[5].get_str();
 	}
 
     if (vchData.size() < 1)
@@ -795,7 +797,8 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
 
 	CTransaction aliastx;
 	CAliasIndex theAlias;
-	if (!GetTxOfAlias(theCert.vchAlias, theAlias, aliastx, true))
+	const CWalletTx *wtxAliasIn = NULL;
+	if (!GetTxOfAlias(vchAlias, theAlias, aliastx, true))
 		throw runtime_error("SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2026 - failed to read alias from alias DB");
 	if(!IsSyscoinTxMine(aliastx, "alias")) {
 		throw runtime_error("SYSCOIN_CERTIFICATE_CONSENSUS_ERROR ERRCODE: 2026a - This alias is not yours");

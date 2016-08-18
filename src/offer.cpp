@@ -1080,15 +1080,19 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						theOffer.vchGeoLocation = dbOffer.vchGeoLocation;
 					if(serializedOffer.vchAliasPeg.empty())
 						theOffer.vchAliasPeg = dbOffer.vchAliasPeg;
-					// if not a linked offer we can update alias otherwise we can't edit the alias for this offer
-					// also only update alias if alias input is attached in vchLinkAlias
-					if(dbOffer.vchLinkOffer.empty() && !serializedOffer.vchLinkAlias.empty())
+					// if its a cert offer, the alias is predetermined by cert alias, otherwise we can change below
+					if(theOffer.vchCert.empty())
 					{
-						theOffer.vchAlias = serializedOffer.vchLinkAlias;
-					}
-					else
-					{
-						theOffer.vchAlias = dbOffer.vchAlias;
+						// if not a linked offer we can update alias otherwise we can't edit the alias for this offer
+						// also only update alias if alias input is attached in vchLinkAlias
+						if(theOffer.vchCert.empty() && dbOffer.vchLinkOffer.empty() && !serializedOffer.vchLinkAlias.empty())
+						{
+							theOffer.vchAlias = serializedOffer.vchLinkAlias;
+						}
+						else
+						{
+							theOffer.vchAlias = dbOffer.vchAlias;
+						}
 					}
 					// user can't update safety level after creation
 					theOffer.safetyLevel = dbOffer.safetyLevel;
@@ -2355,6 +2359,7 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 			CTransaction certaliastx;
 			if (GetTxOfAlias( theCert.vchAlias, certAlias, certaliastx, true))
 			{
+				wtxAliasIn = NULL;
 				wtxCertIn = pwalletMain->GetWalletTx(txCert.GetHash());
 				CPubKey currentCertKey(certAlias.vchPubKey);
 				scriptPubKeyCertOrig = GetScriptForDestination(currentCertKey.GetID());
@@ -2405,7 +2410,7 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	if(offerCopy.sCurrencyCode != sCurrencyCode)
 		theOffer.sCurrencyCode = sCurrencyCode;
 	// if we are changing the alias for this offer set it in vchLinkAlias and pass the alias as input to prove you own it	
-	if(offerCopy.vchAlias != vchAlias)
+	if(wtxAliasIn != NULL && offerCopy.vchAlias != vchAlias)
 		theOffer.vchLinkAlias = vchAlias;
 	if(wtxCertIn != NULL)
 		theOffer.vchCert = vchCert;
