@@ -918,7 +918,7 @@ UniValue certtransfer(const UniValue& params, bool fHelp) {
     // this is a syscoin txn
     CWalletTx wtx;
 	const CWalletTx* wtxIn;
-    CScript scriptPubKeyOrig;
+    CScript scriptPubKeyOrig, scriptPubKeyFromOrig;
 
     EnsureWalletIsUnlocked();
     CTransaction aliastx;
@@ -996,7 +996,7 @@ UniValue certtransfer(const UniValue& params, bool fHelp) {
 	vecSend.push_back(recipient);
 
 	CScript scriptPubKeyAlias;
-	scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << vchAlias << theAlias.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
+	scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << fromAlias.vchAlias << fromAlias.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
 	scriptPubKeyAlias += scriptPubKeyFromOrig;
 	CRecipient aliasRecipient;
 	CreateRecipient(scriptPubKeyAlias, aliasRecipient);
