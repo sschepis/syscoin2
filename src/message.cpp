@@ -365,8 +365,8 @@ bool CheckMessageInputs(const CTransaction &tx, int op, int nOut, const vector<v
 
 		}
 		else{
-				errorMessage = "SYSCOIN_MESSAGE_CONSENSUS_ERROR: ERRCODE: 3011 - Message transaction has unknown op";
-				return error(errorMessage.c_str());
+			errorMessage = "SYSCOIN_MESSAGE_CONSENSUS_ERROR: ERRCODE: 3011 - Message transaction has unknown op";
+			return error(errorMessage.c_str());
 		}
 	}
 	// save serialized message for later use

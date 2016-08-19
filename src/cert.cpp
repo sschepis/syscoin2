@@ -554,7 +554,8 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 			break;
 
 		default:
-			return error( "CheckCertInputs() : cert transaction has unknown op");
+			errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2017 - Certificate transaction has unknown op";
+			return error(errorMessage.c_str());
 		}
 	}
 
@@ -567,7 +568,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 
 			if(!GetTxAndVtxOfCert(vvchArgs[0], dbCert, certTx, vtxPos))	
 			{
-				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2017 - Failed to read from certificate DB";
+				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2017a - Failed to read from certificate DB";
 				return true;
 			}
 			
