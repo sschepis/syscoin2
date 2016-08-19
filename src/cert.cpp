@@ -569,19 +569,6 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 					// user can't update safety level after creation
 					theCert.safetyLevel = dbCert.safetyLevel;
 					theCert.vchCert = dbCert.vchCert;
-					if(!theCert.vchLinkAlias.empty())
-					{
-						theCert.vchAlias = theCert.vchLinkAlias;
-					}
-					else
-					{
-						theCert.vchAlias = dbCert.vchAlias;
-					}
-					if(!GetTxOfAlias(theCert.vchAlias, alias, aliasTx))
-					{
-						errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2018 - Cannot find alias for this certificate. It may be expired";
-						theCert.vchAlias = dbCert.vchAlias;		
-					}
 					// ensure an expired tx for alias transfer doesn't actually do the transfer
 					if(op == OP_CERT_TRANSFER)
 					{
@@ -592,6 +579,23 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 							theCert.vchAlias = dbCert.vchAlias;						
 						}
 					}
+					else
+					{
+						if(!theCert.vchLinkAlias.empty())
+						{
+							theCert.vchAlias = theCert.vchLinkAlias;
+						}
+						else
+						{
+							theCert.vchAlias = dbCert.vchAlias;
+						}
+					}
+					if(!GetTxOfAlias(theCert.vchAlias, alias, aliasTx))
+					{
+						errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2018 - Cannot find alias for this certificate. It may be expired";
+						theCert.vchAlias = dbCert.vchAlias;		
+					}
+
 				}
 			}
 			else

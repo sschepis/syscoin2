@@ -1143,6 +1143,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 
 	CPubKey ArbiterPubKey(arbiteralias.vchPubKey);
 	CPubKey SellerPubKey(selleralias.vchPubKey);
+	CPubKey BuyerPubKey(buyeralias.vchPubKey);
 	CSyscoinAddress selleraddy(SellerPubKey.GetID());
 	CKeyID keyID;
 	if (!selleraddy.GetKeyID(keyID))
@@ -1150,7 +1151,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	CKey vchSecret;
 	if (pwalletMain->GetKey(keyID, vchSecret))
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4077 - Cannot purchase your own offer");
-	CPubKey BuyerPubKey(buyeralias.vchPubKey);
+	
 	scriptArbiter= GetScriptForDestination(ArbiterPubKey.GetID());
 	scriptSeller= GetScriptForDestination(SellerPubKey.GetID());
 	scriptBuyer= GetScriptForDestination(BuyerPubKey.GetID());
@@ -1235,19 +1236,19 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	CRecipient recipientArbiter;
 	CreateRecipient(scriptPubKeyArbiter, recipientArbiter);
 	vecSend.push_back(recipientArbiter);
-
 	CRecipient recipientSeller;
 	CreateRecipient(scriptPubKeySeller, recipientSeller);
 	vecSend.push_back(recipientSeller);
+	CRecipient recipientBuyer;
+	CreateRecipient(scriptPubKeyBuyer, recipientBuyer);
+	vecSend.push_back(recipientBuyer);
+
 	CRecipient aliasRecipient;
 	CreateRecipient(scriptPubKeyAlias, aliasRecipient);
 	// if we use an alias as input to this escrow tx, we need another utxo for further alias transactions on this alias, so we create one here
 	if(wtxAliasIn != NULL)
 		vecSend.push_back(aliasRecipient);
 
-	CRecipient recipientBuyer;
-	CreateRecipient(scriptPubKeyBuyer, recipientBuyer);
-	vecSend.push_back(recipientBuyer);
 
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
@@ -1258,7 +1259,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	const CWalletTx * wtxInCert=NULL;
 	const CWalletTx * wtxInOffer=NULL;
 	const CWalletTx * wtxInEscrow=NULL;
-	SendMoneySyscoin(vecSend,recipientBuyer.nAmount+ recipientArbiter.nAmount+recipientSeller.nAmount+fee.nAmount, false, wtx, wtxInOffer, wtxInCert, wtxAliasIn, wtxInEscrow);
+	SendMoneySyscoin(vecSend,recipientBuyer.nAmount+ recipientArbiter.nAmount+recipientSeller.nAmount+aliasRecipient.nAmount+fee.nAmount, false, wtx, wtxInOffer, wtxInCert, wtxAliasIn, wtxInEscrow);
 	UniValue res(UniValue::VARR);
 	res.push_back(wtx.GetHash().GetHex());
 	res.push_back(HexStr(vchRand));
