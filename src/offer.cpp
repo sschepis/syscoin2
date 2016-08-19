@@ -2402,7 +2402,6 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 			CTransaction certaliastx;
 			if (GetTxOfAlias( theCert.vchAlias, certAlias, certaliastx, true))
 			{
-				wtxAliasIn = NULL;
 				wtxCertIn = pwalletMain->GetWalletTx(txCert.GetHash());
 				CPubKey currentCertKey(certAlias.vchPubKey);
 				scriptPubKeyCertOrig = GetScriptForDestination(currentCertKey.GetID());
