@@ -1051,6 +1051,8 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						theOffer.vchGeoLocation = dbOffer.vchGeoLocation;
 					if(serializedOffer.vchAliasPeg.empty())
 						theOffer.vchAliasPeg = dbOffer.vchAliasPeg;
+					// user can't update safety level after creation
+					theOffer.safetyLevel = dbOffer.safetyLevel;
 					if(!theOffer.vchCert.empty())
 					{
 						CTransaction txCert;
@@ -1079,20 +1081,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 							theOffer.vchAlias = dbOffer.vchAlias;
 						}
 					}
-
-					// if its a cert offer, the alias is predetermined by cert alias, otherwise we can change below
-					// also if not a linked offer we can update alias otherwise we can't edit the alias for this offer
-					if(theOffer.vchCert.empty() && dbOffer.vchLinkOffer.empty())
-					{
-						theOffer.vchAlias = serializedOffer.vchAlias;
-					}
-					else if(serializedOffer.vchAlias != dbOffer.vchAlias)
-					{
-						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 71 - Cannot edit alias of digital or linked offers";
-						theOffer.vchAlias = dbOffer.vchAlias;
-					}
-					// user can't update safety level after creation
-					theOffer.safetyLevel = dbOffer.safetyLevel;
 					if(!GetTxOfAlias(theOffer.vchAlias, alias, aliasTx))
 					{
 						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 71a - Cannot find alias for this offer. It may be expired";
