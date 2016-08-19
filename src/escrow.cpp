@@ -1308,11 +1308,12 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	vector<CAliasIndex> aliasVtxPos;
 	CTransaction arbiteraliastx, buyeraliastx, selleraliastx;
 	bool isExpired;
-	CSyscoinAddress buyerAddressOnActivate;
+	CSyscoinAddress arbiterAddressOnActivate, arbiterAddress;
 	CPubKey arbiterKey;
 	if(GetTxAndVtxOfAlias(escrow.vchArbiterAlias, arbiterAlias, arbiteraliastx, aliasVtxPos, isExpired, true))
 	{
 		arbiterKey = CPubKey(arbiterAlias.vchPubKey);
+		arbiterAddress = CSyscoinAddress(arbiterKey.GetID());
 		arbiterAlias.nHeight = vtxPos.front().nHeight;
 		arbiterAlias.GetAliasFromList(aliasVtxPos);
 		CPubKey pubKey(arbiterAlias.vchPubKey);
@@ -1320,22 +1321,24 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	}
 
 	aliasVtxPos.clear();
-	CSyscoinAddress buyerAddressOnActivate;
+	CSyscoinAddress buyerAddressOnActivate, buyerAddress;
 	CPubKey buyerKey;
 	if(GetTxAndVtxOfAlias(escrow.vchBuyerAlias, buyerAlias, buyeraliastx, aliasVtxPos, isExpired, true))
 	{
 		buyerKey = CPubKey(sellerAlias.vchPubKey);
+		buyerAddress = CSyscoinAddress(buyerKey.GetID());
 		buyerAlias.nHeight = vtxPos.front().nHeight;
 		buyerAlias.GetAliasFromList(aliasVtxPos);
 		CPubKey pubKey(buyerAlias.vchPubKey);
 		buyerAddressOnActivate = CSyscoinAddress(pubKey.GetID());
 	}
 	aliasVtxPos.clear();
-	CSyscoinAddress sellerAddressOnActivate;
+	CSyscoinAddress sellerAddressOnActivate, sellerAddress;
 	CPubKey sellerKey;
 	if(GetTxAndVtxOfAlias(escrow.vchSellerAlias, sellerAlias, selleraliastx, aliasVtxPos, isExpired, true))
 	{
 		sellerKey = CPubKey(sellerAlias.vchPubKey);
+		sellerAddress = CSyscoinAddress(sellerKey.GetID());
 		sellerAlias.nHeight = vtxPos.front().nHeight;
 		sellerAlias.GetAliasFromList(aliasVtxPos);
 		CPubKey pubKey(sellerAlias.vchPubKey);
@@ -1352,7 +1355,7 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4086 - Seller address does not refer to a key");
 		CKey vchSecret;
 		if (!pwalletMain->GetKey(keyID, vchSecret))
-			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4087 - Private key for seller address " + sellerAddress.ToString() + " is not known");
+			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4087 - Private key for seller address " + sellerAddressOnActivate.ToString() + " is not known");
 		foundSellerKey = true;
 		
 	}
@@ -1396,7 +1399,7 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4090 - Arbiter address does not refer to a key");
 		CKey vchSecret;
 		if (!pwalletMain->GetKey(keyID, vchSecret))
-			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4091 - Private key for arbiter address " + arbiterAddress.ToString() + " is not known");
+			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4091 - Private key for arbiter address " + arbiterAddressOnActivate.ToString() + " is not known");
 		strPrivateKey = CSyscoinSecret(vchSecret).ToString();
 	}
 	catch(...)
@@ -1625,7 +1628,7 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4104 - Seller address does not refer to a key");
 	CKey vchSecret;
 	if (!pwalletMain->GetKey(keyID, vchSecret))
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4105 - Private key for seller address " + sellerAddress.ToString() + " is not known");
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4105 - Private key for seller address " + sellerAddressOnActivate.ToString() + " is not known");
 	const string &strPrivateKey = CSyscoinSecret(vchSecret).ToString();
 	// check for existing escrow 's
 	if (ExistsInMempool(vchEscrow, OP_ESCROW_ACTIVATE) || ExistsInMempool(vchEscrow, OP_ESCROW_RELEASE) || ExistsInMempool(vchEscrow, OP_ESCROW_REFUND) || ExistsInMempool(vchEscrow, OP_ESCROW_COMPLETE) ) {
@@ -1837,13 +1840,14 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 
 	CAliasIndex arbiterAlias, buyerAlias, sellerAlias;
 	vector<CAliasIndex> aliasVtxPos;
-	CTransaction aliastx;
+	CTransaction arbiteraliastx, buyeraliastx, selleraliastx;
 	bool isExpired;
-	CSyscoinAddress buyerAddressOnActivate;
+	CSyscoinAddress arbiterAddressOnActivate, arbiterAddress;
 	CPubKey arbiterKey;
 	if(GetTxAndVtxOfAlias(escrow.vchArbiterAlias, arbiterAlias, arbiteraliastx, aliasVtxPos, isExpired, true))
 	{
 		arbiterKey = CPubKey(arbiterAlias.vchPubKey);
+		arbiterAddress = CSyscoinAddress(arbiterKey.GetID());
 		arbiterAlias.nHeight = vtxPos.front().nHeight;
 		arbiterAlias.GetAliasFromList(aliasVtxPos);
 		CPubKey pubKey(arbiterAlias.vchPubKey);
@@ -1851,11 +1855,12 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 	}
 
 	aliasVtxPos.clear();
-	CSyscoinAddress buyerAddressOnActivate;
+	CSyscoinAddress buyerAddressOnActivate, buyerAddress;
 	CPubKey buyerKey;
 	if(GetTxAndVtxOfAlias(escrow.vchBuyerAlias, buyerAlias, buyeraliastx, aliasVtxPos, isExpired, true))
 	{
 		buyerKey = CPubKey(sellerAlias.vchPubKey);
+		buyerAddress = CSyscoinAddress(buyerKey.GetID());
 		buyerAlias.nHeight = vtxPos.front().nHeight;
 		buyerAlias.GetAliasFromList(aliasVtxPos);
 		CPubKey pubKey(buyerAlias.vchPubKey);
@@ -1923,7 +1928,7 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4129 - Arbiter address does not refer to a key");
 		CKey vchSecret;
 		if (!pwalletMain->GetKey(keyID, vchSecret))
-			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4130 - Private key for arbiter address " + arbiterAddress.ToString() + " is not known");
+			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4130 - Private key for arbiter address " + arbiterAddressOnActivate.ToString() + " is not known");
 		strPrivateKey = CSyscoinSecret(vchSecret).ToString();
 	}
 	catch(...)
