@@ -771,7 +771,7 @@ BOOST_AUTO_TEST_CASE (generate_offerpruning)
 	// stop and start node1
 	StopNode("node1");
 	StartNode("node1");
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 5"));
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 3"));
 	// give some time to propogate the new blocks across other 2 nodes
 	MilliSleep(2500);
 	// ensure you can still update before expiry
@@ -779,6 +779,8 @@ BOOST_AUTO_TEST_CASE (generate_offerpruning)
 	// you can search it still on node1/node2
 	BOOST_CHECK_EQUAL(OfferFilter("node1", guid1, "Off"), true);
 	BOOST_CHECK_EQUAL(OfferFilter("node2", guid1, "Off"), true);
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 2"));
+	MilliSleep(2500);
 	// make sure our offer alias doesn't expire
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate pruneoffer newdata privdata"));
 	// generate 89 more blocks (10 get mined from update)
@@ -789,9 +791,11 @@ BOOST_AUTO_TEST_CASE (generate_offerpruning)
 	// you can search it still on node1/node2
 	BOOST_CHECK_EQUAL(OfferFilter("node1", guid1, "Off"), true);
 	BOOST_CHECK_EQUAL(OfferFilter("node2", guid1, "Off"), true);
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 55"));
+	MilliSleep(2500);
 	// make sure our offer alias doesn't expire
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate pruneoffer newdata privdata"));
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 60"));
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 55"));
 	MilliSleep(2500);
 	// make sure our offer alias doesn't expire
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate pruneoffer newdata privdata"));
