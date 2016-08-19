@@ -20,9 +20,9 @@ BOOST_AUTO_TEST_CASE (generate_big_certdata)
 	// but unencrypted 1024 bytes should cause us to trip 1108 bytes once encrypted
 	BOOST_CHECK_THROW(CallRPC("node1", "certnew jagcertbig1 jag1 " + baddata + " 1"), runtime_error);
 	// update cert with long data, public (good) vs private (bad)
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "certupdate jagcertbig1 " + guid + " jag1 " + baddata + " 0"));
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "certupdate " + guid + " jagcertbig1 jag1 " + baddata + " 0"));
 	// trying to update the public cert to a private one with 1024 bytes should fail aswell
-	BOOST_CHECK_THROW(CallRPC("node1", "certupdate jagcertbig1 " + guid + " jag1 " + baddata + " 1"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "certupdate " + guid + " jagcertbig1 jag1 " + baddata + " 1"), runtime_error);
 
 }
 BOOST_AUTO_TEST_CASE (generate_big_certtitle)
@@ -45,7 +45,7 @@ BOOST_AUTO_TEST_CASE (generate_certupdate)
 	AliasNew("node1", "jagcertupdate", "data");
 	string guid = CertNew("node1", "jagcertupdate", "title", "data");
 	// update an cert that isn't yours
-	BOOST_CHECK_THROW(CallRPC("node2", "certupdate jagcertupdate " + guid + " title data 0"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node2", "certupdate " + guid + " jagcertupdate title data 0"), runtime_error);
 	CertUpdate("node1", guid, "jagcertupdate", "changedtitle", "changeddata");
 	// shouldnt update data, just uses prev data because it hasnt changed
 	CertUpdate("node1", guid, "jagcertupdate", "changedtitle", "changeddata");
@@ -236,7 +236,7 @@ BOOST_AUTO_TEST_CASE (generate_certpruning)
 	// give some time to propogate the new blocks across other 2 nodes
 	MilliSleep(2500);
 	// ensure you can still update before expiry
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "certupdate jagprune1 " + guid1 + " newdata privdata 0"));
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "certupdate " + guid1 + " jagprune1 newdata privdata 0"));
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 5"));
 	MilliSleep(2500);
 	// you can search it still on node1/node2
@@ -250,7 +250,7 @@ BOOST_AUTO_TEST_CASE (generate_certpruning)
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate jagprune1 newdata privdata"));
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 5"));
 	// ensure service is still active since its supposed to expire at 100 blocks of non updated services
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "certupdate jagprune1 " + guid1 + " newdata privdata 0"));
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "certupdate " + guid1 + " jagprune1 newdata privdata 0"));
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 5"));
 	MilliSleep(2500);
 	// you can search it still on node1/node2
@@ -260,7 +260,7 @@ BOOST_AUTO_TEST_CASE (generate_certpruning)
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 125"));
 	MilliSleep(2500);
 	// now it should be expired
-	BOOST_CHECK_THROW(CallRPC("node2",  "certupdate jagprune1 " + guid1 + " newdata1 privdata1 0"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node2",  "certupdate " + guid1 + " jagprune1 newdata1 privdata1 0"), runtime_error);
 	BOOST_CHECK_NO_THROW(CallRPC("node2", "generate 5"));
 	MilliSleep(2500);
 	BOOST_CHECK_EQUAL(CertFilter("node1", guid1, "Off"), false);

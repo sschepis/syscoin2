@@ -347,10 +347,10 @@ BOOST_AUTO_TEST_CASE (generate_aliasbanwithoffers)
 	BOOST_CHECK_EQUAL(OfferFilter("node1", offerguidsafe3, "On"), false);
 	BOOST_CHECK_EQUAL(OfferFilter("node1", offerguidsafe3, "Off"), true);	
 
-	// unsafe offer with safe alias, edit to safe offer and try to change alias to unsafe (it shouldn't change)
+	// unsafe offer with safe alias, edit to safe offer and change alias to unsafe 
 	OfferUpdate("node1", "jagbannonsafesearchoffer", offerguidsafe2, "category", "titlenew", "90", "0.15", "descriptionnew", "USD", false, "nocert", true, "location", "Yes");
-	// safe offer with safe alias should show regardless of safe mode because alias should still be safe
-	BOOST_CHECK_EQUAL(OfferFilter("node1", offerguidsafe2, "On"), true);
+	// unsafe offer with unsafe alias should show when safe search off mode only
+	BOOST_CHECK_EQUAL(OfferFilter("node1", offerguidsafe2, "On"), false);
 	BOOST_CHECK_EQUAL(OfferFilter("node1", offerguidsafe2, "Off"), true);
 
 	// safe offer with safe alias, edit to unsafe offer
@@ -597,7 +597,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasprunewithcert)
 	string certguid = arr[1].get_str();
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 10"));
 	MilliSleep(2500);
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "certupdate aliasprunewithcert " + certguid + " newdata privdata 0"));
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "certupdate " + certguid + " aliasprunewithcert newdata privdata 0"));
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 10"));
 	MilliSleep(2500);
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "certtransfer " + certguid + " aliasprunewithcert2"));
@@ -694,12 +694,12 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	BOOST_CHECK_NO_THROW(CallRPC("node1","generate 3"));
 	MilliSleep(2500);
 	
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "certupdate aliasexpire2 " + certgoodguid + " newdata privdata 0"));
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "certupdate " + certgoodguid + " aliasexpire2 newdata privdata 0"));
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "offerupdate sys_rates aliasexpire " + offerguid + " category title 100 0.05 description"));
 	// expire the escrow
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 30"));
 	MilliSleep(2500);
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "certupdate aliasexpire " + certguid + " jag1 data 0"));
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "certupdate " + certguid + " aliasexpire jag1 data 0"));
 	BOOST_CHECK_NO_THROW(CallRPC("node1","generate 35"));
 	MilliSleep(2500);
 
@@ -720,13 +720,13 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	BOOST_CHECK_THROW(CallRPC("node2", "escrowrelease " + escrowguid), runtime_error);
 	// this will recreate the alias and give it a new pubkey.. we need to use the old pubkey to sign the multisig, the escrow rpc call must check for the right pubkey
 	BOOST_CHECK_EQUAL(aliasexpirenode2pubkey, AliasNew("node2", "aliasexpirenode2", "somedata"));
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "certupdate aliasexpire2 " + certgoodguid + " newdata privdata 0"));
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "certupdate " + certgoodguid + " aliasexpire2 newdata privdata 0"));
 	// able to release and claim release on escrow with non-expired aliases with new pubkeys
 	EscrowRelease("node2", escrowguid);	 
 	EscrowClaimRelease("node1", escrowguid); 
 
 	// should fail: update cert with expired alias
-	BOOST_CHECK_THROW(CallRPC("node1", "certupdate aliasexpire " + certguid + " jag1 data 0"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "certupdate " + certguid + " aliasexpire jag1 data 0"), runtime_error);
 	// should fail: xfer an cert with expired alias
 	BOOST_CHECK_THROW(CallRPC("node1", "certtransfer " + certguid + " aliasexpire2"), runtime_error);
 	// should fail: xfer an cert to an expired alias even though transferring cert is good
