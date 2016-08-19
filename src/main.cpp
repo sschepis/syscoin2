@@ -919,7 +919,7 @@ bool AddSyscoinServicesToDB(const CBlock& block, const CCoinsViewCache& inputs, 
 			if(DecodeAliasTx(tx, op, nOut, vvchArgs))
 			{
 				good = CheckAliasInputs(tx, op, nOut, vvchArgs, inputs, fJustCheck, nHeight, errorMessage, &block);
-			}f
+			}
 			if(DecodeMessageTx(tx, op, nOut, vvchArgs))
 			{
 				good = CheckMessageInputs(tx, op, nOut, vvchArgs, inputs, fJustCheck, nHeight, errorMessage, &block);		
