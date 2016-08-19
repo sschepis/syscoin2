@@ -1023,30 +1023,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				}
 				
 			}
-			// if we are selling a cert ensure it exists and pubkey's match (to ensure it doesnt get transferred prior to accepting by user)
-			if(!theOffer.vchCert.empty())
-			{
-				if(!theOffer.vchLinkOffer.empty())
-				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 69 - Cannot sell a digital offer as a linked offer";
-					theOffer.vchCert.clear();	
-				}
-				else
-				{
-					CTransaction txCert;
-					if (GetTxOfCert( theOffer.vchCert, theCert, txCert))
-					{
-						// if selling a cert, offers pubkey must match certs pubkey
-						theOffer.vchAlias = theCert.vchAlias; 
-					}
-					else
-					{
-						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 70 - Trying to update an offer with an expired certificate";
-						theOffer.vchCert.clear();	
-					}
-				}
-			}
-
 			serializedOffer.offerLinks = theOffer.offerLinks;
 			serializedOffer.vchLinkOffer = theOffer.vchLinkOffer;
 			serializedOffer.vchOffer = theOffer.vchOffer;
@@ -1075,6 +1051,35 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						theOffer.vchGeoLocation = dbOffer.vchGeoLocation;
 					if(serializedOffer.vchAliasPeg.empty())
 						theOffer.vchAliasPeg = dbOffer.vchAliasPeg;
+					if(!theOffer.vchCert.empty())
+					{
+						CTransaction txCert;
+						if (!GetTxOfCert( theOffer.vchCert, theCert, txCert))
+						{
+							errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 69 - Updating an offer with a cert that does not exist";
+							theOffer.vchCert.clear();
+						}
+						else if(theOffer.vchLinkOffer.empty() && theCert.vchAlias != theOffer.vchAlias)
+						{
+							errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 70 - Cannot update this offer because the certificate alias does not match the offer alias";
+							theOffer.vchAlias = dbOffer.vchAlias;
+						}		
+					}
+					if(!theOffer.vchLinkOffer.empty())
+					{
+						CTransaction txLinkedOffer;
+						if (!GetTxOfOffer( theOffer.vchLinkOffer, linkOffer, txLinkedOffer))
+						{
+							errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 70a - Linked offer not found. It may be expired";
+							theOffer.vchLinkOffer.clear();
+						}
+						else if(!theOffer.vchCert.empty() && theCert.vchAlias != linkOffer.vchAlias)
+						{
+							errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 70b - Cannot update this offer because the certificate alias does not match the linked offer alias";
+							theOffer.vchAlias = dbOffer.vchAlias;
+						}
+					}
+
 					// if its a cert offer, the alias is predetermined by cert alias, otherwise we can change below
 					// also if not a linked offer we can update alias otherwise we can't edit the alias for this offer
 					if(theOffer.vchCert.empty() && dbOffer.vchLinkOffer.empty())
@@ -1083,14 +1088,14 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					}
 					else if(serializedOffer.vchAlias != dbOffer.vchAlias)
 					{
-						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 70a - Cannot edit alias of digital or linked offers";
+						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 71 - Cannot edit alias of digital or linked offers";
 						theOffer.vchAlias = dbOffer.vchAlias;
 					}
 					// user can't update safety level after creation
 					theOffer.safetyLevel = dbOffer.safetyLevel;
 					if(!GetTxOfAlias(theOffer.vchAlias, alias, aliasTx))
 					{
-						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 71 - Cannot find alias for this offer. It may be expired";
+						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 71a - Cannot find alias for this offer. It may be expired";
 						theOffer = dbOffer;
 					}
 				}
@@ -1120,16 +1125,17 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			if(!theOffer.vchCert.empty())
 			{
 				CTransaction txCert;
-				if (GetTxOfCert( theOffer.vchCert, theCert, txCert))
-				{
-					// if selling a cert, offers pubkey must match certs pubkey
-					theOffer.vchAlias = theCert.vchAlias;
-				}
-				else
+				if (!GetTxOfCert( theOffer.vchCert, theCert, txCert))
 				{
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 75 - Creating an offer with a cert that does not exist";
-					theOffer.vchCert.clear();
-				}			
+					return true;
+				}
+
+				else if(theOffer.vchLinkOffer.empty() && theCert.vchAlias != theOffer.vchAlias)
+				{
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 75a - Cannot create this offer because the certificate alias does not match the offer alias";
+					return true;
+				}		
 			}
 			// if this is a linked offer activate, then add it to the parent offerLinks list
 			if(!theOffer.vchLinkOffer.empty())
@@ -1139,7 +1145,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				{
 					if (theOffer.vchLinkAlias != theOffer.vchAlias)
 					{
-						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 75 - Alias input and offer alias mismatch";
+						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 75b - Alias input and offer alias mismatch";
 						return true;
 					}
 				}
@@ -1166,6 +1172,11 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					{
 						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 77 - Cannot link to an offer that is already linked to another offer";
 						theOffer.vchLinkOffer.clear();	
+					}
+					else if(!theOffer.vchCert.empty() && theCert.vchAlias != linkOffer.vchAlias)
+					{
+						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 75a - Cannot create this offer because the certificate alias does not match the offer alias";
+						return true;
 					}
 					// if alias input is not given yet root offer is in exclusive mode then we can't link this offer
 					else if (theOffer.vchLinkAlias.empty() && linkOffer.linkWhitelist.bExclusiveResell)
@@ -2395,22 +2406,9 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 		if (ExistsInMempool(vchCert, OP_CERT_UPDATE) || ExistsInMempool(vchCert, OP_CERT_TRANSFER)) {
 			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 526 - There are pending operations on that cert");
 		}
-		// make sure its in your wallet (you control this cert)		
-		if (IsSyscoinTxMine(txCert, "cert")) 
-		{
-			CAliasIndex certAlias;
-			CTransaction certaliastx;
-			if (GetTxOfAlias( theCert.vchAlias, certAlias, certaliastx, true))
-			{
-				wtxCertIn = pwalletMain->GetWalletTx(txCert.GetHash());
-				CPubKey currentCertKey(certAlias.vchPubKey);
-				scriptPubKeyCertOrig = GetScriptForDestination(currentCertKey.GetID());
-				scriptPubKeyCert << CScript::EncodeOP_N(OP_CERT_UPDATE) << vchCert << vchFromString("") << OP_2DROP << OP_DROP;
-				scriptPubKeyCert += scriptPubKeyCertOrig;
-			}
-		}
-		else
-			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 527 - Cannot sell this certificate, it is not yours");
+		wtxCertIn = pwalletMain->GetWalletTx(txCert.GetHash());
+		scriptPubKeyCert << CScript::EncodeOP_N(OP_CERT_UPDATE) << vchCert << vchFromString("") << OP_2DROP << OP_DROP;
+		scriptPubKeyCert += scriptPubKeyOrig;
 	}
 	
 	
