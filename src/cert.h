@@ -27,7 +27,7 @@ class CCert {
 public:
 	std::vector<unsigned char> vchCert;
 	std::vector<unsigned char> vchAlias;
-	// to modify vchAlias in certupdate
+	// to modify vchAlias in certtransfer
 	std::vector<unsigned char> vchLinkAlias;
     std::vector<unsigned char> vchTitle;
     std::vector<unsigned char> vchData;

@@ -873,16 +873,11 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 45 - Offer price must be greater than 0";
 				return error(errorMessage.c_str());
 			}
-			if(IsAliasOp(prevAliasOp) && theOffer.vchLinkAlias != vvchPrevAliasArgs[0])
+			if(!IsAliasOp(prevAliasOp) || theOffer.vchAlias != vvchPrevAliasArgs[0])
 			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 46 - Alias link and alias input mismatch";
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 46 - Alias input mismatch";
 				return error(errorMessage.c_str());
 			}	
-			if (!theOffer.vchLinkAlias.empty() && !IsAliasOp(prevAliasOp))
-			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 47 - You must own the alias you are setting as the owner of this offer ";
-				return error(errorMessage.c_str());
-			}
 			if(theOffer.bOnlyAcceptBTC && !theOffer.vchCert.empty())
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 48 - Cannot sell a certificate accepting only Bitcoins";
@@ -1081,18 +1076,15 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					if(serializedOffer.vchAliasPeg.empty())
 						theOffer.vchAliasPeg = dbOffer.vchAliasPeg;
 					// if its a cert offer, the alias is predetermined by cert alias, otherwise we can change below
-					if(theOffer.vchCert.empty())
+					// also if not a linked offer we can update alias otherwise we can't edit the alias for this offer
+					if(theOffer.vchCert.empty() && dbOffer.vchLinkOffer.empty())
 					{
-						// if not a linked offer we can update alias otherwise we can't edit the alias for this offer
-						// also only update alias if alias input is attached in vchLinkAlias
-						if(theOffer.vchCert.empty() && dbOffer.vchLinkOffer.empty() && !serializedOffer.vchLinkAlias.empty())
-						{
-							theOffer.vchAlias = serializedOffer.vchLinkAlias;
-						}
-						else
-						{
-							theOffer.vchAlias = dbOffer.vchAlias;
-						}
+						theOffer.vchAlias = serializedOffer.vchAlias;
+					}
+					else if(serializedOffer.vchAlias != dbOffer.vchAlias)
+					{
+						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 70a - Cannot edit alias of digital or linked offers";
+						theOffer.vchAlias = dbOffer.vchAlias;
 					}
 					// user can't update safety level after creation
 					theOffer.safetyLevel = dbOffer.safetyLevel;
@@ -2313,7 +2305,9 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	if (wtxAliasIn == NULL)
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 524a - This alias is not in your wallet");
 
-
+	if (ExistsInMempool(vchAlias, OP_ALIAS_ACTIVATE) || ExistsInMempool(vchAlias, OP_ALIAS_UPDATE)) {
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 524b - There are pending operations on that alias");
+	}
 	// this is a syscoind txn
 	CWalletTx wtx;
 	const CWalletTx* wtxIn;
@@ -2409,12 +2403,9 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 		theOffer.vchGeoLocation = vchGeoLocation;
 	if(offerCopy.sCurrencyCode != sCurrencyCode)
 		theOffer.sCurrencyCode = sCurrencyCode;
-	// if we are changing the alias for this offer set it in vchLinkAlias and pass the alias as input to prove you own it	
-	if(wtxAliasIn != NULL && offerCopy.vchAlias != vchAlias)
-		theOffer.vchLinkAlias = vchAlias;
 	if(wtxCertIn != NULL)
 		theOffer.vchCert = vchCert;
-	theOffer.vchAlias = alias.vchAlias;
+	theOffer.vchAlias = vchAlias;
 	theOffer.safeSearch = strSafeSearch == "Yes"? true: false;
 	theOffer.nQty = nQty;
 	if (params.size() >= 10)
@@ -2451,15 +2442,8 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	scriptPubKeyAlias += scriptPubKeyOrig;
 	CRecipient aliasRecipient;
 	CreateRecipient(scriptPubKeyAlias, aliasRecipient);
-	if(wtxAliasIn != NULL && !theOffer.vchLinkAlias.empty())
-	{
-		if (ExistsInMempool(theOffer.vchLinkAlias, OP_ALIAS_ACTIVATE) || ExistsInMempool(theOffer.vchLinkAlias, OP_ALIAS_UPDATE)) {
-			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 529a - There are pending operations on that alias");
-		}
-		vecSend.push_back(aliasRecipient);
-	}
-	else
-		wtxAliasIn = NULL;
+	vecSend.push_back(aliasRecipient);
+
 
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
@@ -2666,16 +2650,9 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	CAliasIndex theAlias,tmpAlias;
 	bool isExpired = false;
 	vector<CAliasIndex> aliasVtxPos;
-	if(GetTxAndVtxOfAlias(theOffer.vchAlias, theAlias, aliastx, aliasVtxPos, isExpired, true))
-	{
-		// find the alias (for the right pubkey) at the time of linked accept/escrow if applicable
-		// need this because alias can be transferred and the payment message ends up going to new alias pubkey if we dont do this. 
-		// should be sent to same person that owned the offer when payment was made by buyer
-		theAlias.nHeight = nHeight;
-		theAlias.GetAliasFromList(aliasVtxPos);
-	}
-	else
+	if(!GetTxAndVtxOfAlias(theOffer.vchAlias, theAlias, aliastx, aliasVtxPos, isExpired, true))
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 566 - Could not find the alias associated with this offer");
+	
 	CAliasIndex buyerAlias;
 	if (!GetTxOfAlias(vchBuyerAlias, buyerAlias, aliastx, true))
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 532 - Could not find buyer alias with this name");
@@ -3148,12 +3125,11 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 
 
 	// check that the seller isn't banned level 2
-	vector<CAliasIndex> vtxAliasPos;
-	if (!paliasdb->ReadAlias(theOffer.vchAlias, vtxAliasPos))
-		throw runtime_error("failed to read seller alias from alias DB");
-	if (vtxAliasPos.size() < 1)
-		throw runtime_error("no seller found for this offer");
-	if(vtxAliasPos.back().safetyLevel >= SAFETY_LEVEL2)
+	CTransaction aliastx;
+	CAliasIndex alias;
+	if(!GetTxOfAlias(theOffer.vchAlias, alias, aliastx, true))
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 566 - Could not find the alias associated with this offer");
+	if(alias.safetyLevel >= SAFETY_LEVEL2)
 		throw runtime_error("offer owner has been banned");
 	vector<vector<unsigned char> > vvch;
     int op, nOut;
@@ -3259,7 +3235,7 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 		oOfferAccept.push_back(Pair("price", strprintf("%.*f", precision, ca.nPrice ))); 	
 		oOfferAccept.push_back(Pair("total", strprintf("%.*f", precision, ca.nPrice * ca.nQty )));
 		oOfferAccept.push_back(Pair("buyer", stringFromVch(ca.vchBuyerAlias)));
-		oOfferAccept.push_back(Pair("ismine", IsSyscoinTxMine(txA, "offer") ? "true" : "false"));
+		oOfferAccept.push_back(Pair("ismine", IsSyscoinTxMine(txA, "offer") && IsSyscoinTxMine(aliastx, "alias") ? "true" : "false"));
 
 		if(!ca.txBTCId.IsNull())
 			oOfferAccept.push_back(Pair("paid","true(BTC)"));
@@ -3390,8 +3366,8 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 	oOffer.push_back(Pair("description", stringFromVch(theOffer.sDescription)));
 	oOffer.push_back(Pair("alias", stringFromVch(theOffer.vchAlias)));
 	float rating = 0;
-	if(vtxAliasPos.back().nRatingCount > 0)
-		rating = roundf(vtxAliasPos.back().nRating/(float)vtxAliasPos.back().nRatingCount);
+	if(alias.nRatingCount > 0)
+		rating = roundf(alias.nRating/(float)alias.nRatingCount);
 	oOffer.push_back(Pair("alias_rating",(int)rating));
 	oOffer.push_back(Pair("geolocation", stringFromVch(theOffer.vchGeoLocation)));
 	oOffer.push_back(Pair("offers_sold", (int)aoOfferAccepts.size()));
@@ -3530,8 +3506,6 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 				else
 					oOfferAccept.push_back(Pair("status","paid"));
 
-				CAliasIndex theAlias;
-				CTransaction aliastx;
 				bool isExpired = false;
 				vector<CAliasIndex> aliasVtxPos;
 				if(GetTxAndVtxOfAlias(theOffer.vchAlias, theAlias, aliastx, aliasVtxPos, isExpired, true))
@@ -3539,6 +3513,8 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 					theAlias.nHeight = theOffer.nHeight;
 					theAlias.GetAliasFromList(aliasVtxPos);
 				}
+				if(!IsSyscoinTxMine(aliastx, "alias"))
+					continue;
 				string strMessage = string("");
 				if(!DecryptMessage(theAlias.vchPubKey, theOfferAccept.vchMessage, strMessage))
 					strMessage = string("Encrypted for owner of offer");
@@ -3661,8 +3637,11 @@ UniValue offerlist(const UniValue& params, bool fHelp) {
 				oName.push_back(Pair("quantity", "unlimited"));
 			else
 				oName.push_back(Pair("quantity", strprintf("%d", nQty)));
-			vector<CAliasIndex> vtxAliasPos;
-			paliasdb->ReadAlias(theOfferA.vchAlias, vtxAliasPos);
+			CTransaction aliastx;
+			CAliasIndex theAlias;
+			GetTxOfAlias(theOfferA.vchAlias, theAlias, aliastx, true);
+			if(!IsSyscoinTxMine(aliastx, "alias"))
+				continue;
 				
 			oName.push_back(Pair("exclusive_resell", theOfferA.linkWhitelist.bExclusiveResell ? "ON" : "OFF"));
 			oName.push_back(Pair("btconly", theOfferA.bOnlyAcceptBTC ? "Yes" : "No"));
@@ -3681,8 +3660,8 @@ UniValue offerlist(const UniValue& params, bool fHelp) {
 			
 			oName.push_back(Pair("alias", stringFromVch(theOfferA.vchAlias)));
 			float rating = 0;
-			if(!vtxAliasPos.empty() && vtxAliasPos.back().nRatingCount > 0)
-				rating = roundf(vtxAliasPos.back().nRating/(float)vtxAliasPos.back().nRatingCount);
+			if(theAlias.nRatingCount > 0)
+				rating = roundf(theAlias.nRating/(float)theAlias.nRatingCount);
 			oName.push_back(Pair("alias_rating",(int)rating));
 			oName.push_back(Pair("expires_in", expires_in));
 			oName.push_back(Pair("expires_on", expired_block));

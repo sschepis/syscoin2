@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE (generate_certtransfer)
 	// update xferred cert
 	certdata = "newdata";
 	certtitle = "newtitle";
-	CertUpdate("node2", guid,  "jagcert1", certtitle, certdata);
+	CertUpdate("node2", guid, "jagcert2", certtitle, certdata);
 
 	// retransfer cert
 	CertTransfer("node2", guid, "jagcert3");
