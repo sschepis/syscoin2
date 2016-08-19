@@ -3509,6 +3509,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 				bool isExpired = false;
 				vector<CAliasIndex> aliasVtxPos;
 				CAliasIndex theAlias;
+				CTransaction aliastx;
 				if(GetTxAndVtxOfAlias(theOffer.vchAlias, theAlias, aliastx, aliasVtxPos, isExpired, true))
 				{
 					theAlias.nHeight = theOffer.nHeight;
