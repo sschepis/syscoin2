@@ -1306,33 +1306,41 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 
 	CAliasIndex arbiterAlias, buyerAlias, sellerAlias;
 	vector<CAliasIndex> aliasVtxPos;
-	CTransaction aliastx;
+	CTransaction arbiteraliastx, buyeraliastx, selleraliastx;
 	bool isExpired;
-	if(GetTxAndVtxOfAlias(escrow.vchArbiterAlias, arbiterAlias, aliastx, aliasVtxPos, isExpired, true))
+	CSyscoinAddress buyerAddressOnActivate;
+	CPubKey arbiterKey;
+	if(GetTxAndVtxOfAlias(escrow.vchArbiterAlias, arbiterAlias, arbiteraliastx, aliasVtxPos, isExpired, true))
 	{
+		arbiterKey = CPubKey(arbiterAlias.vchPubKey);
 		arbiterAlias.nHeight = vtxPos.front().nHeight;
 		arbiterAlias.GetAliasFromList(aliasVtxPos);
+		CPubKey pubKey(arbiterAlias.vchPubKey);
+		arbiterAddressOnActivate = CSyscoinAddress(pubKey.GetID());
 	}
-	CPubKey arbiterKey(arbiterAlias.vchPubKey);
-	CSyscoinAddress arbiterAddress(arbiterKey.GetID());
 
 	aliasVtxPos.clear();
-	if(GetTxAndVtxOfAlias(escrow.vchBuyerAlias, buyerAlias, aliastx, aliasVtxPos, isExpired, true))
+	CSyscoinAddress buyerAddressOnActivate;
+	CPubKey buyerKey;
+	if(GetTxAndVtxOfAlias(escrow.vchBuyerAlias, buyerAlias, buyeraliastx, aliasVtxPos, isExpired, true))
 	{
+		buyerKey = CPubKey(sellerAlias.vchPubKey);
 		buyerAlias.nHeight = vtxPos.front().nHeight;
 		buyerAlias.GetAliasFromList(aliasVtxPos);
+		CPubKey pubKey(buyerAlias.vchPubKey);
+		buyerAddressOnActivate = CSyscoinAddress(pubKey.GetID());
 	}
-	CPubKey buyerKey(buyerAlias.vchPubKey);
-	CSyscoinAddress buyerAddress(buyerKey.GetID());
-
 	aliasVtxPos.clear();
-	if(GetTxAndVtxOfAlias(escrow.vchSellerAlias, sellerAlias, aliastx, aliasVtxPos, isExpired, true))
+	CSyscoinAddress sellerAddressOnActivate;
+	CPubKey sellerKey;
+	if(GetTxAndVtxOfAlias(escrow.vchSellerAlias, sellerAlias, selleraliastx, aliasVtxPos, isExpired, true))
 	{
+		sellerKey = CPubKey(sellerAlias.vchPubKey);
 		sellerAlias.nHeight = vtxPos.front().nHeight;
 		sellerAlias.GetAliasFromList(aliasVtxPos);
+		CPubKey pubKey(sellerAlias.vchPubKey);
+		sellerAddressOnActivate = CSyscoinAddress(pubKey.GetID());
 	}
-	CPubKey sellerKey(sellerAlias.vchPubKey);
-	CSyscoinAddress sellerAddress(sellerKey.GetID());
 
 
 	bool foundSellerKey = false;
@@ -1340,7 +1348,7 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	{
 		// if this is the seller calling release, try to claim the release	
 		CKeyID keyID;
-		if (!sellerAddress.GetKeyID(keyID))
+		if (!sellerAddressOnActivate.GetKeyID(keyID))
 			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4086 - Seller address does not refer to a key");
 		CKey vchSecret;
 		if (!pwalletMain->GetKey(keyID, vchSecret))
@@ -1384,7 +1392,7 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 		arbiterSigning = true;
 		// try arbiter
 		CKeyID keyID;
-		if (!arbiterAddress.GetKeyID(keyID))
+		if (!arbiterAddressOnActivate.GetKeyID(keyID))
 			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4090 - Arbiter address does not refer to a key");
 		CKey vchSecret;
 		if (!pwalletMain->GetKey(keyID, vchSecret))
@@ -1396,7 +1404,7 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 		arbiterSigning = false;
 		// otherwise try buyer
 		CKeyID keyID;
-		if (!buyerAddress.GetKeyID(keyID))
+		if (!buyerAddressOnActivate.GetKeyID(keyID))
 			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4092 - Buyer or Arbiter address does not refer to a key");
 		CKey vchSecret;
 		if (!pwalletMain->GetKey(keyID, vchSecret))
@@ -1547,13 +1555,16 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 	vector<CAliasIndex> aliasVtxPos;
 	CTransaction aliastx;
 	bool isExpired;
+	CSyscoinAddress sellerAddressOnActivate;
+	CPubKey sellerKey;
 	if(GetTxAndVtxOfAlias(escrow.vchSellerAlias, sellerAlias, aliastx, aliasVtxPos, isExpired, true))
 	{
+		sellerKey = CPubKey(sellerAlias.vchPubKey);
 		sellerAlias.nHeight = vtxPos.front().nHeight;
 		sellerAlias.GetAliasFromList(aliasVtxPos);
+		CPubKey pubKey(sellerAlias.vchPubKey);
+		sellerAddressOnActivate = CSyscoinAddress(pubKey.GetID());
 	}
-	CPubKey sellerKey(sellerAlias.vchPubKey);
-	CSyscoinAddress sellerAddress(sellerKey.GetID());
 
     CTransaction fundingTx;
 	if (!GetSyscoinTransaction(vtxPos.front().nHeight, escrow.escrowInputTxHash, fundingTx, Params().GetConsensus()))
@@ -1610,7 +1621,7 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 
 
 	CKeyID keyID;
-	if (!sellerAddress.GetKeyID(keyID))
+	if (!sellerAddressOnActivate.GetKeyID(keyID))
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4104 - Seller address does not refer to a key");
 	CKey vchSecret;
 	if (!pwalletMain->GetKey(keyID, vchSecret))
@@ -1828,37 +1839,45 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 	vector<CAliasIndex> aliasVtxPos;
 	CTransaction aliastx;
 	bool isExpired;
-	if(GetTxAndVtxOfAlias(escrow.vchArbiterAlias, arbiterAlias, aliastx, aliasVtxPos, isExpired, true))
+	CSyscoinAddress buyerAddressOnActivate;
+	CPubKey arbiterKey;
+	if(GetTxAndVtxOfAlias(escrow.vchArbiterAlias, arbiterAlias, arbiteraliastx, aliasVtxPos, isExpired, true))
 	{
+		arbiterKey = CPubKey(arbiterAlias.vchPubKey);
 		arbiterAlias.nHeight = vtxPos.front().nHeight;
 		arbiterAlias.GetAliasFromList(aliasVtxPos);
+		CPubKey pubKey(arbiterAlias.vchPubKey);
+		arbiterAddressOnActivate = CSyscoinAddress(pubKey.GetID());
 	}
-	CPubKey arbiterKey(arbiterAlias.vchPubKey);
-	CSyscoinAddress arbiterAddress(arbiterKey.GetID());
 
 	aliasVtxPos.clear();
-	if(GetTxAndVtxOfAlias(escrow.vchBuyerAlias, buyerAlias, aliastx, aliasVtxPos, isExpired, true))
+	CSyscoinAddress buyerAddressOnActivate;
+	CPubKey buyerKey;
+	if(GetTxAndVtxOfAlias(escrow.vchBuyerAlias, buyerAlias, buyeraliastx, aliasVtxPos, isExpired, true))
 	{
+		buyerKey = CPubKey(sellerAlias.vchPubKey);
 		buyerAlias.nHeight = vtxPos.front().nHeight;
 		buyerAlias.GetAliasFromList(aliasVtxPos);
+		CPubKey pubKey(buyerAlias.vchPubKey);
+		buyerAddressOnActivate = CSyscoinAddress(pubKey.GetID());
 	}
-	CPubKey buyerKey(buyerAlias.vchPubKey);
-	CSyscoinAddress buyerAddress(buyerKey.GetID());
-
 	aliasVtxPos.clear();
-	if(GetTxAndVtxOfAlias(escrow.vchSellerAlias, sellerAlias, aliastx, aliasVtxPos, isExpired, true))
+	CSyscoinAddress sellerAddressOnActivate;
+	CPubKey sellerKey;
+	if(GetTxAndVtxOfAlias(escrow.vchSellerAlias, sellerAlias, selleraliastx, aliasVtxPos, isExpired, true))
 	{
+		sellerKey = CPubKey(sellerAlias.vchPubKey);
 		sellerAlias.nHeight = vtxPos.front().nHeight;
 		sellerAlias.GetAliasFromList(aliasVtxPos);
+		CPubKey pubKey(sellerAlias.vchPubKey);
+		sellerAddressOnActivate = CSyscoinAddress(pubKey.GetID());
 	}
-	CPubKey sellerKey(sellerAlias.vchPubKey);
-	CSyscoinAddress sellerAddress(sellerKey.GetID());
 	bool foundBuyerKey = false;
 	try
 	{
 		// if this is the buyer calling refund, try to claim the refund
 		CKeyID keyID;
-		if (!buyerAddress.GetKeyID(keyID))
+		if (!buyerAddressOnActivate.GetKeyID(keyID))
 			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4125 - Buyer address does not refer to a key");
 		CKey vchSecret;
 		if (!pwalletMain->GetKey(keyID, vchSecret))
@@ -1900,7 +1919,7 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 		arbiterSigning = true;
 		// try arbiter
 		CKeyID keyID;
-		if (!arbiterAddress.GetKeyID(keyID))
+		if (!arbiterAddressOnActivate.GetKeyID(keyID))
 			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4129 - Arbiter address does not refer to a key");
 		CKey vchSecret;
 		if (!pwalletMain->GetKey(keyID, vchSecret))
@@ -1912,7 +1931,7 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 		arbiterSigning = false;
 		// otherwise try seller
 		CKeyID keyID;
-		if (!sellerAddress.GetKeyID(keyID))
+		if (!sellerAddressOnActivate.GetKeyID(keyID))
 			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4131 - Seller or Arbiter address does not refer to a key");
 		CKey vchSecret;
 		if (!pwalletMain->GetKey(keyID, vchSecret))
@@ -2046,29 +2065,21 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 	vector<CAliasIndex> aliasVtxPos;
 	CTransaction aliastx;
 	bool isExpired;
-	if(GetTxAndVtxOfAlias(escrow.vchArbiterAlias, arbiterAlias, aliastx, aliasVtxPos, isExpired, true))
-	{
-		arbiterAlias.nHeight = vtxPos.front().nHeight;
-		arbiterAlias.GetAliasFromList(aliasVtxPos);
-	}
+	GetTxOfAlias(escrow.vchArbiterAlias, arbiterAlias, aliastx, true);
 	CPubKey arbiterKey(arbiterAlias.vchPubKey);
-	CSyscoinAddress arbiterAddress(arbiterKey.GetID());
 
-	aliasVtxPos.clear();
+	CSyscoinAddress buyerAddressOnActivate;
+	CPubKey buyerKey;
 	if(GetTxAndVtxOfAlias(escrow.vchBuyerAlias, buyerAlias, aliastx, aliasVtxPos, isExpired, true))
 	{
+		buyerKey = CPubKey(buyerAlias.vchPubKey);
 		buyerAlias.nHeight = vtxPos.front().nHeight;
 		buyerAlias.GetAliasFromList(aliasVtxPos);
+		CPubKey pubKey(buyerAlias.vchPubKey);
+		buyerAddressOnActivate = CSyscoinAddress(pubKey.GetID());
 	}
-	CPubKey buyerKey(buyerAlias.vchPubKey);
-	CSyscoinAddress buyerAddress(buyerKey.GetID());
 
-	aliasVtxPos.clear();
-	if(GetTxAndVtxOfAlias(escrow.vchSellerAlias, sellerAlias, aliastx, aliasVtxPos, isExpired, true))
-	{
-		sellerAlias.nHeight = vtxPos.front().nHeight;
-		sellerAlias.GetAliasFromList(aliasVtxPos);
-	}
+	GetTxOfAlias(escrow.vchSellerAlias, sellerAlias, aliastx, true);
 	CPubKey sellerKey(sellerAlias.vchPubKey);
 	CSyscoinAddress sellerAddress(sellerKey.GetID());
 
@@ -2122,13 +2133,11 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 
 	// get buyer's private key for signing
 	CKeyID keyID;
-	if(!buyerAddress.IsValid())
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4143 - Buyer address is invalid!");
-	if (!buyerAddress.GetKeyID(keyID))
+	if (!buyerAddressOnActivate.GetKeyID(keyID))
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4144 - Buyer address does not refer to a key");
 	CKey vchSecret;
 	if (!pwalletMain->GetKey(keyID, vchSecret))
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4145 - Private key for buyer address " + buyerAddress.ToString() + " is not known");
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4145 - Private key for buyer address " + buyerAddressOnActivate.ToString() + " is not known");
 	string strPrivateKey = CSyscoinSecret(vchSecret).ToString();
       	// check for existing escrow 's
 	if (ExistsInMempool(vchEscrow, OP_ESCROW_ACTIVATE) || ExistsInMempool(vchEscrow, OP_ESCROW_RELEASE) || ExistsInMempool(vchEscrow, OP_ESCROW_REFUND) || ExistsInMempool(vchEscrow, OP_ESCROW_COMPLETE)  ) {
