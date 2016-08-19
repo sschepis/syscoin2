@@ -310,8 +310,6 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 	const COutPoint *prevOutput = NULL;
 	CCoins prevCoins;
 	int prevOp = 0;
-	int prevAliasOp = 0;
-	bool foundAlias = false;
 	bool foundEscrow = false;
 	if (fDebug)
 		LogPrintf("*** ESCROW %d %d %s %s\n", nHeight,
@@ -336,7 +334,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 		theEscrow.SetNull();
 	}
 
-	vector<vector<unsigned char> > vvchPrevArgs, vvchPrevAliasArgs;
+	vector<vector<unsigned char> > vvchPrevArgs;
 	if(fJustCheck)
 	{
 		
@@ -370,19 +368,13 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				continue;
 			if(prevCoins.vout.size() <= prevOutput->n || !IsSyscoinScript(prevCoins.vout[prevOutput->n].scriptPubKey, pop, vvch))
 				continue;
-			if(foundEscrow && foundAlias)
+			if(foundEscrow)
 				break;
 
 			if (!foundEscrow && IsEscrowOp(pop)) {
 				foundEscrow = true; 
 				prevOp = pop;
 				vvchPrevArgs = vvch;
-			}
-			else if (!foundAlias && IsAliasOp(pop))
-			{
-				foundAlias = true; 
-				prevAliasOp = pop;
-				vvchPrevAliasArgs = vvch;
 			}
 		}
 	}

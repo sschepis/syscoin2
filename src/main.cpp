@@ -908,10 +908,6 @@ bool AddSyscoinServicesToDB(const CBlock& block, const CCoinsViewCache& inputs, 
 		if(tx.nVersion == GetSyscoinTxVersion())
 		{	
 			bool good = true;
-			if(DecodeAliasTx(tx, op, nOut, vvchArgs))
-			{
-				good = CheckAliasInputs(tx, op, nOut, vvchArgs, inputs, fJustCheck, nHeight, errorMessage, &block);
-			}
 			if(DecodeCertTx(tx, op, nOut, vvchArgs))
 			{
 				good = CheckCertInputs(tx, op, nOut, vvchArgs, inputs, fJustCheck, nHeight, errorMessage, &block);			
@@ -920,6 +916,10 @@ bool AddSyscoinServicesToDB(const CBlock& block, const CCoinsViewCache& inputs, 
 			{
 				good = CheckEscrowInputs(tx,  op, nOut, vvchArgs, inputs, fJustCheck, nHeight, errorMessage, &block);		
 			}
+			if(DecodeAliasTx(tx, op, nOut, vvchArgs))
+			{
+				good = CheckAliasInputs(tx, op, nOut, vvchArgs, inputs, fJustCheck, nHeight, errorMessage, &block);
+			}f
 			if(DecodeMessageTx(tx, op, nOut, vvchArgs))
 			{
 				good = CheckMessageInputs(tx, op, nOut, vvchArgs, inputs, fJustCheck, nHeight, errorMessage, &block);		

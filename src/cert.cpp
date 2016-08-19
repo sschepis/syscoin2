@@ -424,7 +424,6 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 				foundCert = true; 
 				prevOp = pop;
 				vvchPrevArgs = vvch;
-				break;
 			}
 			else if (!foundAlias && IsAliasOp(pop))
 			{

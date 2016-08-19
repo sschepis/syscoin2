@@ -55,10 +55,10 @@ public:
     template <typename Stream, typename Operation>
 	inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
 		READWRITE(vchTitle);
+		READWRITE(vchAlias);
 		READWRITE(vchData);
 		READWRITE(txHash);
 		READWRITE(VARINT(nHeight));
-		READWRITE(vchAlias);
 		READWRITE(vchLinkAlias);
 		READWRITE(bPrivate);
 		READWRITE(vchCert);
