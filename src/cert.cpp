@@ -505,6 +505,11 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2012 - Certificate input guid mismatch";
 				return error(errorMessage.c_str());
 			}
+			if(!theCert.vchLinkAlias.empty())
+			{
+				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2012a - Certificate linked alias not allowed in update";
+				return error(errorMessage.c_str());
+			}
 			if(!theCert.IsNull())
 			{
 				if (theCert.vchCert != vvchArgs[0])
