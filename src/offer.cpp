@@ -1051,8 +1051,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						theOffer.vchGeoLocation = dbOffer.vchGeoLocation;
 					if(serializedOffer.vchAliasPeg.empty())
 						theOffer.vchAliasPeg = dbOffer.vchAliasPeg;
-					if(serializedOffer.vchLinkOffer.empty())
-						theOffer.vchLinkOffer = dbOffer.vchLinkOffer;
 					if(!theOffer.vchCert.empty())
 					{
 						CTransaction txCert;
