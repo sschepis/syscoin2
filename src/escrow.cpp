@@ -1830,7 +1830,7 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 	CPubKey buyerKey;
 	if(GetTxAndVtxOfAlias(escrow.vchBuyerAlias, buyerAlias, buyeraliastx, aliasVtxPos, isExpired, true))
 	{
-		buyerKey = CPubKey(sellerAlias.vchPubKey);
+		buyerKey = CPubKey(buyerAlias.vchPubKey);
 		buyerAddress = CSyscoinAddress(buyerKey.GetID());
 		buyerAlias.nHeight = vtxPos.front().nHeight;
 		buyerAlias.GetAliasFromList(aliasVtxPos);
