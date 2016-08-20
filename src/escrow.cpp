@@ -388,7 +388,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 	if(theEscrow.IsNull() && !(op == OP_ESCROW_COMPLETE && vvchArgs[1] == vchFromString("0")))
 	{
 		if(fDebug)
-			LogPrintf("CheckEscrowInputs(): Null escrow, skipping...\n");	
+			LogPrintf("SYSCOIN_ESCROW_CONSENSUS_ERROR: Null escrow, skipping...\n");	
 		return true;
 	}
  

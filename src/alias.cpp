@@ -799,15 +799,21 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	bool found = false;
 	vector<unsigned char> vchData;
 	vector<unsigned char> vchAlias;
-	if(GetSyscoinData(tx, vchData) && (!theAlias.UnserializeFromData(vchData) || theAlias.vchAlias != vvchArgs[0]))
+	if(GetSyscoinData(tx, vchData) && !theAlias.UnserializeFromData(vchData)
 	{
 		theAlias.SetNull();
+	}
+	else if(theAlias.vchAlias != vvchArgs[0])
+	{
+		if(fDebug)
+			LogPrintf("SYSCOIN_ALIAS_CONSENSUS_ERROR: Alias guid doesn't match data, skipping...\n");	
+		return true;
 	}
 	// we need to check for cert update specially because an alias update without data is sent along with offers linked with the alias
 	if (theAlias.IsNull() && op != OP_ALIAS_UPDATE)
 	{
 		if(fDebug)
-			LogPrintf("CheckAliasInputs(): Null alias, skipping...\n");	
+			LogPrintf("SYSCOIN_ALIAS_CONSENSUS_ERROR: Null alias, skipping...\n");	
 		return true;
 	}
 	if(fJustCheck)

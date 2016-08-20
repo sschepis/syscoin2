@@ -263,13 +263,13 @@ bool CheckMessageInputs(const CTransaction &tx, int op, int nOut, const vector<v
 	if(!GetSyscoinData(tx, vchData))
 	{
 		if(fDebug)
-			LogPrintf("CheckMessageInputs(): Null message1, skipping...\n");	
+			LogPrintf("SYSCOIN_MESSAGE_CONSENSUS_ERROR: Null message1, skipping...\n");	
 		return true;
 	}
 	else if(!theMessage.UnserializeFromData(vchData))
 	{
 		if(fDebug)
-			LogPrintf("CheckMessageInputs(): Null message2, skipping...\n");	
+			LogPrintf("SYSCOIN_MESSAGE_CONSENSUS_ERROR: Null message2, skipping...\n");	
 		return true;
 	}
     vector<vector<unsigned char> > vvchPrevAliasArgs;
