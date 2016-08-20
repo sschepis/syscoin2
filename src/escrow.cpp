@@ -307,12 +307,6 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 	 // unserialize escrow UniValue from txn, check for valid
     CEscrow theEscrow;
 	vector<unsigned char> vchData;
-	if (!IsEscrowOp(op))
-	{
-		if(fDebug)
-			LogPrintf("SYSCOIN_ESCROW_MESSAGE_ERROR: Not an escrow, skipping...\n");	
-		return true;
-	}
 	if(GetSyscoinData(tx, vchData) && !theEscrow.UnserializeFromData(vchData))
 	{
 		theEscrow.SetNull();

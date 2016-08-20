@@ -260,12 +260,6 @@ bool CheckMessageInputs(const CTransaction &tx, int op, int nOut, const vector<v
 	CAliasIndex alias;
 	CTransaction aliasTx;
 	vector<unsigned char> vchData;
-	if (!IsMessageOp(op))
-	{
-		if(fDebug)
-			LogPrintf("SYSCOIN_MESSAGE_CONSENSUS_ERROR: Not a message, skipping...\n");	
-		return true;
-	}
 	if(!GetSyscoinData(tx, vchData) || !theMessage.UnserializeFromData(vchData))
 	{
 		if(fDebug)

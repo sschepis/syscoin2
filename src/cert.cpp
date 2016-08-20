@@ -360,12 +360,6 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 		errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2000 - Non-Syscoin transaction found";
 		return true;
 	}
-	if (!IsCertOp(op))
-	{
-		if(fDebug)
-			LogPrintf("SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: Not a cert, skipping...\n");	
-		return true;
-	}
 	vector<vector<unsigned char> > vvchPrevArgs, vvchPrevAliasArgs;
 	// unserialize cert from txn, check for valid
 	CCert theCert;
