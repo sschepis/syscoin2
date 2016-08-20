@@ -1679,7 +1679,7 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 	if(vchPubKeyByte.empty())
 		vchPubKeyByte = theAlias.vchPubKey;
 	else
-		vchSecret.clear();
+		vchSecret = CKey();
 	if(!vchPrivateValue.empty())
 	{
 		string strCipherText;
