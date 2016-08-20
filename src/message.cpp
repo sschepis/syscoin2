@@ -266,7 +266,7 @@ bool CheckMessageInputs(const CTransaction &tx, int op, int nOut, const vector<v
 			LogPrintf("SYSCOIN_MESSAGE_CONSENSUS_ERROR: Not a message, skipping...\n");	
 		return true;
 	}
-	if(!GetSyscoinData(tx, vchData) || !theEscrow.UnserializeFromData(vchData))
+	if(!GetSyscoinData(tx, vchData) || !theMessage.UnserializeFromData(vchData))
 	{
 		if(fDebug)
 			LogPrintf("SYSCOIN_MESSAGE_CONSENSUS_ERROR: Null message, skipping...\n");	
