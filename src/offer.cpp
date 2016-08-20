@@ -1717,21 +1717,7 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 			if (ExistsInMempool(vchCert, OP_CERT_UPDATE) || ExistsInMempool(vchCert, OP_CERT_TRANSFER)) {
 				throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 504 - There are pending operations on that cert");
 			}
-			// make sure its in your wallet (you control this cert)		
-			if (IsSyscoinTxMine(txCert, "cert")) 
-			{
-				CAliasIndex certAlias;
-				CTransaction certaliastx;
-				if (GetTxOfAlias( theCert.vchAlias, certAlias, certaliastx, true))
-				{
-					wtxCertIn = pwalletMain->GetWalletTx(txCert.GetHash());
-					CPubKey currentCertKey(certAlias.vchPubKey);
-					scriptPubKeyCertOrig = GetScriptForDestination(currentCertKey.GetID());
-					scriptPubKeyCert << CScript::EncodeOP_N(OP_CERT_UPDATE) << vchCert << vchFromString("") << OP_2DROP << OP_DROP;
-					scriptPubKeyCert += scriptPubKeyCertOrig;
-				}
-			}
-
+			wtxCertIn = pwalletMain->GetWalletTx(txCert.GetHash());
 		}
 	}
 
@@ -1807,7 +1793,10 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 	scriptPubKeyOrig= GetScriptForDestination(currentOfferKey.GetID());
 	scriptPubKey << CScript::EncodeOP_N(OP_OFFER_ACTIVATE) << vchOffer << vchHashOffer << OP_2DROP << OP_DROP;
 	scriptPubKey += scriptPubKeyOrig;
-
+	scriptPubKeyCert << CScript::EncodeOP_N(OP_CERT_UPDATE) << vchCert << vchFromString("") << OP_2DROP << OP_DROP;
+	scriptPubKeyCert += scriptPubKeyOrig;
+				
+			
 	vector<CRecipient> vecSend;
 	CRecipient recipient;
 	CreateRecipient(scriptPubKey, recipient);

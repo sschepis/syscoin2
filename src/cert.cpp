@@ -373,6 +373,13 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 	{
 		theCert.SetNull();
 	}
+	// we need to check for cert update specially because a cert update without data is sent along with offers linked with the cert
+	if (theCert.IsNull() && op != OP_CERT_UPDATE)
+	{
+		if(fDebug)
+			LogPrintf("CheckCertInputs(): Null cert, skipping...\n");	
+		return true;
+	}	
 	if(fJustCheck)
 	{
 		
@@ -434,13 +441,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 		}
 	}
 
-	// we need to check for cert update specially because a cert update without data is sent along with offers linked with the cert
-    if (theCert.IsNull() && op != OP_CERT_UPDATE)
-	{
-		if(fDebug)
-			LogPrintf("CheckCertInputs(): Null cert, skipping...\n");	
-        return true;
-	}
+
 	
 	CAliasIndex alias;
 	CTransaction aliasTx;

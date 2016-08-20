@@ -807,7 +807,13 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	{
 		theAlias.SetNull();
 	}
-
+	// we need to check for cert update specially because an alias update without data is sent along with offers linked with the alias
+	if (theAlias.IsNull() && op != OP_ALIAS_UPDATE)
+	{
+		if(fDebug)
+			LogPrintf("CheckAliasInputs(): Null alias, skipping...\n");	
+		return true;
+	}
 	if(fJustCheck)
 	{
 		
@@ -859,13 +865,6 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				break;
 			}
 		}
-	}
-	// we need to check for cert update specially because an alias update without data is sent along with offers linked with the alias
-	if (theAlias.IsNull() && op != OP_ALIAS_UPDATE)
-	{
-		if(fDebug)
-			LogPrintf("CheckAliasInputs(): Null alias, skipping...\n");	
-		return true;
 	}
 	vector<CAliasIndex> vtxPos;
 	string retError = "";
