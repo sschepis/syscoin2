@@ -369,19 +369,13 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 	{
 		theCert.SetNull();
 	}
-	else if(theCert.vchCert != vvchArgs[0])
-	{
-		if(fDebug)
-			LogPrintf("SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: Cert guid doesn't match data, skipping...\n");	
-		return true;
-	}	
 	// we need to check for cert update specially because a cert update without data is sent along with offers linked with the cert
-	if (theCert.IsNull() && op != OP_CERT_UPDATE)
+	else if(theCert.vchCert != vvchArgs[0] && op != OP_CERT_UPDATE)
 	{
 		if(fDebug)
-			LogPrintf("SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: Null cert, skipping...\n");	
+			LogPrintf("SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: CNull cert, skipping...\n");	
 		return true;
-	}	
+	}		
 	if(fJustCheck)
 	{
 		
