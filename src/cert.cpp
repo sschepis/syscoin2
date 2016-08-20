@@ -194,7 +194,7 @@ bool CCertDB::ScanCerts(const std::vector<unsigned char>& vchCert, const string 
 				const string &cert = stringFromVch(vchCert);
 				string title = stringFromVch(txPos.vchTitle);
 				boost::algorithm::to_lower(title);
-				if (strRegexp != "" && !regex_search(title, certparts, cregex) && strRegexp != cert)
+				if (strRegexp != "" && !regex_search(title, certparts, cregex) && strRegexp != cert && strRegexpLower != stringFromVch(txPos.vchAlias))
 				{
 					pcursor->Next();
 					continue;
