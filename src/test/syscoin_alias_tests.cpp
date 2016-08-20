@@ -570,10 +570,14 @@ BOOST_AUTO_TEST_CASE (generate_aliasprunewithcertoffer)
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "offeraccept aliasprunewithcertoffer2 " + certofferguid + " 1 message"));
 	BOOST_CHECK_NO_THROW(CallRPC("node2", "generate 5"));
 	MilliSleep(2500);
+	BOOST_CHECK_NO_THROW(CallRPC("node2", "generate 5"));
+	MilliSleep(2500);
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "offeraccept aliasprunewithcertoffer2 " + offerguid + " 1 message"));
 	BOOST_CHECK_NO_THROW(CallRPC("node2", "generate 10"));
 	MilliSleep(2500);
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 30"));
+	BOOST_CHECK_NO_THROW(CallRPC("node2", "generate 10"));
+	MilliSleep(2500);
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 110"));
 	MilliSleep(2500);
 	StartNode("node3");
 	GenerateBlocks(5, "node3");
@@ -603,7 +607,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasprunewithcert)
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 10"));
 	MilliSleep(2500);
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "certtransfer " + certguid + " aliasprunewithcert2"));
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 30"));
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 110"));
 	MilliSleep(2500);
 	StartNode("node3");
 	GenerateBlocks(5, "node3");
