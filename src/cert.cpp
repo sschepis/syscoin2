@@ -288,7 +288,7 @@ bool DecodeCertTx(const CTransaction& tx, int& op, int& nOut,
         }
     }
     if (!found) vvch.clear();
-    return found && IsCertOp(op);
+    return found;
 }
 
 
@@ -402,11 +402,11 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 				return error(errorMessage.c_str());
 			}
 		}
-		
+		int tmpOp;
 		for (unsigned int i = 0; i < tx.vout.size(); i++) {
 			const CTxOut& out = tx.vout[i];
 			vector<vector<unsigned char> > vvchRead;
-			if (DecodeCertScript(out.scriptPubKey, op, vvchRead) && vvchRead[0] == vvchArgs[0]) {
+			if (DecodeCertScript(out.scriptPubKey, tmpOp, vvchRead) && vvchRead[0] == vvchArgs[0]) {
 				if(found)
 				{
 					errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2003 - Too many certificate outputs found in a transaction, only 1 allowed";

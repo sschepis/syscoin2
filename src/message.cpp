@@ -186,7 +186,7 @@ bool DecodeMessageTx(const CTransaction& tx, int& op, int& nOut,
         }
     }
 	if (!found) vvch.clear();
-    return found && IsMessageOp(op);
+    return found;
 }
 
 bool DecodeMessageScript(const CScript& script, int& op,

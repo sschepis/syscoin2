@@ -455,7 +455,7 @@ bool DecodeOfferTx(const CTransaction& tx, int& op, int& nOut,
 		}
 	}
 	if (!found) vvch.clear();
-	return found && IsOfferOp(op);
+	return found;
 }
 bool FindOfferAcceptPayment(const CTransaction& tx, const CAmount &nPrice) {
 	for (unsigned int i = 0; i < tx.vout.size(); i++) {

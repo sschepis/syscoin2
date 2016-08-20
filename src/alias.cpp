@@ -836,10 +836,11 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				return error(errorMessage.c_str());
 			}
 		}		
+		int tmpOp;
 		for (unsigned int i = 0; i < tx.vout.size(); i++) {
 			const CTxOut& out = tx.vout[i];
 			vector<vector<unsigned char> > vvchRead;
-			if (DecodeAliasScript(out.scriptPubKey, op, vvchRead) && vvchRead[0] == vvchArgs[0]) {
+			if (DecodeAliasScript(out.scriptPubKey, tmpOp, vvchRead) && vvchRead[0] == vvchArgs[0]) {
 				if(found)
 				{
 					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1002 - Too many alias outputs found in a transaction, only 1 allowed";
@@ -1389,7 +1390,7 @@ bool DecodeAliasTx(const CTransaction& tx, int& op, int& nOut,
 	if (!found)
 		vvch.clear();
 
-	return found && IsAliasOp(op);
+	return found;
 }
 
 
