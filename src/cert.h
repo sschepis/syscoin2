@@ -54,8 +54,7 @@ public:
 	ADD_SERIALIZE_METHODS;
     template <typename Stream, typename Operation>
 	inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-		READWRITE(vchTitle);
-		READWRITE(vchAlias);
+		READWRITE(vchTitle);		
 		READWRITE(vchData);
 		READWRITE(txHash);
 		READWRITE(VARINT(nHeight));
@@ -64,7 +63,8 @@ public:
 		READWRITE(vchCert);
 		READWRITE(safetyLevel);
 		READWRITE(safeSearch);
-		READWRITE(sCategory);				
+		READWRITE(sCategory);
+		READWRITE(vchAlias);
 	}
     friend bool operator==(const CCert &a, const CCert &b) {
         return (
@@ -102,7 +102,7 @@ public:
     }
 
     void SetNull() { vchLinkAlias.clear(); sCategory.clear(); vchCert.clear(); safetyLevel = 0; safeSearch = false; nHeight = 0; txHash.SetNull(); vchAlias.clear(); bPrivate = false; vchTitle.clear(); vchData.clear();}
-    bool IsNull() const { return (vchLinkAlias.empty() && sCategory.empty() && vchCert.empty() && safetyLevel == 0 && !safeSearch && txHash.IsNull() &&  nHeight == 0 && vchAlias.empty() && vchData.empty() && vchTitle.empty() && vchAlias.empty()); }
+    bool IsNull() const { return (vchLinkAlias.empty() && sCategory.empty() && vchCert.empty() && safetyLevel == 0 && !safeSearch && !bPrivate && txHash.IsNull() &&  nHeight == 0 && vchData.empty() && vchTitle.empty() && vchAlias.empty()); }
     bool UnserializeFromTx(const CTransaction &tx);
 	bool UnserializeFromData(const std::vector<unsigned char> &vchData);
 	const std::vector<unsigned char> Serialize();
