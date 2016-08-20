@@ -35,6 +35,7 @@ public:
     int64_t nHeight;
     std::vector<unsigned char> vchPublicValue;
 	std::vector<unsigned char> vchPrivateValue;
+	std::vector<unsigned char> vchPrivateKey;
 	std::vector<unsigned char> vchPubKey;
 	unsigned char safetyLevel;
 	unsigned char nRenewal;
@@ -51,6 +52,7 @@ public:
 	void ClearAlias()
 	{
 		vchPublicValue.clear();
+		vchPrivateKey.clear();
 		vchPrivateValue.clear();
 		vchGUID.clear();
 	}
@@ -76,6 +78,7 @@ public:
 		READWRITE(VARINT(nHeight));
 		READWRITE(vchPublicValue);
 		READWRITE(vchPrivateValue);
+		READWRITE(vchPrivateKey);
 		READWRITE(vchPubKey);
 		READWRITE(vchAlias);
 		READWRITE(vchGUID);
@@ -86,7 +89,7 @@ public:
 		READWRITE(VARINT(nRatingCount));
 	}
     friend bool operator==(const CAliasIndex &a, const CAliasIndex &b) {
-		return (a.nRenewal == b.nRenewal && a.vchGUID == b.vchGUID && a.vchAlias == b.vchAlias && a.nRatingCount == b.nRatingCount && a.nRating == b.nRating && a.safetyLevel == b.safetyLevel && a.safeSearch == b.safeSearch && a.nHeight == b.nHeight && a.txHash == b.txHash && a.vchPublicValue == b.vchPublicValue && a.vchPrivateValue == b.vchPrivateValue && a.vchPubKey == b.vchPubKey);
+		return (a.vchPrivateKey == b.vchPrivateKey && a.nRenewal == b.nRenewal && a.vchGUID == b.vchGUID && a.vchAlias == b.vchAlias && a.nRatingCount == b.nRatingCount && a.nRating == b.nRating && a.safetyLevel == b.safetyLevel && a.safeSearch == b.safeSearch && a.nHeight == b.nHeight && a.txHash == b.txHash && a.vchPublicValue == b.vchPublicValue && a.vchPrivateValue == b.vchPrivateValue && a.vchPubKey == b.vchPubKey);
     }
 
     friend bool operator!=(const CAliasIndex &a, const CAliasIndex &b) {
@@ -100,6 +103,7 @@ public:
         nHeight = b.nHeight;
         vchPublicValue = b.vchPublicValue;
         vchPrivateValue = b.vchPrivateValue;
+		a.vchPrivateKey = b.vchPrivateKey;
         vchPubKey = b.vchPubKey;
 		safetyLevel = b.safetyLevel;
 		safeSearch = b.safeSearch;
@@ -107,8 +111,8 @@ public:
 		nRatingCount = b.nRatingCount;
         return *this;
     }   
-    void SetNull() {nRenewal = 0; vchGUID.clear(); vchAlias.clear(); nRatingCount = 0; nRating = 0; safetyLevel = 0; safeSearch = false; txHash.SetNull(); nHeight = 0; vchPublicValue.clear(); vchPrivateValue.clear(); vchPubKey.clear(); }
-    bool IsNull() const { return (nRenewal == 0 && vchGUID.empty() && vchAlias.empty() && nRatingCount == 0 && nRating == 0 && safetyLevel == 0 && !safeSearch && nHeight == 0 && txHash.IsNull() && vchPublicValue.empty() && vchPrivateValue.empty() && vchPubKey.empty()); }
+    void SetNull() {vchPrivateKey.clear(); nRenewal = 0; vchGUID.clear(); vchAlias.clear(); nRatingCount = 0; nRating = 0; safetyLevel = 0; safeSearch = false; txHash.SetNull(); nHeight = 0; vchPublicValue.clear(); vchPrivateValue.clear(); vchPubKey.clear(); }
+    bool IsNull() const { return (vchPrivateKey.empty() && nRenewal == 0 && vchGUID.empty() && vchAlias.empty() && nRatingCount == 0 && nRating == 0 && safetyLevel == 0 && !safeSearch && nHeight == 0 && txHash.IsNull() && vchPublicValue.empty() && vchPrivateValue.empty() && vchPubKey.empty()); }
 	bool UnserializeFromTx(const CTransaction &tx);
 	bool UnserializeFromData(const std::vector<unsigned char> &vchData);
 	const std::vector<unsigned char> Serialize();

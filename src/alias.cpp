@@ -904,6 +904,11 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1009 - Guid in data output doesn't match guid in tx";
 					return error(errorMessage.c_str());
 				}
+				if(!theAlias.vchPrivateKey.empty())
+				{
+					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1009a - Private key must be empty on activate";
+					return error(errorMessage.c_str());
+				}
 				
 				break;
 			case OP_ALIAS_UPDATE:
@@ -912,10 +917,13 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1010 - Alias input to this transaction not found";
 					return error(errorMessage.c_str());
 				}
-				if(!theAlias.IsNull() && theAlias.vchAlias != vvchArgs[0])
+				if(!theAlias.IsNull())
 				{
-					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1011 - Guid in data output doesn't match guid in transaction";
-					return error(errorMessage.c_str());
+					if(theAlias.vchAlias != vvchArgs[0])
+					{
+						errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1011 - Guid in data output doesn't match guid in transaction";
+						return error(errorMessage.c_str());
+					}
 				}
 				// Check name
 				if (vvchPrevArgs[0] != vvchArgs[0])
@@ -982,6 +990,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					theAlias.nRatingCount = dbAlias.nRatingCount;
 					theAlias.vchGUID = dbAlias.vchGUID;
 					theAlias.vchAlias = dbAlias.vchAlias;
+					
 				}
 				// if transfer
 				if(dbAlias.vchPubKey != theAlias.vchPubKey)
@@ -996,6 +1005,12 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						theAlias.vchPubKey = dbAlias.vchPubKey;
 						errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1017 - Cannot transfer an alias that points to another alias";
 					}
+					if(theAlias.vchPrivateKey.empty())
+					{
+						theAlias.vchPubKey = dbAlias.vchPubKey;
+						errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1017 - Private key cannot be empty on transfer";
+					}					
+					
 				}
 			}
 			else
@@ -1646,23 +1661,46 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 	wtxIn = pwalletMain->GetWalletTx(tx.GetHash());
 	if (wtxIn == NULL)
 		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 1026 - This alias is not in your wallet");
+
+	CPubKey pubKey(theAlias.vchPubKey);	
+	CSyscoinAddress aliasAddress(pubKey.GetID());
+	CKeyID keyID;
+	if (!aliasAddress.GetKeyID(keyID))
+		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 1026a - Alias address does not refer to a key");
+	CKey vchSecret;
+	if (!pwalletMain->GetKey(keyID, vchSecret))
+		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 1026b - Private key for alias address " + aliasAddress.ToString() + " is not known");
+	
 	// check for existing pending aliases
 	if (ExistsInMempool(vchAlias, OP_ALIAS_ACTIVATE) || ExistsInMempool(vchAlias, OP_ALIAS_UPDATE)) {
 		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 1027 - There are pending operations on that alias");
 	}
-
+	vector<unsigned char> vchPrivateKey;
 	if(vchPubKeyByte.empty())
 		vchPubKeyByte = theAlias.vchPubKey;
-	if(vchPrivateValue.size() > 0)
+	else
+		vchSecret.clear();
+	if(!vchPrivateValue.empty())
 	{
 		string strCipherText;
 		
 		// encrypt using new key
 		if(!EncryptMessage(vchPubKeyByte, vchPrivateValue, strCipherText))
 		{
-			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 1028 - Could not encrypt alias private data!");
+			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 1028 - Could not encrypt alias private data");
 		}
 		vchPrivateValue = vchFromString(strCipherText);
+	}
+	if(!vchSecret.empty())
+	{
+		string strCipherText;
+		
+		// encrypt using new key
+		if(!EncryptMessage(vchPubKeyByte, vchSecret, strCipherText))
+		{
+			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 1028a - Could not encrypt alias private key");
+		}
+		vchPrivateKey = vchFromString(strCipherText);
 	}
 
 	CAliasIndex copyAlias = theAlias;
@@ -1674,6 +1712,7 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 		theAlias.vchPrivateValue = vchPrivateValue;
 	
 	theAlias.vchPubKey = vchPubKeyByte;
+	theAlias.vchPrivateKey = vchPrivateKey;
 	theAlias.nRenewal = nRenewal;
 	theAlias.safeSearch = strSafeSearch == "Yes"? true: false;
 	CPubKey currentKey(vchPubKeyByte);
@@ -1793,12 +1832,21 @@ UniValue aliaslist(const UniValue& params, bool fHelp) {
 			oName.push_back(Pair("name", stringFromVch(vchAlias)));
 			oName.push_back(Pair("value", stringFromVch(alias.vchPublicValue)));
 			string strPrivateValue = "";
-			if(alias.vchPrivateValue.size() > 0)
+			if(!alias.vchPrivateValue.empty())
 				strPrivateValue = "Encrypted for alias owner";
 			string strDecrypted = "";
 			if(DecryptMessage(alias.vchPubKey, alias.vchPrivateValue, strDecrypted))
 				strPrivateValue = strDecrypted;		
 			oName.push_back(Pair("privatevalue", strPrivateValue));
+
+			string strPrivateKey = "";
+			if(!alias.vchPrivateKey.empty())
+				strPrivateKey = "Encrypted for alias owner";
+			string strDecryptedKey = "";
+			if(DecryptMessage(alias.vchPubKey, alias.vchPrivateKey, strDecryptedKey))
+				strPrivateKey = strDecryptedKey;		
+			oName.push_back(Pair("privatekey", strPrivateKey));
+
 			oName.push_back(Pair("safesearch", alias.safeSearch ? "Yes" : "No"));
 			oName.push_back(Pair("safetylevel", alias.safetyLevel ));
 			float rating = 0;
@@ -1951,12 +1999,21 @@ UniValue aliasinfo(const UniValue& params, bool fHelp) {
 			throw runtime_error("alias has been banned");
 		oName.push_back(Pair("value", stringFromVch(alias.vchPublicValue)));
 		string strPrivateValue = "";
-		if(alias.vchPrivateValue.size() > 0)
+		if(!alias.vchPrivateValue.empty())
 			strPrivateValue = "Encrypted for alias owner";
 		string strDecrypted = "";
 		if(DecryptMessage(alias.vchPubKey, alias.vchPrivateValue, strDecrypted))
 			strPrivateValue = strDecrypted;		
 		oName.push_back(Pair("privatevalue", strPrivateValue));
+
+		string strPrivateKey = "";
+		if(!alias.vchPrivateKey.empty())
+			strPrivateKey = "Encrypted for alias owner";
+		string strDecryptedKey = "";
+		if(DecryptMessage(alias.vchPubKey, alias.vchPrivateKey, strDecryptedKey))
+			strPrivateKey = strDecryptedKey;		
+		oName.push_back(Pair("privatekey", strPrivateKey));
+
 		oName.push_back(Pair("txid", alias.txHash.GetHex()));
 		CPubKey PubKey(alias.vchPubKey);
 		CSyscoinAddress address(PubKey.GetID());
@@ -2036,12 +2093,21 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 			oName.push_back(Pair("aliastype", opName));
 			oName.push_back(Pair("value", stringFromVch(txPos2.vchPublicValue)));
 			string strPrivateValue = "";
-			if(txPos2.vchPrivateValue.size() > 0)
+			if(!txPos2.vchPrivateValue.empty())
 				strPrivateValue = "Encrypted for alias owner";
 			string strDecrypted = "";
 			if(DecryptMessage(txPos2.vchPubKey, txPos2.vchPrivateValue, strDecrypted))
 				strPrivateValue = strDecrypted;		
 			oName.push_back(Pair("privatevalue", strPrivateValue));
+
+			string strPrivateKey = "";
+			if(!txPos2.vchPrivateKey.empty())
+				strPrivateKey = "Encrypted for alias owner";
+			string strDecryptedKey = "";
+			if(DecryptMessage(txPos2.vchPubKey, txPos2.vchPrivateKey, strDecryptedKey))
+				strPrivateKey = strDecryptedKey;		
+			oName.push_back(Pair("privatekey", strPrivateKey));
+
 			oName.push_back(Pair("txid", tx.GetHash().GetHex()));
 			CPubKey PubKey(txPos2.vchPubKey);
 			CSyscoinAddress address(PubKey.GetID());
@@ -2137,12 +2203,22 @@ UniValue aliasfilter(const UniValue& params, bool fHelp) {
 		oName.push_back(Pair("name", stringFromVch(pairScan.first)));
 		oName.push_back(Pair("value", stringFromVch(txName.vchPublicValue)));
 		string strPrivateValue = "";
-		if(alias.vchPrivateValue.size() > 0)
+		if(!alias.vchPrivateValue.empty())
 			strPrivateValue = "Encrypted for alias owner";
 		string strDecrypted = "";
 		if(DecryptMessage(txName.vchPubKey, alias.vchPrivateValue, strDecrypted))
 			strPrivateValue = strDecrypted;		
 		oName.push_back(Pair("privatevalue", strPrivateValue));
+
+		string strPrivateKey = "";
+		if(!txName.vchPrivateKey.empty())
+			strPrivateKey = "Encrypted for alias owner";
+		string strDecryptedKey = "";
+		if(DecryptMessage(txName.vchPubKey, txName.vchPrivateKey, strDecryptedKey))
+			strPrivateKey = strDecryptedKey;		
+		oName.push_back(Pair("privatekey", strPrivateKey));
+
+
         oName.push_back(Pair("lastupdate_height", nHeight));
 		float rating = 0;
 		if(alias.nRatingCount > 0)
