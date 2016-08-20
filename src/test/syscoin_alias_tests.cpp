@@ -727,6 +727,8 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	EscrowRelease("node2", escrowguid);	 
 	EscrowClaimRelease("node1", escrowguid); 
 
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 25"));
+	MilliSleep(2500);
 	// should fail: update cert with expired alias
 	BOOST_CHECK_THROW(CallRPC("node1", "certupdate " + certguid + " aliasexpire jag1 data 0"), runtime_error);
 	// should fail: xfer an cert with expired alias
