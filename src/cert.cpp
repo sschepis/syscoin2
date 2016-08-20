@@ -490,7 +490,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 
 		case OP_CERT_UPDATE:
 			// previous op must be a cert
-			if ( !foundCert || !IsCertOp(prevOp))
+			if (!IsCertOp(prevOp))
 			{
 				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2011 - Certificate input transaction is of wrong type";
 				return error(errorMessage.c_str());
