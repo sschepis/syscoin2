@@ -1691,12 +1691,13 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 		}
 		vchPrivateValue = vchFromString(strCipherText);
 	}
-	if(!vchSecret.empty())
+	if(vchSecret.size() > 0)
 	{
+		string strPrivateKey = CSyscoinSecret(vchSecret).ToString();
 		string strCipherText;
 		
 		// encrypt using new key
-		if(!EncryptMessage(vchPubKeyByte, vchSecret, strCipherText))
+		if(!EncryptMessage(vchPubKeyByte, vchFromString(strPrivateKey), strCipherText))
 		{
 			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 1028a - Could not encrypt alias private key");
 		}
