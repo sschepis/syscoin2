@@ -803,11 +803,13 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	{
 		theAlias.SetNull();
 	}
+	if(!theAlias.IsNull() && theAlias.vchAlias != vvchArgs[0])
+		theAlias.SetNull();
 	// we need to check for cert update specially because an alias update without data is sent along with offers linked with the alias
-	else if(theAlias.vchAlias != vvchArgs[0] && op != OP_ALIAS_UPDATE)
+	if (theAlias.IsNull() && op != OP_ALIAS_UPDATE)
 	{
 		if(fDebug)
-			LogPrintf("SYSCOIN_ALIAS_CONSENSUS_ERROR: Null alias, skipping...\n");	
+			LogPrintf("CheckAliasInputs(): Null alias, skipping...\n");	
 		return true;
 	}
 	if(fJustCheck)
