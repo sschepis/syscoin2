@@ -60,7 +60,7 @@ AcceptandPayOfferListPage::AcceptandPayOfferListPage(const PlatformStyle *platfo
 	connect(ui->lookupButton, SIGNAL(clicked()), this, SLOT(lookup()));
 	connect(ui->offeridEdit, SIGNAL(textChanged(QString)), this, SLOT(resetState()));
 	ui->notesEdit->setStyleSheet("color: rgb(0, 0, 0); background-color: rgb(255, 255, 255)");
-	ui->aliasDisclaimer->setText(tr("<font color='blue'>Select an Alias</font>"));
+	ui->aliasDisclaimer->setText(tr("<font color='blue'>Select an Alias. You may right-click on the notes section and include your public or private profile information from this alias for the merchant</font>"));
 	m_netwManager = new QNetworkAccessManager(this);
 	m_placeholderImage.load(":/images/" + theme + "/imageplaceholder");
 

@@ -103,7 +103,7 @@ public:
         nHeight = b.nHeight;
         vchPublicValue = b.vchPublicValue;
         vchPrivateValue = b.vchPrivateValue;
-		a.vchPrivateKey = b.vchPrivateKey;
+		vchPrivateKey = b.vchPrivateKey;
         vchPubKey = b.vchPubKey;
 		safetyLevel = b.safetyLevel;
 		safeSearch = b.safeSearch;
