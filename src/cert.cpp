@@ -365,11 +365,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 	CCert theCert;
 	vector<unsigned char> vchData;
 	bool found = false;
-	if(!GetSyscoinData(tx, vchData))
-	{
-		theCert.SetNull();
-	}
-	else if(!theCert.UnserializeFromData(vchData))
+	if(GetSyscoinData(tx, vchData) && !theCert.UnserializeFromData(vchData))
 	{
 		theCert.SetNull();
 	}
