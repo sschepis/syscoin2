@@ -77,13 +77,13 @@ public:
 		READWRITE(vchPublicValue);
 		READWRITE(vchPrivateValue);
 		READWRITE(vchPubKey);
+		READWRITE(vchAlias);
 		READWRITE(vchGUID);
 		READWRITE(safetyLevel);
 		READWRITE(nRenewal);
 		READWRITE(safeSearch);
 		READWRITE(VARINT(nRating));
 		READWRITE(VARINT(nRatingCount));
-		READWRITE(vchAlias);
 	}
     friend bool operator==(const CAliasIndex &a, const CAliasIndex &b) {
 		return (a.nRenewal == b.nRenewal && a.vchGUID == b.vchGUID && a.vchAlias == b.vchAlias && a.nRatingCount == b.nRatingCount && a.nRating == b.nRating && a.safetyLevel == b.safetyLevel && a.safeSearch == b.safeSearch && a.nHeight == b.nHeight && a.txHash == b.txHash && a.vchPublicValue == b.vchPublicValue && a.vchPrivateValue == b.vchPrivateValue && a.vchPubKey == b.vchPubKey);
