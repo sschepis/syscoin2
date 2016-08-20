@@ -799,7 +799,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	bool found = false;
 	vector<unsigned char> vchData;
 	vector<unsigned char> vchAlias;
-	if(GetSyscoinData(tx, vchData) && !theAlias.UnserializeFromData(vchData)
+	if(GetSyscoinData(tx, vchData) && !theAlias.UnserializeFromData(vchData))
 	{
 		theAlias.SetNull();
 	}
