@@ -1677,9 +1677,11 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 	}
 	vector<unsigned char> vchPrivateKey;
 	if(vchPubKeyByte.empty())
+	{
 		vchPubKeyByte = theAlias.vchPubKey;
-	else
 		vchSecret = CKey();
+	}
+
 	if(!vchPrivateValue.empty())
 	{
 		string strCipherText;
