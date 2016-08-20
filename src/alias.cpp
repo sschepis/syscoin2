@@ -799,27 +799,20 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	bool found = false;
 	vector<unsigned char> vchData;
 	vector<unsigned char> vchAlias;
-	if(GetSyscoinData(tx, vchData) && !theAlias.UnserializeFromData(vchData))
+	if(GetSyscoinData(tx, vchData) && (!theAlias.UnserializeFromData(vchData) || theAlias.vchName != vvchArgs[0]))
 	{
 		theAlias.SetNull();
 	}
-
+	// we need to check for cert update specially because an alias update without data is sent along with offers linked with the alias
+	if (theAlias.IsNull() && op != OP_ALIAS_UPDATE)
+	{
+		if(fDebug)
+			LogPrintf("CheckAliasInputs(): Null alias, skipping...\n");	
+		return true;
+	}
 	if(fJustCheck)
 	{
-		for (unsigned int i = 0; i < tx.vout.size(); i++) {
-			const CTxOut& out = tx.vout[i];
-			vector<vector<unsigned char> > vvchRead;
-			if (DecodeAliasScript(out.scriptPubKey, op, vvchRead) && vvchRead[0] == vvchArgs[0]) {
-				if(found)
-				{
-					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1002 - Too many alias outputs found in a transaction, only 1 allowed";
-					return error(errorMessage.c_str());
-				}
-				found = true; 
-			}
-		}	
-		if(!found)
-			theAlias.SetNull();
+		
 		if(vvchArgs.size() != 3)
 		{
 			errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1000 - Alias arguments incorrect size";
@@ -837,7 +830,18 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				return error(errorMessage.c_str());
 			}
 		}		
-	
+		for (unsigned int i = 0; i < tx.vout.size(); i++) {
+			const CTxOut& out = tx.vout[i];
+			vector<vector<unsigned char> > vvchRead;
+			if (DecodeAliasScript(out.scriptPubKey, op, vvchRead) && vvchRead[0] == vvchArgs[0]) {
+				if(found)
+				{
+					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1002 - Too many alias outputs found in a transaction, only 1 allowed";
+					return error(errorMessage.c_str());
+				}
+				found = true; 
+			}
+		}			
 		// Strict check - bug disallowed
 		for (unsigned int i = 0; i < tx.vin.size(); i++) {
 			vector<vector<unsigned char> > vvch;
@@ -857,13 +861,6 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				break;
 			}
 		}
-	}
-	// we need to check for cert update specially because an alias update without data is sent along with offers linked with the alias
-	if (theAlias.IsNull() && op != OP_ALIAS_UPDATE)
-	{
-		if(fDebug)
-			LogPrintf("CheckAliasInputs(): Null alias, skipping...\n");	
-		return true;
 	}
 	vector<CAliasIndex> vtxPos;
 	string retError = "";

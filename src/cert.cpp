@@ -365,26 +365,20 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 	CCert theCert;
 	vector<unsigned char> vchData;
 	bool found = false;
-	if(GetSyscoinData(tx, vchData) && !theCert.UnserializeFromData(vchData))
+	if(GetSyscoinData(tx, vchData) && (!theCert.UnserializeFromData(vchData) || theCert.vchCert != vvchArgs[0]))
 	{
 		theCert.SetNull();
 	}
+	// we need to check for cert update specially because a cert update without data is sent along with offers linked with the cert
+	if (theCert.IsNull() && op != OP_CERT_UPDATE)
+	{
+		if(fDebug)
+			LogPrintf("CheckCertInputs(): Null cert, skipping...\n");	
+		return true;
+	}	
 	if(fJustCheck)
 	{
-		for (unsigned int i = 0; i < tx.vout.size(); i++) {
-			const CTxOut& out = tx.vout[i];
-			vector<vector<unsigned char> > vvchRead;
-			if (DecodeCertScript(out.scriptPubKey, op, vvchRead) && vvchRead[0] == vvchArgs[0]) {
-				if(found)
-				{
-					errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2003 - Too many certificate outputs found in a transaction, only 1 allowed";
-					return error(errorMessage.c_str());
-				}
-				found = true; 
-			}
-		}
-		if(!found)
-			theCert.SetNull();
+		
 		if(vvchArgs.size() != 2)
 		{
 			errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2001 - Certificate arguments incorrect size";
@@ -403,7 +397,18 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 			}
 		}
 		
-	
+		for (unsigned int i = 0; i < tx.vout.size(); i++) {
+			const CTxOut& out = tx.vout[i];
+			vector<vector<unsigned char> > vvchRead;
+			if (DecodeCertScript(out.scriptPubKey, op, vvchRead) && vvchRead[0] == vvchArgs[0]) {
+				if(found)
+				{
+					errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2003 - Too many certificate outputs found in a transaction, only 1 allowed";
+					return error(errorMessage.c_str());
+				}
+				found = true; 
+			}
+		}	
 		// Strict check - bug disallowed
 		for (unsigned int i = 0; i < tx.vin.size(); i++) {
 			vector<vector<unsigned char> > vvch;
@@ -432,13 +437,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 		}
 	}
 
-	// we need to check for cert update specially because a cert update without data is sent along with offers linked with the cert
-	if (theCert.IsNull() && op != OP_CERT_UPDATE)
-	{
-		if(fDebug)
-			LogPrintf("CheckCertInputs(): Null cert, skipping...\n");	
-		return true;
-	}
+
 	
 	CAliasIndex alias;
 	CTransaction aliasTx;
