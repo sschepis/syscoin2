@@ -360,6 +360,12 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 		errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2000 - Non-Syscoin transaction found";
 		return true;
 	}
+	if (!IsCertOp(op))
+	{
+		if(fDebug)
+			LogPrintf("SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: Not a cert, skipping...\n");	
+		return true;
+	}
 	vector<vector<unsigned char> > vvchPrevArgs, vvchPrevAliasArgs;
 	// unserialize cert from txn, check for valid
 	CCert theCert;
@@ -370,7 +376,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 		theCert.SetNull();
 	}
 	// we need to check for cert update specially because a cert update without data is sent along with offers linked with the cert
-	if (!IsCertOp(op) || (theCert.IsNull() && op != OP_CERT_UPDATE))
+	if (theCert.IsNull() && op != OP_CERT_UPDATE)
 	{
 		if(fDebug)
 			LogPrintf("CheckCertInputs(): Null cert, skipping...\n");	

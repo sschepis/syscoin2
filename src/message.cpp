@@ -260,18 +260,19 @@ bool CheckMessageInputs(const CTransaction &tx, int op, int nOut, const vector<v
 	CAliasIndex alias;
 	CTransaction aliasTx;
 	vector<unsigned char> vchData;
-	if(!GetSyscoinData(tx, vchData))
+	if (!IsMessageOp(op))
 	{
 		if(fDebug)
-			LogPrintf("SYSCOIN_MESSAGE_CONSENSUS_ERROR: Null message1, skipping...\n");	
+			LogPrintf("SYSCOIN_MESSAGE_CONSENSUS_ERROR: Not a message, skipping...\n");	
 		return true;
 	}
-	else if(!theMessage.UnserializeFromData(vchData))
+	if(!GetSyscoinData(tx, vchData) || !theEscrow.UnserializeFromData(vchData))
 	{
 		if(fDebug)
-			LogPrintf("SYSCOIN_MESSAGE_CONSENSUS_ERROR: Null message2, skipping...\n");	
+			LogPrintf("SYSCOIN_MESSAGE_CONSENSUS_ERROR: Null message, skipping...\n");	
 		return true;
 	}
+
     vector<vector<unsigned char> > vvchPrevAliasArgs;
 	if(fJustCheck)
 	{

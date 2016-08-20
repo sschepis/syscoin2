@@ -537,6 +537,12 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	// unserialize msg from txn, check for valid
 	COffer theOffer;
 	vector<unsigned char> vchData;
+	if (!IsOfferOp(op))
+	{
+		if(fDebug)
+			LogPrintf("SYSCOIN_OFFER_CONSENSUS_ERROR: Not an offer, skipping...\n");	
+		return true;
+	}
 	if(!GetSyscoinData(tx, vchData))
 	{
 		errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR ERRCODE: 1 - Cannot find data inside of this transaction relating to an offer";
