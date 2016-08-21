@@ -761,12 +761,14 @@ BOOST_AUTO_TEST_CASE (generate_offerpruning)
 	StopNode("node3");
 	// make sure our offer alias doesn't expire
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate pruneoffer newdata privdata"));
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 4"));
+	MilliSleep(2500);
 	// create a new service
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "offernew sys_rates pruneoffer category title 1 0.05 description USD"));
 	const UniValue &arr1 = r.get_array();
 	string guid1 = arr1[1].get_str();
 	// make 89 blocks (10 get mined with new)
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 79"));
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 75"));
 	MilliSleep(2500);
 	// stop and start node1
 	StopNode("node1");

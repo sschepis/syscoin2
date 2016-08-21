@@ -696,7 +696,6 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 
 	// keep alive for later calls
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate aliasexpire2 newdata1 privdata"));
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasnew aliasexpire somedata"));
 	BOOST_CHECK_NO_THROW(CallRPC("node1","generate 3"));
 	MilliSleep(2500);
 	

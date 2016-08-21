@@ -2670,12 +2670,12 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	const CWalletTx *wtxAliasIn = NULL;
 
 	COfferLinkWhitelistEntry foundEntry;
-	theOffer.linkWhitelist.GetLinkEntryByHash(vchAlias, foundEntry);
+	theOffer.linkWhitelist.GetLinkEntryByHash(buyerAlias1.vchAlias, foundEntry);
 	// only non linked offers can have discounts applied via whitelist for buyer
 	if(theOffer.vchLinkOffer.empty() && !foundEntry.IsNull())
 	{
 		// check for existing alias updates/transfers
-		if (ExistsInMempool(vchAlias, OP_ALIAS_UPDATE)) {
+		if (ExistsInMempool(buyerAlias1.vchAlias, OP_ALIAS_UPDATE)) {
 			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 544 - There is are pending operations on that alias");
 		}
 		// make sure its in your wallet (you control this alias)
@@ -2684,7 +2684,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 			wtxAliasIn = pwalletMain->GetWalletTx(buyeraliastx.GetHash());		
 			CPubKey currentKey(buyerAlias1.vchPubKey);
 			scriptPubKeyAliasOrig = GetScriptForDestination(currentKey.GetID());
-			scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << vchAlias  << buyerAlias1.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
+			scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << buyerAlias1.vchAlias  << buyerAlias1.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
 			scriptPubKeyAlias += scriptPubKeyAliasOrig;
 		}		
 		
