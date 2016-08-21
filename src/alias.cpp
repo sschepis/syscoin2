@@ -2147,6 +2147,42 @@ UniValue generatepublickey(const UniValue& params, bool fHelp) {
 	res.push_back(HexStr(vchPubKey));
 	return res;
 }
+UniValue importoffersusedbyalias(const UniValue& params, bool fHelp) {
+	string strOffer = params[0].get_str();
+	string strCategory = params[1].get_str();
+	bool safeSearch = params[2].get_str()=="On"? true: false;
+	if(!pwalletMain)
+		throw runtime_error("No wallet defined!");
+	CWalletDB walletdb(pwalletMain->strWalletFile);
+	vector<pair<vector<unsigned char>, COffer> > offerScan;
+	if (!pofferdb->ScanOffers(vchFromString(""), strOffer, safeSearch, strCategory, 1000, offerScan))
+		throw runtime_error("scan failed");
+	pair<vector<unsigned char>, COffer> pairScan;
+	BOOST_FOREACH(pairScan, offerScan) {
+		const string &offer = stringFromVch(pairScan.first);
+		CTransaction offertx;
+		COffer theOffer;
+		if(GetTxOfOffer(vchFromString(offer), theOffer, offertx))
+		{
+			CWalletTx wtx(pwalletMain,tx);
+			pwalletMain->AddToWallet(wtx, false, &walletdb);
+		}
+	}
+	UniValue res(UniValue::VARR);
+	res.push_back("Success!");
+	return res;
+}
+UniValue importcertsusedbyalias(const UniValue& params, bool fHelp) {
+	UniValue res(UniValue::VARR);
+	res.push_back("Success!");
+	return res;
+}
+UniValue importescrowssusedbyalias(const UniValue& params, bool fHelp) {
+	UniValue res(UniValue::VARR);
+	res.push_back("Success!");
+	return res;
+}
+
 /**
  * [aliasfilter description]
  * @param  params [description]
