@@ -2163,7 +2163,7 @@ UniValue importoffersusedbyalias(const UniValue& params, bool fHelp) {
 		const string &offer = stringFromVch(pairScan.first);
 		CTransaction offertx;
 		COffer theOffer;
-		if(GetTxOfOffer(vchFromString(offer), theOffer, offertx) && IsSyscoinTxMine(aliastx, "alias"))
+		if(GetTxOfOffer(vchFromString(offer), theOffer, offertx) && IsSyscoinTxMine(offertx, "offer"))
 		{
 			count++;
 			CWalletTx wtx(pwalletMain,offertx);
