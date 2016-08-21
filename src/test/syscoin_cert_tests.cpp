@@ -17,10 +17,14 @@ BOOST_AUTO_TEST_CASE (generate_big_certdata)
 	string guid = CertNew("node1", "jagcertbig1", "jag", gooddata);
 	// unencrypted we are allowed up to 1108 bytes
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "certnew jagcertbig1 jag1 " + baddata + " 0"));
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 5"));
+	MilliSleep(2500);
 	// but unencrypted 1024 bytes should cause us to trip 1108 bytes once encrypted
 	BOOST_CHECK_THROW(CallRPC("node1", "certnew jagcertbig1 jag1 " + baddata + " 1"), runtime_error);
 	// update cert with long data, public (good) vs private (bad)
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "certupdate " + guid + " jagcertbig1 jag1 " + baddata + " 0"));
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 5"));
+	MilliSleep(2500);
 	// trying to update the public cert to a private one with 1024 bytes should fail aswell
 	BOOST_CHECK_THROW(CallRPC("node1", "certupdate " + guid + " jagcertbig1 jag1 " + baddata + " 1"), runtime_error);
 
