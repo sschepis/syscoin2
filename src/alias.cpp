@@ -2197,7 +2197,7 @@ UniValue importcertsusedbyalias(const UniValue& params, bool fHelp) {
 	res.push_back("Success!");
 	return res;
 }
-UniValue importescrowssusedbyalias(const UniValue& params, bool fHelp) {
+UniValue importescrowsusedbyalias(const UniValue& params, bool fHelp) {
 	string strAlias = params[0].get_str();
 	if(!pwalletMain)
 		throw runtime_error("No wallet defined!");
