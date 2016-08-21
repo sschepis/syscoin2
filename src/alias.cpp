@@ -2164,7 +2164,7 @@ UniValue importoffersusedbyalias(const UniValue& params, bool fHelp) {
 		COffer theOffer;
 		if(GetTxOfOffer(vchFromString(offer), theOffer, offertx))
 		{
-			CWalletTx wtx(pwalletMain,tx);
+			CWalletTx wtx(pwalletMain,offertx);
 			pwalletMain->AddToWallet(wtx, false, &walletdb);
 		}
 	}
