@@ -2148,14 +2148,14 @@ UniValue generatepublickey(const UniValue& params, bool fHelp) {
 	return res;
 }
 UniValue importoffersusedbyalias(const UniValue& params, bool fHelp) {
-	string strOffer = params[0].get_str();
+	string strAlias = params[0].get_str();
 	string strCategory = params[1].get_str();
 	bool safeSearch = params[2].get_str()=="On"? true: false;
 	if(!pwalletMain)
 		throw runtime_error("No wallet defined!");
 	CWalletDB walletdb(pwalletMain->strWalletFile);
 	vector<pair<vector<unsigned char>, COffer> > offerScan;
-	if (!pofferdb->ScanOffers(vchFromString(""), strOffer, safeSearch, strCategory, 1000, offerScan))
+	if (!pofferdb->ScanOffers(vchFromString(""), strAlias, safeSearch, strCategory, 1000, offerScan))
 		throw runtime_error("scan failed");
 	pair<vector<unsigned char>, COffer> pairScan;
 	BOOST_FOREACH(pairScan, offerScan) {
@@ -2173,11 +2173,49 @@ UniValue importoffersusedbyalias(const UniValue& params, bool fHelp) {
 	return res;
 }
 UniValue importcertsusedbyalias(const UniValue& params, bool fHelp) {
+	string strAlias = params[0].get_str();
+	string strCategory = params[1].get_str();
+	bool safeSearch = params[2].get_str()=="On"? true: false;
+	if(!pwalletMain)
+		throw runtime_error("No wallet defined!");
+	CWalletDB walletdb(pwalletMain->strWalletFile);
+	vector<pair<vector<unsigned char>, CCert> > certScan;
+	if (!pcertdb->ScanCerts(vchFromString(""), strAlias, safeSearch, strCategory, 1000, certScan))
+		throw runtime_error("scan failed");
+	pair<vector<unsigned char>, CCert> pairScan;
+	BOOST_FOREACH(pairScan, certScan) {
+		const string &cert = stringFromVch(pairScan.first);
+		CTransaction certtx;
+		CCert theCert;
+		if(GetTxOfCert(vchFromString(cert), theCert, certtx))
+		{
+			CWalletTx wtx(pwalletMain,certtx);
+			pwalletMain->AddToWallet(wtx, false, &walletdb);
+		}
+	}
 	UniValue res(UniValue::VARR);
 	res.push_back("Success!");
 	return res;
 }
 UniValue importescrowssusedbyalias(const UniValue& params, bool fHelp) {
+	string strAlias = params[0].get_str();
+	if(!pwalletMain)
+		throw runtime_error("No wallet defined!");
+	CWalletDB walletdb(pwalletMain->strWalletFile);
+	vector<pair<vector<unsigned char>, CEscrow> > escrowScan;
+	if (!pescrowdb->ScanEscrows(vchFromString(""), strAlias, 1000, escrowScan))
+		throw runtime_error("scan failed");
+	pair<vector<unsigned char>, CEscrow> pairScan;
+	BOOST_FOREACH(pairScan, escrowScan) {
+		const string &escrow = stringFromVch(pairScan.first);
+		CTransaction escrowtx;
+		CEscrow theEscrow;
+		if(GetTxOfEscrow(vchFromString(escrow), theEscrow, escrowtx))
+		{
+			CWalletTx wtx(pwalletMain,escrowtx);
+			pwalletMain->AddToWallet(wtx, false, &walletdb);
+		}
+	}
 	UniValue res(UniValue::VARR);
 	res.push_back("Success!");
 	return res;
