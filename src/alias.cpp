@@ -2162,7 +2162,7 @@ UniValue importoffersusedbyalias(const UniValue& params, bool fHelp) {
 		const string &offer = stringFromVch(pairScan.first);
 		CTransaction offertx;
 		COffer theOffer;
-		if(GetTxOfOffer(vchFromString(offer), theOffer, offertx))
+		if(GetTxOfOffer(vchFromString(offer), theOffer, offertx) && IsSyscoinTxMine(aliastx, "alias"))
 		{
 			CWalletTx wtx(pwalletMain,offertx);
 			pwalletMain->AddToWallet(wtx, false, &walletdb);
@@ -2187,7 +2187,7 @@ UniValue importcertsusedbyalias(const UniValue& params, bool fHelp) {
 		const string &cert = stringFromVch(pairScan.first);
 		CTransaction certtx;
 		CCert theCert;
-		if(GetTxOfCert(vchFromString(cert), theCert, certtx))
+		if(GetTxOfCert(vchFromString(cert), theCert, certtx) && IsSyscoinTxMine(certtx, "cert"))
 		{
 			CWalletTx wtx(pwalletMain,certtx);
 			pwalletMain->AddToWallet(wtx, false, &walletdb);
@@ -2210,7 +2210,7 @@ UniValue importescrowsusedbyalias(const UniValue& params, bool fHelp) {
 		const string &escrow = stringFromVch(pairScan.first);
 		CTransaction escrowtx;
 		CEscrow theEscrow;
-		if(GetTxOfEscrow(vchFromString(escrow), theEscrow, escrowtx))
+		if(GetTxOfEscrow(vchFromString(escrow), theEscrow, escrowtx) && IsSyscoinTxMine(escrowtx, "escrow"))
 		{
 			CWalletTx wtx(pwalletMain,escrowtx);
 			pwalletMain->AddToWallet(wtx, false, &walletdb);
