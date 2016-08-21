@@ -481,6 +481,11 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2010a - Certificate linked alias not allowed in activate";
 				return error(errorMessage.c_str());
 			}
+			if(!IsAliasOp(prevAliasOp) || theCert.vchAlias != vvchPrevAliasArgs[0])
+			{
+				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2010b - Alias input mismatch";
+				return error(errorMessage.c_str());
+			}
 			if((theCert.vchTitle.size() > MAX_NAME_LENGTH || theCert.vchTitle.empty()))
 			{
 				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2006 - Certificate title too big or is empty";
@@ -666,10 +671,19 @@ UniValue certnew(const UniValue& params, bool fHelp) {
 	// check for alias existence in DB
 	CTransaction aliastx;
 	CAliasIndex theAlias;
+	const CWalletTx *wtxAliasIn = NULL;
 	if (!GetTxOfAlias(vchAlias, theAlias, aliastx, true))
 		throw runtime_error("SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2023 - failed to read alias from alias DB");
 
-	
+	if(!IsSyscoinTxMine(aliastx, "alias")) {
+		throw runtime_error("SYSCOIN_CERTIFICATE_CONSENSUS_ERROR ERRCODE: 2023a - This alias is not yours");
+	}
+	wtxAliasIn = pwalletMain->GetWalletTx(aliastx.GetHash());
+	if (wtxAliasIn == NULL)
+		throw runtime_error("SYSCOIN_CERTIFICATE_CONSENSUS_ERROR ERRCODE: 2023b - This alias is not in your wallet");
+	if (ExistsInMempool(vchAlias, OP_ALIAS_ACTIVATE) || ExistsInMempool(vchAlias, OP_ALIAS_UPDATE)) {
+		throw runtime_error("SYSCOIN_CERTIFICATE_CONSENSUS_ERROR ERRCODE: 2023c - There are pending operations on that alias");
+	}
 
 	if(params.size() >= 6)
 		vchCat = vchFromValue(params[5]);
@@ -736,12 +750,18 @@ UniValue certnew(const UniValue& params, bool fHelp) {
 
     scriptPubKey << CScript::EncodeOP_N(OP_CERT_ACTIVATE) << vchCert << vchHashCert << OP_2DROP << OP_DROP;
     scriptPubKey += scriptPubKeyOrig;
+	CScript scriptPubKeyAlias;
+	scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << theAlias.vchAlias << theAlias.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
+	scriptPubKeyAlias += scriptPubKeyOrig;
 
 	// use the script pub key to create the vecsend which sendmoney takes and puts it into vout
 	vector<CRecipient> vecSend;
 	CRecipient recipient;
 	CreateRecipient(scriptPubKey, recipient);
 	vecSend.push_back(recipient);
+	CRecipient aliasRecipient;
+	CreateRecipient(scriptPubKeyAlias, aliasRecipient);
+	vecSend.push_back(aliasRecipient);
 
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
@@ -749,11 +769,10 @@ UniValue certnew(const UniValue& params, bool fHelp) {
 	CreateFeeRecipient(scriptData, data, fee);
 	vecSend.push_back(fee);
 
-	const CWalletTx * wtxInAlias=NULL;
 	const CWalletTx * wtxInOffer=NULL;
 	const CWalletTx * wtxInEscrow=NULL;
 	const CWalletTx * wtxInCert=NULL;
-	SendMoneySyscoin(vecSend, recipient.nAmount+fee.nAmount, false, wtx, wtxInOffer, wtxInCert, wtxInAlias, wtxInEscrow);
+	SendMoneySyscoin(vecSend, recipient.nAmount+fee.nAmount, false, wtx, wtxInOffer, wtxInCert, wtxAliasIn, wtxInEscrow);
 	UniValue res(UniValue::VARR);
 	res.push_back(wtx.GetHash().GetHex());
 	res.push_back(HexStr(vchRand));
