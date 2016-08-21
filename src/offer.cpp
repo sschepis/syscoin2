@@ -1131,7 +1131,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						}
 						else if(theOffer.nCommission <= -entry.nDiscountPct)
 						{
-							errorMessage = strprintf("SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 76a - You cannot re-sell at a lower price than the discount you received as an affiliate (current discount received: %d%%)", entry.nDiscountPct));
+							errorMessage = strprintf("SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 76a - You cannot re-sell at a lower price than the discount you received as an affiliate (current discount received: %d%%)", entry.nDiscountPct);
 							theOffer.vchLinkOffer.clear();	
 						}
 					}	
