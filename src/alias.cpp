@@ -2151,6 +2151,7 @@ UniValue importoffersusedbyalias(const UniValue& params, bool fHelp) {
 	string strAlias = params[0].get_str();
 	string strCategory = params[1].get_str();
 	bool safeSearch = params[2].get_str()=="On"? true: false;
+	int count = 0;
 	if(!pwalletMain)
 		throw runtime_error("No wallet defined!");
 	CWalletDB walletdb(pwalletMain->strWalletFile);
@@ -2164,15 +2165,17 @@ UniValue importoffersusedbyalias(const UniValue& params, bool fHelp) {
 		COffer theOffer;
 		if(GetTxOfOffer(vchFromString(offer), theOffer, offertx) && IsSyscoinTxMine(aliastx, "alias"))
 		{
+			count++;
 			CWalletTx wtx(pwalletMain,offertx);
 			pwalletMain->AddToWallet(wtx, false, &walletdb);
 		}
 	}
 	UniValue res(UniValue::VARR);
-	res.push_back("Success!");
+	res.push_back(strprintf("Imported %d offers!", count));
 	return res;
 }
 UniValue importcertsusedbyalias(const UniValue& params, bool fHelp) {
+	int count = 0;
 	string strAlias = params[0].get_str();
 	string strCategory = params[1].get_str();
 	bool safeSearch = params[2].get_str()=="On"? true: false;
@@ -2189,15 +2192,17 @@ UniValue importcertsusedbyalias(const UniValue& params, bool fHelp) {
 		CCert theCert;
 		if(GetTxOfCert(vchFromString(cert), theCert, certtx) && IsSyscoinTxMine(certtx, "cert"))
 		{
+			count++;
 			CWalletTx wtx(pwalletMain,certtx);
 			pwalletMain->AddToWallet(wtx, false, &walletdb);
 		}
 	}
 	UniValue res(UniValue::VARR);
-	res.push_back("Success!");
+	res.push_back(strprintf("Imported %d certificates!", count));
 	return res;
 }
 UniValue importescrowsusedbyalias(const UniValue& params, bool fHelp) {
+	int count = 0;
 	string strAlias = params[0].get_str();
 	if(!pwalletMain)
 		throw runtime_error("No wallet defined!");
@@ -2212,12 +2217,13 @@ UniValue importescrowsusedbyalias(const UniValue& params, bool fHelp) {
 		CEscrow theEscrow;
 		if(GetTxOfEscrow(vchFromString(escrow), theEscrow, escrowtx) && IsSyscoinTxMine(escrowtx, "escrow"))
 		{
+			count++;
 			CWalletTx wtx(pwalletMain,escrowtx);
 			pwalletMain->AddToWallet(wtx, false, &walletdb);
 		}
 	}
 	UniValue res(UniValue::VARR);
-	res.push_back("Success!");
+	res.push_back(strprintf("Imported %d escrows!", count));
 	return res;
 }
 
