@@ -1656,7 +1656,6 @@ UniValue offernew(const UniValue& params, bool fHelp) {
     if(!IsSyscoinTxMine(aliastx, "alias")) {
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 501 - This alias is not yours.");
     }
-	if (pwalletMain->GetWalletTx(aliastx.GetHash()) == NULL)
 	wtxAliasIn = pwalletMain->GetWalletTx(aliastx.GetHash());
 	if (wtxAliasIn == NULL)
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 502 - This alias is not in your wallet");
