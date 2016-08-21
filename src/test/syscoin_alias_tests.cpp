@@ -651,7 +651,10 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	const UniValue &array3 = r.get_array();
 	string certgoodguid = array3[1].get_str();	
 	// expire aliasexpire and aliasexpirenode2 aliases
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 65"));
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 5"));
+	MilliSleep(2500);
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "offerupdate sys_rates aliasexpire " + offerguid + " category title 100 0.05 description"));
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 60"));
 	MilliSleep(2500);
 
 
@@ -703,10 +706,10 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "certupdate " + certgoodguid + " aliasexpire2 newdata privdata 0"));
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "offerupdate sys_rates aliasexpire " + offerguid + " category title 100 0.05 description"));
 	// expire the escrow
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 30"));
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 5"));
 	MilliSleep(2500);
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "certupdate " + certguid + " aliasexpire jag1 data 0"));
-	BOOST_CHECK_NO_THROW(CallRPC("node1","generate 35"));
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 60"));
 	MilliSleep(2500);
 
 	StartNode("node3");
