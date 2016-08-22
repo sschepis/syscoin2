@@ -24,9 +24,9 @@ public:
     void addChildItem(QStandardItemModel * model, const QString& text, const QVariant& data );
 private Q_SLOTS:
 	void on_cancelButton_clicked();
-	void on_importCerts_clicked();
-	void on_importOffers_clicked();
-	void on_importEscrows_clicked();
+	bool on_importCerts_clicked();
+	bool on_importOffers_clicked();
+	bool on_importEscrows_clicked();
 private:
 	void loadCategories();
 	QDataWidgetMapper *mapper;

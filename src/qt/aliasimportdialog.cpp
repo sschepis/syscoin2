@@ -22,8 +22,8 @@
 #include "qcomboboxdelegate.h"
 #include <boost/algorithm/string.hpp>
 using namespace std;
-
 extern const CRPCTable tableRPC;
+extern bool getCategoryList(vector<string>& categoryList);
 
 AliasImportDialog::AliasImportDialog(const PlatformStyle *platformStyle, const QModelIndex &idx, QWidget *parent) :
     QDialog(parent),
