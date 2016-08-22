@@ -881,10 +881,6 @@ bool CheckSyscoinInputs(const CTransaction& tx, const CCoinsViewCache& inputs, i
 			// remove tx's that don't pass our check
 			if(!good)
 			{
-				std::list<CTransaction> dummy;
-				mempool.remove(tx, dummy, false);
-				mempool.removeConflicts(tx, dummy);
-				mempool.ClearPrioritisation(tx.GetHash());
 				return false;
 			}
 		}
@@ -927,13 +923,8 @@ bool AddSyscoinServicesToDB(const CBlock& block, const CCoinsViewCache& inputs, 
 			}
 			if(fDebug && !errorMessage.empty())
 				LogPrintf("%s\n", errorMessage.c_str());
-			// remove tx's that don't pass our check
 			if(!good)
 			{
-				std::list<CTransaction> dummy;
-				mempool.remove(tx, dummy, false);
-				mempool.removeConflicts(tx, dummy);
-				mempool.ClearPrioritisation(tx.GetHash());
 				return false;
 			}	
 		}
@@ -960,16 +951,9 @@ bool AddSyscoinServicesToDB(const CBlock& block, const CCoinsViewCache& inputs, 
 					LogPrintf("%s\n", errorMessage.c_str());
 				if(!good)
 					break;
-			}
-			
-
-			// remove tx's that don't pass our check
+			}	
 			if(!good)
 			{
-				std::list<CTransaction> dummy;
-				mempool.remove(tx, dummy, false);
-				mempool.removeConflicts(tx, dummy);
-				mempool.ClearPrioritisation(tx.GetHash());
 				return false;
 			}
 		}
