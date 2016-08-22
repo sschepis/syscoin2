@@ -52,7 +52,7 @@ AliasImportDialog::AliasImportDialog(const PlatformStyle *platformStyle, const Q
 		ui->importCerts->setIcon(platformStyle->SingleColorIcon(":/icons/" + theme + "/add"));
 		ui->importEscrows->setIcon(platformStyle->SingleColorIcon(":/icons/" + theme + "/add"));
 	}
-	loadCategory();
+	loadCategories();
 }
 
 AliasImportDialog::~AliasImportDialog()
@@ -91,7 +91,7 @@ void AliasImportDialog::addChildItem( QStandardItemModel * model, const QString&
     item->setData( "child", Qt::AccessibleDescriptionRole );
     model->appendRow( item );
 }
-void AliasImportDialog::loadCategory()
+void AliasImportDialog::loadCategories()
 {
     QStandardItemModel * offermodel = new QStandardItemModel;
 	QStandardItemModel * certmodel = new QStandardItemModel;
@@ -169,7 +169,7 @@ bool AliasImportDialog::on_importOffers_clicked()
 		params.push_back(currentCategory.toString().toStdString());
 	else if(ui->offerCategory->currentText() != tr("All Category"))
 		params.push_back(ui->offerCategory->currentText().toStdString());
-	params.push_back(ui->offerSafeSearch->checkState() == QT::Checked? "Yes": "No");
+	params.push_back(ui->offerSafeSearch->checkState() == Qt::Checked? "Yes": "No");
     try {
         result = tableRPC.execute(strMethod, params);
 		QMessageBox::information(this, windowTitle(),
@@ -204,7 +204,7 @@ bool AliasImportDialog::on_importCerts_clicked()
 		params.push_back(currentCategory.toString().toStdString());
 	else if(ui->certCategory->currentText() != tr("All Certificates"))
 		params.push_back(ui->certCategory->currentText().toStdString());
-	params.push_back(ui->certSafeSearch->checkState() == QT::Checked? "Yes": "No");
+	params.push_back(ui->certSafeSearch->checkState() == Qt::Checked? "Yes": "No");
     try {
         result = tableRPC.execute(strMethod, params);
 		QMessageBox::information(this, windowTitle(),
