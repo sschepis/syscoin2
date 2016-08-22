@@ -41,6 +41,7 @@ MyAliasListPage::MyAliasListPage(const PlatformStyle *platformStyle, QWidget *pa
 		ui->refreshButton->setIcon(QIcon());
 		ui->newPubKey->setIcon(QIcon());
 		ui->whitelistButton->setIcon(QIcon());
+		ui->importButton->setIcon(QIcon());
 
 	}
 	else
@@ -53,6 +54,7 @@ MyAliasListPage::MyAliasListPage(const PlatformStyle *platformStyle, QWidget *pa
 		ui->refreshButton->setIcon(platformStyle->SingleColorIcon(":/icons/" + theme + "/refresh"));
 		ui->newPubKey->setIcon(platformStyle->SingleColorIcon(":/icons/" + theme + "/add"));
 		ui->whitelistButton->setIcon(platformStyle->SingleColorIcon(":/icons/" + theme + "/address-book"));
+		ui->importButton->setIcon(platformStyle->SingleColorIcon(":/icons/" + theme + "/add"));
 		
 	}
 
@@ -151,7 +153,17 @@ void MyAliasListPage::on_copyAlias_clicked()
     GUIUtil::copyEntryData(ui->tableView, AliasTableModel::Name);
 }
 
-
+void MyAliasListPage::on_importButton_clicked()
+{
+    if(!ui->tableView->selectionModel())
+        return;
+    QModelIndexList selection = ui->tableView->selectionModel()->selectedRows();
+    if(!selection.isEmpty())
+    {
+        AliasImportDialog dlg(platformStyle, selection.at(0));
+        dlg.exec();
+    }
+}
 void MyAliasListPage::on_editButton_clicked()
 {
     if(!ui->tableView->selectionModel())

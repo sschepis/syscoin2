@@ -120,6 +120,7 @@ QT_FORMS_UI = \
   qt/forms/mycertlistpage.ui \
   qt/forms/acceptandpayofferlistpage.ui \
   qt/forms/offeracceptinfodialog.ui \
+  qt/forms/aliasimportdialog.ui \
   qt/forms/escrowinfodialog.ui \
   qt/forms/offerpaydialog.ui \
   qt/forms/offerescrowdialog.ui \
@@ -196,6 +197,7 @@ QT_MOC_CPP = \
   qt/moc_offertablemodel.cpp \
   qt/moc_offeraccepttablemodel.cpp \
   qt/moc_offeracceptinfodialog.cpp \
+  qt/moc_aliasimportdialog.cpp \
   qt/moc_escrowinfodialog.cpp \
   qt/moc_editofferdialog.cpp \
   qt/moc_newwhitelistdialog.cpp \
@@ -315,6 +317,7 @@ SYSCOIN_QT_H = \
   qt/offertablemodel.h \
   qt/offeraccepttablemodel.h \
   qt/offeracceptinfodialog.h \
+  qt/aliasimportdialog.h \
   qt/escrowinfodialog.h \
   qt/editofferdialog.h \
   qt/newwhitelistdialog.h \
@@ -604,6 +607,7 @@ SYSCOIN_QT_CPP += \
   qt/offertablemodel.cpp \
   qt/offeraccepttablemodel.cpp \
   qt/offeracceptinfodialog.cpp \
+  qt/aliasimportdialog.cpp \
   qt/escrowinfodialog.cpp \
   qt/editofferdialog.cpp \
   qt/newwhitelistdialog.cpp \

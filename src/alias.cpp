@@ -2165,9 +2165,13 @@ UniValue importoffersusedbyalias(const UniValue& params, bool fHelp) {
 		COffer theOffer;
 		if(GetTxOfOffer(vchFromString(offer), theOffer, offertx) && IsSyscoinTxMine(offertx, "offer"))
 		{
-			count++;
 			CWalletTx wtx(pwalletMain,offertx);
-			pwalletMain->AddToWallet(wtx, false, &walletdb);
+			map<uint256, CWalletTx>::const_iterator it = pwalletMain->mapWallet.find(wtx.GetHash());
+			if (it != pwalletMain->mapWallet.end())
+			{
+				if(pwalletMain->AddToWallet(wtx, false, &walletdb))
+					count++;	
+			}
 		}
 	}
 	UniValue res(UniValue::VARR);
@@ -2192,9 +2196,13 @@ UniValue importcertsusedbyalias(const UniValue& params, bool fHelp) {
 		CCert theCert;
 		if(GetTxOfCert(vchFromString(cert), theCert, certtx) && IsSyscoinTxMine(certtx, "cert"))
 		{
-			count++;
 			CWalletTx wtx(pwalletMain,certtx);
-			pwalletMain->AddToWallet(wtx, false, &walletdb);
+			map<uint256, CWalletTx>::const_iterator it = pwalletMain->mapWallet.find(wtx.GetHash());
+			if (it != pwalletMain->mapWallet.end())
+			{
+				if(pwalletMain->AddToWallet(wtx, false, &walletdb))
+					count++;	
+			}
 		}
 	}
 	UniValue res(UniValue::VARR);
@@ -2217,9 +2225,13 @@ UniValue importescrowsusedbyalias(const UniValue& params, bool fHelp) {
 		CEscrow theEscrow;
 		if(GetTxOfEscrow(vchFromString(escrow), theEscrow, escrowtx) && IsSyscoinTxMine(escrowtx, "escrow"))
 		{
-			count++;
 			CWalletTx wtx(pwalletMain,escrowtx);
-			pwalletMain->AddToWallet(wtx, false, &walletdb);
+			map<uint256, CWalletTx>::const_iterator it = pwalletMain->mapWallet.find(wtx.GetHash());
+			if (it != pwalletMain->mapWallet.end())
+			{
+				if(pwalletMain->AddToWallet(wtx, false, &walletdb))
+					count++;	
+			}
 		}
 	}
 	UniValue res(UniValue::VARR);
