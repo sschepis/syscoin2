@@ -16,6 +16,7 @@ class QItemSelection;
 class QSortFilterProxyModel;
 class QMenu;
 class QModelIndex;
+class QStandardItemModel;
 QT_END_NAMESPACE
 
 /** Widget that shows a list of owned aliases.
