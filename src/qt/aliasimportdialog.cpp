@@ -77,7 +77,7 @@ void AliasImportDialog::addParentItem( QStandardItemModel * model, const QString
     model->appendRow( item );
 }
 
-void OfferListPage::addChildItem( QStandardItemModel * model, const QString& text, const QVariant& data )
+void AliasImportDialog::addChildItem( QStandardItemModel * model, const QString& text, const QVariant& data )
 {
 	QList<QStandardItem*> lst = model->findItems(text,Qt::MatchExactly);
 	for(unsigned int i=0; i<lst.count(); ++i )
@@ -91,7 +91,7 @@ void OfferListPage::addChildItem( QStandardItemModel * model, const QString& tex
     item->setData( "child", Qt::AccessibleDescriptionRole );
     model->appendRow( item );
 }
-void OfferListPage::loadCategories()
+void AliasImportDialog::loadCategories()
 {
     QStandardItemModel * offermodel = new QStandardItemModel;
 	QStandardItemModel * certmodel = new QStandardItemModel;

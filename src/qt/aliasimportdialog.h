@@ -6,10 +6,10 @@ class QDataWidgetMapper;
 class UniValue;
 namespace Ui {
     class AliasImportDialog;
-	class QStandardItemModel;
 }
 QT_BEGIN_NAMESPACE
 class QModelIndex;
+class QStandardItemModel;
 QT_END_NAMESPACE
 /** Dialog for editing an address and associated information.
  */
