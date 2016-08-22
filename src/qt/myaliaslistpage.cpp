@@ -13,7 +13,7 @@
 #include "mywhitelistofferdialog.h"
 #include "csvmodelwriter.h"
 #include "guiutil.h"
-
+#include "aliasimportdialog.h"
 #include <QSortFilterProxyModel>
 #include <QClipboard>
 #include <QMessageBox>
