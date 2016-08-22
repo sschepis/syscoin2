@@ -651,10 +651,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	const UniValue &array3 = r.get_array();
 	string certgoodguid = array3[1].get_str();	
 	// expire aliasexpire and aliasexpirenode2 aliases
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 5"));
-	MilliSleep(2500);
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "offerupdate sys_rates aliasexpire " + offerguid + " category title 100 0.05 description"));
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 60"));
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 10"));
 	MilliSleep(2500);
 
 
@@ -666,36 +663,28 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	string pubkey = resultArray[0].get_str();		
 
 	// should fail: alias update on expired alias
-	BOOST_CHECK_THROW(CallRPC("node1", "aliasupdate aliasexpire newdata1 privdata"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node2", "aliasupdate aliasexpirenode2 newdata1 privdata"), runtime_error);
 	// should fail: alias transfer from expired alias
-	BOOST_CHECK_THROW(CallRPC("node1", "aliasupdate aliasexpire changedata1 pvtdata Yes " + pubkey), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node2", "aliasupdate aliasexpirenode2 changedata1 pvtdata Yes " + pubkey), runtime_error);
 	// should fail: alias transfer to another alias
 	BOOST_CHECK_THROW(CallRPC("node1", "aliasupdate aliasexpire2 changedata1 pvtdata Yes " + aliasexpirenode2pubkey), runtime_error);
-	// should fail: alias update on expired alias
-	BOOST_CHECK_THROW(CallRPC("node1", "aliasupdate aliasexpire newdata1 privdata"), runtime_error);
 
-	// should fail: offer update on an expired alias in offer
-	BOOST_CHECK_THROW(CallRPC("node1", "offerupdate sys_rates aliasexpire " + offerguid + " category title1 90 0.15 description"), runtime_error);	
-
-
-	// should fail: perform an accept on expired alias in offer
-	BOOST_CHECK_THROW(r = CallRPC("node2", "offeraccept aliasexpire " + offerguid + " 1 message"), runtime_error);
 	// should fail: link to an expired alias in offer
-	BOOST_CHECK_THROW(CallRPC("node1", "offerlink aliasexpire " + offerguid + " 5 newdescription"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node2", "offerlink aliasexpirenode2 " + offerguid + " 5 newdescription"), runtime_error);
 	// should fail: generate an offer using expired alias
-	BOOST_CHECK_THROW(CallRPC("node1", "offernew sys_rates aliasexpire category title 1 0.05 description USD nocert 0 1"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node2", "offernew sys_rates aliasexpirenode2 category title 1 0.05 description USD nocert 0 1"), runtime_error);
 
 	// should fail: send message from expired alias to expired alias
-	BOOST_CHECK_THROW(CallRPC("node1", "messagenew subject title aliasexpire aliasexpirenode2"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node2", "messagenew subject title aliasexpirenode2 aliasexpirenode2"), runtime_error);
 	// should fail: send message from expired alias to non-expired alias
-	BOOST_CHECK_THROW(CallRPC("node1", "messagenew subject title aliasexpire aliasexpire2node2"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node2", "messagenew subject title aliasexpirenode2 aliasexpire"), runtime_error);
 	// should fail: send message from non-expired alias to expired alias
-	BOOST_CHECK_THROW(CallRPC("node2", "messagenew subject title aliasexpire2node2 aliasexpire"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "messagenew subject title aliasexpire aliasexpirenode2"), runtime_error);
 
 	// should fail: new escrow with expired arbiter alias
-	BOOST_CHECK_THROW(CallRPC("node2", "escrownew aliasexpire2node2 " + offerguid + " 1 message aliasexpire"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node2", "escrownew aliasexpire2node2 " + offerguid + " 1 message aliasexpirenode2"), runtime_error);
 	// should fail: new escrow with expired alias
-	BOOST_CHECK_THROW(CallRPC("node2", "escrownew aliasexpirenode2 " + offerguid + " 1 message aliasexpire2"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node2", "escrownew aliasexpirenode2 " + offerguid + " 1 message aliasexpire"), runtime_error);
 
 	// keep alive for later calls
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate aliasexpire2 newdata1 privdata"));
@@ -706,10 +695,10 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "certupdate " + certgoodguid + " aliasexpire2 newdata privdata 0"));
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "offerupdate sys_rates aliasexpire " + offerguid + " category title 100 0.05 description"));
 	// expire the escrow
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 5"));
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 30"));
 	MilliSleep(2500);
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "certupdate " + certguid + " aliasexpire jag1 data 0"));
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 60"));
+	BOOST_CHECK_NO_THROW(CallRPC("node1","generate 35"));
 	MilliSleep(2500);
 
 	StartNode("node3");
