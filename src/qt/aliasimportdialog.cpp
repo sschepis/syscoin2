@@ -52,7 +52,7 @@ AliasImportDialog::AliasImportDialog(const PlatformStyle *platformStyle, const Q
 		ui->importCerts->setIcon(platformStyle->SingleColorIcon(":/icons/" + theme + "/add"));
 		ui->importEscrows->setIcon(platformStyle->SingleColorIcon(":/icons/" + theme + "/add"));
 	}
-	loadCategories();
+	loadCategory();
 }
 
 AliasImportDialog::~AliasImportDialog()
@@ -91,7 +91,7 @@ void AliasImportDialog::addChildItem( QStandardItemModel * model, const QString&
     item->setData( "child", Qt::AccessibleDescriptionRole );
     model->appendRow( item );
 }
-void AliasImportDialog::loadCategories()
+void AliasImportDialog::loadCategory()
 {
     QStandardItemModel * offermodel = new QStandardItemModel;
 	QStandardItemModel * certmodel = new QStandardItemModel;
@@ -100,7 +100,7 @@ void AliasImportDialog::loadCategories()
 	{
 		return;
 	}
-	addParentItem(offermodel, tr("All Categories"), tr("All Categories"));
+	addParentItem(offermodel, tr("All Category"), tr("All Category"));
 	for(unsigned int i = 0;i< categoryList.size(); i++)
 	{
 		vector<string> categories;
@@ -164,11 +164,11 @@ bool AliasImportDialog::on_importOffers_clicked()
 	UniValue params(UniValue::VARR);
 	UniValue result;
 	params.push_back(alias.toStdString());
-	QVariant currentCategory = ui->offerCategories->itemData(ui->offerCategories->currentIndex(), Qt::UserRole);
-	if(ui->offerCategories->currentIndex() > 0 &&  currentCategory != QVariant::Invalid)
+	QVariant currentCategory = ui->offerCategory->itemData(ui->offerCategory->currentIndex(), Qt::UserRole);
+	if(ui->offerCategory->currentIndex() > 0 &&  currentCategory != QVariant::Invalid)
 		params.push_back(currentCategory.toString().toStdString());
-	else if(ui->offerCategories->currentText() != tr("All Categories"))
-		params.push_back(ui->offerCategories->currentText().toStdString());
+	else if(ui->offerCategory->currentText() != tr("All Category"))
+		params.push_back(ui->offerCategory->currentText().toStdString());
 	params.push_back(ui->offerSafeSearch->checkState() == QT::Checked? "Yes": "No");
     try {
         result = tableRPC.execute(strMethod, params);
@@ -199,11 +199,11 @@ bool AliasImportDialog::on_importCerts_clicked()
 	UniValue params(UniValue::VARR);
 	UniValue result;
 	params.push_back(alias.toStdString());
-	QVariant currentCategory = ui->certCategories->itemData(ui->certCategories->currentIndex(), Qt::UserRole);
-	if(ui->certCategories->currentIndex() > 0 &&  currentCategory != QVariant::Invalid)
+	QVariant currentCategory = ui->certCategory->itemData(ui->certCategory->currentIndex(), Qt::UserRole);
+	if(ui->certCategory->currentIndex() > 0 &&  currentCategory != QVariant::Invalid)
 		params.push_back(currentCategory.toString().toStdString());
-	else if(ui->certCategories->currentText() != tr("All Certificates"))
-		params.push_back(ui->certCategories->currentText().toStdString());
+	else if(ui->certCategory->currentText() != tr("All Certificates"))
+		params.push_back(ui->certCategory->currentText().toStdString());
 	params.push_back(ui->certSafeSearch->checkState() == QT::Checked? "Yes": "No");
     try {
         result = tableRPC.execute(strMethod, params);
