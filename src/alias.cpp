@@ -98,7 +98,8 @@ bool IsSys21Fork(const uint64_t& nHeight)
 bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 {
 	vector<unsigned char> vchData;
-	if(!GetSyscoinData(scriptPubKey, vchData))
+	vector<unsigned char> vchHash;
+	if(!GetSyscoinData(scriptPubKey, vchData, vchHash))
 		return false;
 	if(!chainActive.Tip())
 		return false;
@@ -109,7 +110,7 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 	CCert cert;
 	nHeight = 0;
 	const string &chainName = ChainNameFromCommandLine();
-	if(alias.UnserializeFromData(vchData))
+	if(alias.UnserializeFromData(vchData, vchHash))
 	{
 		if(alias.vchAlias == vchFromString("sys_rates") || alias.vchAlias == vchFromString("sys_ban") || alias.vchAlias == vchFromString("sys_category"))
 			return false;
@@ -133,7 +134,7 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 			return true;
 		}
 	}
-	else if(offer.UnserializeFromData(vchData))
+	else if(offer.UnserializeFromData(vchData, vchHash))
 	{
 		vector<COffer> vtxPos;
 		if (pofferdb->ReadOffer(offer.vchOffer, vtxPos))
@@ -152,7 +153,7 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 			return true;
 		}
 	}
-	else if(cert.UnserializeFromData(vchData))
+	else if(cert.UnserializeFromData(vchData, vchHash))
 	{
 		vector<CCert> vtxPos;
 		if (pcertdb->ReadCert(cert.vchCert, vtxPos))
@@ -167,7 +168,7 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 			return true;
 		}
 	}
-	else if(escrow.UnserializeFromData(vchData))
+	else if(escrow.UnserializeFromData(vchData, vchHash))
 	{
 		vector<CEscrow> vtxPos;
 		if (pescrowdb->ReadEscrow(escrow.vchEscrow, vtxPos))
@@ -201,7 +202,7 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 			return true;
 		}
 	}
-	else if(message.UnserializeFromData(vchData))
+	else if(message.UnserializeFromData(vchData, vchHash))
 	{
 		vector<CMessage> vtxPos;
 		if (pmessagedb->ReadMessage(message.vchMessage, vtxPos))
@@ -799,7 +800,8 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	bool found = false;
 	vector<unsigned char> vchData;
 	vector<unsigned char> vchAlias;
-	if(GetSyscoinData(tx, vchData) && !theAlias.UnserializeFromData(vchData))
+	vector<unsigned char> vchHash;
+	if(GetSyscoinData(tx, vchData, vchHash) && !theAlias.UnserializeFromData(vchData, vchHash))
 	{
 		theAlias.SetNull();
 	}
@@ -821,10 +823,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 
 		if(!theAlias.IsNull())
 		{
-			uint256 calculatedHash = Hash(vchData.begin(), vchData.end());
-			vector<unsigned char> vchRand = CScriptNum(calculatedHash.GetCheapHash()).getvch();
-			vector<unsigned char> vchRandAlias = vchFromValue(HexStr(vchRand));
-			if(vchRandAlias != vvchArgs[2])
+			if(vchHash != vvchArgs[2])
 			{
 				errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1001 - Hash provided doesn't match the calculated hash the data";
 				return error(errorMessage.c_str());
@@ -1079,20 +1078,20 @@ string stringFromVch(const vector<unsigned char> &vch) {
 	}
 	return res;
 }
-bool GetSyscoinData(const CTransaction &tx, vector<unsigned char> &vchData)
+bool GetSyscoinData(const CTransaction &tx, vector<unsigned char> &vchData, vector<unsigned char> &vchHash)
 {
 	int nOut = GetSyscoinDataOutput(tx);
     if(nOut == -1)
 	   return false;
 
 	const CScript &scriptPubKey = tx.vout[nOut].scriptPubKey;
-	return GetSyscoinData(scriptPubKey, vchData);
+	return GetSyscoinData(scriptPubKey, vchData, vchHash);
 }
 bool IsValidAliasName(const std::vector<unsigned char> &vchAlias)
 {
 	return (vchAlias.size() <= MAX_GUID_LENGTH && vchAlias.size() >= 3);
 }
-bool GetSyscoinData(const CScript &scriptPubKey, vector<unsigned char> &vchData)
+bool GetSyscoinData(const CScript &scriptPubKey, vector<unsigned char> &vchData, vector<unsigned char> &vchHash)
 {
 	CScript::const_iterator pc = scriptPubKey.begin();
 	opcodetype opcode;
@@ -1102,9 +1101,11 @@ bool GetSyscoinData(const CScript &scriptPubKey, vector<unsigned char> &vchData)
 		return false;
 	if (!scriptPubKey.GetOp(pc, opcode, vchData))
 		return false;
+	if (!scriptPubKey.GetOp(pc, opcode, vchHash))
+		return false;
 	return true;
 }
-bool CAliasIndex::UnserializeFromData(const vector<unsigned char> &vchData) {
+bool CAliasIndex::UnserializeFromData(const vector<unsigned char> &vchData, const vector<unsigned char> &vchHash) {
     try {
         CDataStream dsAlias(vchData, SER_NETWORK, PROTOCOL_VERSION);
         dsAlias >> *this;
@@ -1112,22 +1113,25 @@ bool CAliasIndex::UnserializeFromData(const vector<unsigned char> &vchData) {
 		SetNull();
         return false;
     }
-	// extra check to ensure data was parsed correctly
-	if(!IsSysCompressedOrUncompressedPubKey(vchPubKey))
+	uint256 calculatedHash = Hash(vchData.begin(), vchData.end());
+	vector<unsigned char> vchRand = CScriptNum(calculatedHash.GetCheapHash()).getvch();
+	vector<unsigned char> vchRandAlias = vchFromValue(HexStr(vchRand));
+	if(vchRandAlias != vchHash)
 	{
 		SetNull();
-		return false;
+        return false;
 	}
 	return true;
 }
 bool CAliasIndex::UnserializeFromTx(const CTransaction &tx) {
 	vector<unsigned char> vchData;
-	if(!GetSyscoinData(tx, vchData))
+	vector<unsigned char> vchHash;
+	if(!GetSyscoinData(tx, vchData, vchHash))
 	{
 		SetNull();
 		return false;
 	}
-	if(!UnserializeFromData(vchData))
+	if(!UnserializeFromData(vchData, vchHash))
 	{
 		return false;
 	}
@@ -1455,7 +1459,7 @@ void CreateRecipient(const CScript& scriptPubKey, CRecipient& recipient)
 	CTxOut txout(recipient.nAmount,	recipient.scriptPubKey);
 	recipient.nAmount = txout.GetDustThreshold(::minRelayTxFee);
 }
-void CreateFeeRecipient(const CScript& scriptPubKey, const vector<unsigned char>& data, CRecipient& recipient)
+void CreateFeeRecipient(CScript& scriptPubKey, const vector<unsigned char>& data, CRecipient& recipient)
 {
 	CRecipient recp = {scriptPubKey, 0.02*COIN, false};
 	recipient = recp;
@@ -1464,6 +1468,12 @@ void CreateFeeRecipient(const CScript& scriptPubKey, const vector<unsigned char>
 	CAmount fee = 3*minRelayTxFee.GetFee(nSize);
 	// minimum of 0.02 COIN fees for data
 	recipient.nAmount = fee > 0.02*COIN? fee: 0.02*COIN;
+
+	// add hash to data output (must match hash in inputs check with the tx scriptpubkey hash)
+    uint256 hash = Hash(data.begin(), data.end());
+ 	vector<unsigned char> vchHash = CScriptNum(hash.GetCheapHash()).getvch();
+    vector<unsigned char> vchHashRand = vchFromValue(HexStr(vchHash));
+	scriptPubKey << vchHashRand;
 }
 UniValue aliasnew(const UniValue& params, bool fHelp) {
 	if (fHelp || 2 > params.size() || 5 < params.size())

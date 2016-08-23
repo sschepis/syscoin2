@@ -88,7 +88,7 @@ public:
     void SetNull() {vchMessage.clear(); txHash.SetNull(); nHeight = 0; vchAliasTo.clear(); vchAliasFrom.clear(); vchSubject.clear(); vchMessageTo.clear();vchMessageFrom.clear();}
     bool IsNull() const { return (vchMessage.empty() && txHash.IsNull() && nHeight == 0 && vchAliasTo.empty() && vchAliasFrom.empty()); }
     bool UnserializeFromTx(const CTransaction &tx);
-	bool UnserializeFromData(const std::vector<unsigned char> &vchData);
+	bool UnserializeFromData(const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash);
 	const std::vector<unsigned char> Serialize();
 };
 

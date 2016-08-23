@@ -452,7 +452,7 @@ public:
     bool IsNull() const { return (vchOffer.empty() && safetyLevel == 0 && !safeSearch && vchAlias.empty() && txHash.IsNull() && nHeight == 0 && nPrice == 0 && nQty == 0 &&  linkWhitelist.IsNull() && sTitle.empty() && sDescription.empty() && vchAliasPeg.empty() && offerLinks.empty() && vchGeoLocation.empty() && nCommission == 0 && bPrivate == false && bOnlyAcceptBTC == false && sCurrencyCode.empty() && vchLinkOffer.empty() && vchLinkAlias.empty() && vchCert.empty() ); }
 
     bool UnserializeFromTx(const CTransaction &tx);
-	bool UnserializeFromData(const std::vector<unsigned char> &vchData);
+	bool UnserializeFromData(const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash);
 	const std::vector<unsigned char> Serialize();
 };
 

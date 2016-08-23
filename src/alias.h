@@ -114,7 +114,7 @@ public:
     void SetNull() {vchPrivateKey.clear(); nRenewal = 0; vchGUID.clear(); vchAlias.clear(); nRatingCount = 0; nRating = 0; safetyLevel = 0; safeSearch = false; txHash.SetNull(); nHeight = 0; vchPublicValue.clear(); vchPrivateValue.clear(); vchPubKey.clear(); }
     bool IsNull() const { return (vchPrivateKey.empty() && nRenewal == 0 && vchGUID.empty() && vchAlias.empty() && nRatingCount == 0 && nRating == 0 && safetyLevel == 0 && !safeSearch && nHeight == 0 && txHash.IsNull() && vchPublicValue.empty() && vchPrivateValue.empty() && vchPubKey.empty()); }
 	bool UnserializeFromTx(const CTransaction &tx);
-	bool UnserializeFromData(const std::vector<unsigned char> &vchData);
+	bool UnserializeFromData(const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash);
 	const std::vector<unsigned char> Serialize();
 };
 
@@ -171,7 +171,7 @@ const int SYSCOIN_TX_VERSION = 0x7400;
 bool IsValidAliasName(const std::vector<unsigned char> &vchAlias);
 bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const std::vector<std::vector<unsigned char> > &vvchArgs, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, std::string &errorMessage, const CBlock* block = NULL, bool dontaddtodb=false);
 void CreateRecipient(const CScript& scriptPubKey, CRecipient& recipient);
-void CreateFeeRecipient(const CScript& scriptPubKey, const std::vector<unsigned char>& data, CRecipient& recipient);
+void CreateFeeRecipient(CScript& scriptPubKey, const std::vector<unsigned char>& data, CRecipient& recipient);
 bool IsSyscoinTxMine(const CTransaction& tx,const std::string &type);
 bool IsAliasOp(int op);
 bool getCategoryList(std::vector<std::string>& categoryList);
@@ -197,8 +197,8 @@ int GetAliasExpirationDepth();
 CScript RemoveAliasScriptPrefix(const CScript& scriptIn);
 int GetSyscoinDataOutput(const CTransaction& tx);
 bool IsSyscoinDataOutput(const CTxOut& out);
-bool GetSyscoinData(const CTransaction &tx, std::vector<unsigned char> &vchData);
-bool GetSyscoinData(const CScript &scriptPubKey, std::vector<unsigned char> &vchData);
+bool GetSyscoinData(const CTransaction &tx, std::vector<unsigned char> &vchData, std::vector<unsigned char> &vchHash);
+bool GetSyscoinData(const CScript &scriptPubKey, std::vector<unsigned char> &vchData, std::vector<unsigned char> &vchHash);
 bool IsSysServiceExpired(const uint64_t &nHeight);
 bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight);
 bool GetSyscoinTransaction(int nHeight, const uint256 &hash, CTransaction &txOut, const Consensus::Params& consensusParams);

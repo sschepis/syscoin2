@@ -54,7 +54,7 @@ string messageFromOp(int op) {
         return "<unknown message op>";
     }
 }
-bool CMessage::UnserializeFromData(const vector<unsigned char> &vchData) {
+bool CMessage::UnserializeFromData(const vector<unsigned char> &vchData, const vector<unsigned char> &vchHash) {
     try {
         CDataStream dsMessage(vchData, SER_NETWORK, PROTOCOL_VERSION);
         dsMessage >> *this;
@@ -62,22 +62,25 @@ bool CMessage::UnserializeFromData(const vector<unsigned char> &vchData) {
 		SetNull();
         return false;
     }
-	// extra check to ensure data was parsed correctly
-	if(!IsValidAliasName(vchAliasTo) || !IsValidAliasName(vchAliasFrom))
+	uint256 calculatedHash = Hash(vchData.begin(), vchData.end());
+	vector<unsigned char> vchRand = CScriptNum(calculatedHash.GetCheapHash()).getvch();
+	vector<unsigned char> vchRandMsg = vchFromValue(HexStr(vchRand));
+	if(vchRandMsg != vchHash)
 	{
 		SetNull();
-		return false;
+        return false;
 	}
 	return true;
 }
 bool CMessage::UnserializeFromTx(const CTransaction &tx) {
 	vector<unsigned char> vchData;
-	if(!GetSyscoinData(tx, vchData))
+	vector<unsigned char> vchHash;
+	if(!GetSyscoinData(tx, vchData, vchHash))
 	{
 		SetNull();
 		return false;
 	}
-	if(!UnserializeFromData(vchData))
+	if(!UnserializeFromData(vchData, vchHash))
 	{
 		return false;
 	}
@@ -260,7 +263,8 @@ bool CheckMessageInputs(const CTransaction &tx, int op, int nOut, const vector<v
 	CAliasIndex alias;
 	CTransaction aliasTx;
 	vector<unsigned char> vchData;
-	if(!GetSyscoinData(tx, vchData) || !theMessage.UnserializeFromData(vchData))
+	vector<unsigned char> vchHash;
+	if(!GetSyscoinData(tx, vchData, vchHash) || !theMessage.UnserializeFromData(vchData, vchHash))
 	{
 		if(fDebug)
 			LogPrintf("SYSCOIN_MESSAGE_CONSENSUS_ERROR: Null message, skipping...\n");	
@@ -278,10 +282,7 @@ bool CheckMessageInputs(const CTransaction &tx, int op, int nOut, const vector<v
 		}
 		if(!theMessage.IsNull())
 		{
-			uint256 calculatedHash = Hash(vchData.begin(), vchData.end());
-			vector<unsigned char> vchRand = CScriptNum(calculatedHash.GetCheapHash()).getvch();
-			vector<unsigned char> vchRandMsg = vchFromValue(HexStr(vchRand));
-			if(vchRandMsg != vvchArgs[1])
+			if(vchHash != vvchArgs[1])
 			{
 				errorMessage = "SYSCOIN_MESSAGE_CONSENSUS_ERROR: ERRCODE: 3002 - Hash provided doesn't match the calculated hash the data";
 				return error(errorMessage.c_str());

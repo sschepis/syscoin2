@@ -86,7 +86,7 @@ string certFromOp(int op) {
         return "<unknown cert op>";
     }
 }
-bool CCert::UnserializeFromData(const vector<unsigned char> &vchData) {
+bool CCert::UnserializeFromData(const vector<unsigned char> &vchData, const vector<unsigned char> &vchHash) {
     try {
         CDataStream dsCert(vchData, SER_NETWORK, PROTOCOL_VERSION);
         dsCert >> *this;
@@ -94,22 +94,25 @@ bool CCert::UnserializeFromData(const vector<unsigned char> &vchData) {
 		SetNull();
         return false;
     }
-	// extra check to ensure data was parsed correctly
-	if(!IsValidAliasName(vchAlias))
+	uint256 calculatedHash = Hash(vchData.begin(), vchData.end());
+	vector<unsigned char> vchRand = CScriptNum(calculatedHash.GetCheapHash()).getvch();
+	vector<unsigned char> vchRandCert = vchFromValue(HexStr(vchRand));
+	if(vchRandCert != vchHash)
 	{
 		SetNull();
-		return false;
+        return false;
 	}
 	return true;
 }
 bool CCert::UnserializeFromTx(const CTransaction &tx) {
 	vector<unsigned char> vchData;
-	if(!GetSyscoinData(tx, vchData))
+	vector<unsigned char> vchHash;
+	if(!GetSyscoinData(tx, vchData, vchHash))
 	{
 		SetNull();
 		return false;
 	}
-	if(!UnserializeFromData(vchData))
+	if(!UnserializeFromData(vchData, vchHash))
 	{	
 		return false;
 	}
@@ -365,7 +368,8 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 	CCert theCert;
 	vector<unsigned char> vchData;
 	bool found = false;
-	if(GetSyscoinData(tx, vchData) && !theCert.UnserializeFromData(vchData))
+	vector<unsigned char> vcHash;
+	if(GetSyscoinData(tx, vchData, vcHash) && !theCert.UnserializeFromData(vchData, vcHash))
 	{
 		theCert.SetNull();
 	}
@@ -386,11 +390,8 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 		}
 
 		if(!theCert.IsNull())
-		{
-			uint256 calculatedHash = Hash(vchData.begin(), vchData.end());
-			vector<unsigned char> vchRand = CScriptNum(calculatedHash.GetCheapHash()).getvch();
-			vector<unsigned char> vchRandCert = vchFromValue(HexStr(vchRand));
-			if(vchRandCert != vvchArgs[1])
+		{					
+			if(vchHash != vvchArgs[1])
 			{
 				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2002 - Hash provided doesn't match the calculated hash the data";
 				return error(errorMessage.c_str());

@@ -187,7 +187,7 @@ string offerFromOp(int op) {
 		return "<unknown offer op>";
 	}
 }
-bool COffer::UnserializeFromData(const vector<unsigned char> &vchData) {
+bool COffer::UnserializeFromData(const vector<unsigned char> &vchData, const vector<unsigned char> &vchHash) {
     try {
         CDataStream dsOffer(vchData, SER_NETWORK, PROTOCOL_VERSION);
         dsOffer >> *this;
@@ -195,22 +195,25 @@ bool COffer::UnserializeFromData(const vector<unsigned char> &vchData) {
 		SetNull();
         return false;
     }
-	// extra check to ensure data was parsed correctly
-	if(!IsValidAliasName(vchAlias))
+	uint256 calculatedHash = Hash(vchData.begin(), vchData.end());
+	vector<unsigned char> vchRand = CScriptNum(calculatedHash.GetCheapHash()).getvch();
+	vector<unsigned char> vchRandOffer = vchFromValue(HexStr(vchRand));
+	if(vchRandOffer != vchHash)
 	{
 		SetNull();
-		return false;
+        return false;
 	}
 	return true;
 }
 bool COffer::UnserializeFromTx(const CTransaction &tx) {
 	vector<unsigned char> vchData;
-	if(!GetSyscoinData(tx, vchData))
+	vector<unsigned char> vchHash;
+	if(!GetSyscoinData(tx, vchData, vchHash))
 	{
 		SetNull();
 		return false;
 	}
-	if(!UnserializeFromData(vchData))
+	if(!UnserializeFromData(vchData, vchHash))
 	{
 		return false;
 	}
@@ -537,14 +540,10 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	// unserialize msg from txn, check for valid
 	COffer theOffer;
 	vector<unsigned char> vchData;
-	if(!GetSyscoinData(tx, vchData))
+	vector<unsigned char> vchHash;
+	if(!GetSyscoinData(tx, vchData, vcHash) || !theOffer.UnserializeFromData(vchData, vcHash))
 	{
-		errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR ERRCODE: 1 - Cannot find data inside of this transaction relating to an offer";
-		return true;
-	}
-	else if(!theOffer.UnserializeFromData(vchData))
-	{
-		errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR ERRCODE: 2 - Cannot unserialize data inside of this transaction relating to an offer";
+		errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR ERRCODE: 1 - Cannot unserialize data inside of this transaction relating to an offer";
 		return true;
 	}
 	// Make sure offer outputs are not spent by a regular transaction, or the offer would be lost
@@ -568,12 +567,9 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		}
 		if(!theOffer.IsNull())
 		{
-			uint256 calculatedHash = Hash(vchData.begin(), vchData.end());
-			vector<unsigned char> vchRand = CScriptNum(calculatedHash.GetCheapHash()).getvch();
-			vector<unsigned char> vchRandOffer = vchFromValue(HexStr(vchRand));
 			if(op == OP_OFFER_ACCEPT)
 			{
-				if(vchRandOffer != vvchArgs[3])
+				if(vchHash != vvchArgs[3])
 				{
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 6 - Hash provided doesn't match the calculated hash the data";
 					return error(errorMessage.c_str());
@@ -581,7 +577,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			}
 			else
 			{
-				if(vchRandOffer != vvchArgs[1])
+				if(vchHash != vvchArgs[1])
 				{
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 7 - Hash provided doesn't match the calculated hash the data";
 					return error(errorMessage.c_str());

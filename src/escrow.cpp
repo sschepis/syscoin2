@@ -72,7 +72,7 @@ string escrowFromOp(int op) {
         return "<unknown escrow op>";
     }
 }
-bool CEscrow::UnserializeFromData(const vector<unsigned char> &vchData) {
+bool CEscrow::UnserializeFromData(const vector<unsigned char> &vchData, const vector<unsigned char> &vchHash) {
     try {
         CDataStream dsEscrow(vchData, SER_NETWORK, PROTOCOL_VERSION);
         dsEscrow >> *this;
@@ -80,22 +80,25 @@ bool CEscrow::UnserializeFromData(const vector<unsigned char> &vchData) {
 		SetNull();
         return false;
     }
-	// extra check to ensure data was parsed correctly
-	if(!IsValidAliasName(vchBuyerAlias))
+	uint256 calculatedHash = Hash(vchData.begin(), vchData.end());
+	vector<unsigned char> vchRand = CScriptNum(calculatedHash.GetCheapHash()).getvch();
+	vector<unsigned char> vchRandEscrow = vchFromValue(HexStr(vchRand));
+	if(vchRandEscrow != vchHash)
 	{
 		SetNull();
-		return false;
+        return false;
 	}
 	return true;
 }
 bool CEscrow::UnserializeFromTx(const CTransaction &tx) {
 	vector<unsigned char> vchData;
-	if(!GetSyscoinData(tx, vchData))
+	vector<unsigned char> vchHash;
+	if(!GetSyscoinData(tx, vchData, vchHash))
 	{
 		SetNull();
 		return false;
 	}
-	if(!UnserializeFromData(vchData))
+	if(!UnserializeFromData(vchData, vchHash))
 	{
 		return false;
 	}
@@ -307,7 +310,8 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 	 // unserialize escrow UniValue from txn, check for valid
     CEscrow theEscrow;
 	vector<unsigned char> vchData;
-	if(GetSyscoinData(tx, vchData) && !theEscrow.UnserializeFromData(vchData))
+	vector<unsigned char> vchHash;
+	if(GetSyscoinData(tx, vchData, vchHash) && !theEscrow.UnserializeFromData(vchData, vchHash))
 	{
 		theEscrow.SetNull();
 	}
@@ -323,10 +327,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 		}
 		if(!theEscrow.IsNull())
 		{
-			uint256 calculatedHash = Hash(vchData.begin(), vchData.end());
-			vector<unsigned char> vchRand = CScriptNum(calculatedHash.GetCheapHash()).getvch();
-			vector<unsigned char> vchRandEscrow = vchFromValue(HexStr(vchRand));
-			if(vchRandEscrow != vvchArgs[2])
+			if(vcHash != vvchArgs[2])
 			{
 				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4002 - Hash provided doesn't match the calculated hash the data";
 				return error(errorMessage.c_str());

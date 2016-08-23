@@ -104,7 +104,7 @@ public:
     void SetNull() { vchLinkAlias.clear(); sCategory.clear(); vchCert.clear(); safetyLevel = 0; safeSearch = false; nHeight = 0; txHash.SetNull(); vchAlias.clear(); bPrivate = false; vchTitle.clear(); vchData.clear();}
     bool IsNull() const { return (vchLinkAlias.empty() && sCategory.empty() && vchCert.empty() && safetyLevel == 0 && !safeSearch && !bPrivate && txHash.IsNull() &&  nHeight == 0 && vchData.empty() && vchTitle.empty() && vchAlias.empty()); }
     bool UnserializeFromTx(const CTransaction &tx);
-	bool UnserializeFromData(const std::vector<unsigned char> &vchData);
+	bool UnserializeFromData(const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash);
 	const std::vector<unsigned char> Serialize();
 };
 
