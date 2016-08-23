@@ -112,7 +112,7 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 	const string &chainName = ChainNameFromCommandLine();
 	if(alias.UnserializeFromData(vchData, vchHash))
 	{
-		if(alias.vchAlias == vchFromString("sys_rates") || alias.vchAlias == vchFromString("sys_ban") || alias.vchAlias == vchFromString("sys_category"))
+		if(alias.vchAlias == vchFromString("sysrates.peg") || alias.vchAlias == vchFromString("sysban") || alias.vchAlias == vchFromString("syscategory"))
 			return false;
 		vector<CAliasIndex> vtxPos;
 		// we only prune things that we have in our db and that we can verify the last tx is expired
@@ -596,17 +596,17 @@ bool getCategoryList(vector<string>& categoryList)
 {
 	// check for alias existence in DB
 	vector<CAliasIndex> vtxPos;
-	if (!paliasdb->ReadAlias(vchFromString("sys_category"), vtxPos) || vtxPos.empty())
+	if (!paliasdb->ReadAlias(vchFromString("syscategory"), vtxPos) || vtxPos.empty())
 	{
 		if(fDebug)
-			LogPrintf("getCategoryList() Could not find sys_category alias\n");
+			LogPrintf("getCategoryList() Could not find syscategory alias\n");
 		return false;
 	}
 	
 	if (vtxPos.size() < 1)
 	{
 		if(fDebug)
-			LogPrintf("getCategoryList() Could not find sys_category alias (vtxPos.size() == 0)\n");
+			LogPrintf("getCategoryList() Could not find syscategory alias (vtxPos.size() == 0)\n");
 		return false;
 	}
 
@@ -870,7 +870,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1003 - Alias name does not follow the domain name specification";
 			return error(errorMessage.c_str());
 		}
-		if(theAlias.vchPublicValue.size() > MAX_VALUE_LENGTH && vvchArgs[0] != vchFromString("sys_rates") && vvchArgs[0] != vchFromString("sys_category"))
+		if(theAlias.vchPublicValue.size() > MAX_VALUE_LENGTH && vvchArgs[0] != vchFromString("sysrates.peg") && vvchArgs[0] != vchFromString("syscategory"))
 		{
 			errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1004 - Alias public value too big";
 			return error(errorMessage.c_str());
@@ -1038,7 +1038,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1019 - Failed to write to alias DB";
 			return error(errorMessage.c_str());
 		}
-		if(!dontaddtodb && update && vchAlias == vchFromString("sys_ban"))
+		if(!dontaddtodb && update && vchAlias == vchFromString("sysban"))
 		{
 			updateBans(theAlias.vchPublicValue);
 		}		
@@ -1230,7 +1230,7 @@ bool GetTxOfAlias(const vector<unsigned char> &vchAlias,
 		return false;
 	txPos = vtxPos.back();
 	int nHeight = txPos.nHeight;
-	if(vchAlias != vchFromString("sys_rates") && vchAlias != vchFromString("sys_ban") && vchAlias != vchFromString("sys_category"))
+	if(vchAlias != vchFromString("sysrates.peg") && vchAlias != vchFromString("sysban") && vchAlias != vchFromString("syscategory"))
 	{
 		if (!skipExpiresCheck && (nHeight + (txPos.nRenewal*GetAliasExpirationDepth())
 				< chainActive.Tip()->nHeight)) {
@@ -1252,7 +1252,7 @@ bool GetTxAndVtxOfAlias(const vector<unsigned char> &vchAlias,
 		return false;
 	txPos = vtxPos.back();
 	int nHeight = txPos.nHeight;
-	if(vchAlias != vchFromString("sys_rates") && vchAlias != vchFromString("sys_ban") && vchAlias != vchFromString("sys_category"))
+	if(vchAlias != vchFromString("sysrates.peg") && vchAlias != vchFromString("sysban") && vchAlias != vchFromString("syscategory"))
 	{
 		if (!skipExpiresCheck && (nHeight + (txPos.nRenewal*GetAliasExpirationDepth())
 				< chainActive.Tip()->nHeight)) {
@@ -1505,7 +1505,7 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	smatch nameparts;
 	sregex domainwithtldregex = sregex::compile("^((?!-)[a-z0-9-]{3,63}(?<!-)\\.)+[a-z]{2,6}$");
 	sregex domainwithouttldregex = sregex::compile("^((?!-)[a-z0-9-]{3,63}(?<!-))");
-	if(vchAlias != vchFromString("sys_rates") && vchAlias != vchFromString("sys_ban") && vchAlias != vchFromString("sys_category"))
+	if(vchAlias != vchFromString("sysrates.peg") && vchAlias != vchFromString("sysban") && vchAlias != vchFromString("syscategory"))
 	{
 		if(find_first(strName, "."))
 		{
@@ -1870,7 +1870,7 @@ UniValue aliaslist(const UniValue& params, bool fHelp) {
 			oName.push_back(Pair("rating", (int)rating));
 			oName.push_back(Pair("ratingcount", alias.nRatingCount));
 			expired_block = nHeight + (alias.nRenewal*GetAliasExpirationDepth());
-			if(vchAlias != vchFromString("sys_rates") && vchAlias != vchFromString("sys_ban") && vchAlias != vchFromString("sys_category"))
+			if(vchAlias != vchFromString("sysrates.peg") && vchAlias != vchFromString("sysban") && vchAlias != vchFromString("syscategory"))
 			{
 				if(expired_block < chainActive.Tip()->nHeight)
 				{
@@ -2046,7 +2046,7 @@ UniValue aliasinfo(const UniValue& params, bool fHelp) {
 		oName.push_back(Pair("ratingcount", alias.nRatingCount));
         oName.push_back(Pair("lastupdate_height", nHeight));
 		expired_block = nHeight + (alias.nRenewal*GetAliasExpirationDepth());
-		if(vchAlias != vchFromString("sys_rates") && vchAlias != vchFromString("sys_ban") && vchAlias != vchFromString("sys_category"))
+		if(vchAlias != vchFromString("sysrates.peg") && vchAlias != vchFromString("sysban") && vchAlias != vchFromString("syscategory"))
 		{
 			if(expired_block < chainActive.Tip()->nHeight)
 			{
@@ -2134,7 +2134,7 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 			oName.push_back(Pair("rating", (int)rating));
 			oName.push_back(Pair("ratingcount", txPos2.nRatingCount));
 			expired_block = nHeight + (txPos2.nRenewal*GetAliasExpirationDepth()) ;
-			if(vchAlias != vchFromString("sys_rates") && vchAlias != vchFromString("sys_ban") && vchAlias != vchFromString("sys_category"))
+			if(vchAlias != vchFromString("sysrates.peg") && vchAlias != vchFromString("sysban") && vchAlias != vchFromString("syscategory"))
 			{
 				if(expired_block < chainActive.Tip()->nHeight)
 				{

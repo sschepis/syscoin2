@@ -141,7 +141,7 @@ void OptionsModel::Init(bool resetSettings)
     if (!settings.contains("defaultCertAlias"))
         settings.setValue("defaultCertAlias", "");
     if (!settings.contains("defaultPegAlias"))
-        settings.setValue("defaultPegAlias", "sys_rates");
+        settings.setValue("defaultPegAlias", "sysrates.peg");
     if (!settings.contains("defaultBuyOfferAlias"))
         settings.setValue("defaultBuyOfferAlias", "");
     if (!settings.contains("safesearch"))
@@ -398,7 +398,7 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
         case DefaultPegAlias:
             if (settings.value("defaultPegAlias") != value) {
 				if(value == "")
-					settings.setValue("defaultPegAlias", "sys_rates");
+					settings.setValue("defaultPegAlias", "sysrates.peg");
 				else
 					settings.setValue("defaultPegAlias", value);
             }

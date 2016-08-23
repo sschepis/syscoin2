@@ -143,10 +143,10 @@ BOOST_AUTO_TEST_CASE (generate_certban)
 	string certguidsafe = CertNew("node1", "jagsafesearch1", "certtitle", "certdata", false, "Yes");
 	// not safe to search
 	string certguidnotsafe = CertNew("node1", "jagsafesearch1", "certtitle", "certdata", false, "No");
-	// can't ban on any other node than one that created sys_ban
+	// can't ban on any other node than one that created sysban
 	BOOST_CHECK_THROW(CertBan("node2",certguidnotsafe,SAFETY_LEVEL1), runtime_error);
 	BOOST_CHECK_THROW(CertBan("node3",certguidsafe,SAFETY_LEVEL1), runtime_error);
-	// ban both certs level 1 (only owner of sys_category can do this)
+	// ban both certs level 1 (only owner of syscategory can do this)
 	BOOST_CHECK_NO_THROW(CertBan("node1",certguidsafe,SAFETY_LEVEL1));
 	BOOST_CHECK_NO_THROW(CertBan("node1",certguidnotsafe,SAFETY_LEVEL1));
 	// should only show level 1 banned if safe search filter is not used
@@ -158,7 +158,7 @@ BOOST_AUTO_TEST_CASE (generate_certban)
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "certinfo " + certguidsafe));
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "certinfo " + certguidnotsafe));
 	
-	// ban both certs level 2 (only owner of sys_category can do this)
+	// ban both certs level 2 (only owner of syscategory can do this)
 	BOOST_CHECK_NO_THROW(CertBan("node1",certguidsafe,SAFETY_LEVEL2));
 	BOOST_CHECK_NO_THROW(CertBan("node1",certguidnotsafe,SAFETY_LEVEL2));
 	// no matter what filter won't show banned certs
@@ -171,7 +171,7 @@ BOOST_AUTO_TEST_CASE (generate_certban)
 	BOOST_CHECK_THROW(r = CallRPC("node1", "certinfo " + certguidsafe), runtime_error);
 	BOOST_CHECK_THROW(r = CallRPC("node1", "certinfo " + certguidnotsafe), runtime_error);
 
-	// unban both certs (only owner of sys_category can do this)
+	// unban both certs (only owner of syscategory can do this)
 	BOOST_CHECK_NO_THROW(CertBan("node1",certguidsafe,0));
 	BOOST_CHECK_NO_THROW(CertBan("node1",certguidnotsafe,0));
 	// safe to search regardless of filter

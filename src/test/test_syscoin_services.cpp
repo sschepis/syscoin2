@@ -262,46 +262,46 @@ void CreateSysRatesIfNotExist()
 	string data = "{\\\"rates\\\":[{\\\"currency\\\":\\\"USD\\\",\\\"rate\\\":2690.1,\\\"precision\\\":2},{\\\"currency\\\":\\\"EUR\\\",\\\"rate\\\":2695.2,\\\"precision\\\":2},{\\\"currency\\\":\\\"GBP\\\",\\\"rate\\\":2697.3,\\\"precision\\\":2},{\\\"currency\\\":\\\"CAD\\\",\\\"rate\\\":2698.0,\\\"precision\\\":2},{\\\"currency\\\":\\\"BTC\\\",\\\"rate\\\":100000.0,\\\"precision\\\":8},{\\\"currency\\\":\\\"SYS\\\",\\\"rate\\\":1.0,\\\"precision\\\":2}]}";
 	// should get runtime error if doesnt exist
 	try{
-		CallRPC("node1", "aliasupdate sys_rates " + data);
+		CallRPC("node1", "aliasupdate sysrates.peg " + data);
 	}
 	catch(const runtime_error& err)
 	{
 		GenerateBlocks(200, "node1");	
 		GenerateBlocks(200, "node2");	
 		GenerateBlocks(200, "node3");	
-		BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasnew sys_rates " + data));
+		BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasnew sysrates.peg " + data));
 	}
 	GenerateBlocks(5);
 }
 void CreateSysBanIfNotExist()
 {
 	string data = "{}";
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasnew sys_ban " + data));
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasnew sysban " + data));
 	GenerateBlocks(5);
 }
 void CreateSysCategoryIfNotExist()
 {
 	string data = "\"{\\\"categories\\\":[{\\\"cat\\\":\\\"certificates\\\"},{\\\"cat\\\":\\\"wanted\\\"},{\\\"cat\\\":\\\"for sale > general\\\"},{\\\"cat\\\":\\\"for sale > wanted\\\"},{\\\"cat\\\":\\\"services\\\"}]}\"";
 	
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasnew sys_category " + data));
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasnew syscategory " + data));
 	GenerateBlocks(5);
 }
 void AliasBan(const string& node, const string& alias, int severity)
 {
 	string data = "{\\\"aliases\\\":[{\\\"id\\\":\\\"" + alias + "\\\",\\\"severity\\\":" + boost::lexical_cast<string>(severity) + "}]}";
-	CallRPC(node, "aliasupdate sys_ban " + data);
+	CallRPC(node, "aliasupdate sysban " + data);
 	GenerateBlocks(5);
 }
 void OfferBan(const string& node, const string& offer, int severity)
 {
 	string data = "{\\\"offers\\\":[{\\\"id\\\":\\\"" + offer + "\\\",\\\"severity\\\":" + boost::lexical_cast<string>(severity) + "}]}";
-	CallRPC(node, "aliasupdate sys_ban " + data);
+	CallRPC(node, "aliasupdate sysban " + data);
 	GenerateBlocks(5);
 }
 void CertBan(const string& node, const string& cert, int severity)
 {
 	string data = "{\\\"certs\\\":[{\\\"id\\\":\\\"" + cert + "\\\",\\\"severity\\\":" + boost::lexical_cast<string>(severity) + "}]}";
-	CallRPC(node, "aliasupdate sys_ban " + data);
+	CallRPC(node, "aliasupdate sysban " + data);
 	GenerateBlocks(5);
 }
 string AliasNew(const string& node, const string& aliasname, const string& pubdata, string privdata, string safesearch)
@@ -686,7 +686,7 @@ const string OfferNew(const string& node, const string& aliasname, const string&
 	CreateSysRatesIfNotExist();
 	UniValue r;
 	string exclusivereselltmp =  exclusiveResell? "1": "0";
-	string offercreatestr = "offernew sys_rates " + aliasname + " " + category + " " + title + " " + qty + " " + price + " " + description + " " + currency  + " " + certguid + " " + exclusivereselltmp + " " + acceptbtconly + " " + geolocation + " " + safesearch;
+	string offercreatestr = "offernew sysrates.peg " + aliasname + " " + category + " " + title + " " + qty + " " + price + " " + description + " " + currency  + " " + certguid + " " + exclusivereselltmp + " " + acceptbtconly + " " + geolocation + " " + safesearch;
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, offercreatestr));
 	const UniValue &arr = r.get_array();
 	string guid = arr[1].get_str();
@@ -756,7 +756,7 @@ void OfferUpdate(const string& node, const string& aliasname, const string& offe
 	UniValue r;
 	string exclusivereselltmp = exclusiveResell? "1": "0";
 	string privatetmp = isPrivate ? "1" : "0";
-	string offerupdatestr = "offerupdate sys_rates " + aliasname + " " + offerguid + " " + category + " " + title + " " + qty + " " + price + " " + description + " " + currency + " " + privatetmp + " " + certguid + " " + exclusivereselltmp + " " + geolocation + " " + safesearch;
+	string offerupdatestr = "offerupdate sysrates.peg " + aliasname + " " + offerguid + " " + category + " " + title + " " + qty + " " + price + " " + description + " " + currency + " " + privatetmp + " " + certguid + " " + exclusivereselltmp + " " + geolocation + " " + safesearch;
 	
 
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, offerupdatestr));

@@ -228,10 +228,10 @@ BOOST_AUTO_TEST_CASE (generate_aliasban)
 	// 2 aliases, one will be banned that is safe searchable other is banned that is not safe searchable
 	AliasNew("node1", "jagbansafesearch", "pubdata", "privdata", "Yes");
 	AliasNew("node1", "jagbannonsafesearch", "pubdata", "privdata", "No");
-	// can't ban on any other node than one that created sys_ban
+	// can't ban on any other node than one that created sysban
 	BOOST_CHECK_THROW(AliasBan("node2","jagbansafesearch",SAFETY_LEVEL1), runtime_error);
 	BOOST_CHECK_THROW(AliasBan("node3","jagbansafesearch",SAFETY_LEVEL1), runtime_error);
-	// ban both aliases level 1 (only owner of sys_category can do this)
+	// ban both aliases level 1 (only owner of syscategory can do this)
 	BOOST_CHECK_NO_THROW(AliasBan("node1","jagbansafesearch",SAFETY_LEVEL1));
 	BOOST_CHECK_NO_THROW(AliasBan("node1","jagbannonsafesearch",SAFETY_LEVEL1));
 	// should only show level 1 banned if safe search filter is not used
@@ -243,7 +243,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasban)
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo jagbansafesearch"));
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "aliasinfo jagbannonsafesearch"));
 	
-	// ban both aliases level 2 (only owner of sys_category can do this)
+	// ban both aliases level 2 (only owner of syscategory can do this)
 	BOOST_CHECK_NO_THROW(AliasBan("node1","jagbansafesearch",SAFETY_LEVEL2));
 	BOOST_CHECK_NO_THROW(AliasBan("node1","jagbannonsafesearch",SAFETY_LEVEL2));
 	// no matter what filter won't show banned aliases
@@ -256,7 +256,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasban)
 	BOOST_CHECK_THROW(r = CallRPC("node1", "aliasinfo jagbansafesearch"), runtime_error);
 	BOOST_CHECK_THROW(r = CallRPC("node1", "aliasinfo jagbannonsafesearch"), runtime_error);
 
-	// unban both aliases (only owner of sys_category can do this)
+	// unban both aliases (only owner of syscategory can do this)
 	BOOST_CHECK_NO_THROW(AliasBan("node1","jagbansafesearch",0));
 	BOOST_CHECK_NO_THROW(AliasBan("node1","jagbannonsafesearch",0));
 	// safe to search regardless of filter
@@ -369,7 +369,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasbanwithoffers)
 	OfferUpdate("node1", "jagbansafesearchoffer", offerguidsafe2, "category", "titlenew", "10", "1.00", "descriptionnew", "USD", false, "nocert", true, "location", "No");
 	OfferUpdate("node1", "jagbannonsafesearchoffer", offerguidsafe3, "category", "titlenew", "10", "1.00", "descriptionnew", "USD", false, "nocert", true, "location", "No");	
 
-	// ban both aliases level 1 (only owner of sys_category can do this)
+	// ban both aliases level 1 (only owner of syscategory can do this)
 	BOOST_CHECK_NO_THROW(AliasBan("node1","jagbansafesearchoffer",SAFETY_LEVEL1));
 	BOOST_CHECK_NO_THROW(AliasBan("node1","jagbannonsafesearchoffer",SAFETY_LEVEL1));
 	// should only show level 1 banned if safe search filter is used
@@ -385,7 +385,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasbanwithoffers)
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "offerinfo " + offerguidsafe3));
 
 
-	// ban both aliases level 2 (only owner of sys_category can do this)
+	// ban both aliases level 2 (only owner of syscategory can do this)
 	BOOST_CHECK_NO_THROW(AliasBan("node1","jagbansafesearchoffer",SAFETY_LEVEL2));
 	BOOST_CHECK_NO_THROW(AliasBan("node1","jagbannonsafesearchoffer",SAFETY_LEVEL2));
 	// no matter what filter won't show banned aliases
@@ -402,7 +402,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasbanwithoffers)
 	BOOST_CHECK_THROW(r = CallRPC("node1", "offerinfo " + offerguidsafe3), runtime_error);
 
 
-	// unban both aliases (only owner of sys_category can do this)
+	// unban both aliases (only owner of syscategory can do this)
 	BOOST_CHECK_NO_THROW(AliasBan("node1","jagbansafesearchoffer",0));
 	BOOST_CHECK_NO_THROW(AliasBan("node1","jagbannonsafesearchoffer",0));
 	// back to original settings
@@ -508,7 +508,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasprunewithoffer)
 	MilliSleep(2500);
 	BOOST_CHECK_NO_THROW(CallRPC("node2", "generate 10"));
 	MilliSleep(2500);
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "offernew sys_rates aliasprunewithoffer category title 1 0.05 description USD"));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "offernew sysrates.peg aliasprunewithoffer category title 1 0.05 description USD"));
 	const UniValue &arr = r.get_array();
 	string offerguid = arr[1].get_str();
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 10"));
@@ -522,6 +522,8 @@ BOOST_AUTO_TEST_CASE (generate_aliasprunewithoffer)
 	BOOST_CHECK_NO_THROW(CallRPC("node2", "generate 5"));
 	MilliSleep(2500);
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "escrowrelease " + escrowguid));
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 10"));
+	MilliSleep(2500);
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 10"));
 	MilliSleep(2500);
 	BOOST_CHECK_NO_THROW(CallRPC("node2", "generate 110"));
@@ -549,20 +551,20 @@ BOOST_AUTO_TEST_CASE (generate_aliasprunewithcertoffer)
 	string certguid = arr[1].get_str();
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 10"));
 	MilliSleep(2500);
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "offernew sys_rates aliasprunewithcertoffer category title 1 0.05 description USD " + certguid));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "offernew sysrates.peg aliasprunewithcertoffer category title 1 0.05 description USD " + certguid));
 	const UniValue &arr1 = r.get_array();
 	string certofferguid = arr1[1].get_str();
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 10"));
 	MilliSleep(2500);
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "offernew sys_rates aliasprunewithcertoffer category title 1 0.05 description USD"));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "offernew sysrates.peg aliasprunewithcertoffer category title 1 0.05 description USD"));
 	const UniValue &arr2 = r.get_array();
 	string offerguid = arr2[1].get_str();
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 10"));
 	MilliSleep(2500);
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "offerupdate sys_rates aliasprunewithcertoffer " + offerguid + " category title 1 0.05 description"));
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "offerupdate sysrates.peg aliasprunewithcertoffer " + offerguid + " category title 1 0.05 description"));
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 10"));
 	MilliSleep(2500);
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "offerupdate sys_rates aliasprunewithcertoffer " + certofferguid + " category title 1 0.05 description USD 0 " + certguid));
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "offerupdate sysrates.peg aliasprunewithcertoffer " + certofferguid + " category title 1 0.05 description USD 0 " + certguid));
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 10"));
 	MilliSleep(2500);
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 5"));
@@ -607,6 +609,8 @@ BOOST_AUTO_TEST_CASE (generate_aliasprunewithcert)
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 10"));
 	MilliSleep(2500);
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "certtransfer " + certguid + " aliasprunewithcert2"));
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 10"));
+	MilliSleep(2500);
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 110"));
 	MilliSleep(2500);
 	StartNode("node3");
@@ -672,7 +676,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	// should fail: link to an expired alias in offer
 	BOOST_CHECK_THROW(CallRPC("node2", "offerlink aliasexpirenode2 " + offerguid + " 5 newdescription"), runtime_error);
 	// should fail: generate an offer using expired alias
-	BOOST_CHECK_THROW(CallRPC("node2", "offernew sys_rates aliasexpirenode2 category title 1 0.05 description USD nocert 0 1"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node2", "offernew sysrates.peg aliasexpirenode2 category title 1 0.05 description USD nocert 0 1"), runtime_error);
 
 	// should fail: send message from expired alias to expired alias
 	BOOST_CHECK_THROW(CallRPC("node2", "messagenew subject title aliasexpirenode2 aliasexpirenode2"), runtime_error);
@@ -692,7 +696,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	MilliSleep(2500);
 	
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "certupdate " + certgoodguid + " aliasexpire2 newdata privdata 0"));
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "offerupdate sys_rates aliasexpire " + offerguid + " category title 100 0.05 description"));
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "offerupdate sysrates.peg aliasexpire " + offerguid + " category title 100 0.05 description"));
 	// expire the escrow
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 30"));
 	MilliSleep(2500);

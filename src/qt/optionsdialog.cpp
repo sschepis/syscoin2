@@ -81,7 +81,7 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
     ui->theme->addItem(tr("shade"), QVariant(""));
 	ui->theme->addItem(tr("solid"), QVariant("1"));
 	ui->theme->addItem(tr("white"), QVariant("2"));
-	ui->defaultPegAlias->setPlaceholderText("sys_rates");
+	ui->defaultPegAlias->setPlaceholderText("sysrates.peg");
      
     QDir translations(":translations");
     ui->lang->addItem(QString("(") + tr("default") + QString(")"), QVariant(""));

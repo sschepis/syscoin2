@@ -1330,7 +1330,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				
 				// find the payment from the tx outputs (make sure right amount of coins were paid for this offer accept), the payment amount found has to be exact	
 				heightToCheckAgainst = theOfferAccept.nAcceptHeight;
-				// if this is a linked offer accept, set the height to the first height so sys_rates price will match what it was at the time of the original accept
+				// if this is a linked offer accept, set the height to the first height so sysrates.peg price will match what it was at the time of the original accept
 				// we assume previous tx still in mempool because it calls offeraccept within the checkinputs stage (not entering a block yet)
 				if (!theOfferAccept.vchLinkAccept.empty())
 				{				
@@ -1624,7 +1624,7 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 	if (fHelp || params.size() < 7 || params.size() > 14)
 		throw runtime_error(
 		"offernew <aliaspeg> <alias> <category> <title> <quantity> <price> <description> <currency> [cert. guid] [exclusive resell=1] [accept btc only=0] [geolocation=''] [safe search=Yes] [private='0']\n"
-						"<aliaspeg> Alias peg you wish to use, leave blank to use sys_rates.\n"	
+						"<aliaspeg> Alias peg you wish to use, leave blank to use sysrates.peg.\n"	
 						"<alias> An alias you own.\n"
 						"<category> category, 255 chars max.\n"
 						"<title> title, 255 chars max.\n"
@@ -2541,7 +2541,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	CTransaction acceptTx;
 	COffer theOffer;
 	const CWalletTx *wtxOfferIn = NULL;
-	// if this is a linked offer accept, set the height to the first height so sys_rates price will match what it was at the time of the original accept
+	// if this is a linked offer accept, set the height to the first height so sysrates.peg price will match what it was at the time of the original accept
 	CTransaction tx;
 	vector<COffer> vtxPos;
 	if (!GetTxAndVtxOfOffer( vchOffer, theOffer, tx, vtxPos, true))

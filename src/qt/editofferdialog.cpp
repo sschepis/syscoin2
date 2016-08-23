@@ -76,7 +76,7 @@ EditOfferDialog::EditOfferDialog(Mode mode, const QString &strCert,  const QStri
     case NewCertOffer:
 		ui->aliasEdit->setEnabled(false);
 		ui->offerLabel->setVisible(false);
-		ui->aliasPegEdit->setText(tr("sys_rates"));
+		ui->aliasPegEdit->setText(tr("sysrates.peg"));
 		on_aliasPegEdit_editingFinished();
 		ui->offerEdit->setVisible(false);
         setWindowTitle(tr("New Offer(Certificate)"));
