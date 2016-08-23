@@ -541,7 +541,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	COffer theOffer;
 	vector<unsigned char> vchData;
 	vector<unsigned char> vchHash;
-	if(!GetSyscoinData(tx, vchData, vcHash) || !theOffer.UnserializeFromData(vchData, vcHash))
+	if(!GetSyscoinData(tx, vchData, vchHash) || !theOffer.UnserializeFromData(vchData, vchHash))
 	{
 		errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR ERRCODE: 1 - Cannot unserialize data inside of this transaction relating to an offer";
 		return true;

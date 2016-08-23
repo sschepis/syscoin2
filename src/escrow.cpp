@@ -327,7 +327,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 		}
 		if(!theEscrow.IsNull())
 		{
-			if(vcHash != vvchArgs[2])
+			if(vchHash != vvchArgs[2])
 			{
 				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4002 - Hash provided doesn't match the calculated hash the data";
 				return error(errorMessage.c_str());
