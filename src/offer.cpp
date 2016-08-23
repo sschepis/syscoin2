@@ -1889,7 +1889,7 @@ UniValue offerlink(const UniValue& params, bool fHelp) {
 	newOffer.SetPrice(price);
 	newOffer.nCommission = commissionInteger;
 	newOffer.vchLinkOffer = vchLinkOffer;
-	newOffer.linkWhiteList.bExclusiveResell = true;
+	newOffer.linkWhitelist.bExclusiveResell = true;
 	newOffer.nHeight = chainActive.Tip()->nHeight;
 	//create offeractivate txn keys
 
