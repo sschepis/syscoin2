@@ -349,7 +349,10 @@ void EditOfferDialog::loadCerts()
 						
 						index = ui->aliasEdit->findData(alias);
 						if ( index != -1 ) 
+						{
 						    ui->aliasEdit->setCurrentIndex(index);
+							ui->aliasDisclaimer->setText(tr("<font color='blue'>This will automatically use the alias which owns the certificate you are selling</font>"));
+						}
 						
 					}
 				}
