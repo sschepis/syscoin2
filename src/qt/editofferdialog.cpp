@@ -46,12 +46,12 @@ EditOfferDialog::EditOfferDialog(Mode mode, const QString &strCert,  const QStri
 	cert = strCert;
 	ui->certEdit->clear();
 	ui->certEdit->addItem(tr("Select Certificate (optional)"));
-	connect(ui->certEdit, SIGNAL(currentIndexChanged(int)), this, SLOT(certChanged(int)));
 	loadAliases();
 	connect(ui->aliasEdit,SIGNAL(currentIndexChanged(const QString&)),this,SLOT(aliasChanged(const QString&)));
 	loadCerts();
 	loadCategories();
 	ui->descriptionEdit->setStyleSheet("color: rgb(0, 0, 0); background-color: rgb(255, 255, 255)");
+	connect(ui->certEdit, SIGNAL(currentIndexChanged(int)), this, SLOT(certChanged(int)));
     QSettings settings;
 	QString defaultPegAlias, defaultOfferAlias;
 	int aliasIndex;
@@ -76,7 +76,8 @@ EditOfferDialog::EditOfferDialog(Mode mode, const QString &strCert,  const QStri
     case NewCertOffer:
 		ui->aliasEdit->setEnabled(false);
 		ui->offerLabel->setVisible(false);
-		ui->aliasPegEdit->setText(tr("sysrates.peg"));
+		defaultPegAlias = settings.value("defaultPegAlias", "").toString();
+		ui->aliasPegEdit->setText(defaultPegAlias);
 		on_aliasPegEdit_editingFinished();
 		ui->offerEdit->setVisible(false);
         setWindowTitle(tr("New Offer(Certificate)"));
@@ -346,14 +347,12 @@ void EditOfferDialog::loadCerts()
 						if ( index != -1 ) 
 						{
 						    ui->certEdit->setCurrentIndex(index);
-							ui->aliasEdit->setEnabled(false);
 							ui->aliasDisclaimer->setText(tr("<font color='blue'>This will automatically use the alias which owns the certificate you are selling</font>"));
 						}
 						index = ui->aliasEdit->findData(alias);
 						if ( index != -1 ) 
 						{
 						    ui->aliasEdit->setCurrentIndex(index);
-							ui->aliasEdit->setEnabled(false);
 							ui->aliasDisclaimer->setText(tr("<font color='blue'>This will automatically use the alias which owns the certificate you are selling</font>"));
 						}
 					}

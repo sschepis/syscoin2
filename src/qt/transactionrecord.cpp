@@ -139,27 +139,28 @@ static bool CreateSyscoinTransactions(const CWallet *wallet, const CWalletTx& wt
 	if(wtx.nVersion != GetSyscoinTxVersion())
 		return false;	
 	uint256 hash = wtx.GetHash();
+    vector<vector<unsigned char> > vvchArgs;
+    int op, nOut;
+	// there should only be one data carrying syscoin output per transaction, but there may be more than 1 syscoin utxo in a transaction
+	// we want to display the data carrying one and not the empty utxo		
+	if(!DecodeAndParseSyscoinTx(wtx, op, nOut, vvchArgs))
+		return false;
+	TransactionRecord sub(hash, nTime);
+	if(!CreateSyscoinTransactionRecord(sub, op, vvchArgs, wtx, type))
+		return false;
+	
 	BOOST_FOREACH(const CTxOut& txout, wtx.vout)
 	{
-        vector<vector<unsigned char> > vvchArgs;
-        int op, nOut;
 		isminetype mine = wallet->IsMine(txout);
 		if(mine)
 		{
-			// there should only be one data carrying syscoin output per transaction, but there may be more than 1 syscoin utxo in a transaction
-			// we want to display the data carrying one and not the empty utxo		
-			if(DecodeAndParseSyscoinTx(wtx, op, nOut, vvchArgs))
-			{
-				TransactionRecord sub(hash, nTime);
-				if(!CreateSyscoinTransactionRecord(sub, op, vvchArgs, wtx, type))
-					return false;
-				sub.idx = parts.size(); // sequence number
-				if(type == RECV)
-					sub.credit = nNet;
-				else if(type == SEND)
-					sub.debit = nNet;
-				parts.append(sub);
-				return true;
+			sub.idx = parts.size(); // sequence number
+			if(type == RECV)
+				sub.credit = nNet;
+			else if(type == SEND)
+				sub.debit = nNet;
+			parts.append(sub);
+			return true;
 			}			
 		}
 	}
