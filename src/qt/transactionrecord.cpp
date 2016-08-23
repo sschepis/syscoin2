@@ -160,8 +160,7 @@ static bool CreateSyscoinTransactions(const CWallet *wallet, const CWalletTx& wt
 			else if(type == SEND)
 				sub.debit = nNet;
 			parts.append(sub);
-			return true;
-			}			
+			return true;		
 		}
 	}
 	return false;
