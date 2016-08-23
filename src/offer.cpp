@@ -840,7 +840,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 41 - Offer input and offer guid mismatch";
 				return error(errorMessage.c_str());
 			}
-			if(!theOffer.linkWhitelist.IsNull() && (theOffer.linkWhitelist.entries[0].nDiscountPct < -99 || theOffer.linkWhitelist.entries[0].nDiscountPct > 99) && theOffer.linkWhitelist.entries[0].nDiscountPct != 127)
+			if(!theOffer.linkWhitelist.entries.empty() && (theOffer.linkWhitelist.entries[0].nDiscountPct < -99 || theOffer.linkWhitelist.entries[0].nDiscountPct > 99) && theOffer.linkWhitelist.entries[0].nDiscountPct != 127)
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 42 - Invalid discount amount, must be within -99 and 99 or 127 if removing an affiliate";
 				return error(errorMessage.c_str());
@@ -1473,7 +1473,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				// special case we use to remove all entries
 				if(serializedOffer.linkWhitelist.entries[0].nDiscountPct == 127)
 				{
-					if(theOffer.linkWhitelist.IsNull())
+					if(theOffer.linkWhitelist.entries.empty())
 					{
 						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 111 - Whitelist is already empty";					
 					}
