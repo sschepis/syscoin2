@@ -76,18 +76,20 @@ bool CEscrow::UnserializeFromData(const vector<unsigned char> &vchData, const ve
     try {
         CDataStream dsEscrow(vchData, SER_NETWORK, PROTOCOL_VERSION);
         dsEscrow >> *this;
+
+		const vector<unsigned char> &vchEscrowData = Serialize();
+		uint256 calculatedHash = Hash(vchEscrowData.begin(), vchEscrowData.end());
+		vector<unsigned char> vchRand = CScriptNum(calculatedHash.GetCheapHash()).getvch();
+		vector<unsigned char> vchRandEscrow = vchFromValue(HexStr(vchRand));
+		if(vchRandEscrow != vchHash)
+		{
+			SetNull();
+			return false;
+		}
     } catch (std::exception &e) {
 		SetNull();
         return false;
     }
-	uint256 calculatedHash = Hash(vchData.begin(), vchData.end());
-	vector<unsigned char> vchRand = CScriptNum(calculatedHash.GetCheapHash()).getvch();
-	vector<unsigned char> vchRandEscrow = vchFromValue(HexStr(vchRand));
-	if(vchRandEscrow != vchHash)
-	{
-		SetNull();
-        return false;
-	}
 	return true;
 }
 bool CEscrow::UnserializeFromTx(const CTransaction &tx) {

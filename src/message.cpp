@@ -62,7 +62,8 @@ bool CMessage::UnserializeFromData(const vector<unsigned char> &vchData, const v
 		SetNull();
         return false;
     }
-	uint256 calculatedHash = Hash(vchData.begin(), vchData.end());
+	const vector<unsigned char> &vchMsgData = Serialize();
+	uint256 calculatedHash = Hash(vchMsgData.begin(), vchMsgData.end());
 	vector<unsigned char> vchRand = CScriptNum(calculatedHash.GetCheapHash()).getvch();
 	vector<unsigned char> vchRandMsg = vchFromValue(HexStr(vchRand));
 	if(vchRandMsg != vchHash)

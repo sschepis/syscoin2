@@ -1109,18 +1109,20 @@ bool CAliasIndex::UnserializeFromData(const vector<unsigned char> &vchData, cons
     try {
         CDataStream dsAlias(vchData, SER_NETWORK, PROTOCOL_VERSION);
         dsAlias >> *this;
+
+		const vector<unsigned char> &vchAliasData = Serialize();
+		uint256 calculatedHash = Hash(vchAliasData.begin(), vchAliasData.end());
+		vector<unsigned char> vchRand = CScriptNum(calculatedHash.GetCheapHash()).getvch();
+		vector<unsigned char> vchRandAlias = vchFromValue(HexStr(vchRand));
+		if(vchRandAlias != vchHash)
+		{
+			SetNull();
+			return false;
+		}
     } catch (std::exception &e) {
 		SetNull();
         return false;
     }
-	uint256 calculatedHash = Hash(vchData.begin(), vchData.end());
-	vector<unsigned char> vchRand = CScriptNum(calculatedHash.GetCheapHash()).getvch();
-	vector<unsigned char> vchRandAlias = vchFromValue(HexStr(vchRand));
-	if(vchRandAlias != vchHash)
-	{
-		SetNull();
-        return false;
-	}
 	return true;
 }
 bool CAliasIndex::UnserializeFromTx(const CTransaction &tx) {

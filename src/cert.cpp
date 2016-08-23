@@ -90,18 +90,21 @@ bool CCert::UnserializeFromData(const vector<unsigned char> &vchData, const vect
     try {
         CDataStream dsCert(vchData, SER_NETWORK, PROTOCOL_VERSION);
         dsCert >> *this;
+
+		const vector<unsigned char> &vchCertData = Serialize();
+		uint256 calculatedHash = Hash(vchCertData.begin(), vchCertData.end());
+		vector<unsigned char> vchRand = CScriptNum(calculatedHash.GetCheapHash()).getvch();
+		vector<unsigned char> vchRandCert = vchFromValue(HexStr(vchRand));
+		if(vchRandCert != vchHash)
+		{
+			SetNull();
+			return false;
+		}
+
     } catch (std::exception &e) {
 		SetNull();
         return false;
     }
-	uint256 calculatedHash = Hash(vchData.begin(), vchData.end());
-	vector<unsigned char> vchRand = CScriptNum(calculatedHash.GetCheapHash()).getvch();
-	vector<unsigned char> vchRandCert = vchFromValue(HexStr(vchRand));
-	if(vchRandCert != vchHash)
-	{
-		SetNull();
-        return false;
-	}
 	return true;
 }
 bool CCert::UnserializeFromTx(const CTransaction &tx) {
