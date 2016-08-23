@@ -1461,6 +1461,12 @@ void CreateRecipient(const CScript& scriptPubKey, CRecipient& recipient)
 }
 void CreateFeeRecipient(CScript& scriptPubKey, const vector<unsigned char>& data, CRecipient& recipient)
 {
+	// add hash to data output (must match hash in inputs check with the tx scriptpubkey hash)
+    uint256 hash = Hash(data.begin(), data.end());
+ 	vector<unsigned char> vchHash = CScriptNum(hash.GetCheapHash()).getvch();
+    vector<unsigned char> vchHashRand = vchFromValue(HexStr(vchHash));
+	scriptPubKey << vchHashRand;
+
 	CRecipient recp = {scriptPubKey, 0.02*COIN, false};
 	recipient = recp;
 	CTxOut txout(0,	recipient.scriptPubKey);
@@ -1468,12 +1474,6 @@ void CreateFeeRecipient(CScript& scriptPubKey, const vector<unsigned char>& data
 	CAmount fee = 3*minRelayTxFee.GetFee(nSize);
 	// minimum of 0.02 COIN fees for data
 	recipient.nAmount = fee > 0.02*COIN? fee: 0.02*COIN;
-
-	// add hash to data output (must match hash in inputs check with the tx scriptpubkey hash)
-    uint256 hash = Hash(data.begin(), data.end());
- 	vector<unsigned char> vchHash = CScriptNum(hash.GetCheapHash()).getvch();
-    vector<unsigned char> vchHashRand = vchFromValue(HexStr(vchHash));
-	scriptPubKey << vchHashRand;
 }
 UniValue aliasnew(const UniValue& params, bool fHelp) {
 	if (fHelp || 2 > params.size() || 5 < params.size())
