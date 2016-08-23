@@ -38,7 +38,7 @@ EditOfferDialog::EditOfferDialog(Mode mode, const QString &strCert,  const QStri
 	ui->privateEdit->clear();
 	ui->privateEdit->addItem(QString("No"));
 	ui->privateEdit->addItem(QString("Yes"));
-		ui->currencyEdit->addItem(QString("USD"));
+	ui->currencyEdit->addItem(QString("USD"));
 	ui->acceptBTCOnlyEdit->clear();
 	ui->acceptBTCOnlyEdit->addItem(QString("No"));
 	ui->acceptBTCOnlyEdit->addItem(QString("Yes"));
@@ -215,8 +215,8 @@ void EditOfferDialog::certChanged(int index)
 	else if(index == 0)
 	{
 		ui->aliasDisclaimer->setText(tr("<font color='blue'>Select an alias to own this offer</font>"));
-		ui->aliasEdit->setEnabled(true);
 		ui->qtyEdit->setEnabled(true);
+		ui->aliasEdit->setEnabled(true);
 	}
 }
 
@@ -344,17 +344,13 @@ void EditOfferDialog::loadCerts()
 					if(name == cert)
 					{
 						int index = ui->certEdit->findData(name);
-						if ( index != -1 ) 
-						{
+						if ( index != -1 ) 						
 						    ui->certEdit->setCurrentIndex(index);
-							ui->aliasDisclaimer->setText(tr("<font color='blue'>This will automatically use the alias which owns the certificate you are selling</font>"));
-						}
+						
 						index = ui->aliasEdit->findData(alias);
 						if ( index != -1 ) 
-						{
 						    ui->aliasEdit->setCurrentIndex(index);
-							ui->aliasDisclaimer->setText(tr("<font color='blue'>This will automatically use the alias which owns the certificate you are selling</font>"));
-						}
+						
 					}
 				}
 				
@@ -428,7 +424,7 @@ void EditOfferDialog::loadAliases()
 				if(expired == 0)
 				{
 					QString name = QString::fromStdString(name_str);
-					ui->aliasEdit->addItem(name);					
+					ui->aliasEdit->addItem(name, name);					
 				}
 				
 			}
