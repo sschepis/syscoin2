@@ -772,7 +772,7 @@ UniValue certnew(const UniValue& params, bool fHelp) {
 	const CWalletTx * wtxInOffer=NULL;
 	const CWalletTx * wtxInEscrow=NULL;
 	const CWalletTx * wtxInCert=NULL;
-	SendMoneySyscoin(vecSend, recipient.nAmount+fee.nAmount, false, wtx, wtxInOffer, wtxInCert, wtxAliasIn, wtxInEscrow);
+	SendMoneySyscoin(vecSend, recipient.nAmount+fee.nAmount+aliasRecipient.nAmount, false, wtx, wtxInOffer, wtxInCert, wtxAliasIn, wtxInEscrow);
 	UniValue res(UniValue::VARR);
 	res.push_back(wtx.GetHash().GetHex());
 	res.push_back(HexStr(vchRand));

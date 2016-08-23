@@ -1801,7 +1801,7 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 	vecSend.push_back(fee);
 	const CWalletTx * wtxInOffer=NULL;
 	const CWalletTx * wtxInEscrow=NULL;
-	SendMoneySyscoin(vecSend, recipient.nAmount+fee.nAmount, false, wtx, wtxInOffer, wtxCertIn, wtxAliasIn, wtxInEscrow);
+	SendMoneySyscoin(vecSend, recipient.nAmount+fee.nAmount+aliasRecipient.nAmount, false, wtx, wtxInOffer, wtxCertIn, wtxAliasIn, wtxInEscrow);
 	UniValue res(UniValue::VARR);
 	res.push_back(wtx.GetHash().GetHex());
 	res.push_back(HexStr(vchRand));
@@ -1926,7 +1926,7 @@ UniValue offerlink(const UniValue& params, bool fHelp) {
 	const CWalletTx * wtxInCert=NULL;
 	const CWalletTx * wtxInOffer=NULL;
 	const CWalletTx * wtxInEscrow=NULL;
-	SendMoneySyscoin(vecSend, recipient.nAmount+fee.nAmount, false, wtx, wtxInOffer, wtxInCert, wtxAliasIn, wtxInEscrow);
+	SendMoneySyscoin(vecSend, recipient.nAmount+fee.nAmount+aliasRecipient.nAmount, false, wtx, wtxInOffer, wtxInCert, wtxAliasIn, wtxInEscrow);
 
 	UniValue res(UniValue::VARR);
 	res.push_back(wtx.GetHash().GetHex());
@@ -2033,7 +2033,7 @@ UniValue offeraddwhitelist(const UniValue& params, bool fHelp) {
 	vecSend.push_back(fee);
 	const CWalletTx * wtxInCert=NULL;
 	const CWalletTx * wtxInEscrow=NULL;
-	SendMoneySyscoin(vecSend, recipient.nAmount+fee.nAmount, false, wtx, wtxIn, wtxInCert, wtxAliasIn, wtxInEscrow);
+	SendMoneySyscoin(vecSend, recipient.nAmount+fee.nAmount+aliasRecipient.nAmount, false, wtx, wtxIn, wtxInCert, wtxAliasIn, wtxInEscrow);
 
 	UniValue res(UniValue::VARR);
 	res.push_back(wtx.GetHash().GetHex());
@@ -2124,7 +2124,7 @@ UniValue offerremovewhitelist(const UniValue& params, bool fHelp) {
 	vecSend.push_back(fee);
 	const CWalletTx * wtxInEscrow=NULL;
 	const CWalletTx * wtxInCert=NULL;
-	SendMoneySyscoin(vecSend, recipient.nAmount+fee.nAmount, false, wtx, wtxIn, wtxInCert, wtxAliasIn, wtxInEscrow);
+	SendMoneySyscoin(vecSend, recipient.nAmount+fee.nAmount+aliasRecipient.nAmount, false, wtx, wtxIn, wtxInCert, wtxAliasIn, wtxInEscrow);
 
 	UniValue res(UniValue::VARR);
 	res.push_back(wtx.GetHash().GetHex());
@@ -2212,7 +2212,7 @@ UniValue offerclearwhitelist(const UniValue& params, bool fHelp) {
 	vecSend.push_back(fee);
 	const CWalletTx * wtxInCert=NULL;
 	const CWalletTx * wtxInEscrow=NULL;
-	SendMoneySyscoin(vecSend, recipient.nAmount+fee.nAmount, false, wtx, wtxIn, wtxInCert, wtxAliasIn, wtxInEscrow);
+	SendMoneySyscoin(vecSend, recipient.nAmount+fee.nAmount+aliasRecipient.nAmount, false, wtx, wtxIn, wtxInCert, wtxAliasIn, wtxInEscrow);
 
 	UniValue res(UniValue::VARR);
 	res.push_back(wtx.GetHash().GetHex());
