@@ -39,7 +39,7 @@ AliasImportDialog::AliasImportDialog(const PlatformStyle *platformStyle, const Q
 	else
 	{
 
-		ui->importButton->setIcon(platformStyle->SingleColorIcon(":/icons/" + theme + "/add"));
+		ui->importButton->setIcon(platformStyle->SingleColorIcon(":/icons/" + theme + "/filesave"));
 	}
 }
 
