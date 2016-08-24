@@ -30,7 +30,7 @@ AliasImportDialog::AliasImportDialog(const PlatformStyle *platformStyle, const Q
     mapper->setSubmitPolicy(QDataWidgetMapper::ManualSubmit);
 	alias = idx.data(AliasTableModel::NameRole).toString();
 	QString theme = GUIUtil::getThemeName();  
-	ui->aliasImportBanner->setPixmap(QPixmap(":/images/" + theme + "/logo_horizontal"));
+	ui->aliasImportBanner->setPixmap(QPixmap(":/images/" + theme + "/" + theme + "_logo_horizontal"));
 	ui->aliasImportDisclaimer->setText(tr("<font color='blue'>You may import your transactions related to alias <b>%1</b>. This is useful if the alias has been transferred to you and you wish to own services created with the alias.</font>").arg(alias));		
 	if (!platformStyle->getImagesOnButtons())
 	{
