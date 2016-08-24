@@ -2161,6 +2161,8 @@ UniValue importalias(const UniValue& params, bool fHelp) {
 		throw runtime_error("No wallet defined!");
 	int count = 0;
 	vector<CAliasIndex> vtxPos;
+	CAliasIndex theAlias;
+	CTransaction aliastx;
 	if(!GetTxAndVtxOfAlias(vchAlias, theAlias, aliastx, vtxPos))
 	{
 		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid or expired alias");
@@ -2185,7 +2187,7 @@ UniValue importalias(const UniValue& params, bool fHelp) {
 		if (!pwalletMain->AddKeyPubKey(key, pubkey))
 			throw JSONRPCError(RPC_WALLET_ERROR, "Error adding key to wallet");
 	}	
-	CAliasIndex theAlias;
+	CWalletDB walletdb(pwalletMain->strWalletFile);
 	BOOST_FOREACH(theAlias, vtxPos) {
 		CTransaction tx;
 		if (GetSyscoinTransaction(theAlias.nHeight, theAlias.txHash, tx, Params().GetConsensus()))
