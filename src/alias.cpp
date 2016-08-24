@@ -73,7 +73,7 @@ bool GetPreviousInput(const COutPoint * outpoint, int &op, vector<vector<unsigne
 bool GetSyscoinTransaction(int nHeight, const uint256 &hash, CTransaction &txOut, const Consensus::Params& consensusParams)
 {
 	CBlockIndex *pindexSlow = NULL; 
-	TRY_LOCK(cs_main, cs_trymain);
+	LOCK(cs_main);
 	pindexSlow = chainActive[nHeight];
     if (pindexSlow) {
         CBlock block;
@@ -1286,10 +1286,6 @@ void GetAddressFromAlias(const std::string& strAlias, std::string& strAddress, u
 		// get transaction pointed to by alias
 		CTransaction tx;
 		const CAliasIndex &alias = vtxPos.back();
-		uint256 txHash = alias.txHash;
-		if (!GetSyscoinTransaction(alias.nHeight, txHash, tx, Params().GetConsensus()))
-			throw runtime_error("failed to read transaction from disk");
-
 		CPubKey PubKey(alias.vchPubKey);
 		CSyscoinAddress address(PubKey.GetID());
 		if(!address.IsValid())
@@ -2159,27 +2155,45 @@ UniValue generatepublickey(const UniValue& params, bool fHelp) {
 	res.push_back(HexStr(vchPubKey));
 	return res;
 }
-UniValue importoffersusedbyalias(const UniValue& params, bool fHelp) {
-	string strAlias = params[0].get_str();
-	string strCategory = params[1].get_str();
-	bool safeSearch = params[2].get_str()=="On"? true: false;
-	int count = 0;
+UniValue importalias(const UniValue& params, bool fHelp) {
+	vector<unsigned char> vchAlias = vchFromValue(params[0]);
 	if(!pwalletMain)
 		throw runtime_error("No wallet defined!");
-	CWalletDB walletdb(pwalletMain->strWalletFile);
-	vector<pair<vector<unsigned char>, COffer> > offerScan;
-	if (!pofferdb->ScanOffers(vchFromString(""), strAlias, safeSearch, strCategory, 1000, offerScan))
-		throw runtime_error("scan failed");
-	pair<vector<unsigned char>, COffer> pairScan;
-	BOOST_FOREACH(pairScan, offerScan) {
-		const string &offer = stringFromVch(pairScan.first);
-		CTransaction offertx;
-		COffer theOffer;
-		if(GetTxOfOffer(vchFromString(offer), theOffer, offertx) && IsSyscoinTxMine(offertx, "offer"))
+	int count = 0;
+	vector<CAliasIndex> vtxPos;
+	if(!GetTxAndVtxOfAlias(vchAlias, theAlias, vtxPos, aliastx))
+	{
+		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid or expired alias");
+	}
+	string strDecryptedKey = "";
+	DecryptMessage(theAlias.vchPubKey, theAlias.vchPrivateKey, strDecryptedKey);
+		
+    CSyscoinSecret vchSecret;
+    bool fGood = vchSecret.SetString(strDecryptedKey);
+
+    if (!fGood) throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key encoding");
+
+    CKey key = vchSecret.GetKey();
+    if (!key.IsValid()) throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Private key outside allowed range");
+
+    CPubKey pubkey = key.GetPubKey();
+    CKeyID vchAddress = pubkey.GetID();
+ 
+	// Don't throw error in case a key is already there
+	if (!pwalletMain->HaveKey(vchAddress))
+	{
+		pwalletMain->mapKeyMetadata[vchAddress].nCreateTime = 1;
+		if (!pwalletMain->AddKeyPubKey(key, pubkey))
+			throw JSONRPCError(RPC_WALLET_ERROR, "Error adding key to wallet");
+	}	
+	CAliasIndex theAlias;
+	BOOST_FOREACH(theAlias, vtxPos) {
+		CTransaction tx;
+		if (GetSyscoinTransaction(theAlias.nHeight, theAlias.txHash, tx, Params().GetConsensus()))
 		{
-			CWalletTx wtx(pwalletMain,offertx);
+			CWalletTx wtx(pwalletMain,tx);
 			map<uint256, CWalletTx>::const_iterator it = pwalletMain->mapWallet.find(wtx.GetHash());
-			if (it != pwalletMain->mapWallet.end())
+			if (it == pwalletMain->mapWallet.end())
 			{
 				if(pwalletMain->AddToWallet(wtx, false, &walletdb))
 					count++;	
@@ -2187,67 +2201,7 @@ UniValue importoffersusedbyalias(const UniValue& params, bool fHelp) {
 		}
 	}
 	UniValue res(UniValue::VARR);
-	res.push_back(strprintf("Imported %d offers!", count));
-	return res;
-}
-UniValue importcertsusedbyalias(const UniValue& params, bool fHelp) {
-	int count = 0;
-	string strAlias = params[0].get_str();
-	string strCategory = params[1].get_str();
-	bool safeSearch = params[2].get_str()=="On"? true: false;
-	if(!pwalletMain)
-		throw runtime_error("No wallet defined!");
-	CWalletDB walletdb(pwalletMain->strWalletFile);
-	vector<pair<vector<unsigned char>, CCert> > certScan;
-	if (!pcertdb->ScanCerts(vchFromString(""), strAlias, safeSearch, strCategory, 1000, certScan))
-		throw runtime_error("scan failed");
-	pair<vector<unsigned char>, CCert> pairScan;
-	BOOST_FOREACH(pairScan, certScan) {
-		const string &cert = stringFromVch(pairScan.first);
-		CTransaction certtx;
-		CCert theCert;
-		if(GetTxOfCert(vchFromString(cert), theCert, certtx) && IsSyscoinTxMine(certtx, "cert"))
-		{
-			CWalletTx wtx(pwalletMain,certtx);
-			map<uint256, CWalletTx>::const_iterator it = pwalletMain->mapWallet.find(wtx.GetHash());
-			if (it != pwalletMain->mapWallet.end())
-			{
-				if(pwalletMain->AddToWallet(wtx, false, &walletdb))
-					count++;	
-			}
-		}
-	}
-	UniValue res(UniValue::VARR);
-	res.push_back(strprintf("Imported %d certificates!", count));
-	return res;
-}
-UniValue importescrowsusedbyalias(const UniValue& params, bool fHelp) {
-	int count = 0;
-	string strAlias = params[0].get_str();
-	if(!pwalletMain)
-		throw runtime_error("No wallet defined!");
-	CWalletDB walletdb(pwalletMain->strWalletFile);
-	vector<pair<vector<unsigned char>, CEscrow> > escrowScan;
-	if (!pescrowdb->ScanEscrows(vchFromString(""), strAlias, 1000, escrowScan))
-		throw runtime_error("scan failed");
-	pair<vector<unsigned char>, CEscrow> pairScan;
-	BOOST_FOREACH(pairScan, escrowScan) {
-		const string &escrow = stringFromVch(pairScan.first);
-		CTransaction escrowtx;
-		CEscrow theEscrow;
-		if(GetTxOfEscrow(vchFromString(escrow), theEscrow, escrowtx) && IsSyscoinTxMine(escrowtx, "escrow"))
-		{
-			CWalletTx wtx(pwalletMain,escrowtx);
-			map<uint256, CWalletTx>::const_iterator it = pwalletMain->mapWallet.find(wtx.GetHash());
-			if (it != pwalletMain->mapWallet.end())
-			{
-				if(pwalletMain->AddToWallet(wtx, false, &walletdb))
-					count++;	
-			}
-		}
-	}
-	UniValue res(UniValue::VARR);
-	res.push_back(strprintf("Imported %d escrows!", count));
+	res.push_back(count);
 	return res;
 }
 
