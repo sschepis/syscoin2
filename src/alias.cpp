@@ -2163,7 +2163,8 @@ UniValue importalias(const UniValue& params, bool fHelp) {
 	vector<CAliasIndex> vtxPos;
 	CAliasIndex theAlias;
 	CTransaction aliastx;
-	if(!GetTxAndVtxOfAlias(vchAlias, theAlias, aliastx, vtxPos))
+	bool isExpired;
+	if(!GetTxAndVtxOfAlias(vchAlias, theAlias, aliastx, vtxPos, isExpired))
 	{
 		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid or expired alias");
 	}
