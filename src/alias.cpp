@@ -2193,17 +2193,15 @@ UniValue importalias(const UniValue& params, bool fHelp) {
 		CTransaction tx;
 		if (GetSyscoinTransaction(theAlias.nHeight, theAlias.txHash, tx, Params().GetConsensus()))
 		{
-			CWalletTx wtx(pwalletMain,tx);
-			map<uint256, CWalletTx>::const_iterator it = pwalletMain->mapWallet.find(wtx.GetHash());
-			if (it == pwalletMain->mapWallet.end())
+            CBlock block;
+            if(ReadBlockFromDisk(block, chainActive[theAlias.nHeight], Params().GetConsensus()))
 			{
-				if(pwalletMain->AddToWallet(wtx, false, &walletdb))
-					count++;	
+				pwalletMain->SyncTransaction(tx, &block);
 			}
 		}
 	}
 	UniValue res(UniValue::VARR);
-	res.push_back(count);
+	res.push_back("Success!");
 	return res;
 }
 

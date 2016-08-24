@@ -21,6 +21,7 @@ EditAliasDialog::EditAliasDialog(Mode mode, QWidget *parent) :
 	ui->transferEdit->setVisible(false);
 	ui->transferLabel->setVisible(false);
 	ui->transferDisclaimer->setText(tr("<font color='blue'>Transfering your alias will also transfer ownership all of your syscoin services that use this alias, the new owner can use these services by clicking on import button from the alias list screen which will import alias key into their wallet</font>"));
+	ui->transferDisclaimer->setVisible(false);
 	ui->safeSearchDisclaimer->setText(tr("<font color='blue'>Is this alias safe to search? Anything that can be considered offensive to someone should be set to <b>No</b> here. If you do create an alias that is offensive and do not set this option to <b>No</b> your alias will be banned!</font>"));
 	ui->expiryEdit->clear();
 	ui->expiryEdit->addItem(tr("1 Year"),"1");

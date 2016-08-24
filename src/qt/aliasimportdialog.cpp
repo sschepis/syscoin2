@@ -56,28 +56,11 @@ bool AliasImportDialog::on_importButton_clicked()
 	params.push_back(alias.toStdString());
     try {
         result = tableRPC.execute(strMethod, params);
-		if (result.type() == UniValue::VARR)
-		{
-			const UniValue &arr = result.get_array();
-			if(arr.size() == 1)
-			{
-				QMessageBox::information(this, windowTitle(),
-				tr("%1 transactions have been imported into your wallet!").arg(arr[0].get_int()),
-				QMessageBox::Ok, QMessageBox::Ok);
-				QDialog::accept();
-				return true;
-			}
-			else {
-				QMessageBox::warning(this, windowTitle(),
-					tr("No transactions have been imported into your wallet!"),
-					QMessageBox::Ok, QMessageBox::Ok);
-			}
-		}
-		else {
-			QMessageBox::warning(this, windowTitle(),
-				tr("No transactions have been imported into your wallet!"),
-				QMessageBox::Ok, QMessageBox::Ok);
-		}
+		QMessageBox::information(this, windowTitle(),
+			tr("Alias import successful!"),
+			QMessageBox::Ok, QMessageBox::Ok);
+		QDialog::accept();
+		return true;	
 	}
 	catch (UniValue& objError)
 	{
