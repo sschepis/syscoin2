@@ -18,13 +18,8 @@
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include "rpcserver.h"
-#include <QStandardItemModel>
-#include "qcomboboxdelegate.h"
-#include <boost/algorithm/string.hpp>
 using namespace std;
 extern const CRPCTable tableRPC;
-extern bool getCategoryList(vector<string>& categoryList);
-
 AliasImportDialog::AliasImportDialog(const PlatformStyle *platformStyle, const QModelIndex &idx, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::AliasImportDialog)
@@ -34,25 +29,18 @@ AliasImportDialog::AliasImportDialog(const PlatformStyle *platformStyle, const Q
     mapper = new QDataWidgetMapper(this);
     mapper->setSubmitPolicy(QDataWidgetMapper::ManualSubmit);
 	alias = idx.data(AliasTableModel::NameRole).toString();
-	ui->importOfferDisclaimer->setText(tr("<font color='blue'>You may import your offers related to alias <b>%1</b>. This is useful if the alias has been transferred to you and you wish to own offers created with the alias. Below you may filter your import criteria based on offer category and/or the offers being safe to search.</font>").arg(alias));	
-	ui->importCertDisclaimer->setText(tr("<font color='blue'>You may import your certificates related to alias <b>%1</b>. This is useful if the alias has been transferred to you and you wish to own certificates created with the alias. Below you may filter your import criteria based on certificate category and/or the certificates being safe to search.</font>").arg(alias));	
-	ui->importEscrowDisclaimer->setText(tr("<font color='blue'>You may import your escrows related to alias <b>%1</b>. This is useful if the alias has been transferred to you and you wish to own escrows created with the alias.</font>").arg(alias));	
+	ui->aliasImportBanner->setPixmap(QPixmap(":/images/" + theme + "/logo_horizontal"));
+	ui->aliasImportDisclaimer->setText(tr("<font color='blue'>You may import your transactions related to alias <b>%1</b>. This is useful if the alias has been transferred to you and you wish to own services created with the alias.</font>").arg(alias));		
 	QString theme = GUIUtil::getThemeName();  
 	if (!platformStyle->getImagesOnButtons())
 	{
-		ui->cancelButton->setIcon(QIcon());
-		ui->importOffers->setIcon(QIcon());
-		ui->importCerts->setIcon(QIcon());
-		ui->importEscrows->setIcon(QIcon());
+		ui->importButton->setIcon(QIcon());
 	}
 	else
 	{
-		ui->cancelButton->setIcon(platformStyle->SingleColorIcon(":/icons/" + theme + "/quit"));
-		ui->importOffers->setIcon(platformStyle->SingleColorIcon(":/icons/" + theme + "/add"));
-		ui->importCerts->setIcon(platformStyle->SingleColorIcon(":/icons/" + theme + "/add"));
-		ui->importEscrows->setIcon(platformStyle->SingleColorIcon(":/icons/" + theme + "/add"));
+
+		ui->importButton->setIcon(platformStyle->SingleColorIcon(":/icons/" + theme + "/add"));
 	}
-	loadCategories();
 }
 
 AliasImportDialog::~AliasImportDialog()
@@ -60,195 +48,47 @@ AliasImportDialog::~AliasImportDialog()
     delete ui;
 }
 
-void AliasImportDialog::addParentItem( QStandardItemModel * model, const QString& text, const QVariant& data )
+bool AliasImportDialog::on_importButton_clicked()
 {
-	QList<QStandardItem*> lst = model->findItems(text,Qt::MatchExactly);
-	for(unsigned int i=0; i<lst.count(); ++i )
-	{ 
-		if(lst[i]->data(Qt::UserRole) == data)
-			return;
-	}
-    QStandardItem* item = new QStandardItem( text );
-	item->setData( data, Qt::UserRole );
-    item->setData( "parent", Qt::AccessibleDescriptionRole );
-    QFont font = item->font();
-    font.setBold( true );
-    item->setFont( font );
-    model->appendRow( item );
-}
-
-void AliasImportDialog::addChildItem( QStandardItemModel * model, const QString& text, const QVariant& data )
-{
-	QList<QStandardItem*> lst = model->findItems(text,Qt::MatchExactly);
-	for(unsigned int i=0; i<lst.count(); ++i )
-	{ 
-		if(lst[i]->data(Qt::UserRole) == data)
-			return;
-	}
-
-    QStandardItem* item = new QStandardItem( text + QString( 4, QChar( ' ' ) ) );
-    item->setData( data, Qt::UserRole );
-    item->setData( "child", Qt::AccessibleDescriptionRole );
-    model->appendRow( item );
-}
-void AliasImportDialog::loadCategories()
-{
-    QStandardItemModel * offermodel = new QStandardItemModel;
-	QStandardItemModel * certmodel = new QStandardItemModel;
-	vector<string> categoryList;
-	if(!getCategoryList(categoryList))
-	{
-		return;
-	}
-	addParentItem(offermodel, tr("All Category"), tr("All Category"));
-	for(unsigned int i = 0;i< categoryList.size(); i++)
-	{
-		vector<string> categories;
-		boost::split(categories,categoryList[i],boost::is_any_of(">"));
-		if(categories.size() > 0)
+	string strMethod = string("importalias");
+	UniValue params(UniValue::VARR);
+	UniValue result;
+	params.push_back(alias.toStdString());
+    try {
+        result = tableRPC.execute(strMethod, params);
+		if (result.type() == UniValue::VARR)
 		{
-			for(unsigned int j = 0;j< categories.size(); j++)
+			const UniValue &arr = result.get_array();
+			if(arr.size() == 1)
 			{
-				boost::algorithm::trim(categories[j]);
-				// only support 2 levels in qt GUI for categories
-				if(j == 0)
-				{
-					addParentItem(offermodel, QString::fromStdString(categories[0]), QVariant(QString::fromStdString(categories[0])));
-				}
-				else if(j == 1)
-				{
-					addChildItem(offermodel, QString::fromStdString(categories[1]), QVariant(QString::fromStdString(categoryList[i])));
-				}
+				QMessageBox::information(this, windowTitle(),
+				tr("%1 transactions have been imported into your wallet!").arg(arr[0].get_int()),
+				QMessageBox::Ok, QMessageBox::Ok);
+				QDialog::accept();
+			}
+			else {
+				QMessageBox::warning(this, windowTitle(),
+					tr("No transactions have been imported into your wallet!"),
+					QMessageBox::Ok, QMessageBox::Ok);
 			}
 		}
-		else
-		{
-			addParentItem(offermodel, QString::fromStdString(categoryList[i]), QVariant(QString::fromStdString(categoryList[i])));
+		else {
+			QMessageBox::warning(this, windowTitle(),
+				tr("No transactions have been imported into your wallet!"),
+				QMessageBox::Ok, QMessageBox::Ok);
 		}
 	}
-    ui->offerCategory->setModel(offermodel);
-    ui->offerCategory->setItemDelegate(new ComboBoxDelegate);
-
-	addParentItem(certmodel, tr("All Certificates"), tr("certificates"));
-	for(unsigned int i = 0;i< categoryList.size(); i++)
-	{
-		vector<string> categories;
-		boost::split(categories,categoryList[i],boost::is_any_of(">"));
-		if(categories.size() > 0)
-		{
-			for(unsigned int j = 0;j< categories.size(); j++)
-			{
-				boost::algorithm::trim(categories[j]);
-				if(categories[0] != "certificates")
-					continue;
-				if(j == 1)
-				{
-					addChildItem(certmodel, QString::fromStdString(categories[1]), QVariant(QString::fromStdString(categoryList[i])));
-				}
-			}
-		}
-	}
-    ui->certCategory->setModel(certmodel);
-    ui->certCategory->setItemDelegate(new ComboBoxDelegate);
-
-}
-
-void AliasImportDialog::on_cancelButton_clicked()
-{
-    mapper->submit();
-    accept();
-}
-bool AliasImportDialog::on_importOffers_clicked()
-{
-	string strMethod = string("importoffersusedbyalias");
-	UniValue params(UniValue::VARR);
-	UniValue result;
-	params.push_back(alias.toStdString());
-	QVariant currentCategory = ui->offerCategory->itemData(ui->offerCategory->currentIndex(), Qt::UserRole);
-	if(ui->offerCategory->currentIndex() > 0 &&  currentCategory != QVariant::Invalid)
-		params.push_back(currentCategory.toString().toStdString());
-	else if(ui->offerCategory->currentText() != tr("All Category"))
-		params.push_back(ui->offerCategory->currentText().toStdString());
-	params.push_back(ui->offerSafeSearch->checkState() == Qt::Checked? "Yes": "No");
-    try {
-        result = tableRPC.execute(strMethod, params);
-		QMessageBox::information(this, windowTitle(),
-				tr("%1 Offers have been imported into your wallet!").arg(result.size()),
-				QMessageBox::Ok, QMessageBox::Ok);
-	}
 	catch (UniValue& objError)
 	{
 		QMessageBox::critical(this, windowTitle(),
-				tr("Could not find this any offers related to this alias"),
+			tr("Could not import this alias: ") + QString::fromStdString(find_value(objError, "message").get_str()),
 				QMessageBox::Ok, QMessageBox::Ok);
 
 	}
 	catch(std::exception& e)
 	{
 		QMessageBox::critical(this, windowTitle(),
-			tr("There was an exception trying to locate offers related to this alias: ") + QString::fromStdString(e.what()),
-				QMessageBox::Ok, QMessageBox::Ok);
-	}
-	return false;
-
-
-}
-bool AliasImportDialog::on_importCerts_clicked()
-{
-	string strMethod = string("importcertsusedbyalias");
-	UniValue params(UniValue::VARR);
-	UniValue result;
-	params.push_back(alias.toStdString());
-	QVariant currentCategory = ui->certCategory->itemData(ui->certCategory->currentIndex(), Qt::UserRole);
-	if(ui->certCategory->currentIndex() > 0 &&  currentCategory != QVariant::Invalid)
-		params.push_back(currentCategory.toString().toStdString());
-	else if(ui->certCategory->currentText() != tr("All Certificates"))
-		params.push_back(ui->certCategory->currentText().toStdString());
-	params.push_back(ui->certSafeSearch->checkState() == Qt::Checked? "Yes": "No");
-    try {
-        result = tableRPC.execute(strMethod, params);
-		QMessageBox::information(this, windowTitle(),
-				tr("%1 Certificates have been imported into your wallet!").arg(result.size()),
-				QMessageBox::Ok, QMessageBox::Ok);
-	}
-	catch (UniValue& objError)
-	{
-		QMessageBox::critical(this, windowTitle(),
-				tr("Could not find this any certificates related to this alias"),
-				QMessageBox::Ok, QMessageBox::Ok);
-
-	}
-	catch(std::exception& e)
-	{
-		QMessageBox::critical(this, windowTitle(),
-			tr("There was an exception trying to locate offers related to this alias: ") + QString::fromStdString(e.what()),
-				QMessageBox::Ok, QMessageBox::Ok);
-	}
-	return false;
-}
-bool AliasImportDialog::on_importEscrows_clicked()
-{
-	string strMethod = string("importescrowsusedbyalias");
-	UniValue params(UniValue::VARR);
-	UniValue result;
-	params.push_back(alias.toStdString());
-    try {
-        result = tableRPC.execute(strMethod, params);
-		QMessageBox::information(this, windowTitle(),
-				tr("%1 Escrows have been imported into your wallet!").arg(result.size()),
-				QMessageBox::Ok, QMessageBox::Ok);
-	}
-	catch (UniValue& objError)
-	{
-		QMessageBox::critical(this, windowTitle(),
-				tr("Could not find this any escrows related to this alias"),
-				QMessageBox::Ok, QMessageBox::Ok);
-
-	}
-	catch(std::exception& e)
-	{
-		QMessageBox::critical(this, windowTitle(),
-			tr("There was an exception trying to locate escrows related to this alias: ") + QString::fromStdString(e.what()),
+			tr("There was an exception trying to import this alias: ") + QString::fromStdString(e.what()),
 				QMessageBox::Ok, QMessageBox::Ok);
 	}
 	return false;

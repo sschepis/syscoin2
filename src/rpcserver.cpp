@@ -386,9 +386,7 @@ static const CRPCCommand vRPCCommands[] =
     { "wallet", "aliashistory",      &aliashistory,      false },
     { "wallet", "aliasfilter",       &aliasfilter,       false },
 	{ "wallet", "generatepublickey", &generatepublickey, false },
-	{ "wallet", "importoffersusedbyalias",	&importoffersusedbyalias,	false },
-	{ "wallet", "importcertsusedbyalias",	&importcertsusedbyalias,		false },
-	{ "wallet", "importescrowsusedbyalias", &importescrowsusedbyalias,	false },
+	{ "wallet", "importalias",		 &importalias,	false },
 
     // use the blockchain as a distributed marketplace
     { "wallet", "offernew",             &offernew,             false },
