@@ -65,6 +65,7 @@ bool AliasImportDialog::on_importButton_clicked()
 				tr("%1 transactions have been imported into your wallet!").arg(arr[0].get_int()),
 				QMessageBox::Ok, QMessageBox::Ok);
 				QDialog::accept();
+				return true;
 			}
 			else {
 				QMessageBox::warning(this, windowTitle(),
