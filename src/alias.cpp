@@ -1698,10 +1698,21 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 
 	if(!vchPrivateValue.empty())
 	{
+		string strData = "";
+		string strDecryptedData = stringFromVch(vchPrivateValue);
 		string strCipherText;
 		
+		// if transfer
+		if(params.size() >= 5)
+		{
+			// decrypt using old key
+			if(DecryptMessage(theAlias.vchPubKey, theAlias.vchPrivateValue, strData))
+				strDecryptedData = strData;
+			else
+				throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2035 - Could not decrypt certificate data");
+		}
 		// encrypt using new key
-		if(!EncryptMessage(vchPubKeyByte, vchPrivateValue, strCipherText))
+		if(!EncryptMessage(vchPubKeyByte, vchFromString(strDecryptedData), strCipherText))
 		{
 			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 1028 - Could not encrypt alias private data");
 		}
