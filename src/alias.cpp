@@ -1160,9 +1160,9 @@ bool CAliasDB::ScanNames(const std::vector<unsigned char>& vchAlias, const strin
 
 	// regexp
 	using namespace boost;
-	cmatch nameparts;
+	match_results<string::const_iterator> nameparts;
 	string strRegexpLower = strRegexp;
-	boost::algorithm::to_lower(strRegexpLower);
+	algorithm::to_lower(strRegexpLower);
 	regex cregex(strRegexpLower);
 	scoped_ptr<CDBIterator> pcursor(NewIterator());
 	pcursor->Seek(make_pair(string("namei"), vchAlias));
@@ -1205,7 +1205,7 @@ bool CAliasDB::ScanNames(const std::vector<unsigned char>& vchAlias, const strin
 					continue;
 				}
 				string name = stringFromVch(vchAlias);
-				if (strRegexp != "" && !regex_match(name.c_str(), nameparts, cregex) && strRegexp != name)
+				if (strRegexp != "" && !regex_match(name, nameparts, cregex) && strRegexp != name)
 				{
 					pcursor->Next();
 					continue;
@@ -1503,18 +1503,18 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 
 	
 	using namespace boost;
-	to_lower(strName);
-	cmatch name;
+	algorithm::to_lower(strName);
+	match_results<string::const_iterator> nameparts;
 	regex domainwithtldregex("^((?!-)[a-z0-9-]{3,63}(?<!-)\\.)+[a-z]{2,6}$");
 	regex domainwithouttldregex("^(?!-)[a-z0-9-]{3,63}(?<!-)");
 	if(find_first(strName, "."))
 	{
-		if (!regex_match(strName.c_str(), name, domainwithtldregex))
+		if (!regex_match(strName, nameparts, domainwithtldregex))
 			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 1020 - Invalid Syscoin Identity. Must follow the domain name spec of 3 to 63 characters with no preceding or trailing dashes and a TLD of 2 to 6 characters");	
 	}
 	else
 	{
-		if (!regex_match(strName.c_str(), name, domainwithouttldregex))
+		if (!regex_match(strName, nameparts, domainwithouttldregex))
 			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 1021 - Invalid Syscoin Identity. Must follow the domain name spec of 3 to 63 characters with no preceding or trailing dashes");
 	}
 	
