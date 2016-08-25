@@ -792,7 +792,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	// Make sure alias outputs are not spent by a regular transaction, or the alias would be lost
 	if (tx.nVersion != SYSCOIN_TX_VERSION) 
 	{
-		errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1000 - Non-Syscoin transaction found";
+		errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1000 - " + _("Non-Syscoin transaction found");
 		return true;
 	}
 	// unserialize alias from txn, check for valid
@@ -817,7 +817,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		
 		if(vvchArgs.size() != 3)
 		{
-			errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1000 - Alias arguments incorrect size";
+			errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1000 - " + _("Alias arguments incorrect size");
 			return error(errorMessage.c_str());
 		}
 
@@ -825,7 +825,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		{
 			if(vchHash != vvchArgs[2])
 			{
-				errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1001 - Hash provided doesn't match the calculated hash the data";
+				errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1001 - " + _("Hash provided doesn't match the calculated hash the data");
 				return error(errorMessage.c_str());
 			}
 		}		
@@ -835,7 +835,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			if (DecodeAliasScript(tx.vout[i].scriptPubKey, tmpOp, vvchRead) && vvchRead[0] == vvchArgs[0]) {
 				if(found)
 				{
-					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1002 - Too many alias outputs found in a transaction, only 1 allowed";
+					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1002 - " + _("Too many alias outputs found in a transaction, only 1 allowed");
 					return error(errorMessage.c_str());
 				}
 				found = true; 
@@ -867,27 +867,27 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	{
 		if(!IsValidAliasName(vvchArgs[0]))
 		{
-			errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1003 - Alias name does not follow the domain name specification";
+			errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1003 - " + _("Alias name does not follow the domain name specification");
 			return error(errorMessage.c_str());
 		}
 		if(theAlias.vchPublicValue.size() > MAX_VALUE_LENGTH && vvchArgs[0] != vchFromString("sysrates.peg") && vvchArgs[0] != vchFromString("syscategory"))
 		{
-			errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1004 - Alias public value too big";
+			errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1004 - " + _("Alias public value too big");
 			return error(errorMessage.c_str());
 		}
 		if(theAlias.vchPrivateValue.size() > MAX_ENCRYPTED_VALUE_LENGTH)
 		{
-			errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1005 - Alias private value too big";
+			errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1005 - " + _("Alias private value too big");
 			return error(errorMessage.c_str());
 		}
 		if(theAlias.nHeight > nHeight)
 		{
-			errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1006 - Bad alias height";
+			errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1006 - " + _("Bad alias height");
 			return error(errorMessage.c_str());
 		}
 		if(!theAlias.IsNull() && (theAlias.nRenewal > 5 || theAlias.nRenewal < 1))
 		{
-			errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1007 - Expiration must be within 1 to 5 years";
+			errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1007 - " + _("Expiration must be within 1 to 5 years");
 			return error(errorMessage.c_str());
 		}
 		switch (op) {
@@ -895,17 +895,17 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				// Check GUID
 				if (theAlias.vchGUID != vvchArgs[1])
 				{
-					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1008 - Alias input guid mismatch";
+					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1008 - " + _("Alias input guid mismatch");
 					return error(errorMessage.c_str());
 				}
 				if(theAlias.vchAlias != vvchArgs[0])
 				{
-					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1009 - Guid in data output doesn't match guid in tx";
+					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1009 - " + _("Guid in data output doesn't match guid in tx");
 					return error(errorMessage.c_str());
 				}
 				if(!theAlias.vchPrivateKey.empty())
 				{
-					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1009a - Private key must be empty on activate";
+					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1009a - " + _("Private key must be empty on activate");
 					return error(errorMessage.c_str());
 				}
 				
@@ -913,32 +913,32 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			case OP_ALIAS_UPDATE:
 				if (!IsAliasOp(prevOp))
 				{
-					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1010 - Alias input to this transaction not found";
+					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1010 - " + _("Alias input to this transaction not found");
 					return error(errorMessage.c_str());
 				}
 				if(!theAlias.IsNull())
 				{
 					if(theAlias.vchAlias != vvchArgs[0])
 					{
-						errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1011 - Guid in data output doesn't match guid in transaction";
+						errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1011 - " + _("Guid in data output doesn't match guid in transaction");
 						return error(errorMessage.c_str());
 					}
 				}
 				// Check name
 				if (vvchPrevArgs[0] != vvchArgs[0])
 				{
-					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1012 - Alias input mismatch";
+					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1012 - " + _("Alias input mismatch");
 					return error(errorMessage.c_str());
 				}
 				// Check GUID
 				if (vvchPrevArgs[1] != vvchArgs[1])
 				{
-					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1013 - Alias Guid input mismatch";
+					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1013 - " + _("Alias Guid input mismatch");
 					return error(errorMessage.c_str());
 				}
 				break;
 		default:
-				errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1014 - Alias transaction has unknown op";
+				errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1014 - " + _("Alias transaction has unknown op");
 				return error(errorMessage.c_str());
 		}
 
@@ -959,7 +959,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			{
 				if(!isExpired && !vtxPos.empty())
 				{
-					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1015 - Trying to renew an alias that isn't expired";
+					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1015 - " + _("Trying to renew an alias that isn't expired");
 					return true;
 				}
 			}
