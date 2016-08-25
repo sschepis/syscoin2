@@ -202,7 +202,7 @@ bool EditAliasDialog::saveCurrentRow()
 			strMethod = string("aliasupdate");
 			params.push_back(ui->aliasEdit->text().toStdString());
 			params.push_back(ui->nameEdit->toPlainText().toStdString());
-			params.push_back("");
+			params.push_back(ui->privateEdit->toPlainText().toStdString());
 			params.push_back(ui->safeSearchEdit->currentText().toStdString());
 			params.push_back(ui->transferEdit->text().toStdString());
 			params.push_back(ui->expiryEdit->itemData(ui->expiryEdit->currentIndex()).toString().toStdString());

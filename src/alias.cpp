@@ -1516,7 +1516,7 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	}
 	else
 	{
-		if (!regex_search(strName, nameparts, domainwithouttldregex)  || string(nameparts[0]) != strName)
+		if (!regex_search(strName, nameparts, domainwithouttldregex)  || string(nameparts[0] != strName)
 			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 1021 - Invalid Syscoin Identity. Must follow the domain name spec of 3 to 63 characters with no preceding or trailing dashes");
 	}
 	
@@ -1698,23 +1698,12 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 
 	if(!vchPrivateValue.empty())
 	{
-		string strData = "";
-		string strDecryptedData = stringFromVch(vchPrivateValue);
 		string strCipherText;
 		
-		// if transfer
-		if(params.size() >= 5 && params[4].get_str().size() > 0)
-		{
-			// decrypt using old key
-			if(DecryptMessage(theAlias.vchPubKey, theAlias.vchPrivateValue, strData))
-				strDecryptedData = strData;
-			else
-				throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 1028 - Could not decrypt alias data");
-		}
 		// encrypt using new key
-		if(!EncryptMessage(vchPubKeyByte, vchFromString(strDecryptedData), strCipherText))
+		if(!EncryptMessage(vchPubKeyByte, vchPrivateValue, strCipherText))
 		{
-			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 1028a - Could not encrypt alias private data");
+			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 1028 - Could not encrypt alias private data");
 		}
 		vchPrivateValue = vchFromString(strCipherText);
 	}
@@ -1726,7 +1715,7 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 		// encrypt using new key
 		if(!EncryptMessage(vchPubKeyByte, vchFromString(strPrivateKey), strCipherText))
 		{
-			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 1028b - Could not encrypt alias private key");
+			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 1028a - Could not encrypt alias private key");
 		}
 		vchPrivateKey = vchFromString(strCipherText);
 	}
