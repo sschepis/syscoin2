@@ -67,7 +67,15 @@ EditAliasDialog::~EditAliasDialog()
 {
     delete ui;
 }
-
+void EditAliasDialog::on_cancelButton_clicked()
+{
+    reject();
+}
+void EditAliasDialog::on_okButton_clicked()
+{
+    mapper->submit();
+    accept();
+}
 void EditAliasDialog::setModel(WalletModel* walletModel, AliasTableModel *model)
 {
     this->model = model;
