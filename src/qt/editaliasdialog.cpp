@@ -85,6 +85,7 @@ void EditAliasDialog::setModel(WalletModel* walletModel, AliasTableModel *model)
     mapper->setModel(model);
 	mapper->addMapping(ui->aliasEdit, AliasTableModel::Name);
     mapper->addMapping(ui->nameEdit, AliasTableModel::Value);
+	mapper->addMapping(ui->privateEdit, AliasTableModel::PrivValue);
 	
     
 }

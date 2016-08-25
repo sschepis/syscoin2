@@ -1506,21 +1506,19 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	using namespace boost::algorithm;
 	to_lower(strName);
 	smatch nameparts;
-	sregex domainwithtldregex = sregex::compile("^((?!-)[a-z0-9-]{3,63}(?<!-)\\.)+[a-z]{2,6}$");
-	sregex domainwithouttldregex = sregex::compile("^((?!-)[a-z0-9-]{3,63}(?<!-))");
-	if(vchAlias != vchFromString("sysrates.peg") && vchAlias != vchFromString("sysban") && vchAlias != vchFromString("syscategory"))
+	sregex domainwithtldregex = sregex::compile("^((?!-_)[a-z0-9-]{3,63}(?<!-_)\\.)+[a-z]{2,6}$");
+	sregex domainwithouttldregex = sregex::compile("^((?!-_)[a-z0-9-]{3,63}(?<!-_))");
+	if(find_first(strName, "."))
 	{
-		if(find_first(strName, "."))
-		{
-			if (!regex_search(strName, nameparts, domainwithtldregex))
-				throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 1020 - Invalid Syscoin Identity. Must follow the domain name spec of 3 to 63 characters with no preceding or trailing dashes and a TLD of 2 to 6 characters");	
-		}
-		else
-		{
-			if (!regex_search(strName, nameparts, domainwithouttldregex))
-				throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 1021 - Invalid Syscoin Identity. Must follow the domain name spec of 3 to 63 characters with no preceding or trailing dashes");
-		}
+		if (!regex_search(strName, nameparts, domainwithtldregex))
+			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 1020 - Invalid Syscoin Identity. Must follow the domain name spec of 3 to 63 characters with no preceding or trailing dashes and a TLD of 2 to 6 characters");	
 	}
+	else
+	{
+		if (!regex_search(strName, nameparts, domainwithouttldregex))
+			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 1021 - Invalid Syscoin Identity. Must follow the domain name spec of 3 to 63 characters with no preceding or trailing dashes");
+	}
+	
 
 
 	vchAlias = vchFromString(strName);
