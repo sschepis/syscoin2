@@ -1009,7 +1009,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						theAlias.vchPubKey = dbAlias.vchPubKey;
 						errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1017a - Private key cannot be empty on transfer";
 					}	
-					else (theAlias.vchPrivateKey == dbAlias.vchPrivateKey)
+					else if(theAlias.vchPrivateKey == dbAlias.vchPrivateKey)
 					{
 						theAlias.vchPubKey = dbAlias.vchPubKey;
 						errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1017b - Private key must change on transfer";
