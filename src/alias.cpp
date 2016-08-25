@@ -2203,7 +2203,8 @@ UniValue importalias(const UniValue& params, bool fHelp) {
             CBlock block;
             if(ReadBlockFromDisk(block, chainActive[theAlias.nHeight], Params().GetConsensus()))
 			{
-				pwalletMain->SyncTransaction(tx, &block);
+				LOCK2(cs_main, cs_wallet);
+				AddToWalletIfInvolvingMe(tx, &block, true))
 			}
 		}
 	}
