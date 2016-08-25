@@ -1516,7 +1516,7 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	}
 	else
 	{
-		if (!regex_search(strName, nameparts, domainwithouttldregex)  || string(nameparts[0] != strName)
+		if (!regex_search(strName, nameparts, domainwithouttldregex)  || string(nameparts[0]) != strName)
 			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 1021 - Invalid Syscoin Identity. Must follow the domain name spec of 3 to 63 characters with no preceding or trailing dashes");
 	}
 	
