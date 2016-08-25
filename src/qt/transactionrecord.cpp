@@ -41,8 +41,7 @@ static bool CreateSyscoinTransactionRecord(TransactionRecord& sub, int op, const
 	switch(op)
 	{
 	case OP_ALIAS_ACTIVATE:
-		if(type == SEND)
-			sub.type = TransactionRecord::AliasActivate;
+		sub.type = TransactionRecord::AliasActivate;
 		break;
 	case OP_ALIAS_UPDATE:
 		if(type == SEND)
@@ -51,12 +50,10 @@ static bool CreateSyscoinTransactionRecord(TransactionRecord& sub, int op, const
 			sub.type = TransactionRecord::AliasRecv;
 		break;
 	case OP_OFFER_ACTIVATE:
-		if(type == SEND)
-			sub.type = TransactionRecord::OfferActivate;
+		sub.type = TransactionRecord::OfferActivate;
 		break;
 	case OP_OFFER_UPDATE:
-		if(type == SEND)
-			sub.type = TransactionRecord::OfferUpdate;
+		sub.type = TransactionRecord::OfferUpdate;
 		break;
 	case OP_OFFER_ACCEPT:
 		offer = COffer(wtx);
@@ -78,12 +75,10 @@ static bool CreateSyscoinTransactionRecord(TransactionRecord& sub, int op, const
 		return true;
 		break;
 	case OP_CERT_ACTIVATE:
-		if(type == SEND)
-			sub.type = TransactionRecord::CertActivate;
+		sub.type = TransactionRecord::CertActivate;
 		break;
 	case OP_CERT_UPDATE:
-		if(type == SEND)
-			sub.type = TransactionRecord::CertUpdate;
+		sub.type = TransactionRecord::CertUpdate;
 		break;
 	case OP_CERT_TRANSFER:
 		if(type == SEND)
