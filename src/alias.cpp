@@ -22,7 +22,6 @@
 #include "utiltime.h"
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/case_conv.hpp> // for to_lower()
-#include <boost/xpressive/xpressive_dynamic.hpp>
 #include <boost/foreach.hpp>
 #include <boost/thread.hpp>
 #include <boost/algorithm/hex.hpp>
@@ -1160,12 +1159,12 @@ bool CAliasDB::ScanNames(const std::vector<unsigned char>& vchAlias, const strin
 	int nMaxAge  = GetAliasExpirationDepth();
 
 	// regexp
-	using namespace boost::xpressive;
-	smatch nameparts;
+	using namespace boost;
+	cmatch nameparts;
 	string strRegexpLower = strRegexp;
 	boost::algorithm::to_lower(strRegexpLower);
-	sregex cregex = sregex::compile(strRegexpLower);
-	boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
+	regex cregex(strRegexpLower);
+	scoped_ptr<CDBIterator> pcursor(NewIterator());
 	pcursor->Seek(make_pair(string("namei"), vchAlias));
     while (pcursor->Valid()) {
         boost::this_thread::interruption_point();
@@ -1206,7 +1205,7 @@ bool CAliasDB::ScanNames(const std::vector<unsigned char>& vchAlias, const strin
 					continue;
 				}
 				string name = stringFromVch(vchAlias);
-				if (strRegexp != "" && !regex_search(name, nameparts, cregex) && strRegexp != name)
+				if (strRegexp != "" && !regex_match(name.c_str(), nameparts, cregex) && strRegexp != name)
 				{
 					pcursor->Next();
 					continue;
@@ -1502,18 +1501,20 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	The domain name should not start or end with hyphen (-) (e.g. -syscoin.org or syscoin-.org)
 	The domain name can be a subdomain (e.g. sys.blogspot.com)*/
 
-	boost::to_lower(strName);
-	boost::cmatch name;
-	boost::regex domainwithtldregex("^((?!-)[a-z0-9-]{3,63}(?<!-)\\.)+[a-z]{2,6}$");
-	boost::regex domainwithouttldregex("^(?!-)[a-z0-9-]{3,63}(?<!-)");
-	if(boost::find_first(strName, "."))
+	
+	using namespace boost;
+	to_lower(strName);
+	cmatch name;
+	regex domainwithtldregex("^((?!-)[a-z0-9-]{3,63}(?<!-)\\.)+[a-z]{2,6}$");
+	regex domainwithouttldregex("^(?!-)[a-z0-9-]{3,63}(?<!-)");
+	if(find_first(strName, "."))
 	{
-		if (!boost::regex_match(strName.c_str(), name, domainwithtldregex))
+		if (!regex_match(strName.c_str(), name, domainwithtldregex))
 			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 1020 - Invalid Syscoin Identity. Must follow the domain name spec of 3 to 63 characters with no preceding or trailing dashes and a TLD of 2 to 6 characters");	
 	}
 	else
 	{
-		if (!boost::regex_match(strName.c_str(), name, domainwithouttldregex))
+		if (!regex_match(strName.c_str(), name, domainwithouttldregex))
 			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 1021 - Invalid Syscoin Identity. Must follow the domain name spec of 3 to 63 characters with no preceding or trailing dashes");
 	}
 	
