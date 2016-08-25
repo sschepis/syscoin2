@@ -27,6 +27,7 @@
 #include <boost/thread.hpp>
 #include <boost/algorithm/hex.hpp>
 #include <boost/algorithm/string/find.hpp>
+#include <boost/regex.hpp> 
 using namespace std;
 CAliasDB *paliasdb = NULL;
 COfferDB *pofferdb = NULL;
@@ -1502,8 +1503,7 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	The domain name can be a subdomain (e.g. sys.blogspot.com)*/
 
 	
-	using namespace boost::xpressive;
-	using namespace boost::algorithm;
+	using namespace boost;
 	to_lower(strName);
 	cmatch name;
 	regex domainwithtldregex("^((?!-)[a-z0-9-]{3,63}(?<!-)\\.)+[a-z]{2,6}$");
