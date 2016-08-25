@@ -1703,18 +1703,18 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 		string strCipherText;
 		
 		// if transfer
-		if(params.size() >= 5)
+		if(params.size() >= 5 && params[4].get_str().size() > 0)
 		{
 			// decrypt using old key
 			if(DecryptMessage(theAlias.vchPubKey, theAlias.vchPrivateValue, strData))
 				strDecryptedData = strData;
 			else
-				throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2035 - Could not decrypt certificate data");
+				throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 1028 - Could not decrypt alias data");
 		}
 		// encrypt using new key
 		if(!EncryptMessage(vchPubKeyByte, vchFromString(strDecryptedData), strCipherText))
 		{
-			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 1028 - Could not encrypt alias private data");
+			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 1028a - Could not encrypt alias private data");
 		}
 		vchPrivateValue = vchFromString(strCipherText);
 	}
@@ -1726,7 +1726,7 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 		// encrypt using new key
 		if(!EncryptMessage(vchPubKeyByte, vchFromString(strPrivateKey), strCipherText))
 		{
-			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 1028a - Could not encrypt alias private key");
+			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 1028b - Could not encrypt alias private key");
 		}
 		vchPrivateKey = vchFromString(strCipherText);
 	}
