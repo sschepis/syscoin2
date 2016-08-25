@@ -1502,20 +1502,18 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	The domain name should not start or end with hyphen (-) (e.g. -syscoin.org or syscoin-.org)
 	The domain name can be a subdomain (e.g. sys.blogspot.com)*/
 
-	
-	using namespace boost;
-	to_lower(strName);
-	cmatch name;
-	regex domainwithtldregex("^((?!-)[a-z0-9-]{3,63}(?<!-)\\.)+[a-z]{2,6}$");
-	regex domainwithouttldregex("^(?!-)[a-z0-9-]{3,63}(?<!-)");
-	if(find_first(strName, "."))
+	boost::to_lower(strName);
+	boost::cmatch name;
+	boost::regex domainwithtldregex("^((?!-)[a-z0-9-]{3,63}(?<!-)\\.)+[a-z]{2,6}$");
+	boost::regex domainwithouttldregex("^(?!-)[a-z0-9-]{3,63}(?<!-)");
+	if(boost::find_first(strName, "."))
 	{
-		if (!regex_match(strName.c_str(), name, domainwithtldregex))
+		if (!boost::regex_match(strName.c_str(), name, domainwithtldregex))
 			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 1020 - Invalid Syscoin Identity. Must follow the domain name spec of 3 to 63 characters with no preceding or trailing dashes and a TLD of 2 to 6 characters");	
 	}
 	else
 	{
-		if (!regex_match(strName.c_str(), name, domainwithouttldregex))
+		if (!boost::regex_match(strName.c_str(), name, domainwithouttldregex))
 			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 1021 - Invalid Syscoin Identity. Must follow the domain name spec of 3 to 63 characters with no preceding or trailing dashes");
 	}
 	
