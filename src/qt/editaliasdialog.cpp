@@ -30,7 +30,9 @@ EditAliasDialog::EditAliasDialog(Mode mode, QWidget *parent) :
 	ui->expiryEdit->addItem(tr("4 Years"),"4");
 	ui->expiryEdit->addItem(tr("5 Years"),"5");
 	ui->expiryDisclaimer->setText(tr("<font color='blue'>Set the length of time to keep your alias from expiring. The longer you wish to keep it alive the more fees you will pay to create or update this alias. The formula for the fee is 0.2 SYS * years * years.</font>"));
-    switch(mode)
+    ui->privateDisclaimer->setText(tr("<font color='blue'>This is to private profile information which is encrypted and only available to you. This is useful for when sending notes to a merchant through the payment screen so you don't have to type it out everytime.</font>"));
+	ui->publicDisclaimer->setText(tr("<font color='blue'>This is public profile information that anyone on the network can see. Fill this in with things you would like others to know about you.</font>"));
+	switch(mode)
     {
     case NewDataAlias:
         setWindowTitle(tr("New Data Alias"));
