@@ -1510,12 +1510,12 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	regex domainwithouttldregex("^(?!-)[a-z0-9-]{3,63}(?<!-)");
 	if(find_first(strName, "."))
 	{
-		if (!regex_match(strName, name, domainwithtldregex))
+		if (!regex_match(strName.c_str(), name, domainwithtldregex))
 			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 1020 - Invalid Syscoin Identity. Must follow the domain name spec of 3 to 63 characters with no preceding or trailing dashes and a TLD of 2 to 6 characters");	
 	}
 	else
 	{
-		if (!regex_match(strName, name, domainwithouttldregex))
+		if (!regex_match(strName.c_str(), name, domainwithouttldregex))
 			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 1021 - Invalid Syscoin Identity. Must follow the domain name spec of 3 to 63 characters with no preceding or trailing dashes");
 	}
 	
