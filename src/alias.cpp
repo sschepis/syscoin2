@@ -1506,8 +1506,8 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	using namespace boost::algorithm;
 	to_lower(strName);
 	cmatch name;
-	sregex domainwithtldregex = sregex::compile("^((?!-)[a-z0-9-]{3,63}(?<!-)\\.)+[a-z]{2,6}$");
-	sregex domainwithouttldregex = sregex::compile("^(?!-)[a-z0-9-]{3,63}(?<!-)");
+	regex domainwithtldregex("^((?!-)[a-z0-9-]{3,63}(?<!-)\\.)+[a-z]{2,6}$");
+	regex domainwithouttldregex("^(?!-)[a-z0-9-]{3,63}(?<!-)");
 	if(find_first(strName, "."))
 	{
 		if (!regex_match(strName, name, domainwithtldregex))
