@@ -3233,10 +3233,10 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 		else
 			oOfferAccept.push_back(Pair("paid","true"));
 		CAliasIndex theAlias;
-		CTransaction aliastx;
+		CTransaction aliastmptx;
 		bool isExpired = false;
 		vector<CAliasIndex> aliasVtxPos;
-		if(GetTxAndVtxOfAlias(acceptOffer.vchAlias, theAlias, aliastx, aliasVtxPos, isExpired, true))
+		if(GetTxAndVtxOfAlias(acceptOffer.vchAlias, theAlias, aliastmptx, aliasVtxPos, isExpired, true))
 		{
 			theAlias.nHeight = acceptOffer.nHeight;
 			theAlias.GetAliasFromList(aliasVtxPos);
