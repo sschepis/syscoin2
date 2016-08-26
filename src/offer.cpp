@@ -3511,8 +3511,6 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 					theAlias.nHeight = theOffer.nHeight;
 					theAlias.GetAliasFromList(aliasVtxPos);
 				}
-				if(!IsSyscoinTxMine(aliastx, "alias"))
-					continue;
 				string strMessage = string("");
 				if(!DecryptMessage(theAlias.vchPubKey, theOfferAccept.vchMessage, strMessage))
 					strMessage = string("Encrypted for owner of offer");
