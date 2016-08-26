@@ -3115,7 +3115,7 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
     CTransaction tx;
     if (!GetSyscoinTransaction(theOffer.nHeight, theOffer.txHash, tx, Params().GetConsensus()))
 	{
-		throw runtime_error(strprintf("failed to accept read offertransaction from disk: %s", theOffer.txHash.GetHex()).c_str());
+		throw runtime_error(strprintf("failed to accept read offertransaction from disk: %s", txHash.GetHex()).c_str());
 	}
 
 	if(theOffer.safetyLevel >= SAFETY_LEVEL2)
