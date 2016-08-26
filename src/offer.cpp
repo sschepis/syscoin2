@@ -1262,7 +1262,8 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 90 - " + _("Cannot exceed 10 feedback entries for this user of this offer accept");
 					return true;
 				}
-				HandleAcceptFeedback(theOfferAccept, theOffer);	
+				if(!dontaddtodb)
+					HandleAcceptFeedback(theOfferAccept, theOffer);	
 			
 			}
 			// if its not a special feedback output for the buyer then we decrease qty accordingly
@@ -3511,11 +3512,14 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 					theAlias.nHeight = theOffer.nHeight;
 					theAlias.GetAliasFromList(aliasVtxPos);
 				}
+				// if its your offer accept (paid to you) but alias is not yours anymore then skip
 				if(isAcceptMine && !IsSyscoinTxMine(aliastx, "alias"))
 					continue;
 				CAliasIndex theBuyerAlias;
 				CTransaction buyeraliastx;
 				GetTxOfAlias(theOfferAccept.vchBuyerAlias, theBuyerAlias, buyeraliastx, true);
+
+				// if you paid for this offer but the buyer alias isn't yours anymore skip
 				if(!isAcceptMine && !IsSyscoinTxMine(buyeraliastx, "alias"))
 					continue;				
 				string strMessage = string("");
