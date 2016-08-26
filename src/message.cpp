@@ -453,7 +453,7 @@ UniValue messagenew(const UniValue& params, bool fHelp) {
 
 
 	if(!GetTxOfAlias(vchFromString(strToAddress), aliasTo, aliastx, true))
-		return runtime_error("SYSCOIN_MESSAGE_RPC_ERROR: ERRCODE: 3020 - " + _("Failed to read to alias from alias DB"));
+		throw runtime_error("SYSCOIN_MESSAGE_RPC_ERROR: ERRCODE: 3020 - " + _("Failed to read to alias from alias DB"));
 	CPubKey ToPubKey = CPubKey(aliasTo.vchPubKey);
 
 
