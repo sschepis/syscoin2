@@ -3355,6 +3355,12 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 	oOffer.push_back(Pair("alias_peg", stringFromVch(theOffer.vchAliasPeg)));
 	oOffer.push_back(Pair("description", stringFromVch(theOffer.sDescription)));
 	oOffer.push_back(Pair("alias", stringFromVch(theOffer.vchAlias)));
+	CPubKey PubKey(alias.vchPubKey);
+	CSyscoinAddress address(PubKey.GetID());
+	if(!address.IsValid())
+		throw runtime_error("Invalid alias address");
+	oOffer.push_back(Pair("address", address.ToString()));
+
 	float rating = 0;
 	if(alias.nRatingCount > 0)
 		rating = roundf(alias.nRating/(float)alias.nRatingCount);
