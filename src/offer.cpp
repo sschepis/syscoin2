@@ -3111,10 +3111,7 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 	if (vtxPos.size() < 1)
 		throw runtime_error("no result returned");
 
-    // get transaction pointed to by offer
-	CTransaction tx;
-	if(!GetTxOfOffer( vchOffer, theOffer, tx, true))
-		throw runtime_error("failed to read offer transaction from disk");
+    theOffer = vtxPos.back();
 	if(theOffer.safetyLevel >= SAFETY_LEVEL2)
 		throw runtime_error("offer has been banned");
 	CTransaction linkTx;
@@ -3625,6 +3622,7 @@ UniValue offerlist(const UniValue& params, bool fHelp) {
 				}
 				else
 				{
+					theOfferA = vtxPos.back();
 					if (!DecodeOfferTx(tx, op, nOut, vvch) || !IsOfferOp(op))
 						continue;
 					if(!IsSyscoinTxMine(tx, "offer"))
