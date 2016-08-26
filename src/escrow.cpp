@@ -2648,7 +2648,7 @@ UniValue escrowlist(const UniValue& params, bool fHelp) {
 		COffer offer;
 		CTransaction offertx;
 		vector<COffer> offerVtxPos;
-		GetTxAndVtxOfOffer(escrow.vchOffer, offer, offertx, offerVtxPos. true);
+		GetTxAndVtxOfOffer(escrow.vchOffer, offer, offertx, offerVtxPos, true);
 
 		// skip this escrow if it doesn't match the given filter value
 		if (vchNameUniq.size() > 0 && vchNameUniq != vchEscrow)
