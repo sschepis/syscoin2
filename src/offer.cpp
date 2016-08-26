@@ -3333,7 +3333,7 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 	oOffer.push_back(Pair("sysprice", ValueFromAmount(nPricePerUnit)));
 	oOffer.push_back(Pair("price", strprintf("%.*f", precision, theOffer.GetPrice() ))); 
 	
-	oOffer.push_back(Pair("ismine", IsSyscoinTxMine(tx, "offer") ? "true" : "false"));
+	oOffer.push_back(Pair("ismine", IsSyscoinTxMine(tx, "offer") && IsSyscoinTxMine(aliastx, "alias")  ? "true" : "false"));
 	if(!theOffer.vchLinkOffer.empty()) {
 		oOffer.push_back(Pair("commission", strprintf("%d%%", theOffer.nCommission)));
 		oOffer.push_back(Pair("offerlink", "true"));
@@ -3481,7 +3481,16 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 					}
 				}
 				if(!theOfferAccept.vchEscrow.empty() && vchOfferAcceptLink.empty())
-					continue;				
+					continue;
+				bool isExpired = false;
+				vector<CAliasIndex> aliasVtxPos;
+				CAliasIndex theAlias;
+				CTransaction aliastx;
+				if(GetTxAndVtxOfAlias(theOffer.vchAlias, theAlias, aliastx, aliasVtxPos, isExpired, true))
+				{
+					theAlias.nHeight = theOffer.nHeight;
+					theAlias.GetAliasFromList(aliasVtxPos);
+				}
 				string linkAccept = "";
 				if(!vchOfferAcceptLink.empty())
 					linkAccept = stringFromVch(vchOfferAcceptLink);
@@ -3496,22 +3505,13 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 				oOfferAccept.push_back(Pair("price", strprintf("%.*f", precision, theOffer.GetPrice() ))); 
 				oOfferAccept.push_back(Pair("total", strprintf("%.*f", precision, theOfferAccept.nPrice * theOfferAccept.nQty ))); 
 				// this accept is for me(something ive sold) if this offer is mine
-				oOfferAccept.push_back(Pair("ismine", isAcceptMine? "true" : "false"));
+				oOfferAccept.push_back(Pair("ismine", isAcceptMine && IsSyscoinTxMine(aliastx, "alias")? "true" : "false"));
 
 				if(!theOfferAccept.txBTCId.IsNull())
 					oOfferAccept.push_back(Pair("status","paid(BTC)"));
 				else
 					oOfferAccept.push_back(Pair("status","paid"));
 
-				bool isExpired = false;
-				vector<CAliasIndex> aliasVtxPos;
-				CAliasIndex theAlias;
-				CTransaction aliastx;
-				if(GetTxAndVtxOfAlias(theOffer.vchAlias, theAlias, aliastx, aliasVtxPos, isExpired, true))
-				{
-					theAlias.nHeight = theOffer.nHeight;
-					theAlias.GetAliasFromList(aliasVtxPos);
-				}
 				// if its your offer accept (paid to you) but alias is not yours anymore then skip
 				if(isAcceptMine && !IsSyscoinTxMine(aliastx, "alias"))
 					continue;
