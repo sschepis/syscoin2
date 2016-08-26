@@ -2702,7 +2702,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	}
 
 	unsigned int memPoolQty = QtyOfPendingAcceptsInMempool(vchOffer);
-	if(vtxPos.back().nQty != -1 && vtxPos.back().nQty < ((!vchEscrowTxHash.empty()? 0: nQty)+memPoolQty))
+	if(vtxPos.back().nQty != -1 && vtxPos.back().nQty < ((!txAccept.vchEscrow.empty()? 0: nQty)+memPoolQty))
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 545 - " + _("Not enough remaining quantity to fulfill this orderaccept"));
 
 	int precision = 2;
