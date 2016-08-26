@@ -3112,6 +3112,12 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 		throw runtime_error("no result returned");
 
     theOffer = vtxPos.back();
+    CTransaction tx;
+    if (!GetSyscoinTransaction(theOffer.nHeight, theOffer.txHash, tx, Params().GetConsensus()))
+	{
+		throw runtime_error(strprintf("failed to accept read offertransaction from disk: %s", txHash.GetHex()).c_str());
+	}
+
 	if(theOffer.safetyLevel >= SAFETY_LEVEL2)
 		throw runtime_error("offer has been banned");
 	CTransaction linkTx;
