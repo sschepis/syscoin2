@@ -1277,7 +1277,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				{
 					if((theOfferAccept.nQty > theOffer.nQty))
 					{
-						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 91 - " + _("Not enough quantity left in this offer for this purchase";
+						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 91 - " + _("Not enough quantity left in this offer for this purchase");
 						return true;
 					}				
 					theOffer.nQty -= theOfferAccept.nQty;
@@ -1300,7 +1300,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						return true;
 					}
 					else if(!GetTxOfOffer( theOffer.vchLinkOffer, linkOffer, linkedTx))
-					{" + _("
+					{
 						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 94 - " + _("Could not get linked offer");
 						return true;
 					}
