@@ -545,13 +545,13 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	vector<unsigned char> vchHash;
 	if(!GetSyscoinData(tx, vchData, vchHash) || !theOffer.UnserializeFromData(vchData, vchHash))
 	{
-		errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR ERRCODE: 1 - Cannot unserialize data inside of this transaction relating to an offer";
+		errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR ERRCODE: 1 - " + _("Cannot unserialize data inside of this transaction relating to an offer");
 		return true;
 	}
 	// Make sure offer outputs are not spent by a regular transaction, or the offer would be lost
 	if (tx.nVersion != SYSCOIN_TX_VERSION) 
 	{
-		errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 3 - Non-Syscoin transaction found";
+		errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 3 - " + _("Non-Syscoin transaction found");
 		return true;
 	}
 	if(fJustCheck)
@@ -559,12 +559,12 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		
 		if(op != OP_OFFER_ACCEPT && vvchArgs.size() != 2)
 		{
-			errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 4 - Offer arguments incorrect size";
+			errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 4 - " + _("Offer arguments incorrect size");
 			return error(errorMessage.c_str());
 		}
 		else if(op == OP_OFFER_ACCEPT && vvchArgs.size() != 4)
 		{
-			errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 5 - OfferAccept arguments incorrect size";
+			errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 5 - " + _("OfferAccept arguments incorrect size");
 			return error(errorMessage.c_str());
 		}
 		if(!theOffer.IsNull())
@@ -573,7 +573,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			{
 				if(vchHash != vvchArgs[3])
 				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 6 - Hash provided doesn't match the calculated hash the data";
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 6 - " + _("Hash provided doesn't match the calculated hash the data");
 					return error(errorMessage.c_str());
 				}
 			}
@@ -581,7 +581,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			{
 				if(vchHash != vvchArgs[1])
 				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 7 - Hash provided doesn't match the calculated hash the data";
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 7 - " + _("Hash provided doesn't match the calculated hash the data");
 					return error(errorMessage.c_str());
 				}
 			}
@@ -660,107 +660,107 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	{
 		if(theOffer.sDescription.size() > MAX_VALUE_LENGTH)
 		{
-			errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 8 - Offer description too long";
+			errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 8 - " + _("Offer description too long");
 			return error(errorMessage.c_str());
 		}
 		if(theOffer.sTitle.size() > MAX_NAME_LENGTH)
 		{
-			errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 9 - Offer title too long";
+			errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 9 - " + _("Offer title too long");
 			return error(errorMessage.c_str());
 		}
 		if(theOffer.sCategory.size() > MAX_NAME_LENGTH)
 		{
-			errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 10 - Offer category too long";
+			errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 10 - " + _("Offer category too long");
 			return error(errorMessage.c_str());
 		}
 		if(theOffer.vchLinkOffer.size() > MAX_GUID_LENGTH)
 		{
-			errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 11 - Offer link guid hash too long";
+			errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 11 - " + _("Offer link guid hash too long");
 			return error(errorMessage.c_str());
 		}
 		if(theOffer.sCurrencyCode.size() > MAX_GUID_LENGTH)
 		{
-			errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 13 - Offer curreny too long";
+			errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 13 - " + _("Offer curreny too long");
 			return error(errorMessage.c_str());
 		}
 		if(theOffer.vchAliasPeg.size() > MAX_GUID_LENGTH)
 		{
-			errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 14 - Offer alias peg too long";
+			errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 14 - " + _("Offer alias peg too long");
 			return error(errorMessage.c_str());
 		}
 		if(theOffer.vchGeoLocation.size() > MAX_NAME_LENGTH)
 		{
-			errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 15 - Offer geolocation too long";
+			errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 15 - " + _("Offer geolocation too long");
 			return error(errorMessage.c_str());
 		}
 		if(theOffer.offerLinks.size() > 0)
 		{
-			errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 16 - Offer links are not allowed in the transaction data";
+			errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 16 - " + _("Offer links are not allowed in the transaction data");
 			return error(errorMessage.c_str());
 		}
 		if(theOffer.linkWhitelist.entries.size() > 1)
 		{
-			errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 17 - Offer has too many affiliate entries, only one allowed per transaction";
+			errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 17 - " + _("Offer has too many affiliate entries, only one allowed per transaction");
 			return error(errorMessage.c_str());
 		}
 		if(!theOffer.vchOffer.empty() && theOffer.vchOffer != vvchArgs[0])
 		{
-			errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 18 - Offer guid in the data output does not match the guid in the transaction";
+			errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 18 - " + _("Offer guid in the data output does not match the guid in the transaction");
 			return error(errorMessage.c_str());
 		}
 		if (vvchArgs[0].size() > MAX_GUID_LENGTH)
 		{
-			errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 19 - Offer guid too long";
+			errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 19 - " + _("Offer guid too long");
 			return error(errorMessage.c_str());
 		}
 
 		if(stringFromVch(theOffer.sCurrencyCode) != "BTC" && theOffer.bOnlyAcceptBTC)
 		{
-			errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 20 - Offer that only accepts BTC must have BTC specified as its currency";
+			errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 20 - " + _("Offer that only accepts BTC must have BTC specified as its currency");
 			return error(errorMessage.c_str());
 		}
 		switch (op) {
 		case OP_OFFER_ACTIVATE:
 			if(!theOffer.accept.IsNull())
 			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 46 - Cannot have accept information on offer activation";
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 46 - " + _("Cannot have accept information on offer activation");
 				return error(errorMessage.c_str());
 			}
 			if (!theOffer.vchCert.empty() && !IsCertOp(prevCertOp))
 			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 21 - You must own the certificate you wish to sell";
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 21 - " + _("You must own the certificate you wish to sell");
 				return error(errorMessage.c_str());
 			}
 			if (IsCertOp(prevCertOp) && !theOffer.vchCert.empty() && theOffer.vchCert != vvchPrevCertArgs[0])
 			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 22 - Cert input and offer cert guid mismatch";
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 22 - " + _("Cert input and offer cert guid mismatch");
 				return error(errorMessage.c_str());
 			}
 			if ( theOffer.vchOffer != vvchArgs[0])
 			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 23 - Offer input and offer guid mismatch";
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 23 - " + _("Offer input and offer guid mismatch");
 				return error(errorMessage.c_str());
 			}
 			if(!IsAliasOp(prevAliasOp) || theOffer.vchAlias != vvchPrevAliasArgs[0])
 			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 25 - Alias input mismatch";
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 25 - " + _("Alias input mismatch");
 				return error(errorMessage.c_str());
 			}
 			if(!theOffer.vchLinkOffer.empty())
 			{
 				if(theOffer.nCommission > 255)
 				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 26 - Commission must be less than 256";
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 26 - " + _("Commission must be less than 256");
 					return error(errorMessage.c_str());
 				}
 				if(theOffer.nCommission <= 0)
 				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 27 - Commission must be greator than 0";
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 27 - " + _("Commission must be greator than 0");
 					return error(errorMessage.c_str());
 				}
 				if(theOffer.bOnlyAcceptBTC)
 				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 28 - Linked offer cannot accept BTC only";
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 28 - " + _("Linked offer cannot accept BTC only");
 					return error(errorMessage.c_str());
 				}
 			}
@@ -768,38 +768,38 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			{
 				if(theOffer.sCategory.size() < 1)
 				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 32 - Offer category cannot be empty";
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 32 - " + _("Offer category cannot be empty");
 					return error(errorMessage.c_str());
 				}
 				if(theOffer.sTitle.size() < 1)
 				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 33 - Offer title cannot be empty";
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 33 - " + _("Offer title cannot be empty");
 					return error(errorMessage.c_str());
 				}
 			}
 			if(theOffer.nQty < -1)
 			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 29 - Quantity must be greator than or equal to -1";
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 29 - " + _("Quantity must be greator than or equal to -1");
 				return error(errorMessage.c_str());
 			}
 			if(!theOffer.vchCert.empty() && theOffer.nQty != 1)
 			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 30 - Quantity must be 1 for a digital offer";
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 30 - " + _("Quantity must be 1 for a digital offer");
 				return error(errorMessage.c_str());
 			}
 			if(theOffer.nPrice <= 0)
 			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 31 - Offer price must be greater than 0";
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 31 - " + _("Offer price must be greater than 0");
 				return error(errorMessage.c_str());
 			}
 			if(theOffer.bOnlyAcceptBTC && !theOffer.vchCert.empty())
 			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 34 - Cannot sell a digital offer accepting only Bitcoins";
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 34 - " + _("Cannot sell a digital offer accepting only Bitcoins");
 				return error(errorMessage.c_str());
 			}
 			if(theOffer.bOnlyAcceptBTC && stringFromVch(theOffer.sCurrencyCode) != "BTC")
 			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 35 - Can only accept Bitcoins for offers that set their currency to BTC";
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 35 - " + _("Can only accept Bitcoins for offers that set their currency to BTC");
 				return error(errorMessage.c_str());
 			}
 
@@ -807,73 +807,73 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		case OP_OFFER_UPDATE:
 			if(!theOffer.accept.IsNull())
 			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 47 - Cannot have accept information on offer update";
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 47 - " + _("Cannot have accept information on offer update");
 				return error(errorMessage.c_str());
 			}
 			if (!IsOfferOp(prevOp) )
 			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 36 - Offerupdate previous op is invalid";
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 36 - " + _("Offerupdate previous op is invalid");
 				return error(errorMessage.c_str());
 			}
 			if(prevOp == OP_OFFER_ACCEPT)
 			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 37 - Cannot use offeraccept as input to an update";
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 37 - " + _("Cannot use offeraccept as input to an update");
 				return error(errorMessage.c_str());
 			}
 			if (vvchPrevArgs[0] != vvchArgs[0])
 			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 38 - Offerupdate offer mismatch";
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 38 - " + _("Offerupdate offer mismatch");
 				return error(errorMessage.c_str());
 			}
 			if (IsCertOp(prevCertOp) && theOffer.vchCert != vvchPrevCertArgs[0])
 			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 39 - Cert input and offer cert guid mismatch";
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 39 - " + _("Cert input and offer cert guid mismatch");
 				return error(errorMessage.c_str());
 			}
 			if (!theOffer.vchCert.empty() && !IsCertOp(prevCertOp))
 			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 40 - You must own the cert offer you wish to update";
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 40 - " + _("You must own the cert offer you wish to update");
 				return error(errorMessage.c_str());
 			}
 			if ( theOffer.vchOffer != vvchArgs[0])
 			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 41 - Offer input and offer guid mismatch";
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 41 - " + _("Offer input and offer guid mismatch");
 				return error(errorMessage.c_str());
 			}
 			if(!theOffer.linkWhitelist.entries.empty() && (theOffer.linkWhitelist.entries[0].nDiscountPct < -99 || theOffer.linkWhitelist.entries[0].nDiscountPct > 99) && theOffer.linkWhitelist.entries[0].nDiscountPct != 127)
 			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 42 - Invalid discount amount, must be within -99 and 99 or 127 if removing an affiliate";
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 42 - " + _("Invalid discount amount, must be within -99 and 99 or 127 if removing an affiliate");
 				return error(errorMessage.c_str());
 			}
 
 			if(theOffer.nQty < -1)
 			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 43 - Quantity must be greator than or equal to -1";
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 43 - " + _("Quantity must be greator than or equal to -1");
 				return error(errorMessage.c_str());
 			}
 			if(!theOffer.vchCert.empty() && theOffer.nQty != 1)
 			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 44 - Quantity must be 1 for a digital offer";
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 44 - " + _("Quantity must be 1 for a digital offer");
 				return error(errorMessage.c_str());
 			}
 			if(theOffer.nPrice <= 0)
 			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 45 - Offer price must be greater than 0";
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 45 - " + _("Offer price must be greater than 0");
 				return error(errorMessage.c_str());
 			}
 			if(!IsAliasOp(prevAliasOp) || theOffer.vchAlias != vvchPrevAliasArgs[0])
 			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 46 - Alias input mismatch";
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 46 - " + _("Alias input mismatch");
 				return error(errorMessage.c_str());
 			}	
 			if(theOffer.bOnlyAcceptBTC && !theOffer.vchCert.empty())
 			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 48 - Cannot sell a certificate accepting only Bitcoins";
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 48 - " + _("Cannot sell a certificate accepting only Bitcoins");
 				return error(errorMessage.c_str());
 			}
 			if(theOffer.bOnlyAcceptBTC && stringFromVch(theOffer.sCurrencyCode) != "BTC")
 			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 49 - Can only accept Bitcoins for offer's that set their currency to BTC";
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 49 - " + _("Can only accept Bitcoins for offer's that set their currency to BTC");
 				return error(errorMessage.c_str());
 			}
 			break;
@@ -883,17 +883,17 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			{
 				if(prevOp != OP_OFFER_ACCEPT)
 				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 50 - Must use offeraccept as input to an accept feedback";
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 50 - " + _("Must use offeraccept as input to an accept feedback");
 					return error(errorMessage.c_str());
 				}
 				if (vvchPrevArgs[1] != vvchArgs[1])
 				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 51 - Offeraccept feedback mismatch";
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 51 - " + _("Offeraccept feedback mismatch");
 					return error(errorMessage.c_str());
 				}
 				if(theOfferAccept.feedback.vchFeedback.empty())
 				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 52 - Cannot leave empty feedback";
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 52 - " + _("Cannot leave empty feedback");
 					return error(errorMessage.c_str());
 				}
 				break;
@@ -901,44 +901,44 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 
 			if (theOfferAccept.IsNull())
 			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 53 - Offeraccept object cannot be empty";
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 53 - " + _("Offeraccept object cannot be empty");
 				return error(errorMessage.c_str());
 			}
 			if (!IsValidAliasName(theOfferAccept.vchBuyerAlias))
 			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 119 - Invalid offer buyer alias";
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 119 - " + _("Invalid offer buyer alias");
 				return error(errorMessage.c_str());
 			}
 			if (IsOfferOp(prevOp) && !theOfferAccept.feedback.IsNull() && vvchPrevArgs[1] != theOfferAccept.vchLinkAccept && vvchPrevArgs[0] != theOfferAccept.vchLinkOffer)
 			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 54 - Prev offer input and link accept guid mismatch";
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 54 - " + _("Prev offer input and link accept guid mismatch");
 				return error(errorMessage.c_str());
 			}
 			if (IsEscrowOp(prevEscrowOp) && !theOfferAccept.txBTCId.IsNull())
 			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 55 - Cannot use BTC for escrow transactions";
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 55 - " + _("Cannot use BTC for escrow transactions");
 				return error(errorMessage.c_str());
 			}
 			if (IsEscrowOp(prevEscrowOp) && theOfferAccept.vchEscrow != vvchPrevEscrowArgs[0])
 			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 56 - Escrow guid mismatch";
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 56 - " + _("Escrow guid mismatch");
 				return error(errorMessage.c_str());
 			}
 			if (IsAliasOp(prevAliasOp) && theOffer.vchLinkAlias != vvchPrevAliasArgs[0])
 			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 57 - Whitelist alias guid mismatch";
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 57 - " + _("Whitelist alias guid mismatch");
 				return error(errorMessage.c_str());
 			}
 			if (vvchArgs[1].size() > MAX_GUID_LENGTH)
 			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 58 - Offeraccept transaction with guid too big";
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 58 - " + _("Offeraccept transaction with guid too big");
 				return error(errorMessage.c_str());
 			}
 			if(prevOp == OP_OFFER_ACCEPT)
 			{
 				if(!theOfferAccept.txBTCId.IsNull())
 				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 59 - Cannot accept a linked offer with BTC";
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 59 - " + _("Cannot accept a linked offer with BTC");
 					return error(errorMessage.c_str());
 				}
 			}
@@ -946,39 +946,39 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 
 			if (theOfferAccept.vchAcceptRand.size() > MAX_GUID_LENGTH)
 			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 60 - Offer accept hex guid too long";
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 60 - " + _("Offer accept hex guid too long");
 				return error(errorMessage.c_str());
 			}
 			if (theOfferAccept.vchLinkAccept.size() > MAX_GUID_LENGTH)
 			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 61 - Offer link accept hex guid too long";
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 61 - " + _("Offer link accept hex guid too long");
 				return error(errorMessage.c_str());
 			}
 			if (theOfferAccept.vchLinkOffer.size() > MAX_GUID_LENGTH)
 			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 62 - Offer link hex guid too long";
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 62 - " + _("Offer link hex guid too long");
 				return error(errorMessage.c_str());
 			}
 			if (theOfferAccept.vchMessage.size() > MAX_ENCRYPTED_VALUE_LENGTH)
 			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 63 - Message field too big";
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 63 - " + _("Message field too big");
 				return error(errorMessage.c_str());
 			}
 			if (IsEscrowOp(prevEscrowOp) && IsOfferOp(prevOp))
 			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 64 - Offer accept cannot attach both escrow and offer inputs at the same time";
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 64 - " + _("Offer accept cannot attach both escrow and offer inputs at the same time");
 				return error(errorMessage.c_str());
 			}
 			if (theOffer.vchOffer != vvchArgs[0])
 			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 65 - Offer input and offer guid mismatch";
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 65 - " + _("Offer input and offer guid mismatch");
 				return error(errorMessage.c_str());
 			}
 
 			break;
 
 		default:
-			errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 66 - Offer transaction has unknown op";
+			errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 66 - " + _("Offer transaction has unknown op");
 			return error(errorMessage.c_str());
 		}
 	}
@@ -994,7 +994,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		
 			if(!GetTxAndVtxOfOffer(vvchArgs[0], theOffer, offerTx, vtxPos))	
 			{		
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 67 - Failed to read from offer DB";
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 67 - " + _("Failed to read from offer DB");
 				return true;				
 			}						
 		}
@@ -1006,7 +1006,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			{
 				if(serializedOffer.bOnlyAcceptBTC)
 				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 68 - Linked offer cannot accept BTC only";
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 68 - " + _("Linked offer cannot accept BTC only");
 					serializedOffer.bOnlyAcceptBTC = false;
 				}
 				
@@ -1046,12 +1046,12 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						CTransaction txCert;
 						if (!GetTxOfCert( theOffer.vchCert, theCert, txCert))
 						{
-							errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 69 - Updating an offer with a cert that does not exist";
+							errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 69 - " + _("Updating an offer with a cert that does not exist");
 							theOffer.vchCert.clear();
 						}
 						else if(theOffer.vchLinkOffer.empty() && theCert.vchAlias != theOffer.vchAlias)
 						{
-							errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 70 - Cannot update this offer because the certificate alias does not match the offer alias";
+							errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 70 - " + _("Cannot update this offer because the certificate alias does not match the offer alias");
 							theOffer.vchAlias = dbOffer.vchAlias;
 						}		
 					}
@@ -1060,18 +1060,18 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						CTransaction txLinkedOffer;
 						if (!GetTxOfOffer( theOffer.vchLinkOffer, linkOffer, txLinkedOffer))
 						{
-							errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 70a - Linked offer not found. It may be expired";
+							errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 70a - " + _("Linked offer not found. It may be expired");
 							theOffer.vchLinkOffer.clear();
 						}
 						else if(!theOffer.vchCert.empty() && theCert.vchAlias != linkOffer.vchAlias)
 						{
-							errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 70b - Cannot update this offer because the certificate alias does not match the linked offer alias";
+							errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 70b - " + _("Cannot update this offer because the certificate alias does not match the linked offer alias");
 							theOffer.vchAlias = dbOffer.vchAlias;
 						}
 					}
 					if(!GetTxOfAlias(theOffer.vchAlias, alias, aliasTx))
 					{
-						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 71a - Cannot find alias for this offer. It may be expired";
+						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 71a - " + _("Cannot find alias for this offer. It may be expired");
 						theOffer = dbOffer;
 					}
 				}
@@ -1079,7 +1079,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			// check for valid alias peg
 			if(getCurrencyToSYSFromAlias(theOffer.vchAliasPeg, theOffer.sCurrencyCode, nRate, theOffer.nHeight, rateList,precision) != "")
 			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 72 - Could not find currency " + stringFromVch(theOffer.sCurrencyCode) + " in the " + stringFromVch(theOffer.vchAliasPeg) + " alias";
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 72 - " + _("Could not find currency in the peg alias");
 				return true;
 			}			
 		}
@@ -1087,12 +1087,12 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		{
 			if(!GetTxOfAlias(theOffer.vchAlias, alias, aliasTx))
 			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 73 - Alias expiry check for offer" ;
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 73 - " + _("Alias expiry check for offer");
 				return true;	
 			}
 			if (pofferdb->ExistsOffer(vvchArgs[0]))
 			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 74 - Offer already exists";
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 74 - " + _("Offer already exists");
 				return true;
 			}
 			// if we are selling a cert ensure it exists and pubkey's match (to ensure it doesnt get transferred prior to accepting by user)
@@ -1101,13 +1101,13 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				CTransaction txCert;
 				if (!GetTxOfCert( theOffer.vchCert, theCert, txCert))
 				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 75 - Creating an offer with a cert that does not exist";
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 75 - " + _("Creating an offer with a cert that does not exist");
 					return true;
 				}
 
 				else if(theOffer.vchLinkOffer.empty() && theCert.vchAlias != theOffer.vchAlias)
 				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 75a - Cannot create this offer because the certificate alias does not match the offer alias";
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 75a - " + _("Cannot create this offer because the certificate alias does not match the offer alias");
 					return true;
 				}		
 			}
@@ -1124,28 +1124,28 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					{
 						if(!linkOffer.linkWhitelist.GetLinkEntryByHash(theOffer.vchAlias, entry))
 						{
-							errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 76 - Cannot find this alias in the parent offer affiliate list";
+							errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 76 - " + _("Cannot find this alias in the parent offer affiliate list");
 							theOffer.vchLinkOffer.clear();	
 						}
 						else if(theOffer.nCommission <= -entry.nDiscountPct)
 						{
-							errorMessage = strprintf("SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 76a - You cannot re-sell at a lower price than the discount you received as an affiliate (current discount received: %d%%)", entry.nDiscountPct);
+							errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 76a - " + _("You cannot re-sell at a lower price than the discount you received as an affiliate");
 							theOffer.vchLinkOffer.clear();	
 						}
 					}	
 					else if (!linkOffer.vchLinkOffer.empty())
 					{
-						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 77 - Cannot link to an offer that is already linked to another offer";
+						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 77 - " + _("Cannot link to an offer that is already linked to another offer");
 						theOffer.vchLinkOffer.clear();	
 					}
 					else if(!theOffer.vchCert.empty() && theCert.vchAlias != linkOffer.vchAlias)
 					{
-						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 75a - Cannot create this offer because the certificate alias does not match the offer alias";
+						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 75a -" + _(" Cannot create this offer because the certificate alias does not match the offer alias");
 						return true;
 					}
 					else if(linkOffer.bOnlyAcceptBTC)
 					{
-						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 79 - Cannot link to an offer that only accepts Bitcoins as payment";
+						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 79 - " + _("Cannot link to an offer that only accepts Bitcoins as payment");
 						theOffer.vchLinkOffer.clear();	
 					}
 					if(!theOffer.vchLinkOffer.empty())
@@ -1167,20 +1167,20 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					
 							if (!dontaddtodb && !pofferdb->WriteOffer(theOffer.vchLinkOffer, myVtxPos))
 							{
-								errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 80 - Failed to write to offer link to DB";
+								errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 80 - " + _("Failed to write to offer link to DB");
 								return error(errorMessage.c_str());
 							}
 						}
 						else
 						{
-							errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 80 - Parent offer affiliate table exceeded 100 entries";
+							errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 80 - " + _("Parent offer affiliate table exceeded 100 entries");
 							theOffer.vchLinkOffer.clear();
 						}					
 					}
 				}
 				else
 				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 81 - Linked offer is expired";
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 81 - " + _("Linked offer is expired");
 					theOffer.vchLinkOffer.clear();	
 				}
 			}
@@ -1189,7 +1189,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				// check for valid alias peg
 				if(getCurrencyToSYSFromAlias(theOffer.vchAliasPeg, theOffer.sCurrencyCode, nRate, theOffer.nHeight, rateList,precision) != "")
 				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 82 - Could not find currency " + stringFromVch(theOffer.sCurrencyCode) + " in the " + stringFromVch(theOffer.vchAliasPeg) + " alias";
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 82 - " + _("Could not find currency in the peg alias");
 					return true;
 				}
 			}
@@ -1198,7 +1198,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			theOfferAccept = serializedOffer.accept;
 			if(!GetTxOfAlias(theOfferAccept.vchBuyerAlias, alias, aliasTx))
 			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 83 - Alias expiry check for offer";
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 83 - " + _("Alias expiry check for offer");
 				return true;	
 			}
 			// trying to purchase a cert
@@ -1207,23 +1207,23 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				CTransaction txCert;
 				if (!GetTxOfCert( theOffer.vchCert, theCert, txCert))
 				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 84 - Cannot sell an expired certificate";
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 84 - " + _("Cannot sell an expired certificate");
 					return true;
 				}
 				else if(!theOfferAccept.txBTCId.IsNull())
 				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 85 - Cannot purchase certificates with Bitcoins";
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 85 - " + _("Cannot purchase certificates with Bitcoins");
 					return true;
 				}
 				else if(theOffer.vchLinkOffer.empty() && theCert.vchAlias != theOffer.vchAlias)
 				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 86 - Cannot purchase this offer because the certificate has been transferred or it is linked to another offer";
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 86 - " + _("Cannot purchase this offer because the certificate has been transferred or it is linked to another offer");
 					return true;
 				}
 			}
 			else if (theOfferAccept.vchMessage.size() <= 0)
 			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 87 - Offer payment message cannot be empty";
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 87 - " + _("Offer payment message cannot be empty");
 				return true;
 			}
 					
@@ -1237,7 +1237,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			{
 				if(!theOffer.vchLinkOffer.empty())
 				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 88 - Cannot leave feedback for linked offers";
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 88 - " + _("Cannot leave feedback for linked offers");
 					return true;
 				}
 				// ensure we don't add same feedback twice (feedback in db should be older than current height)
@@ -1248,7 +1248,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				}
 				else
 				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 89 - Feedback in db is newer than the current height";
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 89 - " + _("Feedback in db is newer than the current height");
 					return true;
 				}
 
@@ -1259,7 +1259,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					theOfferAccept.feedback.nRating = 0;
 				if(feedbackCount >= 10)
 				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 90 - Cannot exceed 10 feedback entries for this user of this offer accept";
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 90 - " + _("Cannot exceed 10 feedback entries for this user of this offer accept");
 					return true;
 				}
 				HandleAcceptFeedback(theOfferAccept, theOffer);	
@@ -1277,7 +1277,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				{
 					if((theOfferAccept.nQty > theOffer.nQty))
 					{
-						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 91 - Not enough quantity left in this offer for this purchase";
+						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 91 - " + _("Not enough quantity left in this offer for this purchase";
 						return true;
 					}				
 					theOffer.nQty -= theOfferAccept.nQty;
@@ -1288,7 +1288,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			
 				if(theOffer.sCategory.size() > 0 && boost::algorithm::ends_with(stringFromVch(theOffer.sCategory), "wanted"))
 				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 92 - Cannot purchase a wanted offer";
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 92 - " + _("Cannot purchase a wanted offer");
 					return true;
 				}
 				if(!theOffer.vchLinkOffer.empty())
@@ -1296,34 +1296,34 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 
 					if(!theOfferAccept.txBTCId.IsNull())
 					{
-						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 93 - Cannot accept a linked offer by paying in Bitcoins";
+						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 93 - " + _("Cannot accept a linked offer by paying in Bitcoins");
 						return true;
 					}
 					else if(!GetTxOfOffer( theOffer.vchLinkOffer, linkOffer, linkedTx))
-					{
-						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 94 - Could not get linked offer";
+					{" + _("
+						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 94 - " + _("Could not get linked offer");
 						return true;
 					}
 					else if(!theOffer.vchCert.empty() && theCert.vchAlias != linkOffer.vchAlias)
 					{
-						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 95 - Cannot purchase this linked offer because the certificate has been transferred or it is linked to another offer";
+						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 95 - " + _("Cannot purchase this linked offer because the certificate has been transferred or it is linked to another offer");
 						return true;
 					}
 					else if (linkOffer.bOnlyAcceptBTC)
 					{
-						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 96 - Linked offer only accepts Bitcoins, linked offers currently only work with Syscoin payments";
+						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 96 - " + _("Linked offer only accepts Bitcoins, linked offers currently only work with Syscoin payments");
 						return true;
 					}
 					else if(!serializedOffer.vchLinkAlias.empty())
 					{
-						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 97 - Purchase discounts can only be applied to non-linked offers";
+						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 97 - " + _("Purchase discounts can only be applied to non-linked offers");
 						return true;
 					}
 					
 					// make sure that linked offer exists in root offerlinks (offers that are linked to the root offer)
 					else if(std::find(linkOffer.offerLinks.begin(), linkOffer.offerLinks.end(), vvchArgs[0]) == linkOffer.offerLinks.end())
 					{
-						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 98 - This offer does not exist in the root offerLinks table";
+						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 98 - " + _("This offer does not exist in the root offerLinks table");
 						return true;
 					}					
 				}
@@ -1340,14 +1340,14 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					bool skipFeedback = true;
 					if (!GetTxOfOfferAccept(theOfferAccept.vchLinkOffer, theOfferAccept.vchLinkAccept, offer, theLinkedOfferAccept, acceptTx, skipFeedback))
 					{
-						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 99 - Could not find a linked offer accept from mempool or disk";
+						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 99 - " + _("Could not find a linked offer accept from mempool or disk");
 						return true;
 					}	
 					// if this is an accept for a linked offer, the root offer is set to exclusive mode and reseller doesn't have an alias in the whitelist, you cannot accept this linked offer
 					// serializedOffer.vchLinkAlias is validated below if its not empty
 					if(serializedOffer.vchLinkAlias.empty() && theOffer.linkWhitelist.bExclusiveResell)
 					{
-						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 100 - Cannot pay for this linked offer because you don't own an alias from its affiliate list. Root offer is set to exclusive mode";
+						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 100 - " + _("Cannot pay for this linked offer because you don't own an alias from its affiliate list. Root offer is set to exclusive mode");
 						return true;
 					}	
 					theOfferAccept.nQty = theLinkedOfferAccept.nQty;
@@ -1355,7 +1355,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					linkAccept = true;
 					if(theOfferAccept.vchBuyerAlias != theLinkedOfferAccept.vchBuyerAlias)
 					{
-						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 101 - Linked accept buyer must match the buyer of the reselling offer";
+						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 101 - " + _("Linked accept buyer must match the buyer of the reselling offer");
 						return true;
 					}
 				}
@@ -1371,7 +1371,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						CEscrow fundingEscrow = escrowVtxPos.front();
 						if(fundingEscrow.vchOffer != vvchArgs[0])
 						{
-							errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 102 - Escrow guid does not match the guid of the offer you are accepting";
+							errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 102 - " + _("Escrow guid does not match the guid of the offer you are accepting");
 							return true;
 						}
 						// override height if funding escrow was before the accept that the buyer did, to index into sysrates
@@ -1382,14 +1382,14 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					}
 					else
 					{
-						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 103 - Cannot find escrow linked to this offer accept";
+						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 103 - " + _("Cannot find escrow linked to this offer accept");
 						return true;
 					}
 				}
 				// the height really shouldnt change cause we set it correctly in offeraccept
 				if(heightToCheckAgainst != theOfferAccept.nAcceptHeight)
 				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 104 - Height mismatch with calculated height and accept height";
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 104 - " + _("Height mismatch with calculated height and accept height");
 					return true;
 				}
 	
@@ -1400,21 +1400,21 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				{
 					if (!GetTxOfAlias(serializedOffer.vchLinkAlias, theAlias, aliasTx))
 					{
-						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 105 - Cannot find the alias you are trying to use for an offer discount. Perhaps it is expired";
+						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 105 - " + _("Cannot find the alias you are trying to use for an offer discount. Perhaps it is expired");
 						return true;
 					}
 					// try to get the whitelist entry here from the sellers whitelist, apply the discount with GetPrice()
 					myPriceOffer.linkWhitelist.GetLinkEntryByHash(serializedOffer.vchLinkAlias, entry);
 					if(entry.IsNull())
 					{
-						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 106 - Cannot find the alias entry in the offer's affiliate list";
+						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 106 - " + _("Cannot find the alias entry in the offer's affiliate list");
 						return true;
 					}
 				}
 				
 				if(!theOfferAccept.txBTCId.IsNull() && stringFromVch(myPriceOffer.sCurrencyCode) != "BTC")
 				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 107 - Cannot pay for offer in bitcoins if its currency is not set to BTC";
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 107 - " + _("Cannot pay for offer in bitcoins if its currency is not set to BTC");
 					return true;
 				}
 				// check that user pays enough in syscoin if the currency of the offer is not directbtc purchase
@@ -1424,7 +1424,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					float priceAtTimeOfAccept = myPriceOffer.GetPrice(entry);
 					if(priceAtTimeOfAccept != theOfferAccept.nPrice)
 					{
-						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 108 - Offer accept does not specify the correct payment amount";
+						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 108 - " + _("Offer accept does not specify the correct payment amount");
 						return true;
 					}
 
@@ -1439,7 +1439,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 							nPrice = convertCurrencyCodeToSyscoin(myPriceOffer.vchAliasPeg, myPriceOffer.sCurrencyCode, priceAtTimeOfAccept, heightToCheckAgainst-1, precision)*theOfferAccept.nQty;
 							if(!FindOfferAcceptPayment(tx, nPrice))
 							{
-								errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 109 - Offer accept does not pay enough according to the offer price";
+								errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 109 - " + _("Offer accept does not pay enough according to the offer price");
 								return true;
 							}
 						}
@@ -1450,7 +1450,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				{
 					if(theOfferAccept.nQty <= 0 || (theOffer.nQty != -1 && theOfferAccept.nQty > theOffer.nQty) || (!linkOffer.IsNull() && theOfferAccept.nQty > linkOffer.nQty && linkOffer.nQty != -1))
 					{
-						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 110 - Offer does not have enough quantity left for this purchase";
+						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 110 - " + _("Offer does not have enough quantity left for this purchase");
 						return true;
 					}					
 				}
@@ -1475,7 +1475,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				{
 					if(theOffer.linkWhitelist.entries.empty())
 					{
-						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 111 - Whitelist is already empty";					
+						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 111 - " + _("Whitelist is already empty");					
 					}
 					else
 						theOffer.linkWhitelist.SetNull();
@@ -1496,7 +1496,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						}
 						else
 						{
-							errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 112 - Cannot find the alias you are trying to offer affiliate list. Perhaps it is expired";					
+							errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 112 - " + _("Cannot find the alias you are trying to offer affiliate list. Perhaps it is expired");					
 						}
 					}
 				}
@@ -1517,7 +1517,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				}
 				else
 				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 113 - Linked offer is expired";		
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 113 - " + _("Linked offer is expired");		
 					theOffer.vchLinkOffer.clear();
 				}
 			}
@@ -1540,7 +1540,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					
 						if (!dontaddtodb && !pofferdb->WriteOffer(theOffer.offerLinks[i], myVtxPos))
 						{
-							errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 114 - Failed to write to offer link to DB";		
+							errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 114 - " + _("Failed to write to offer link to DB");		
 							return error(errorMessage.c_str());		
 						}
 					
@@ -1555,7 +1555,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	
 		if (!dontaddtodb && !pofferdb->WriteOffer(vvchArgs[0], vtxPos))
 		{
-			errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 115 - Failed to write to offer DB";		
+			errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 115 - " + _("Failed to write to offer DB");		
 			return error(errorMessage.c_str());
 		}
 		
@@ -1576,7 +1576,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					
 						if (!dontaddtodb && !pofferdb->WriteOffer(theOffer.offerLinks[i], myVtxPos))
 						{
-							errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 116 - Failed to write to offer link to DB";		
+							errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 116 - " + _("Failed to write to offer link to DB");		
 							return error(errorMessage.c_str());
 						}						
 					}
@@ -1591,7 +1591,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				string strError = makeOfferLinkAcceptTX(theOfferAccept, vvchArgs[0], theOfferAccept.vchMessage, theOffer.vchLinkOffer, tx.GetHash().GetHex(), theOffer, alias, block);
 				if(strError != "")		
 				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 117 - Offer link accept failure: " + strError;	
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 117 - " + _("Offer link accept failure ") + strError;	
 				}
 				
 			} 
@@ -1603,7 +1603,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
  				string strError = makeTransferCertTX(theOffer, theOfferAccept);
  				if(strError != "")
 				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 118 - Transfer certificate failure: " + strError;	
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 118 - " + _("Transfer certificate failure ") + strError;	
 				}
  			}
 		}
@@ -1650,16 +1650,16 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 	CAliasIndex alias;
 	const CWalletTx *wtxAliasIn = NULL;
 	if (!GetTxOfAlias(vchAlias, alias, aliastx, true))
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 500 - Could not find an alias with this name");
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 500 - " + _("Could not find an alias with this name"));
     if(!IsSyscoinTxMine(aliastx, "alias")) {
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 501 - This alias is not yours.");
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 501 - " + _("This alias is not yours"));
     }
 	wtxAliasIn = pwalletMain->GetWalletTx(aliastx.GetHash());
 	if (wtxAliasIn == NULL)
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 502 - This alias is not in your wallet");
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 502 - " + _("This alias is not in your wallet"));
 
 	if (ExistsInMempool(vchAlias, OP_ALIAS_ACTIVATE) || ExistsInMempool(vchAlias, OP_ALIAS_UPDATE)) {
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 502a - There are pending operations on that alias");
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 502a - " + _("There are pending operations on that alias"));
 	}
 
 	vector<unsigned char> vchCat = vchFromValue(params[2]);
@@ -1673,7 +1673,7 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 	try {
 		nQty = atoi(params[4].get_str());
 	} catch (std::exception &e) {
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 503 - Invalid quantity value, must be less than 4294967296 and greater than or equal to -1");
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 503 - " + _("Invalid quantity value, must be less than 4294967296 and greater than or equal to -1"));
 	}
 	nPrice = atof(params[5].get_str().c_str());
 	vchDesc = vchFromValue(params[6]);
@@ -1694,7 +1694,7 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 		{
       		// check for existing cert 's
 			if (ExistsInMempool(vchCert, OP_CERT_UPDATE) || ExistsInMempool(vchCert, OP_CERT_TRANSFER)) {
-				throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 504 - There are pending operations on that cert");
+				throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 504 - " + _("There are pending operations on that cert"));
 			}
 			wtxCertIn = pwalletMain->GetWalletTx(txCert.GetHash());
 		}
@@ -1726,7 +1726,7 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 	int precision;
 	if(getCurrencyToSYSFromAlias(vchAliasPeg, vchCurrency, nRate, chainActive.Tip()->nHeight, rateList,precision) != "")
 	{
-		string err = strprintf("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 505 - Could not find currency %s in the %s alias!\n", stringFromVch(vchCurrency), stringFromVch(vchAliasPeg));
+		string err = "SYSCOIN_OFFER_RPC_ERROR ERRCODE: 505 - " + _("Could not find currency in the peg alias");
 		throw runtime_error(err.c_str());
 	}
 	double minPrice = pow(10.0,-precision);
@@ -1825,15 +1825,15 @@ UniValue offerlink(const UniValue& params, bool fHelp) {
 	CAliasIndex alias;
 	const CWalletTx *wtxAliasIn = NULL;
 	if (!GetTxOfAlias(vchAlias, alias, aliastx, true))
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 506 - Could not find an alias with this name");
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 506 - " + _("Could not find an alias with this name"));
     if(!IsSyscoinTxMine(aliastx, "alias")) {
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 507 - This alias is not yours");
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 507 - " + _("This alias is not yours"));
     }
 	wtxAliasIn = pwalletMain->GetWalletTx(aliastx.GetHash());
 	if (wtxAliasIn == NULL)
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 508 - This alias is not in your wallet");
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 508 - " + _("This alias is not in your wallet"));
 	if (ExistsInMempool(vchAlias, OP_ALIAS_ACTIVATE) || ExistsInMempool(vchAlias, OP_ALIAS_UPDATE)) {
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 508a - There are pending operations on that alias");
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 508a - " + _("There are pending operations on that alias"));
 	}
 
 	vector<unsigned char> vchLinkOffer = vchFromValue(params[1]);
@@ -1842,7 +1842,7 @@ UniValue offerlink(const UniValue& params, bool fHelp) {
 	CTransaction tx;
 	COffer linkOffer;
 	if (vchLinkOffer.empty() || !GetTxOfOffer( vchLinkOffer, linkOffer, tx, true))
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 509 - Could not find an offer with this guid");
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 509 - " + _("Could not find an offer with this guid"));
 
 	int commissionInteger = atoi(params[2].get_str().c_str());
 	if(params.size() >= 4)
@@ -1966,23 +1966,23 @@ UniValue offeraddwhitelist(const UniValue& params, bool fHelp) {
 	CTransaction tx;
 	COffer theOffer;
 	if (!GetTxOfOffer( vchOffer, theOffer, tx, true))
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 511 - Could not find an offer with this guid");
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 511 - " + _("Could not find an offer with this guid"));
 
 	CTransaction aliastx;
 	CAliasIndex theAlias;
 	const CWalletTx *wtxAliasIn = NULL;
 	if (!GetTxOfAlias( theOffer.vchAlias, theAlias, aliastx, true))
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 562 - Could not find an alias with this guid");
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 562 - " + _("Could not find an alias with this guid"));
 
 	if(!IsSyscoinTxMine(aliastx, "alias")) {
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 562a - This alias is not yours");
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 562a - " + _("This alias is not yours"));
 	}
 	wtxAliasIn = pwalletMain->GetWalletTx(aliastx.GetHash());
 	if (wtxAliasIn == NULL)
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 562b - This alias is not in your wallet");
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 562b - " + _("This alias is not in your wallet"));
 
 	if (ExistsInMempool(theAlias.vchAlias, OP_ALIAS_ACTIVATE) || ExistsInMempool(theAlias.vchAlias, OP_ALIAS_UPDATE)) {
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 562c - There are pending operations on that alias");
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 562c - " + _("There are pending operations on that alias"));
 	}
 
 	CPubKey currentKey(theAlias.vchPubKey);
@@ -1990,14 +1990,14 @@ UniValue offeraddwhitelist(const UniValue& params, bool fHelp) {
 
 	const CWalletTx* wtxIn = pwalletMain->GetWalletTx(tx.GetHash());
 	if (wtxIn == NULL)
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 512 - This offer is not in your wallet");
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 512 - " + _("This offer is not in your wallet"));
 	// check for existing pending offers
 	if (ExistsInMempool(vchOffer, OP_OFFER_ACTIVATE) || ExistsInMempool(vchOffer, OP_OFFER_UPDATE)) {
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 513 - There are pending operations on that offer");
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 513 - " + _("There are pending operations on that offer"));
 	}
 	COfferLinkWhitelistEntry foundEntry;
 	if(theOffer.linkWhitelist.GetLinkEntryByHash(vchAlias, foundEntry))
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 514 - This alias entry already exists on affiliate list");
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 514 - " + _("This alias entry already exists on affiliate list"));
 
 	COfferLinkWhitelistEntry entry;
 	entry.aliasLinkVchRand = vchAlias;
@@ -2065,35 +2065,35 @@ UniValue offerremovewhitelist(const UniValue& params, bool fHelp) {
 	COffer theOffer;
 	const CWalletTx *wtxAliasIn = NULL;
 	if (!GetTxOfOffer( vchOffer, theOffer, tx, true))
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 515 - Could not find an offer with this guid");
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 515 - " + _("Could not find an offer with this guid"));
 	CTransaction aliastx;
 	CAliasIndex theAlias;
 	if (!GetTxOfAlias( theOffer.vchAlias, theAlias, aliastx, true))
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 563 - Could not find an alias with this guid");
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 515 - " + _("Could not find an alias with this guid"));
 	if(!IsSyscoinTxMine(aliastx, "alias")) {
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 563a - This alias is not yours");
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 515a - " + _("This alias is not yours"));
 	}
 	wtxAliasIn = pwalletMain->GetWalletTx(aliastx.GetHash());
 	if (wtxAliasIn == NULL)
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 563b - This alias is not in your wallet");
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 515b - " + _("This alias is not in your wallet"));
 
 	if (ExistsInMempool(theAlias.vchAlias, OP_ALIAS_ACTIVATE) || ExistsInMempool(theAlias.vchAlias, OP_ALIAS_UPDATE)) {
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 563c - There are pending operations on that alias");
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 515c - " + _("There are pending operations on that alias"));
 	}
 	CPubKey currentKey(theAlias.vchPubKey);
 	scriptPubKeyOrig = GetScriptForDestination(currentKey.GetID());
 
 	wtxIn = pwalletMain->GetWalletTx(tx.GetHash());
 	if (wtxIn == NULL)
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 516 - This offer is not in your wallet");
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 516 - " + _("This offer is not in your wallet"));
 	// check for existing pending offers
 	if (ExistsInMempool(vchOffer, OP_OFFER_ACTIVATE) || ExistsInMempool(vchOffer, OP_OFFER_UPDATE)) {
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 517 - There are pending operations on that offer");
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 517 - " + _("There are pending operations on that offer"));
 	}
 	// create OFFERUPDATE txn keys
 	COfferLinkWhitelistEntry foundEntry;
 	if(!theOffer.linkWhitelist.GetLinkEntryByHash(vchAlias, foundEntry))
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 518 - This alias entry was not found on affiliate list");
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 518 - " + _("This alias entry was not found on affiliate list"));
 	theOffer.ClearOffer();
 	theOffer.nHeight = chainActive.Tip()->nHeight;
 	theOffer.linkWhitelist.PutWhitelistEntry(foundEntry);
@@ -2150,20 +2150,20 @@ UniValue offerclearwhitelist(const UniValue& params, bool fHelp) {
 	COffer theOffer;
 	const CWalletTx *wtxAliasIn = NULL;
 	if (!GetTxOfOffer( vchOffer, theOffer, tx, true))
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 519 - Could not find an offer with this guid");
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 519 - " + _("Could not find an offer with this guid"));
 	CTransaction aliastx;
 	CAliasIndex theAlias;
 	if (!GetTxOfAlias(theOffer.vchAlias, theAlias, aliastx, true))
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 519a - Could not find an alias with this guid");
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 519a - " + _("Could not find an alias with this guid"));
 	
 	if(!IsSyscoinTxMine(aliastx, "alias")) {
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 519b - This alias is not yours");
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 519b - " + _("This alias is not yours"));
 	}
 	wtxAliasIn = pwalletMain->GetWalletTx(aliastx.GetHash());
 	if (wtxAliasIn == NULL)
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 519c - This alias is not in your wallet");
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 519c - " + _("This alias is not in your wallet"));
 	if (ExistsInMempool(theAlias.vchAlias, OP_ALIAS_ACTIVATE) || ExistsInMempool(theAlias.vchAlias, OP_ALIAS_UPDATE)) {
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 519d - There are pending operations on that alias");
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 519d - " + _("There are pending operations on that alias"));
 	}
 
 	CPubKey currentKey(theAlias.vchPubKey);
@@ -2171,10 +2171,10 @@ UniValue offerclearwhitelist(const UniValue& params, bool fHelp) {
 
 	wtxIn = pwalletMain->GetWalletTx(tx.GetHash());
 	if (wtxIn == NULL)
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 520 - This offer is not in your wallet");
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 520 - " + _("This offer is not in your wallet"));
 	// check for existing pending offers
 	if (ExistsInMempool(vchOffer, OP_OFFER_ACTIVATE) || ExistsInMempool(vchOffer, OP_OFFER_UPDATE)) {
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 521 - There are pending operations on that offer");
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 521 - " + _("There are pending operations on that offer"));
 	}
 	theOffer.ClearOffer();
 	theOffer.nHeight = chainActive.Tip()->nHeight;
@@ -2293,24 +2293,24 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 		price = atof(params[6].get_str().c_str());
 
 	} catch (std::exception &e) {
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 522 - Invalid price and/or quantity values. Quantity must be less than 4294967296 and greater than or equal to -1");
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 522 - " + _("Invalid price and/or quantity values. Quantity must be less than 4294967296 and greater than or equal to -1"));
 	}
 
 	CAliasIndex alias;
 	CTransaction aliastx;
 	const CWalletTx *wtxAliasIn = NULL;
 	if (!GetTxOfAlias(vchAlias, alias, aliastx, true))
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 523 - Could not find an alias with this name");
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 523 - " + _("Could not find an alias with this name"));
 
 	if(!IsSyscoinTxMine(aliastx, "alias")) {
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 524 - This alias is not yours");
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 524 - " + _("This alias is not yours"));
 	}
 	wtxAliasIn = pwalletMain->GetWalletTx(aliastx.GetHash());
 	if (wtxAliasIn == NULL)
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 524a - This alias is not in your wallet");
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 524a - " + _("This alias is not in your wallet"));
 
 	if (ExistsInMempool(vchAlias, OP_ALIAS_ACTIVATE) || ExistsInMempool(vchAlias, OP_ALIAS_UPDATE)) {
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 524b - There are pending operations on that alias");
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 524b - " + _("There are pending operations on that alias"));
 	}
 	// this is a syscoind txn
 	CWalletTx wtx;
@@ -2323,7 +2323,7 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	CTransaction tx, linktx;
 	COffer theOffer, linkOffer;
 	if (!GetTxOfOffer( vchOffer, theOffer, tx, true))
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 524 - Could not find an offer with this guid");
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 524 - " + _("Could not find an offer with this guid"));
 	
 	CPubKey currentKey(alias.vchPubKey);
 	scriptPubKeyOrig = GetScriptForDestination(currentKey.GetID());
@@ -2333,10 +2333,10 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 
 	wtxIn = pwalletMain->GetWalletTx(tx.GetHash());
 	if (wtxIn == NULL)
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 524 - This offer is not in your wallet");
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 524 - " + _("This offer is not in your wallet"));
 	// check for existing pending offers
 	if (ExistsInMempool(vchOffer, OP_OFFER_ACTIVATE) || ExistsInMempool(vchOffer, OP_OFFER_UPDATE)) {
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 525 - There are pending operations on that offer");
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 525 - " + _("There are pending operations on that offer"));
 	}
 
 	CCert theCert;
@@ -2348,7 +2348,7 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	{
 		// check for existing cert updates
 		if (ExistsInMempool(vchCert, OP_CERT_UPDATE) || ExistsInMempool(vchCert, OP_CERT_TRANSFER)) {
-			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 526 - There are pending operations on that cert");
+			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 526 - " + _("There are pending operations on that cert"));
 		}
 		wtxCertIn = pwalletMain->GetWalletTx(txCert.GetHash());
 		scriptPubKeyCert << CScript::EncodeOP_N(OP_CERT_UPDATE) << vchCert << vchFromString("") << OP_2DROP << OP_DROP;
@@ -2373,7 +2373,7 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 		sCurrencyCode = offerCopy.sCurrencyCode;
 	if(getCurrencyToSYSFromAlias(vchAliasPeg, sCurrencyCode, nRate, chainActive.Tip()->nHeight, rateList,precision) != "")
 	{
-		string err = strprintf("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 528 - Could not find currency %s in the %s alias!\n", stringFromVch(sCurrencyCode), stringFromVch(vchAliasPeg));
+		string err = "SYSCOIN_OFFER_RPC_ERROR ERRCODE: 528 - " + _("Could not find currency in the peg alias");
 		throw runtime_error(err.c_str());
 	}
 
@@ -2402,7 +2402,7 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 		theOffer.bPrivate = bPrivate;
 	unsigned int memPoolQty = QtyOfPendingAcceptsInMempool(vchOffer);
 	if(nQty != -1 && (nQty-memPoolQty) < 0)
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 529 - Not enough remaining quantity to fulfill this update");
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 529 - " + _("Not enough remaining quantity to fulfill this update"));
 	theOffer.nHeight = chainActive.Tip()->nHeight;
 	theOffer.SetPrice(price);
 	if(params.size() >= 12 && params[11].get_str().size() > 0)
@@ -2517,12 +2517,12 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	unsigned int nQty = 1;
 	if (params.size() >= 3) {
 		if(atof(params[2].get_str().c_str()) <= 0)
-			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 530 - Invalid quantity value, must be greator than 0");
+			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 530 - " + _("Invalid quantity value, must be greator than 0"));
 	
 		try {
 			nQty = boost::lexical_cast<unsigned int>(params[2].get_str());
 		} catch (std::exception &e) {
-			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 531 - Quantity must be less than 4294967296");
+			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 531 - " + _("Quantity must be less than 4294967296"));
 		}
 	}
 
@@ -2546,7 +2546,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	vector<COffer> vtxPos;
 	if (!GetTxAndVtxOfOffer( vchOffer, theOffer, tx, vtxPos, true))
 	{
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 533 - Could not find an offer with this identifier");
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 533 - " + _("Could not find an offer with this identifier"));
 	}
 	// create accept
 	COfferAccept txAccept;
@@ -2555,15 +2555,15 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 		uint256 linkTxHash(uint256S(stringFromVch(vchLinkOfferAcceptTxHash)));
 		wtxOfferIn = pwalletMain->GetWalletTx(linkTxHash);
 		if (wtxOfferIn == NULL)
-			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 534 - This offer accept is not in your wallet");
+			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 534 - " + _("This offer accept is not in your wallet"));
 		COffer linkOffer(*wtxOfferIn);
 		if(linkOffer.accept.IsNull())
-			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 535 - Offer accept passed into the function is not actually an offer accept");
+			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 535 - " + _("Offer accept passed into the function is not actually an offer accept"));
 		int op, nOut;
 		vector<vector<unsigned char> > vvch;
 		if (!DecodeOfferTx(*wtxOfferIn, op, nOut, vvch) 
     		|| op != OP_OFFER_ACCEPT)
-			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 536 - Could not decode linked offer accept tx");
+			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 536 - " + _("Could not decode linked offer accept tx"));
 				
 		// ensure both accepts have the escrow information
 		txAccept.vchEscrow = linkOffer.accept.vchEscrow;
@@ -2584,13 +2584,13 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 		// make sure escrow is in wallet
 		wtxEscrowIn = pwalletMain->GetWalletTx(escrowTxHash);
 		if (wtxEscrowIn == NULL) 
-			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 537 - Release escrow transaction is not in your wallet");
+			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 537 - " + _("Release escrow transaction is not in your wallet"));
 		if(!escrow.UnserializeFromTx(*wtxEscrowIn))
-			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 538 - Release escrow transaction cannot unserialize escrow value");
+			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 538 - " + _("Release escrow transaction cannot unserialize escrow value"));
 		
 		int op, nOut;
 		if (!DecodeEscrowTx(*wtxEscrowIn, op, nOut, escrowVvch))
-			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 539 - Cannot decode escrow tx hash");
+			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 539 - " + _("Cannot decode escrow tx hash"));
 		
 		// if we want to accept an escrow release or we are accepting a linked offer from an escrow release. Override heightToCheckAgainst if using escrow since escrow can take a long time.
 		// get escrow activation
@@ -2629,7 +2629,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	}
 
 	if (ExistsInMempool(vchOffer, OP_OFFER_ACTIVATE)) {
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 540 - There are pending operations on that offer");
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 540 - " + _("There are pending operations on that offer"));
 	}
 
 	// get offer price at the time of accept from buyer
@@ -2641,28 +2641,28 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	bool isExpired = false;
 	vector<CAliasIndex> aliasVtxPos;
 	if(!GetTxAndVtxOfAlias(theOffer.vchAlias, theAlias, aliastx, aliasVtxPos, isExpired, true))
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 566 - Could not find the alias associated with this offer");
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 540a - " + _("Could not find the alias associated with this offer"));
 	
 	CAliasIndex buyerAlias;
 	if (!GetTxOfAlias(vchBuyerAlias, buyerAlias, aliastx, true))
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 532 - Could not find buyer alias with this name");
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 540b - " + _("Could not find buyer alias with this name"));
 	// get buyer passed into rpc (not necessarily actual buyer which for linked offers is the buyer of the linked offer accept)
 	CAliasIndex buyerAlias1;
 	if (!GetTxOfAlias(vchAlias, buyerAlias1, buyeraliastx, true))
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 532a - Could not find buyer alias with this name");
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 540c - " + _("Could not find buyer alias with this name"));
 	// if not escrow accept then make sure you can't buy your own offer
 	if(vchEscrowTxHash.empty())
 	{
 		CPubKey sellerKey = CPubKey(theAlias.vchPubKey);
 		CSyscoinAddress sellerAddress(sellerKey.GetID());
 		if(!sellerAddress.IsValid())
-			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 541 - Seller address is invalid");
+			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 541 - " + _("Seller address is invalid"));
 		CKeyID keyID;
 		if (!sellerAddress.GetKeyID(keyID))
-			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 542 - Seller address does not refer to a key");
+			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 542 - " + _("Seller address does not refer to a key"));
 		CKey vchSecret;
 		if (pwalletMain->GetKey(keyID, vchSecret))
-			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 543 - Cannot purchase your own offer");
+			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 543 - " + _("Cannot purchase your own offer"));
 	}
 
 
@@ -2675,7 +2675,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	{
 		// check for existing alias updates/transfers
 		if (ExistsInMempool(buyerAlias1.vchAlias, OP_ALIAS_UPDATE)) {
-			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 544 - There is are pending operations on that alias");
+			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 544 - " + _("There is are pending operations on that alias"));
 		}
 		// make sure its in your wallet (you control this alias)
 		if (IsSyscoinTxMine(buyeraliastx, "alias")) 
@@ -2691,12 +2691,12 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 
 	unsigned int memPoolQty = QtyOfPendingAcceptsInMempool(vchOffer);
 	if(vtxPos.back().nQty != -1 && vtxPos.back().nQty < ((!vchEscrowTxHash.empty()? 0: nQty)+memPoolQty))
-		throw runtime_error(strprintf("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 545 - Not enough remaining quantity to fulfill this orderaccept, qty remaining %u, qty desired %u,  qty waiting to be accepted by the network %d", vtxPos.back().nQty, nQty, memPoolQty));
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 545 - " + _("Not enough remaining quantity to fulfill this orderaccept"));
 
 	int precision = 2;
 	CAmount nPrice = convertCurrencyCodeToSyscoin(theOffer.vchAliasPeg, theOffer.sCurrencyCode, theOffer.GetPrice(foundEntry), nHeight, precision);
 	if(nPrice == 0)
-		throw runtime_error(strprintf("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 546 - %s currency not found in offer's alias peg %s", stringFromVch(theOffer.sCurrencyCode), stringFromVch(theOffer.vchAliasPeg)));
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 546 - " + _("Could not find currency in the peg alias"));
 	string strCipherText = "";
 	// encryption should only happen once even when not a resell or not an escrow accept. It is already encrypted in both cases.
 	if(vchLinkOfferAcceptTxHash.empty() && vchEscrowTxHash.empty())
@@ -2707,22 +2707,22 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 			COffer linkedOffer;
 			if (!GetTxOfOffer( theOffer.vchLinkOffer, linkedOffer, linktx, true))
 			{
-				throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 547 - Could not find linked offer with this identifier");
+				throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 547 - " + _("Could not find linked offer with this identifier"));
 			}
 			CAliasIndex theLinkedAlias;
 			if (!GetTxOfAlias( vchAlias, theLinkedAlias, aliastx, true))
-				throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 567 - Could not find an alias with this guid");
+				throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 567 - " + _("Could not find an alias with this guid"));
 
 			// encrypt to root offer owner if this is a linked offer you are accepting
 			if(!EncryptMessage(theLinkedAlias.vchPubKey, vchMessage, strCipherText))
-				throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 548 - Could not encrypt message to seller");
+				throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 548 - " + _("Could not encrypt message to seller"));
 				
 		}
 		else
 		{
 			// encrypt to offer owner
 			if(!EncryptMessage(theAlias.vchPubKey, vchMessage, strCipherText))
-				throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 549 - Could not encrypt message to seller");
+				throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 549 - " + _("Could not encrypt message to seller"));
 		}
 	}
 	vector<unsigned char> vchPaymentMessage;
@@ -2735,7 +2735,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	{
 		// check for existing cert transfer
 		if (ExistsInMempool(theOffer.vchCert, OP_CERT_TRANSFER)) {
-			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 550 - There is a pending transfer operation on that cert");
+			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 550 - " + _("There is a pending transfer operation on that cert"));
 		}	
 	}
 	txAccept.vchAcceptRand = vchAccept;
@@ -2835,7 +2835,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	}
 	else
 	{
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 551 - This offer must be paid with Bitcoins as per requirements of the seller");
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 551 - " + _("This offer must be paid with Bitcoins as per requirements of the seller"));
 	}
 
 	CScript scriptData;
@@ -2937,10 +2937,10 @@ UniValue offeracceptfeedback(const UniValue& params, bool fHelp) {
 	try {
 		nRating = atoi(params[3].get_str());
 		if(nRating < 0 || nRating > 5)
-			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 552 - Invalid rating value, must be less than or equal to 5 and greater than or equal to 0");
+			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 552 - " + _("Invalid rating value, must be less than or equal to 5 and greater than or equal to 0"));
 
 	} catch (std::exception &e) {
-		throw runtime_error("invalid rating value");
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 552a - " + _("Invalid rating value"));
 	}
 	
 	
@@ -2957,16 +2957,16 @@ UniValue offeracceptfeedback(const UniValue& params, bool fHelp) {
 	// feedback is skipped by default but we want to use it as input to another feedback possibly if this is a reply
 	bool skipFeedback = false;
 	if (!GetTxOfOfferAccept(vchOffer, vchAcceptRand, offer, theOfferAccept, tx, skipFeedback))
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 553 - Could not find this offer accept");
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 553 - " + _("Could not find this offer accept"));
 
 	wtxIn = pwalletMain->GetWalletTx(tx.GetHash());
 	if (wtxIn == NULL)
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 554 - This offer accept is not in your wallet");
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 554 - " + _("This offer accept is not in your wallet"));
 	vector<vector<unsigned char> > vvch;
     int op, nOut;
     if (!DecodeOfferTx(tx, op, nOut, vvch) 
     	|| op != OP_OFFER_ACCEPT)
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 555 - Could not decode offer accept tx");
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 555 - " + _("Could not decode offer accept tx"));
 	
 	CAliasIndex buyerAlias, sellerAlias;
 	CTransaction aliastx;
@@ -2985,10 +2985,10 @@ UniValue offeracceptfeedback(const UniValue& params, bool fHelp) {
 	{
 		CKeyID keyID;
 		if (!buyerAddress.GetKeyID(keyID))
-			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 556 - Buyer address does not refer to a key");
+			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 556 - " + _("Buyer address does not refer to a key"));
 		CKey vchSecret;
 		if (!pwalletMain->GetKey(keyID, vchSecret))
-			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 557 - Private key for buyer address is not know");
+			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 557 - " + _("Private key for buyer address is not know"));
 		foundBuyerKey = true;
 	}
 	catch(...)
@@ -3000,10 +3000,10 @@ UniValue offeracceptfeedback(const UniValue& params, bool fHelp) {
 	{
 		CKeyID keyID;
 		if (!sellerAddress.GetKeyID(keyID))
-			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 558 - Seller address does not refer to a key");
+			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 558 - " + _("Seller address does not refer to a key"));
 		CKey vchSecret;
 		if (!pwalletMain->GetKey(keyID, vchSecret))
-			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 559 - Private key for seller address is not known");
+			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 559 - " + _("Private key for seller address is not known"));
 		foundSellerKey = true;
 	}
 	catch(...)
@@ -3013,7 +3013,7 @@ UniValue offeracceptfeedback(const UniValue& params, bool fHelp) {
 	
      	// check for existing escrow 's
 	if (ExistsInMempool(vvch[0], OP_OFFER_ACCEPT)) {
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 560 - There are pending operations on that offer");
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 560 - " + _("There are pending operations on that offer"));
 	}
 	offer.ClearOffer();
 	offer.accept = theOfferAccept;
@@ -3038,7 +3038,7 @@ UniValue offeracceptfeedback(const UniValue& params, bool fHelp) {
 	}
 	else
 	{
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 561 - You must be either the buyer or seller to leave feedback on this offer purchase");
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 561 - " + _("You must be either the buyer or seller to leave feedback on this offer purchase"));
 	}
 
 	const vector<unsigned char> &data = offer.Serialize();
@@ -3118,7 +3118,7 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 	CTransaction aliastx;
 	CAliasIndex alias;
 	if(!GetTxOfAlias(theOffer.vchAlias, alias, aliastx, true))
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 566 - Could not find the alias associated with this offer");
+		throw runtime_error("Could not find the alias associated with this offer");
 	if(alias.safetyLevel >= SAFETY_LEVEL2)
 		throw runtime_error("offer owner has been banned");
 	vector<vector<unsigned char> > vvch;
