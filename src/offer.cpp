@@ -1215,7 +1215,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 85 - " + _("Cannot purchase certificates with Bitcoins");
 					return true;
 				}
-				else if(theOffer.vchLinkOffer.empty() && theCert.vchAlias != theOffer.vchAlias)
+				else if(theOfferAccept.vchEscrow.empty() && theOffer.vchLinkOffer.empty() && theCert.vchAlias != theOffer.vchAlias)
 				{
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 86 - " + _("Cannot purchase this offer because the certificate has been transferred or it is linked to another offer");
 					return true;
