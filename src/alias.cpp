@@ -1948,7 +1948,8 @@ UniValue aliasaffiliates(const UniValue& params, bool fHelp) {
 			// get parent offer
 			CTransaction tx;
 			COffer linkOffer;
-			if (!GetTxOfOffer( theOffer.vchLinkOffer, linkOffer, tx))
+			vector<COffer> offerVtxPos;
+			if (!GetTxAndVtxOfOffer( theOffer.vchLinkOffer, linkOffer, tx, offerVtxPos))
 				continue;
 
 			for(unsigned int i=0;i<linkOffer.linkWhitelist.entries.size();i++) {

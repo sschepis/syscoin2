@@ -651,6 +651,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	bool escrowAccept = false;
 	vector<string> rateList;
 	vector<string> categories;
+	vector<COffer> offerVtxPos;
 	string category;
 	int precision = 2;
 	CAmount nRate;
@@ -1058,7 +1059,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					if(!theOffer.vchLinkOffer.empty())
 					{
 						CTransaction txLinkedOffer;
-						if (!GetTxOfOffer( theOffer.vchLinkOffer, linkOffer, txLinkedOffer))
+						if (!GetTxAndVtxOfOffer( theOffer.vchLinkOffer, linkOffer, txLinkedOffer, offerVtxPos))
 						{
 							errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 70a - " + _("Linked offer not found. It may be expired");
 							theOffer.vchLinkOffer.clear();
@@ -1311,7 +1312,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 93 - " + _("Cannot accept a linked offer by paying in Bitcoins");
 						return true;
 					}
-					else if(!GetTxOfOffer( theOffer.vchLinkOffer, linkOffer, linkedTx))
+					else if(!GetTxAndVtxOfOffer( theOffer.vchLinkOffer, linkOffer, linkedTx, offerVtxPos))
 					{
 						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 94 - " + _("Could not get linked offer");
 						return true;
@@ -2239,9 +2240,10 @@ UniValue offerwhitelist(const UniValue& params, bool fHelp) {
 	// look for a transaction with this key
 	CTransaction tx;
 	COffer theOffer;
-	if (!GetTxOfOffer( vchOffer, theOffer, tx))
+	vector<COffer> myVtxPos;
+	if (!GetTxAndVtxOfOffer( vchOffer, theOffer, tx, myVtxPos))
 		throw runtime_error("could not find an offer with this guid");
-	
+
 	for(unsigned int i=0;i<theOffer.linkWhitelist.entries.size();i++) {
 		CTransaction txAlias;
 		CAliasIndex theAlias;
@@ -2715,15 +2717,9 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	{
 		if(!theOffer.vchLinkOffer.empty())
 		{
-			CTransaction linktx;
-			COffer linkedOffer;
-			if (!GetTxOfOffer( theOffer.vchLinkOffer, linkedOffer, linktx, true))
-			{
-				throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 547 - " + _("Could not find linked offer with this identifier"));
-			}
 			CAliasIndex theLinkedAlias;
 			if (!GetTxOfAlias( vchAlias, theLinkedAlias, aliastx, true))
-				throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 567 - " + _("Could not find an alias with this guid"));
+				throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 547 - " + _("Could not find an alias with this guid"));
 
 			// encrypt to root offer owner if this is a linked offer you are accepting
 			if(!EncryptMessage(theLinkedAlias.vchPubKey, vchMessage, strCipherText))
@@ -3113,7 +3109,8 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 
     // get transaction pointed to by offer
 	CTransaction tx;
-	if(!GetTxOfOffer( vchOffer, theOffer, tx, true))
+	vector<COffer> myVtxPos;
+	if(!GetTxAndVtxOfOffer( vchOffer, theOffer, tx, myVtxPos, true))
 		throw runtime_error("failed to read offer transaction from disk");
 	if(theOffer.safetyLevel >= SAFETY_LEVEL2)
 		throw runtime_error("offer has been banned");
@@ -3121,7 +3118,8 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 	COffer linkOffer;
 	if( !theOffer.vchLinkOffer.empty())
 	{
-		if(!GetTxOfOffer( theOffer.vchLinkOffer, linkOffer, linkTx, true))
+		vector<COffer> myLinkedVtxPos;
+		if(!GetTxAndVtxOfOffer( theOffer.vchLinkOffer, linkOffer, linkTx, myLinkedVtxPos, true))
 			throw runtime_error("failed to read linked offer transaction from disk");
 	}
 
@@ -3617,7 +3615,8 @@ UniValue offerlist(const UniValue& params, bool fHelp) {
 			{
 				nQty = vtxPos.back().nQty;
 				CTransaction tx;
-				if(!GetTxOfOffer( vchOffer, theOfferA, tx))
+				vector<COffer> myVtxPos;
+				if(!GetTxAndVtxOfOffer( vchOffer, theOfferA, tx, myVtxPos))
 				{
 					pending = 1;
 					if(!IsSyscoinTxMine(wtx, "offer"))

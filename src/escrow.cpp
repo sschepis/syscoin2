@@ -1037,8 +1037,10 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	COffer theOffer, linkedOffer;
 	
 	CTransaction txOffer, txAlias;
-	if (!GetTxOfOffer( vchOffer, theOffer, txOffer, true))
+	vector<COffer> offerVtxPos;
+	if (!GetTxAndVtxOfOffer( vchOffer, theOffer, txOffer, offerVtxPos, true))
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4064 - " + _("Could not find an offer with this identifier"));
+
 	CAliasIndex selleralias;
 	if (!GetTxOfAlias( theOffer.vchAlias, selleralias, txAlias, true))
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4065 - " + _("Could not find seller alias with this identifier"));
@@ -1058,7 +1060,8 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	{
 	
 		CTransaction tmpTx;
-		if (!GetTxOfOffer( theOffer.vchLinkOffer, linkedOffer, tmpTx, true))
+		vector<COffer> offerTmpVtxPos;
+		if (!GetTxAndVtxOfOffer( theOffer.vchLinkOffer, linkedOffer, tmpTx, offerTmpVtxPos, true))
 			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4068 - " + _("Trying to accept a linked offer but could not find parent offer"));
 		CAliasIndex theLinkedAlias;
 		CTransaction txLinkedAlias;
@@ -2464,9 +2467,9 @@ UniValue escrowinfo(const UniValue& params, bool fHelp) {
 	CEscrow ca = vtxPos.back();
 	CTransaction offertx;
 	COffer offer;
-	GetTxOfOffer(ca.vchOffer, offer, offertx, true);
-		
-	
+	vector<COffer> offerVtxPos;
+	GetTxAndVtxOfOffer(ca.vchOffer, offer, offertx, offerVtxPos, true);
+
     string sHeight = strprintf("%llu", ca.nHeight);
     oEscrow.push_back(Pair("escrow", stringFromVch(vchEscrow)));
 	string sTime;
@@ -2644,8 +2647,9 @@ UniValue escrowlist(const UniValue& params, bool fHelp) {
 		}
 		COffer offer;
 		CTransaction offertx;
-		GetTxOfOffer(escrow.vchOffer, offer, offertx, true);
-			
+		vector<COffer> offerVtxPos;
+		GetTxAndVtxOfOffer(escrow.vchOffer, offer, offertx, offerVtxPos. true);
+
 		// skip this escrow if it doesn't match the given filter value
 		if (vchNameUniq.size() > 0 && vchNameUniq != vchEscrow)
 			continue;
@@ -2809,7 +2813,8 @@ UniValue escrowhistory(const UniValue& params, bool fHelp) {
 			}
 			COffer offer;
 			CTransaction offertx;
-			GetTxOfOffer(txPos2.vchOffer, offer, offertx, true);
+			vector<COffer> offerVtxPos;
+			GetTxAndVtxOfOffer(txPos2.vchOffer, offer, offertx, offerVtxPos, true);
 				
             // decode txn, skip non-alias txns
             vector<vector<unsigned char> > vvch;
