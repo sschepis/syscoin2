@@ -1215,11 +1215,20 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 85 - " + _("Cannot purchase certificates with Bitcoins");
 					return true;
 				}
-				else if(theOfferAccept.vchEscrow.empty() && theOffer.vchLinkOffer.empty() && theCert.vchAlias != theOffer.vchAlias)
-				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 86 - " + _("Cannot purchase this offer because the certificate has been transferred or it is linked to another offer");
-					return true;
-				}
+				else if(theOffer.vchLinkOffer.empty())
+					if(!theOfferAccept.vchEscrow.empty())
+					{
+						if(theCert.vchAlias != theOfferAccept.vchBuyerAlias)
+						{
+							errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 86 - " + _("Certificate must be transferred to the buyer manually before escrow is released");
+							return true;
+						}
+					}
+					else (theCert.vchAlias != theOffer.vchAlias)
+					{
+						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 86a - " + _("Cannot purchase this offer because the certificate has been transferred or it is linked to another offer");
+						return true;
+					}
 			}
 			else if (theOfferAccept.vchMessage.size() <= 0)
 			{
