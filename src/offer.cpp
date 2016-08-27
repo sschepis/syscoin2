@@ -3018,7 +3018,8 @@ UniValue offeracceptfeedback(const UniValue& params, bool fHelp) {
 	CScript scriptPubKeyAlias;
 	CScript scriptPubKey,scriptPubKeyOrig;
 	vector<unsigned char> vchLinkAlias;
-	bool foundBuyerKey = foundSellerKey = false;
+	bool foundBuyerKey = false;
+	bool foundSellerKey = false;
 	try
 	{
 		CKeyID keyID;
