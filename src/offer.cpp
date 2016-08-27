@@ -2880,7 +2880,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 
 	// if making a purchase and we are using an alias from the whitelist of the offer, we may need to prove that we own that alias so in that case we attach an input from the alias
 	// if purchasing an escrow, we adjust the height to figure out pricing of the accept so we may also attach escrow inputs to the tx
-	SendMoneySyscoin(vecSend, recipientBuyer.nAmount+acceptRecipient.nAmount+paymentRecipient.nAmount+fee.nAmount+escrowBuyerRecipient.nAmount+escrowArbiterRecipient.nAmount+escrowSellerRecipient.nAmount+aliasRecipient.nAmount, false, wtx, wtxOfferIn, wtxInCert, wtxAliasIn, wtxEscrowIn, true, justCheck);
+	SendMoneySyscoin(vecSend, acceptRecipient.nAmount+paymentRecipient.nAmount+fee.nAmount+escrowBuyerRecipient.nAmount+escrowArbiterRecipient.nAmount+escrowSellerRecipient.nAmount+aliasRecipient.nAmount, false, wtx, wtxOfferIn, wtxInCert, wtxAliasIn, wtxEscrowIn, true, justCheck);
 	
 	UniValue res(UniValue::VARR);
 	res.push_back(wtx.GetHash().GetHex());
@@ -3018,7 +3018,7 @@ UniValue offeracceptfeedback(const UniValue& params, bool fHelp) {
 	CScript scriptPubKeyAlias;
 	CScript scriptPubKey,scriptPubKeyOrig;
 	vector<unsigned char> vchLinkAlias;
-	bool foundBuyerKey = false;
+	bool foundBuyerKey = foundSellerKey = false;
 	try
 	{
 		CKeyID keyID;
@@ -3046,7 +3046,6 @@ UniValue offeracceptfeedback(const UniValue& params, bool fHelp) {
 	}
 	if(!foundBuyerKey)
 	{
-		bool foundSellerKey = false;
 		try
 		{
 			CKeyID keyID;
@@ -3111,7 +3110,7 @@ UniValue offeracceptfeedback(const UniValue& params, bool fHelp) {
     vector<unsigned char> vchHashOffer = vchFromValue(HexStr(vchHash));
 
 	vector<CRecipient> vecSend;
-	CRecipient recipientAlias, recipient
+	CRecipient recipientAlias, recipient;
 
 
 	scriptPubKey << CScript::EncodeOP_N(OP_OFFER_ACCEPT) << vvch[0] << vvch[1] << vchFromString("1") << vchHashOffer << OP_2DROP <<  OP_2DROP << OP_DROP;
@@ -3556,7 +3555,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 
 				// if its your offer accept (paid to you) but alias is not yours anymore then skip
 				if(IsSyscoinTxMine(acceptTx, "offer") && !IsSyscoinTxMine(aliastx, "alias"))
-					continue
+					continue;
 				CAliasIndex theBuyerAlias;
 				CTransaction buyeraliastx;
 				GetTxOfAlias(theOfferAccept.vchBuyerAlias, theBuyerAlias, buyeraliastx, true);
