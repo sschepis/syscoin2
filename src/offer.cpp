@@ -909,7 +909,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 119 - " + _("Invalid offer buyer alias");
 				return error(errorMessage.c_str());
 			}
-			if (IsOfferOp(prevOp) && !theOfferAccept.feedback.IsNull() && vvchPrevArgs[1] != theOfferAccept.vchLinkAccept && vvchPrevArgs[0] != theOfferAccept.vchLinkOffer)
+			if (IsOfferOp(prevOp) && !theOfferAccept.feedback.IsNull() && (vvchPrevArgs[1] != theOfferAccept.vchLinkAccept || vvchPrevArgs[0] != theOfferAccept.vchLinkOffer))
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 54 - " + _("Prev offer input and link accept guid mismatch");
 				return error(errorMessage.c_str());
@@ -1246,9 +1246,26 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			}
 			if(!theOfferAccept.feedback.IsNull())
 			{
+				if (!theOfferAccept.vchLinkAccept.empty())
+				{				
+					CTransaction acceptTx;
+					COfferAccept theLinkedOfferAccept;
+					COffer offer;
+					bool skipFeedback = true;
+					if (!GetTxOfOfferAccept(theOfferAccept.vchLinkOffer, theOfferAccept.vchLinkAccept, offer, theLinkedOfferAccept, acceptTx, skipFeedback))
+					{
+						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 88 - " + _("Could not find a linked offer accept from mempool or disk");
+						return true;
+					}	
+					if(!theOfferAccept.feedback.IsNull() && !theLinkedOfferAccept.vchEscrow.empty())
+					{
+						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 88a - " + _("Cannot leave feedback for an offer used by an escrow, use Manage Escrow to leave feedback instead");
+						return true;
+					}
+				}
 				if(!theOffer.vchLinkOffer.empty())
 				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 88 - " + _("Cannot leave feedback for linked offers");
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 88b - " + _("Cannot leave feedback for linked offers");
 					return true;
 				}
 				// ensure we don't add same feedback twice (feedback in db should be older than current height)
@@ -2579,7 +2596,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 		// ensure both accepts have the escrow information
 		txAccept.vchEscrow = linkOffer.accept.vchEscrow;
 		txAccept.vchLinkAccept = linkOffer.accept.vchAcceptRand;
-		txAccept.vchLinkOffer = vvch[0];
+		txAccept.vchLinkOffer = linkOffer.vchOffer;
 		nHeight = linkOffer.accept.nAcceptHeight;
 		nQty = linkOffer.accept.nQty;
 		vchAccept = linkOffer.accept.vchAcceptRand;
