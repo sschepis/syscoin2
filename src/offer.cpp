@@ -3547,7 +3547,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 				oOfferAccept.push_back(Pair("price", strprintf("%.*f", precision, theOffer.GetPrice() ))); 
 				oOfferAccept.push_back(Pair("total", strprintf("%.*f", precision, theOfferAccept.nPrice * theOfferAccept.nQty ))); 
 				// this accept is for me(something ive sold) if this offer is mine
-				oOfferAccept.push_back(Pair("ismine", IsSyscoinTxMine(acceptTx, "offer") &&  && IsSyscoinTxMine(aliastx, "alias")? "true" : "false"));
+				oOfferAccept.push_back(Pair("ismine", IsSyscoinTxMine(acceptTx, "offer") && IsSyscoinTxMine(aliastx, "alias")? "true" : "false"));
 
 				if(!theOfferAccept.txBTCId.IsNull())
 					oOfferAccept.push_back(Pair("status","paid(BTC)"));
@@ -3555,7 +3555,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 					oOfferAccept.push_back(Pair("status","paid"));
 
 				// if its your offer accept (paid to you) but alias is not yours anymore then skip
-				if(IsSyscoinTxMine(acceptTx, "offer")  && !IsSyscoinTxMine(aliastx, "alias"))
+				if(IsSyscoinTxMine(acceptTx, "offer") && !IsSyscoinTxMine(aliastx, "alias"))
 					continue
 				CAliasIndex theBuyerAlias;
 				CTransaction buyeraliastx;
