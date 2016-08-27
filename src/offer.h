@@ -19,7 +19,7 @@ bool DecodeOfferTx(const CTransaction& tx, int& op, int& nOut, std::vector<std::
 bool DecodeAndParseOfferTx(const CTransaction& tx, int& op, int& nOut, std::vector<std::vector<unsigned char> >& vvch);
 bool DecodeOfferScript(const CScript& script, int& op, std::vector<std::vector<unsigned char> > &vvch);
 bool IsOfferOp(int op);
-int IndexOfOfferOutput(const CTransaction& tx, bool skipAcceptBuyerSpecialOutput);
+int IndexOfOfferOutput(const CTransaction& tx);
 int GetOfferExpirationDepth();
 std::string offerFromOp(int op);
 CScript RemoveOfferScriptPrefix(const CScript& scriptIn);
@@ -484,11 +484,11 @@ public:
 
 };
 void HandleAcceptFeedback(const COfferAccept& accept, const COffer& offer);
-int FindFeedbackInAccept(const std::vector<unsigned char> &vchAccept, const unsigned char nFeedbackUser, const std::vector<COffer> &vtxPos, int& numRatings);
+void FindFeedbackInAccept(const std::vector<unsigned char> &vchAccept, const std::vector<COffer> &vtxPos, int &numBuyerRatings, int &numSellerRatings, int &feedbackBuyerCount, int &feedbackSellerCount;
 void GetFeedbackInAccept(std::vector<CAcceptFeedback> &feedback, int &avgRating, const std::vector<unsigned char> &vchAccept, const AcceptUser type, const std::vector<COffer> &vtxPos);
-bool GetAcceptByHash(std::vector<COffer> &offerList,  COfferAccept &ca, bool skipFeedback);
+bool GetAcceptByHash(std::vector<COffer> &offerList,  COfferAccept &ca);
 bool GetTxOfOfferAccept(const std::vector<unsigned char> &vchOffer, const std::vector<unsigned char> &vchOfferAccept,
-		COffer &theOffer, COfferAccept &theOfferAccept, CTransaction& tx, bool skipFeedback=true);
+		COffer &theOffer, COfferAccept &theOfferAccept, CTransaction& tx);
 bool GetTxOfOffer(const std::vector<unsigned char> &vchOffer, COffer& txPos, CTransaction& tx, bool skipExpiresCheck=false);
 bool GetTxAndVtxOfOffer(const std::vector<unsigned char> &vchOffer, 
 				  COffer& txPos, CTransaction& tx, std::vector<COffer> &vtxPos, bool skipExpiresCheck=false);

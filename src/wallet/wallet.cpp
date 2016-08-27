@@ -32,7 +32,7 @@
 
 using namespace std;
 // SYSCOIN services
-extern int IndexOfOfferOutput(const CTransaction& tx, bool skipBuyerSpecialOutput);
+extern int IndexOfOfferOutput(const CTransaction& tx);
 extern int IndexOfCertOutput(const CTransaction& tx);
 extern int IndexOfAliasOutput(const CTransaction& tx);
 extern int IndexOfEscrowOutput(const CTransaction& tx);

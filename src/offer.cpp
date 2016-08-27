@@ -344,7 +344,7 @@ bool COfferDB::ScanOffers(const std::vector<unsigned char>& vchOffer, const stri
     return true;
 }
 
-int IndexOfOfferOutput(const CTransaction& tx, bool skipAcceptBuyerSpecialOutput) {
+int IndexOfOfferOutput(const CTransaction& tx) {
 	if (tx.nVersion != SYSCOIN_TX_VERSION)
 		return -1;
 	vector<vector<unsigned char> > vvch;
@@ -353,8 +353,6 @@ int IndexOfOfferOutput(const CTransaction& tx, bool skipAcceptBuyerSpecialOutput
 		const CTxOut& out = tx.vout[i];
 		// find an output you own
 		if (pwalletMain->IsMine(out) && DecodeOfferScript(out.scriptPubKey, op, vvch)) {
-			if(skipAcceptBuyerSpecialOutput && op == OP_OFFER_ACCEPT && vvch[2] == vchFromString("1"))
-				continue;
 			return i;
 		}
 	}
@@ -408,12 +406,12 @@ bool GetTxAndVtxOfOffer(const vector<unsigned char> &vchOffer,
 	return true;
 }
 bool GetTxOfOfferAccept(const vector<unsigned char> &vchOffer, const vector<unsigned char> &vchOfferAccept,
-		COffer &theOffer, COfferAccept &theOfferAccept, CTransaction& tx, bool skipFeedback) {
+		COffer &theOffer, COfferAccept &theOfferAccept, CTransaction& tx) {
 	vector<COffer> vtxPos;
 	if (!pofferdb->ReadOffer(vchOffer, vtxPos) || vtxPos.empty()) return false;
 	theOfferAccept.SetNull();
 	theOfferAccept.vchAcceptRand = vchOfferAccept;
-	GetAcceptByHash(vtxPos, theOfferAccept, skipFeedback);
+	GetAcceptByHash(vtxPos, theOfferAccept);
 	if(theOfferAccept.IsNull())
 		return false;
 	int nHeight = theOfferAccept.nHeight;
@@ -881,12 +879,17 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			theOfferAccept = theOffer.accept;
 			if(!theOfferAccept.feedback.IsNull())
 			{
-				if(prevOp != OP_OFFER_ACCEPT)
+				if(vvchArgs.size() < 3 || vvchArgs[2] != vchFromString("1"))
 				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 50 - " + _("Must use offeraccept as input to an accept feedback");
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 50 - " + _("Invalid feedback transaction");
 					return error(errorMessage.c_str());
 				}
-				if (vvchPrevArgs[1] != vvchArgs[1])
+				if(IsAliasOp(prevAliasOp))
+				{
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 50a - " + _("Must use alias as input to an accept feedback");
+					return error(errorMessage.c_str());
+				}
+				if (vvchPrevAliasArgs[0] != theOfferAccept.vchLinkAlias)
 				{
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 51 - " + _("Offeraccept feedback mismatch");
 					return error(errorMessage.c_str());
@@ -909,9 +912,14 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 119 - " + _("Invalid offer buyer alias");
 				return error(errorMessage.c_str());
 			}
-			if (IsOfferOp(prevOp) && !theOfferAccept.feedback.IsNull() && (vvchPrevArgs[1] != theOfferAccept.vchLinkAccept || vvchPrevArgs[0] != theOfferAccept.vchLinkOffer))
+			if (IsOfferOp(prevOp) && (vvchPrevArgs[1] != theOfferAccept.vchLinkAccept || vvchPrevArgs[0] != theOfferAccept.vchLinkOffer))
 			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 54 - " + _("Prev offer input and link accept guid mismatch");
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 54 - " + _("Prev offer input or link accept guid mismatch");
+				return error(errorMessage.c_str());
+			}
+			if((!theOfferAccept.vchLinkAccept.empty() || !theOfferAccept.vchLinkOffer.empty()) && !IsOfferOp(prevOp))
+			{
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 54a - " + _("Prev offer or link accept input missing");
 				return error(errorMessage.c_str());
 			}
 			if (IsEscrowOp(prevEscrowOp) && !theOfferAccept.txBTCId.IsNull())
@@ -1238,34 +1246,46 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				return true;
 			}
 					
-			if(vvchArgs[2] == vchFromString("1"))
-			{
-				if(fDebug)
-					LogPrintf( "SYSCOIN_OFFER_CONSENSUS_ERROR Buyer special accept output... skipping\n");
-				return true;
-			}
 			if(!theOfferAccept.feedback.IsNull())
 			{
-				if (!theOfferAccept.vchLinkAccept.empty())
-				{				
-					CTransaction acceptTx;
-					COfferAccept theLinkedOfferAccept;
-					COffer offer;
-					bool skipFeedback = true;
-					if (!GetTxOfOfferAccept(theOfferAccept.vchLinkOffer, theOfferAccept.vchLinkAccept, offer, theLinkedOfferAccept, acceptTx, skipFeedback))
+				CTransaction acceptTx;
+				COfferAccept offerAccept;
+				COffer offer;
+				if (!GetTxOfOfferAccept(vvchArgs[0], vvchArgs[1], offer, offerAccept, acceptTx))
+				{
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 88 - " + _("Could not find offer accept from mempool or disk");
+					return true;
+				}
+				// if feedback is for buyer then we need to ensure attached input alias was from seller
+				if(theOfferAccept.feedback.nFeedbackUser == ACCEPTBUYER)
+				{
+					if(theOfferAccept.vchLinkAlias != offer.vchAlias)
 					{
-						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 88 - " + _("Could not find a linked offer accept from mempool or disk");
-						return true;
-					}	
-					if(!theOfferAccept.feedback.IsNull() && !theLinkedOfferAccept.vchEscrow.empty())
-					{
-						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 88a - " + _("Cannot leave feedback for an offer used by an escrow, use Manage Escrow to leave feedback instead");
+						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 88a - " + _("Only seller can leaver buyer feedback");
 						return true;
 					}
 				}
-				if(!theOffer.vchLinkOffer.empty())
+				else if(theOfferAccept.feedback.nFeedbackUser == ACCEPTSELLER)
 				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 88b - " + _("Cannot leave feedback for linked offers");
+					if(theOfferAccept.vchLinkAlias != offerAccept.vchBuyerAlias)
+					{
+						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 88b - " + _("Only buyer can leave seller feedback");
+						return true;
+					}
+				}
+				else
+				{
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 88c - " + _("Unknown feedback user type");
+					return true;
+				}
+				if(!offerAccept.vchEscrow.empty())
+				{
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 89 - " + _("Cannot leave feedback for an offer used by an escrow, use Manage Escrow to leave feedback instead");
+					return true;
+				}
+				if(!offer.vchLinkOffer.empty())
+				{
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 89a - " + _("Cannot leave feedback for linked offers");
 					return true;
 				}
 				// ensure we don't add same feedback twice (feedback in db should be older than current height)
@@ -1276,212 +1296,221 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				}
 				else
 				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 89 - " + _("Feedback in db is newer than the current height");
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 89b - " + _("Feedback in db is newer than the current height");
 					return true;
 				}
 
-				int numRatings;				
-				int feedbackCount = FindFeedbackInAccept(vvchArgs[1], theOfferAccept.feedback.nFeedbackUser, vtxPos, numRatings);
+				int numBuyerRatings, numSellerRatings, feedbackBuyerCount, feedbackSellerCount;				
+				FindFeedbackInAccept(vvchArgs[1], vtxPos, numBuyerRatings, numSellerRatings, feedbackBuyerCount, feedbackSellerCount);
 				// has this user (nFeedbackUser) already rated? if so set desired rating to 0
-				if(numRatings > 0)
+				if(theOfferAccept.feedback.nFeedbackUser == ACCEPTBUYER && numBuyerRatings > 0)
 					theOfferAccept.feedback.nRating = 0;
-				if(feedbackCount >= 10)
+				else if(theOfferAccept.feedback.nFeedbackUser == ACCEPTSELLER && numSellerRatings > 0)
+					theOfferAccept.feedback.nRating = 0;
+				if(feedbackBuyerCount >= 10 || feedbackSellerCount >= 10)
 				{
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 90 - " + _("Cannot exceed 10 feedback entries for this user of this offer accept");
 					return true;
 				}
+				if(theOfferAccept.feedback.nFeedbackUser == ACCEPTBUYER && numBuyerRatings > numSellerRatings)
+				{
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 90a - " + _("Cannot leave multiple buyer feedbacks you must wait for a seller reply first");
+					return true;
+				}
+				else if(theOfferAccept.feedback.nFeedbackUser == ACCEPTSELLER && numSellerRatings > numBuyerRatings)
+				{
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 90b - " + _("Cannot leave multiple seller feedbacks you must wait for a buyer reply first");
+					return true;
+				}
 				if(!dontaddtodb)
 					HandleAcceptFeedback(theOfferAccept, theOffer);	
+				return true;
 			
 			}
-			// if its not a special feedback output for the buyer then we decrease qty accordingly
-			else
+			// if its not feedback then we decrease qty accordingly
+			if(theOfferAccept.nQty <= 0)
+				theOfferAccept.nQty = 1;
+			// update qty if not an escrow accept (since that updates qty on escrow creation, and refunds qty on escrow refund)
+			// also if this offer you are accepting is linked to another offer don't need to update qty (once the root accept is done this offer qty will be updated)
+			if(theOffer.nQty != -1 && theOfferAccept.vchEscrow.empty() && theOffer.vchLinkOffer.empty())
+			{
+				if((theOfferAccept.nQty > theOffer.nQty))
+				{
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 91 - " + _("Not enough quantity left in this offer for this purchase");
+					return true;
+				}				
+				theOffer.nQty -= theOfferAccept.nQty;
+				if(theOffer.nQty < 0)
+					theOffer.nQty = 0;
+				
+			}
+		
+			if(theOffer.sCategory.size() > 0 && boost::algorithm::ends_with(stringFromVch(theOffer.sCategory), "wanted"))
+			{
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 92 - " + _("Cannot purchase a wanted offer");
+				return true;
+			}
+			if(!theOffer.vchLinkOffer.empty())
 			{
 
-				if(theOfferAccept.nQty <= 0)
-					theOfferAccept.nQty = 1;
-				// update qty if not an escrow accept (since that updates qty on escrow creation, and refunds qty on escrow refund)
-				// also if this offer you are accepting is linked to another offer don't need to update qty (once the root accept is done this offer qty will be updated)
-				if(theOffer.nQty != -1 && theOfferAccept.vchEscrow.empty() && theOffer.vchLinkOffer.empty())
+				if(!theOfferAccept.txBTCId.IsNull())
 				{
-					if((theOfferAccept.nQty > theOffer.nQty))
-					{
-						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 91 - " + _("Not enough quantity left in this offer for this purchase");
-						return true;
-					}				
-					theOffer.nQty -= theOfferAccept.nQty;
-					if(theOffer.nQty < 0)
-						theOffer.nQty = 0;
-					
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 93 - " + _("Cannot accept a linked offer by paying in Bitcoins");
+					return true;
 				}
+				else if(!GetTxAndVtxOfOffer( theOffer.vchLinkOffer, linkOffer, linkedTx, offerVtxPos))
+				{
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 94 - " + _("Could not get linked offer");
+					return true;
+				}
+				else if(theOfferAccept.vchEscrow.empty() && !theOffer.vchCert.empty() && theCert.vchAlias != linkOffer.vchAlias)
+				{
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 95 - " + _("Cannot purchase this linked offer because the certificate has been transferred or it is linked to another offer");
+					return true;
+				}
+				else if (linkOffer.bOnlyAcceptBTC)
+				{
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 96 - " + _("Linked offer only accepts Bitcoins, linked offers currently only work with Syscoin payments");
+					return true;
+				}
+				else if(!serializedOffer.vchLinkAlias.empty())
+				{
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 97 - " + _("Purchase discounts can only be applied to non-linked offers");
+					return true;
+				}
+				
+				// make sure that linked offer exists in root offerlinks (offers that are linked to the root offer)
+				else if(std::find(linkOffer.offerLinks.begin(), linkOffer.offerLinks.end(), vvchArgs[0]) == linkOffer.offerLinks.end())
+				{
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 98 - " + _("This offer does not exist in the root offerLinks table");
+					return true;
+				}					
+			}
 			
-				if(theOffer.sCategory.size() > 0 && boost::algorithm::ends_with(stringFromVch(theOffer.sCategory), "wanted"))
+			// find the payment from the tx outputs (make sure right amount of coins were paid for this offer accept), the payment amount found has to be exact	
+			heightToCheckAgainst = theOfferAccept.nAcceptHeight;
+			// if this is a linked offer accept, set the height to the first height so sysrates.peg price will match what it was at the time of the original accept
+			// we assume previous tx still in mempool because it calls offeraccept within the checkinputs stage (not entering a block yet)
+			if (!theOfferAccept.vchLinkAccept.empty())
+			{				
+				CTransaction acceptTx;
+				COfferAccept theLinkedOfferAccept;
+				COffer offer;
+				if (!GetTxOfOfferAccept(theOfferAccept.vchLinkOffer, theOfferAccept.vchLinkAccept, offer, theLinkedOfferAccept, acceptTx))
 				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 92 - " + _("Cannot purchase a wanted offer");
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 99 - " + _("Could not find a linked offer accept from mempool or disk");
 					return true;
-				}
-				if(!theOffer.vchLinkOffer.empty())
-				{
-
-					if(!theOfferAccept.txBTCId.IsNull())
-					{
-						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 93 - " + _("Cannot accept a linked offer by paying in Bitcoins");
-						return true;
-					}
-					else if(!GetTxAndVtxOfOffer( theOffer.vchLinkOffer, linkOffer, linkedTx, offerVtxPos))
-					{
-						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 94 - " + _("Could not get linked offer");
-						return true;
-					}
-					else if(theOfferAccept.vchEscrow.empty() && !theOffer.vchCert.empty() && theCert.vchAlias != linkOffer.vchAlias)
-					{
-						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 95 - " + _("Cannot purchase this linked offer because the certificate has been transferred or it is linked to another offer");
-						return true;
-					}
-					else if (linkOffer.bOnlyAcceptBTC)
-					{
-						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 96 - " + _("Linked offer only accepts Bitcoins, linked offers currently only work with Syscoin payments");
-						return true;
-					}
-					else if(!serializedOffer.vchLinkAlias.empty())
-					{
-						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 97 - " + _("Purchase discounts can only be applied to non-linked offers");
-						return true;
-					}
-					
-					// make sure that linked offer exists in root offerlinks (offers that are linked to the root offer)
-					else if(std::find(linkOffer.offerLinks.begin(), linkOffer.offerLinks.end(), vvchArgs[0]) == linkOffer.offerLinks.end())
-					{
-						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 98 - " + _("This offer does not exist in the root offerLinks table");
-						return true;
-					}					
-				}
-				
-				// find the payment from the tx outputs (make sure right amount of coins were paid for this offer accept), the payment amount found has to be exact	
-				heightToCheckAgainst = theOfferAccept.nAcceptHeight;
-				// if this is a linked offer accept, set the height to the first height so sysrates.peg price will match what it was at the time of the original accept
-				// we assume previous tx still in mempool because it calls offeraccept within the checkinputs stage (not entering a block yet)
-				if (!theOfferAccept.vchLinkAccept.empty())
-				{				
-					CTransaction acceptTx;
-					COfferAccept theLinkedOfferAccept;
-					COffer offer;
-					bool skipFeedback = true;
-					if (!GetTxOfOfferAccept(theOfferAccept.vchLinkOffer, theOfferAccept.vchLinkAccept, offer, theLinkedOfferAccept, acceptTx, skipFeedback))
-					{
-						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 99 - " + _("Could not find a linked offer accept from mempool or disk");
-						return true;
-					}	
-					// if this is an accept for a linked offer, the root offer is set to exclusive mode and reseller doesn't have an alias in the whitelist, you cannot accept this linked offer
-					// serializedOffer.vchLinkAlias is validated below if its not empty
-					if(serializedOffer.vchLinkAlias.empty() && theOffer.linkWhitelist.bExclusiveResell)
-					{
-						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 100 - " + _("Cannot pay for this linked offer because you don't own an alias from its affiliate list. Root offer is set to exclusive mode");
-						return true;
-					}	
-					theOfferAccept.nQty = theLinkedOfferAccept.nQty;
-					heightToCheckAgainst = theLinkedOfferAccept.nAcceptHeight;
-					if(theOfferAccept.vchBuyerAlias != theLinkedOfferAccept.vchBuyerAlias)
-					{
-						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 101 - " + _("Linked accept buyer must match the buyer of the reselling offer");
-						return true;
-					}
-				}
-				// if this accept was done via an escrow release, we get the height from escrow and use that to lookup the price at the time
-				if(!theOffer.accept.vchEscrow.empty())
-				{		
-					vector<CEscrow> escrowVtxPos;
-					CEscrow escrow;
-					CTransaction escrowTx;
-					if (GetTxAndVtxOfEscrow( theOffer.accept.vchEscrow, escrow, escrowTx, escrowVtxPos))
-					{
-						// we want the initial funding escrow transaction height as when to calculate this offer accept price
-						CEscrow fundingEscrow = escrowVtxPos.front();
-						if(fundingEscrow.vchOffer != vvchArgs[0])
-						{
-							errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 102 - " + _("Escrow guid does not match the guid of the offer you are accepting");
-							return true;
-						}
-						// override height if funding escrow was before the accept that the buyer did, to index into sysrates
-						if(heightToCheckAgainst > fundingEscrow.nHeight){
-							heightToCheckAgainst = fundingEscrow.nHeight;
-						}
-					}
-					else
-					{
-						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 103 - " + _("Cannot find escrow linked to this offer accept");
-						return true;
-					}
-				}
-				// the height really shouldnt change cause we set it correctly in offeraccept
-				if(heightToCheckAgainst != theOfferAccept.nAcceptHeight)
-				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 104 - " + _("Height mismatch with calculated height and accept height");
-					return true;
-				}
-	
-				myPriceOffer.nHeight = heightToCheckAgainst;
-				myPriceOffer.GetOfferFromList(vtxPos);
-				// if the buyer uses an alias for a discount or a exclusive whitelist buy, then get the guid
-				if(!serializedOffer.vchLinkAlias.empty())
-				{
-					if (!GetTxOfAlias(serializedOffer.vchLinkAlias, theAlias, aliasTx))
-					{
-						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 105 - " + _("Cannot find the alias you are trying to use for an offer discount. Perhaps it is expired");
-						return true;
-					}
-					// try to get the whitelist entry here from the sellers whitelist, apply the discount with GetPrice()
-					myPriceOffer.linkWhitelist.GetLinkEntryByHash(serializedOffer.vchLinkAlias, entry);
-					if(entry.IsNull())
-					{
-						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 106 - " + _("Cannot find the alias entry in the offer's affiliate list");
-						return true;
-					}
-				}
-				
-				if(!theOfferAccept.txBTCId.IsNull() && stringFromVch(myPriceOffer.sCurrencyCode) != "BTC")
-				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 107 - " + _("Cannot pay for offer in bitcoins if its currency is not set to BTC");
-					return true;
-				}
-				// check that user pays enough in syscoin if the currency of the offer is not directbtc purchase
-				if(theOfferAccept.txBTCId.IsNull())
-				{
-		
-					float priceAtTimeOfAccept = myPriceOffer.GetPrice(entry);
-					if(priceAtTimeOfAccept != theOfferAccept.nPrice)
-					{
-						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 108 - " + _("Offer accept does not specify the correct payment amount");
-						return true;
-					}
-
-					int precision = 2;
-					// lookup the price of the offer in syscoin based on pegged alias at the block # when accept/escrow was made
-					CAmount nPrice = convertCurrencyCodeToSyscoin(myPriceOffer.vchAliasPeg, myPriceOffer.sCurrencyCode, priceAtTimeOfAccept, heightToCheckAgainst, precision)*theOfferAccept.nQty;
-					if(!FindOfferAcceptPayment(tx, nPrice))
-					{
-						nPrice = convertCurrencyCodeToSyscoin(myPriceOffer.vchAliasPeg, myPriceOffer.sCurrencyCode, priceAtTimeOfAccept, heightToCheckAgainst+1, precision)*theOfferAccept.nQty;
-						if(!FindOfferAcceptPayment(tx, nPrice))
-						{
-							nPrice = convertCurrencyCodeToSyscoin(myPriceOffer.vchAliasPeg, myPriceOffer.sCurrencyCode, priceAtTimeOfAccept, heightToCheckAgainst-1, precision)*theOfferAccept.nQty;
-							if(!FindOfferAcceptPayment(tx, nPrice))
-							{
-								errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 109 - " + _("Offer accept does not pay enough according to the offer price");
-								return true;
-							}
-						}
-					}												
 				}	
-				// if not escrow check qty to see if enough, escrow creation already deducts qty
-				if(!theOffer.accept.vchEscrow.empty())
+				// if this is an accept for a linked offer, the root offer is set to exclusive mode and reseller doesn't have an alias in the whitelist, you cannot accept this linked offer
+				// serializedOffer.vchLinkAlias is validated below if its not empty
+				if(serializedOffer.vchLinkAlias.empty() && theOffer.linkWhitelist.bExclusiveResell)
 				{
-					if(theOfferAccept.nQty <= 0 || (theOffer.nQty != -1 && theOfferAccept.nQty > theOffer.nQty) || (!linkOffer.IsNull() && theOfferAccept.nQty > linkOffer.nQty && linkOffer.nQty != -1))
-					{
-						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 110 - " + _("Offer does not have enough quantity left for this purchase");
-						return true;
-					}					
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 100 - " + _("Cannot pay for this linked offer because you don't own an alias from its affiliate list. Root offer is set to exclusive mode");
+					return true;
+				}	
+				theOfferAccept.nQty = theLinkedOfferAccept.nQty;
+				heightToCheckAgainst = theLinkedOfferAccept.nAcceptHeight;
+				if(theOfferAccept.vchBuyerAlias != theLinkedOfferAccept.vchBuyerAlias)
+				{
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 101 - " + _("Linked accept buyer must match the buyer of the reselling offer");
+					return true;
 				}
 			}
+			// if this accept was done via an escrow release, we get the height from escrow and use that to lookup the price at the time
+			if(!theOffer.accept.vchEscrow.empty())
+			{		
+				vector<CEscrow> escrowVtxPos;
+				CEscrow escrow;
+				CTransaction escrowTx;
+				if (GetTxAndVtxOfEscrow( theOffer.accept.vchEscrow, escrow, escrowTx, escrowVtxPos))
+				{
+					// we want the initial funding escrow transaction height as when to calculate this offer accept price
+					CEscrow fundingEscrow = escrowVtxPos.front();
+					if(fundingEscrow.vchOffer != vvchArgs[0])
+					{
+						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 102 - " + _("Escrow guid does not match the guid of the offer you are accepting");
+						return true;
+					}
+					// override height if funding escrow was before the accept that the buyer did, to index into sysrates
+					if(heightToCheckAgainst > fundingEscrow.nHeight){
+						heightToCheckAgainst = fundingEscrow.nHeight;
+					}
+				}
+				else
+				{
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 103 - " + _("Cannot find escrow linked to this offer accept");
+					return true;
+				}
+			}
+			// the height really shouldnt change cause we set it correctly in offeraccept
+			if(heightToCheckAgainst != theOfferAccept.nAcceptHeight)
+			{
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 104 - " + _("Height mismatch with calculated height and accept height");
+				return true;
+			}
+
+			myPriceOffer.nHeight = heightToCheckAgainst;
+			myPriceOffer.GetOfferFromList(vtxPos);
+			// if the buyer uses an alias for a discount or a exclusive whitelist buy, then get the guid
+			if(!serializedOffer.vchLinkAlias.empty())
+			{
+				if (!GetTxOfAlias(serializedOffer.vchLinkAlias, theAlias, aliasTx))
+				{
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 105 - " + _("Cannot find the alias you are trying to use for an offer discount. Perhaps it is expired");
+					return true;
+				}
+				// try to get the whitelist entry here from the sellers whitelist, apply the discount with GetPrice()
+				myPriceOffer.linkWhitelist.GetLinkEntryByHash(serializedOffer.vchLinkAlias, entry);
+				if(entry.IsNull())
+				{
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 106 - " + _("Cannot find the alias entry in the offer's affiliate list");
+					return true;
+				}
+			}
+			
+			if(!theOfferAccept.txBTCId.IsNull() && stringFromVch(myPriceOffer.sCurrencyCode) != "BTC")
+			{
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 107 - " + _("Cannot pay for offer in bitcoins if its currency is not set to BTC");
+				return true;
+			}
+			// check that user pays enough in syscoin if the currency of the offer is not directbtc purchase
+			if(theOfferAccept.txBTCId.IsNull())
+			{
+	
+				float priceAtTimeOfAccept = myPriceOffer.GetPrice(entry);
+				if(priceAtTimeOfAccept != theOfferAccept.nPrice)
+				{
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 108 - " + _("Offer accept does not specify the correct payment amount");
+					return true;
+				}
+
+				int precision = 2;
+				// lookup the price of the offer in syscoin based on pegged alias at the block # when accept/escrow was made
+				CAmount nPrice = convertCurrencyCodeToSyscoin(myPriceOffer.vchAliasPeg, myPriceOffer.sCurrencyCode, priceAtTimeOfAccept, heightToCheckAgainst, precision)*theOfferAccept.nQty;
+				if(!FindOfferAcceptPayment(tx, nPrice))
+				{
+					nPrice = convertCurrencyCodeToSyscoin(myPriceOffer.vchAliasPeg, myPriceOffer.sCurrencyCode, priceAtTimeOfAccept, heightToCheckAgainst+1, precision)*theOfferAccept.nQty;
+					if(!FindOfferAcceptPayment(tx, nPrice))
+					{
+						nPrice = convertCurrencyCodeToSyscoin(myPriceOffer.vchAliasPeg, myPriceOffer.sCurrencyCode, priceAtTimeOfAccept, heightToCheckAgainst-1, precision)*theOfferAccept.nQty;
+						if(!FindOfferAcceptPayment(tx, nPrice))
+						{
+							errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 109 - " + _("Offer accept does not pay enough according to the offer price");
+							return true;
+						}
+					}
+				}												
+			}	
+			// if not escrow check qty to see if enough, escrow creation already deducts qty
+			if(!theOffer.accept.vchEscrow.empty())
+			{
+				if(theOfferAccept.nQty <= 0 || (theOffer.nQty != -1 && theOfferAccept.nQty > theOffer.nQty) || (!linkOffer.IsNull() && theOfferAccept.nQty > linkOffer.nQty && linkOffer.nQty != -1))
+				{
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 110 - " + _("Offer does not have enough quantity left for this purchase");
+					return true;
+				}					
+			}
+			
 
 			theOfferAccept.nHeight = nHeight;
 			theOfferAccept.vchAcceptRand = vvchArgs[1];
@@ -2656,10 +2685,6 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 		}	
 	}
 
-	if (ExistsInMempool(vchOffer, OP_OFFER_ACTIVATE)) {
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 540 - " + _("There are pending operations on that offer"));
-	}
-
 	// get offer price at the time of accept from buyer
 	theOffer.nHeight = nHeight;
 	theOffer.GetOfferFromList(vtxPos);
@@ -2771,10 +2796,6 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
     CAmount nTotalValue = ( nPrice * nQty );
     
 	// send one to ourselves to we can leave feedback (notice the last opcode is 1 to denote its a special feedback output for the buyer to be able to leave feedback first and not a normal accept output)
-	CScript scriptPubKeyBuyer, scriptPubKeyBuyerDestination;
-	CPubKey buyerKey(buyerAlias.vchPubKey);
-	scriptPubKeyBuyerDestination= GetScriptForDestination(buyerKey.GetID());
-	CRecipient recipientBuyer;
 	if(!vchBTCTxId.empty())
 	{
 		uint256 txBTCId(uint256S(stringFromVch(vchBTCTxId)));
@@ -2792,15 +2813,9 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
     uint256 hash = Hash(data.begin(), data.end());
  	vector<unsigned char> vchHash = CScriptNum(hash.GetCheapHash()).getvch();
     vector<unsigned char> vchHashOffer = vchFromValue(HexStr(vchHash));
-	// if this is a linked accept then we create output for feedback for the reseller since the normal accept from buyer is used here by the linked accept
-	scriptPubKeyBuyer  << CScript::EncodeOP_N(OP_OFFER_ACCEPT) << vchOffer << vchAccept << vchFromString("1") << vchHashOffer << OP_2DROP << OP_2DROP << OP_DROP;
 	// normal accept sig
 	scriptPubKeyAccept << CScript::EncodeOP_N(OP_OFFER_ACCEPT) << vchOffer << vchAccept << vchFromString("0") << vchHashOffer << OP_2DROP << OP_2DROP << OP_DROP;
 	
-
-	scriptPubKeyBuyer += scriptPubKeyBuyerDestination;
-	CreateRecipient(scriptPubKeyBuyer, recipientBuyer);
-
 
     CScript scriptPayment;
 	CPubKey currentKey(theAlias.vchPubKey);
@@ -2825,9 +2840,6 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	CRecipient escrowArbiterRecipient;
 	CreateRecipient(scriptPubKeyEscrowArbiter, escrowArbiterRecipient);
 
-	// send back to yourself always for feedback unless its escrow or its a non linked offer (you get the feedback output when the linked accept occurs)
-	if(vchEscrowTxHash.empty() && copyOffer.vchLinkOffer.empty())
-		vecSend.push_back(recipientBuyer);
 	// if we are accepting an escrow transaction then create another escrow utxo for escrowcomplete to be able to do its thing
 	if (wtxEscrowIn != NULL) 
 	{
@@ -2905,20 +2917,27 @@ void HandleAcceptFeedback(const COfferAccept& accept, const COffer& offer)
 			
 	}
 }
-int FindFeedbackInAccept(const vector<unsigned char> &vchAccept, const unsigned char nFeedbackUser, const vector<COffer> &vtxPos, int& numRatings)
+void FindFeedbackInAccept(const vector<unsigned char> &vchAccept,  const vector<COffer> &vtxPos, int &numBuyerRatings, int &numSellerRatings, int &feedbackBuyerCount, int &feedbackSellerCount)
 {
-	int count = 0;
-	numRatings = 0;
+	feedbackSellerCount = feedbackBuyerCount = numBuyerRatings = numSellerRatings = 0;
 	for(unsigned int i =0;i<vtxPos.size();i++)
 	{	
-		if(!vtxPos[i].accept.feedback.IsNull() && vtxPos[i].accept.vchAcceptRand == vchAccept && vtxPos[i].accept.feedback.nFeedbackUser == nFeedbackUser)
+		if(!vtxPos[i].accept.feedback.IsNull() && vtxPos[i].accept.vchAcceptRand == vchAccept)
 		{
-			count++;
-			if(vtxPos[i].accept.feedback.nRating > 0)
-				numRatings++;
+			if(vtxPos[i].accept.feedback.nFeedbackUser == ACCEPTBUYER)
+			{
+				feedbackBuyerCount++;
+				if(vtxPos[i].accept.feedback.nRating > 0)
+					numBuyerRatings++;
+			}
+			else if(vtxPos[i].accept.feedback.nFeedbackUser == ACCEPTSELLER)
+			{
+				feedbackSellerCount++;
+				if(vtxPos[i].accept.feedback.nRating > 0)
+					numSellerRatings++;
+			}
 		}
 	}
-	return count;
 }
 void GetFeedbackInAccept(vector<CAcceptFeedback> &feedBack, int &avgRating, const vector<unsigned char> &vchAccept, const AcceptUser type, const vector<COffer> &vtxPos)
 {
@@ -2975,32 +2994,30 @@ UniValue offeracceptfeedback(const UniValue& params, bool fHelp) {
     CTransaction tx;
 	COffer offer;
 	COfferAccept theOfferAccept;
-	const CWalletTx *wtxIn;
-	// feedback is skipped by default but we want to use it as input to another feedback possibly if this is a reply
-	bool skipFeedback = false;
-	if (!GetTxOfOfferAccept(vchOffer, vchAcceptRand, offer, theOfferAccept, tx, skipFeedback))
+	const CWalletTx *wtxAliasIn;
+
+	if (!GetTxOfOfferAccept(vchOffer, vchAcceptRand, offer, theOfferAccept, tx))
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 553 - " + _("Could not find this offer accept"));
 
-	wtxIn = pwalletMain->GetWalletTx(tx.GetHash());
-	if (wtxIn == NULL)
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 554 - " + _("This offer accept is not in your wallet"));
 	vector<vector<unsigned char> > vvch;
     int op, nOut;
     if (!DecodeOfferTx(tx, op, nOut, vvch) 
     	|| op != OP_OFFER_ACCEPT)
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 555 - " + _("Could not decode offer accept tx"));
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 554 - " + _("Could not decode offer accept tx"));
 	
 	CAliasIndex buyerAlias, sellerAlias;
-	CTransaction aliastx;
+	CTransaction buyeraliastx, selleraliastx;
 
-	GetTxOfAlias(theOfferAccept.vchBuyerAlias, buyerAlias, aliastx, true);
+	GetTxOfAlias(theOfferAccept.vchBuyerAlias, buyerAlias, buyeraliastx, true);
 	CPubKey buyerKey(buyerAlias.vchPubKey);
 	CSyscoinAddress buyerAddress(buyerKey.GetID());
 
-	GetTxOfAlias(offer.vchAlias, sellerAlias, aliastx, true);
+	GetTxOfAlias(offer.vchAlias, sellerAlias, selleraliastx, true);
 	CPubKey sellerKey(sellerAlias.vchPubKey);
 	CSyscoinAddress sellerAddress(sellerKey.GetID());
 
+	CScript scriptPubKeyAlias;
+	CScript scriptPubKey,scriptPubKeyOrig;
 
 	bool foundBuyerKey = false;
 	try
@@ -3012,25 +3029,50 @@ UniValue offeracceptfeedback(const UniValue& params, bool fHelp) {
 		if (!pwalletMain->GetKey(keyID, vchSecret))
 			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 557 - " + _("Private key for buyer address is not know"));
 		foundBuyerKey = true;
+		wtxAliasIn = pwalletMain->GetWalletTx(buyeraliastx.GetHash());
+		if (wtxAliasIn == NULL)
+			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 557a - " + _("Buyer alias is not in your wallet"));
+
+		if (ExistsInMempool(buyerAlias.vchAlias, OP_ALIAS_ACTIVATE) || ExistsInMempool(buyerAlias.vchAlias, OP_ALIAS_UPDATE)) {
+			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 557b - There are pending operations on that alias");
+		}
+		scriptPubKeyOrig= GetScriptForDestination(buyerKey.GetID());
+		scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << buyerAlias.vchAlias << buyerAlias.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
+		scriptPubKeyAlias += scriptPubKeyOrig;
+		theOfferAccept.vchLinkAlias = buyerAlias.vchAlias;
 	}
 	catch(...)
 	{
 		foundBuyerKey = false;
 	}
-	bool foundSellerKey = false;
-	try
+	if(!foundBuyerKey)
 	{
-		CKeyID keyID;
-		if (!sellerAddress.GetKeyID(keyID))
-			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 558 - " + _("Seller address does not refer to a key"));
-		CKey vchSecret;
-		if (!pwalletMain->GetKey(keyID, vchSecret))
-			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 559 - " + _("Private key for seller address is not known"));
-		foundSellerKey = true;
-	}
-	catch(...)
-	{
-		foundSellerKey = false;
+		bool foundSellerKey = false;
+		try
+		{
+			CKeyID keyID;
+			if (!sellerAddress.GetKeyID(keyID))
+				throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 558 - " + _("Seller address does not refer to a key"));
+			CKey vchSecret;
+			if (!pwalletMain->GetKey(keyID, vchSecret))
+				throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 559 - " + _("Private key for seller address is not known"));
+			foundSellerKey = true;
+			wtxAliasIn = pwalletMain->GetWalletTx(selleraliastx.GetHash());
+			if (wtxAliasIn == NULL)
+				throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 559a - " + _("Seller alias is not in your wallet"));
+
+			if (ExistsInMempool(sellerAlias.vchAlias, OP_ALIAS_ACTIVATE) || ExistsInMempool(sellerAlias.vchAlias, OP_ALIAS_UPDATE)) {
+				throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 559b - There are pending operations on that alias");
+			}
+			scriptPubKeyOrig= GetScriptForDestination(sellerKey.GetID());
+			scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << sellerAlias.vchAlias << sellerAlias.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
+			scriptPubKeyAlias += scriptPubKeyOrig;
+			theOfferAccept.vchLinkAlias = sellerAlias.vchAlias;
+		}
+		catch(...)
+		{
+			foundSellerKey = false;
+		}
 	}
 	
      	// check for existing escrow 's
@@ -3068,29 +3110,17 @@ UniValue offeracceptfeedback(const UniValue& params, bool fHelp) {
  	vector<unsigned char> vchHash = CScriptNum(hash.GetCheapHash()).getvch();
     vector<unsigned char> vchHashOffer = vchFromValue(HexStr(vchHash));
 
-	CScript scriptPubKeyBuyer, scriptPubKeySeller,scriptPubKeyBuyerDestination, scriptPubKeySellerDestination;
-	scriptPubKeyBuyerDestination= GetScriptForDestination(buyerKey.GetID());
-	scriptPubKeySellerDestination= GetScriptForDestination(sellerKey.GetID());
 	vector<CRecipient> vecSend;
-	CRecipient recipientBuyer, recipientSeller;
-	scriptPubKeyBuyer << CScript::EncodeOP_N(OP_OFFER_ACCEPT) << vvch[0] << vvch[1] << vvch[2] << vchHashOffer << OP_2DROP <<  OP_2DROP << OP_DROP;
-	scriptPubKeyBuyer += scriptPubKeyBuyerDestination;
-	CreateRecipient(scriptPubKeyBuyer, recipientBuyer);
-	scriptPubKeySeller << CScript::EncodeOP_N(OP_OFFER_ACCEPT) << vvch[0] << vvch[1] << vvch[2] << vchHashOffer << OP_2DROP << OP_2DROP << OP_DROP;
-	scriptPubKeySeller += scriptPubKeySellerDestination;
-	CreateRecipient(scriptPubKeySeller, recipientSeller);
-	// buyer
-	if(foundBuyerKey)
-	{
-		vecSend.push_back(recipientSeller);
+	CRecipient recipientAlias, recipient
 
-	}
-	// seller
-	else if(foundSellerKey)
-	{
-		vecSend.push_back(recipientBuyer);
 
-	}
+	scriptPubKey << CScript::EncodeOP_N(OP_OFFER_ACCEPT) << vvch[0] << vvch[1] << vchFromString("1") << vchHashOffer << OP_2DROP <<  OP_2DROP << OP_DROP;
+	scriptPubKey += scriptPubKeyOrig;
+	CreateRecipient(scriptPubKey, recipient);
+	CreateRecipient(scriptPubKeyAlias, recipientAlias);
+
+	vecSend.push_back(recipient);
+	vecSend.push_back(recipientAlias);
 	
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
@@ -3100,8 +3130,8 @@ UniValue offeracceptfeedback(const UniValue& params, bool fHelp) {
 
 	const CWalletTx * wtxInEscrow=NULL;
 	const CWalletTx * wtxInCert=NULL;
-	const CWalletTx * wtxInAlias=NULL;
-	SendMoneySyscoin(vecSend, recipientBuyer.nAmount+recipientSeller.nAmount+fee.nAmount, false, wtx, wtxIn, wtxInCert, wtxInAlias, wtxInEscrow);
+	const CWalletTx * wtxIn=NULL;
+	SendMoneySyscoin(vecSend, recipient.nAmount+recipientAlias.nAmount+fee.nAmount, false, wtx, wtxIn, wtxInCert, wtxAliasIn, wtxInEscrow);
 	UniValue ret(UniValue::VARR);
 	ret.push_back(wtx.GetHash().GetHex());
 	return ret;
@@ -3460,18 +3490,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 					continue;
 				if (vtxPos.size() < 1)
 					continue;
-				bool isAcceptMine = IsSyscoinTxMine(acceptTx, "offer");
-				bool skipAcceptBuyerSpecialOutput = false;
-				int nOut = IndexOfOfferOutput(acceptTx, skipAcceptBuyerSpecialOutput);
-				// if we own an output in this accept tx yet the tx isn't ours
-				// it must be a buyer special output that was sent via linked accept
-				// so we skip it from showing in the accept lists
-				// this only applies to linked offer accepts because those ones don't attach buyer special output
-				if(!theOffer.vchLinkOffer.empty())
-				{
-					if(nOut >= 0 && !isAcceptMine)
-						continue;
-				}
+
 				oOfferAccept.push_back(Pair("offer", offer));
 				oOfferAccept.push_back(Pair("title", stringFromVch(theOffer.sTitle)));
 				oOfferAccept.push_back(Pair("id", stringFromVch(vchAcceptRand)));
@@ -3896,13 +3915,13 @@ int GetNumberOfAccepts(const std::vector<COffer> &offerList) {
     }
     return count;
 }
-bool GetAcceptByHash(std::vector<COffer> &offerList, COfferAccept &ca, bool skipFeedback) {
+bool GetAcceptByHash(std::vector<COffer> &offerList, COfferAccept &ca) {
 	if(offerList.empty())
 		return false;
 	for(std::vector<COffer>::reverse_iterator it = offerList.rbegin(); it != offerList.rend(); ++it) {
 		const COffer& myoffer = *it;
-		// skip null states or ones with feedback (these aren't considered normal accepts)
-		if(myoffer.accept.IsNull() || (skipFeedback && !myoffer.accept.feedback.IsNull()))
+		// skip null states
+		if(myoffer.accept.IsNull())
 			continue;
         if(myoffer.accept.vchAcceptRand == ca.vchAcceptRand) {
             ca = myoffer.accept;
