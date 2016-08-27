@@ -888,7 +888,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 50a - " + _("Must use alias as input to an accept feedback");
 					return error(errorMessage.c_str());
 				}
-				if (vvchPrevAliasArgs[0] != theOfferAccept.vchLinkAlias)
+				if (vvchPrevAliasArgs[0] != theOffer.vchLinkAlias)
 				{
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 51 - " + _("Offeraccept feedback mismatch");
 					return error(errorMessage.c_str());
@@ -1258,7 +1258,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				// if feedback is for buyer then we need to ensure attached input alias was from seller
 				if(theOfferAccept.feedback.nFeedbackUser == ACCEPTBUYER)
 				{
-					if(theOfferAccept.vchLinkAlias != offer.vchAlias)
+					if(theOffer.vchLinkAlias != offer.vchAlias)
 					{
 						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 88a - " + _("Only seller can leaver buyer feedback");
 						return true;
@@ -1266,7 +1266,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				}
 				else if(theOfferAccept.feedback.nFeedbackUser == ACCEPTSELLER)
 				{
-					if(theOfferAccept.vchLinkAlias != offerAccept.vchBuyerAlias)
+					if(theOffer.vchLinkAlias != offerAccept.vchBuyerAlias)
 					{
 						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 88b - " + _("Only buyer can leave seller feedback");
 						return true;
@@ -3017,7 +3017,7 @@ UniValue offeracceptfeedback(const UniValue& params, bool fHelp) {
 
 	CScript scriptPubKeyAlias;
 	CScript scriptPubKey,scriptPubKeyOrig;
-
+	vector<unsigned char> vchLinkAlias;
 	bool foundBuyerKey = false;
 	try
 	{
@@ -3038,7 +3038,7 @@ UniValue offeracceptfeedback(const UniValue& params, bool fHelp) {
 		scriptPubKeyOrig= GetScriptForDestination(buyerKey.GetID());
 		scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << buyerAlias.vchAlias << buyerAlias.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
 		scriptPubKeyAlias += scriptPubKeyOrig;
-		theOfferAccept.vchLinkAlias = buyerAlias.vchAlias;
+		vchLinkAlias = buyerAlias.vchAlias;
 	}
 	catch(...)
 	{
@@ -3066,7 +3066,7 @@ UniValue offeracceptfeedback(const UniValue& params, bool fHelp) {
 			scriptPubKeyOrig= GetScriptForDestination(sellerKey.GetID());
 			scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << sellerAlias.vchAlias << sellerAlias.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
 			scriptPubKeyAlias += scriptPubKeyOrig;
-			theOfferAccept.vchLinkAlias = sellerAlias.vchAlias;
+			vchLinkAlias = sellerAlias.vchAlias;
 		}
 		catch(...)
 		{
@@ -3080,6 +3080,7 @@ UniValue offeracceptfeedback(const UniValue& params, bool fHelp) {
 	}
 	offer.ClearOffer();
 	offer.accept = theOfferAccept;
+	offer.vchLinkAlias = vchLinkAlias;
 	offer.nHeight = chainActive.Tip()->nHeight;
 	// buyer
 	if(foundBuyerKey)
@@ -3554,14 +3555,14 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 					oOfferAccept.push_back(Pair("status","paid"));
 
 				// if its your offer accept (paid to you) but alias is not yours anymore then skip
-				if(IsSyscoinTxMine(acceptTx, "offer") && && !IsSyscoinTxMine(aliastx, "alias"))
-					continue;
+				if(IsSyscoinTxMine(acceptTx, "offer")  && !IsSyscoinTxMine(aliastx, "alias"))
+					continue
 				CAliasIndex theBuyerAlias;
 				CTransaction buyeraliastx;
 				GetTxOfAlias(theOfferAccept.vchBuyerAlias, theBuyerAlias, buyeraliastx, true);
 
 				// if you paid for this offer but the buyer alias isn't yours anymore skip
-				if(!IsSyscoinTxMine(acceptTx, "offer") && && !IsSyscoinTxMine(buyeraliastx, "alias"))
+				if(!IsSyscoinTxMine(acceptTx, "offer") && !IsSyscoinTxMine(buyeraliastx, "alias"))
 					continue;				
 				string strMessage = string("");
 				if(!DecryptMessage(theAlias.vchPubKey, theOfferAccept.vchMessage, strMessage))
