@@ -912,18 +912,17 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
 
 
 UniValue certtransfer(const UniValue& params, bool fHelp) {
-	if (fHelp || 2 > params.size() || params.size() > 3)
+ if (fHelp || params.size() != 2)
         throw runtime_error(
-		"certtransfer <certkey> <alias> [justcheck]\n"
+		"certtransfer <certkey> <alias>\n"
                 "<certkey> certificate guidkey.\n"
 				"<alias> Alias to transfer this certificate to.\n"
-				"<justcheck> Do not send transaction. For validation only. For internal use only, leave blank\n"
                  + HelpRequiringPassphrase());
 
     // gather & validate inputs
 	vector<unsigned char> vchCert = vchFromValue(params[0]);
 	vector<unsigned char> vchAlias = vchFromValue(params[1]);
-	string justCheck = params.size()>=3?params[2].get_str():"0";
+
 	// check for alias existence in DB
 	CTransaction tx;
 	CAliasIndex toAlias;
@@ -1028,7 +1027,7 @@ UniValue certtransfer(const UniValue& params, bool fHelp) {
 	vecSend.push_back(fee);
 	const CWalletTx * wtxInOffer=NULL;
 	const CWalletTx * wtxInEscrow=NULL;
-	SendMoneySyscoin(vecSend, recipient.nAmount+aliasRecipient.nAmount+fee.nAmount, false, wtx, wtxInOffer, wtxIn, wtxAliasIn, wtxInEscrow, true, justCheck);
+	SendMoneySyscoin(vecSend, recipient.nAmount+aliasRecipient.nAmount+fee.nAmount, false, wtx, wtxInOffer, wtxIn, wtxAliasIn, wtxInEscrow);
 
 	UniValue res(UniValue::VARR);
 	res.push_back(wtx.GetHash().GetHex());

@@ -70,7 +70,7 @@ bool foundOfferLinkInWallet(const vector<unsigned char> &vchOffer, const vector<
 	return false;
 }
 // transfer cert if its linked to offer
-string makeTransferCertTX(const COffer& theOffer, const COfferAccept& theOfferAccept, bool justcheck)
+string makeTransferCertTX(const COffer& theOffer, const COfferAccept& theOfferAccept)
 {
 
 	string strError;
@@ -78,7 +78,6 @@ string makeTransferCertTX(const COffer& theOffer, const COfferAccept& theOfferAc
 	UniValue params(UniValue::VARR);
 	params.push_back(stringFromVch(theOffer.vchCert));
 	params.push_back(stringFromVch(theOfferAccept.vchBuyerAlias));
-	params.push_back(justcheck? "1" : "0");
     try {
         tableRPC.execute(strMethod, params);
 	}
@@ -94,7 +93,7 @@ string makeTransferCertTX(const COffer& theOffer, const COfferAccept& theOfferAc
 
 }
 // refund an offer accept by creating a transaction to send coins to offer accepter, and an offer accept back to the offer owner. 2 Step process in order to use the coins that were sent during initial accept.
-string makeOfferLinkAcceptTX(const COfferAccept& theOfferAccept, const vector<unsigned char> &vchOffer, const vector<unsigned char> &vchMessage, const vector<unsigned char> &vchLinkOffer, const string &offerAcceptLinkTxHash, const COffer& theOffer, const CAliasIndex& theAlias, const CBlock* block, bool justcheck)
+string makeOfferLinkAcceptTX(const COfferAccept& theOfferAccept, const vector<unsigned char> &vchOffer, const vector<unsigned char> &vchMessage, const vector<unsigned char> &vchLinkOffer, const string &offerAcceptLinkTxHash, const COffer& theOffer, const CAliasIndex& theAlias, const CBlock* block)
 {
 	if(!block)
 	{
@@ -143,7 +142,6 @@ string makeOfferLinkAcceptTX(const COfferAccept& theOfferAccept, const vector<un
 	params.push_back("");
 	params.push_back(offerAcceptLinkTxHash);
 	params.push_back("");
-	params.push_back(justcheck? "1" : "0");
 	
     try {
         tableRPC.execute(strMethod, params);
@@ -1217,16 +1215,17 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 85 - " + _("Cannot purchase certificates with Bitcoins");
 					return true;
 				}
+				else if(!theOfferAccept.vchEscrow.empty())
+				{
+					if(theCert.vchAlias != theOfferAccept.vchBuyerAlias)
+					{
+						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 86 - " + _("Certificate must be transferred to the buyer manually before escrow is released");
+						return true;
+					}
+				}
 				else if(theOffer.vchLinkOffer.empty())
 				{
-					if(!theOfferAccept.vchEscrow.empty())
-					{
-						if(theCert.vchAlias != theOfferAccept.vchBuyerAlias)
-						{
-							errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 86 - " + _("Certificate must be transferred to the buyer manually before escrow is released");
-							return true;
-						}
-					}
+	
 					else if(theCert.vchAlias != theOffer.vchAlias)
 					{
 						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 86a - " + _("Cannot purchase this offer because the certificate has been transferred or it is linked to another offer");
@@ -1318,7 +1317,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 94 - " + _("Could not get linked offer");
 						return true;
 					}
-					else if(!theOffer.vchCert.empty() && theCert.vchAlias != linkOffer.vchAlias)
+					else if(theOfferAccept.vchEscrow.empty() && !theOffer.vchCert.empty() && theCert.vchAlias != linkOffer.vchAlias)
 					{
 						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 95 - " + _("Cannot purchase this linked offer because the certificate has been transferred or it is linked to another offer");
 						return true;
@@ -1596,11 +1595,11 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			}
  			
 			// if its my offer and its linked and its not a special feedback output for the buyer
-			if (pwalletMain && !theOffer.vchLinkOffer.empty() && IsSyscoinTxMine(tx, "offer"))
+			if (!dontaddtodb && pwalletMain && !theOffer.vchLinkOffer.empty() && IsSyscoinTxMine(tx, "offer"))
 			{	
 				// theOffer.vchLinkOffer is the linked offer guid
 				// theOffer is this reseller offer used to get pubkey to send to offeraccept as first parameter
-				string strError = makeOfferLinkAcceptTX(theOfferAccept, vvchArgs[0], theOfferAccept.vchMessage, theOffer.vchLinkOffer, tx.GetHash().GetHex(), theOffer, alias, block, dontaddtodb);
+				string strError = makeOfferLinkAcceptTX(theOfferAccept, vvchArgs[0], theOfferAccept.vchMessage, theOffer.vchLinkOffer, tx.GetHash().GetHex(), theOffer, alias, block);
 				if(strError != "")		
 				{
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 117 - " + _("Offer link accept failure:") + " " + strError;	
@@ -1610,9 +1609,9 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			// only if we are the root offer owner do we even consider xfering a cert					
  			// purchased a cert so xfer it
 			// also can't auto xfer offer paid in btc, need to do manually
- 			if(pwalletMain && theOfferAccept.txBTCId.IsNull() && IsSyscoinTxMine(tx, "offer") && !theOffer.vchCert.empty() && theOffer.vchLinkOffer.empty())
+ 			if(!dontaddtodb && pwalletMain && theOfferAccept.txBTCId.IsNull() && IsSyscoinTxMine(tx, "offer") && !theOffer.vchCert.empty() && theOffer.vchLinkOffer.empty())
  			{
- 				string strError = makeTransferCertTX(theOffer, theOfferAccept, dontaddtodb);
+ 				string strError = makeTransferCertTX(theOffer, theOfferAccept);
  				if(strError != "")
 				{
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 118 - " + _("Transfer certificate failure:") + " " + strError;	
