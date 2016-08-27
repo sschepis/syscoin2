@@ -56,7 +56,7 @@ bool foundOfferLinkInWallet(const vector<unsigned char> &vchOffer, const vector<
 						if(foundOffer)
 							break;
 
-						if (!foundOffer && opIn == OP_OFFER_ACCEPT && vvchIn[2] != vchFromString("1")) {
+						if (!foundOffer && opIn == OP_OFFER_ACCEPT) {
 							foundOffer = true; 
 							vchOfferAcceptLink = vvchIn[1];
 						}
@@ -450,9 +450,8 @@ bool DecodeOfferTx(const CTransaction& tx, int& op, int& nOut,
 	// Strict check - bug disallowed
 	for (unsigned int i = 0; i < tx.vout.size(); i++) {
 		const CTxOut& out = tx.vout[i];
-		// skip the special buyer feedback output (we should have the normal offer accept output also)
 		if (DecodeOfferScript(out.scriptPubKey, op, vvch)) {
-			if(op == OP_OFFER_ACCEPT && vvch[2] == vchFromString("1"))
+			if(op == OP_OFFER_ACCEPT)
 				continue;
 			nOut = i; found = true;
 			break;
@@ -3256,7 +3255,7 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 				break;
 
 			if (!foundOffer && IsOfferOp(opIn)) {
-				if(opIn == OP_OFFER_ACCEPT && vvchIn[2] != vchFromString("1"))
+				if(opIn == OP_OFFER_ACCEPT)
 				{
 					vchOfferAcceptLink = vvchIn[1];
 					foundOffer = true; 
@@ -3515,7 +3514,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 						break;
 
 					if (!foundOffer && IsOfferOp(opIn)) {
-						if(opIn == OP_OFFER_ACCEPT && vvchIn[2] != vchFromString("1"))
+						if(opIn == OP_OFFER_ACCEPT)
 						{
 							vchOfferAcceptLink = vvchIn[1];
 							foundOffer = true; 
@@ -3547,7 +3546,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 				oOfferAccept.push_back(Pair("price", strprintf("%.*f", precision, theOffer.GetPrice() ))); 
 				oOfferAccept.push_back(Pair("total", strprintf("%.*f", precision, theOfferAccept.nPrice * theOfferAccept.nQty ))); 
 				// this accept is for me(something ive sold) if this offer is mine
-				oOfferAccept.push_back(Pair("ismine", isAcceptMine && IsSyscoinTxMine(aliastx, "alias")? "true" : "false"));
+				oOfferAccept.push_back(Pair("ismine", IsSyscoinTxMine(acceptTx, "offer") &&  && IsSyscoinTxMine(aliastx, "alias")? "true" : "false"));
 
 				if(!theOfferAccept.txBTCId.IsNull())
 					oOfferAccept.push_back(Pair("status","paid(BTC)"));
@@ -3555,14 +3554,14 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 					oOfferAccept.push_back(Pair("status","paid"));
 
 				// if its your offer accept (paid to you) but alias is not yours anymore then skip
-				if(isAcceptMine && !IsSyscoinTxMine(aliastx, "alias"))
+				if(IsSyscoinTxMine(acceptTx, "offer") && && !IsSyscoinTxMine(aliastx, "alias"))
 					continue;
 				CAliasIndex theBuyerAlias;
 				CTransaction buyeraliastx;
 				GetTxOfAlias(theOfferAccept.vchBuyerAlias, theBuyerAlias, buyeraliastx, true);
 
 				// if you paid for this offer but the buyer alias isn't yours anymore skip
-				if(!isAcceptMine && !IsSyscoinTxMine(buyeraliastx, "alias"))
+				if(!IsSyscoinTxMine(acceptTx, "offer") && && !IsSyscoinTxMine(buyeraliastx, "alias"))
 					continue;				
 				string strMessage = string("");
 				if(!DecryptMessage(theAlias.vchPubKey, theOfferAccept.vchMessage, strMessage))
