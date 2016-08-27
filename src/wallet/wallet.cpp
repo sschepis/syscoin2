@@ -1896,7 +1896,7 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
 	if(wtxInOffer != NULL)
 	{
 		const CTransaction& txIn = wtxInOffer[0];
-		nTxOutOffer = IndexOfOfferOutput(txIn, false);
+		nTxOutOffer = IndexOfOfferOutput(txIn);
 		if (nTxOutOffer < 0)
 		{
 			strFailReason = _("Can't determine type of offer input into syscoin service transaction");
