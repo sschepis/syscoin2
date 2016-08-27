@@ -1225,8 +1225,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				}
 				else if(theOffer.vchLinkOffer.empty())
 				{
-	
-					else if(theCert.vchAlias != theOffer.vchAlias)
+					if(theCert.vchAlias != theOffer.vchAlias)
 					{
 						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 86a - " + _("Cannot purchase this offer because the certificate has been transferred or it is linked to another offer");
 						return true;
