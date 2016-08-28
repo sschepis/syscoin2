@@ -34,7 +34,7 @@ public:
 	unsigned char nRating;
 	unsigned char nFeedbackUser;
 	uint64_t nHeight;
-	
+	uint256 txHash;
     CAcceptFeedback() {
         SetNull();
     }
@@ -50,6 +50,7 @@ public:
 		READWRITE(nRating);
 		READWRITE(nFeedbackUser);
 		READWRITE(nHeight);
+		READWRITE(txHash);
 	}
 
     friend bool operator==(const CAcceptFeedback &a, const CAcceptFeedback &b) {
@@ -58,6 +59,7 @@ public:
 		&& a.nRating == b.nRating
 		&& a.nFeedbackUser == b.nFeedbackUser
 		&& a.nHeight == b.nHeight
+		&& a.txHash == b.txHash
         );
     }
 
@@ -66,6 +68,7 @@ public:
 		nRating = b.nRating;
 		nFeedbackUser = b.nFeedbackUser;
 		nHeight = b.nHeight;
+		txHash = b.txHash;
         return *this;
     }
 
@@ -73,8 +76,8 @@ public:
         return !(a == b);
     }
 
-    void SetNull() { nHeight = 0; nRating = 0; nFeedbackUser = 0; vchFeedback.clear();}
-    bool IsNull() const { return ( nHeight == 0 && nRating == 0 && nFeedbackUser == 0 && vchFeedback.empty()); }
+    void SetNull() { txHash.SetNull() && nHeight = 0; nRating = 0; nFeedbackUser = 0; vchFeedback.clear();}
+    bool IsNull() const { return ( txHash.IsNull() && nHeight == 0 && nRating == 0 && nFeedbackUser == 0 && vchFeedback.empty()); }
 };
 struct acceptfeedbacksort {
     bool operator ()(const CAcceptFeedback& a, const CAcceptFeedback& b) {

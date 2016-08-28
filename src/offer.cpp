@@ -1326,6 +1326,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 90c - " + _("Cannot leave multiple seller feedbacks you must wait for a buyer reply first");
 					return true;
 				}
+				theOfferAccept.feedback[0].txHash = tx.GetHash();
 				theOfferAccept.feedback[0].nHeight = nHeight;
 				offerAccept.feedback.push_back(theOfferAccept.feedback[0]);			
 				if(!dontaddtodb)
@@ -3320,6 +3321,8 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 			if (pindex) {
 				sFeedbackTime = strprintf("%llu", pindex->nTime);
 			}
+			
+			oFeedback.push_back(Pair("txid", buyerFeedBacks[j].txHash.GetHex()));
 			oFeedback.push_back(Pair("time", sFeedbackTime));
 			oFeedback.push_back(Pair("rating", buyerFeedBacks[j].nRating));
 			oFeedback.push_back(Pair("feedbackuser", buyerFeedBacks[j].nFeedbackUser));
@@ -3336,6 +3339,7 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 			if (pindex) {
 				sFeedbackTime = strprintf("%llu", pindex->nTime);
 			}
+			oFeedback.push_back(Pair("txid", sellerFeedBacks[j].txHash.GetHex()));
 			oFeedback.push_back(Pair("time", sFeedbackTime));
 			oFeedback.push_back(Pair("rating", sellerFeedBacks[j].nRating));
 			oFeedback.push_back(Pair("feedbackuser", sellerFeedBacks[j].nFeedbackUser));
