@@ -33,7 +33,7 @@ public:
 	std::vector<unsigned char> vchFeedback;
 	unsigned char nRating;
 	unsigned char nFeedbackUser;
-	uint256 txHash;
+	uint64_t nHeight;
 	
     CAcceptFeedback() {
         SetNull();
