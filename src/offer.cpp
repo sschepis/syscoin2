@@ -3020,7 +3020,6 @@ UniValue offeracceptfeedback(const UniValue& params, bool fHelp) {
 		CKey vchSecret;
 		if (!pwalletMain->GetKey(keyID, vchSecret))
 			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 557 - " + _("Private key for buyer address is not know"));
-		foundBuyerKey = true;
 		wtxAliasIn = pwalletMain->GetWalletTx(buyeraliastx.GetHash());
 		if (wtxAliasIn == NULL)
 			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 557a - " + _("Buyer alias is not in your wallet"));
@@ -3032,6 +3031,7 @@ UniValue offeracceptfeedback(const UniValue& params, bool fHelp) {
 		scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << buyerAlias.vchAlias << buyerAlias.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
 		scriptPubKeyAlias += scriptPubKeyOrig;
 		vchLinkAlias = buyerAlias.vchAlias;
+		foundBuyerKey = true;
 	}
 	catch(...)
 	{
@@ -3047,7 +3047,6 @@ UniValue offeracceptfeedback(const UniValue& params, bool fHelp) {
 			CKey vchSecret;
 			if (!pwalletMain->GetKey(keyID, vchSecret))
 				throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 559 - " + _("Private key for seller address is not known"));
-			foundSellerKey = true;
 			wtxAliasIn = pwalletMain->GetWalletTx(selleraliastx.GetHash());
 			if (wtxAliasIn == NULL)
 				throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 559a - " + _("Seller alias is not in your wallet"));
@@ -3059,6 +3058,7 @@ UniValue offeracceptfeedback(const UniValue& params, bool fHelp) {
 			scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << sellerAlias.vchAlias << sellerAlias.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
 			scriptPubKeyAlias += scriptPubKeyOrig;
 			vchLinkAlias = sellerAlias.vchAlias;
+			foundSellerKey = true;
 		}
 		catch(...)
 		{
