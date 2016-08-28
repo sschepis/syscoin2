@@ -3199,8 +3199,6 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 		acceptOffer.nHeight = ca.nAcceptHeight;
 		if(ca.IsNull())
 			continue;
-		if(!ca.feedback.IsNull())
-			continue;
 		if(!acceptOffer.GetOfferFromList(vtxPos))
 			continue;
 		UniValue oOfferAccept(UniValue::VOBJ);
@@ -3219,6 +3217,8 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 			if (!IsSyscoinScript(txA.vout[j].scriptPubKey, op, vvch))
 				continue;
 			if(op != OP_OFFER_ACCEPT)
+				continue;
+			if(vvch[2] == vchFromString("1"))
 				continue;
 			if(ca.vchAcceptRand == vvch[1])
 				break;
