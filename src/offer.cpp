@@ -1304,7 +1304,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				// has this user (nFeedbackUser) already rated? if so set desired rating to 0
 				if(theOfferAccept.feedback[0].nFeedbackUser == ACCEPTBUYER && numBuyerRatings > 0)
 					theOfferAccept.feedback[0].nRating = 0;
-				else if(theOfferAccept.feedback.nFeedbackUser == ACCEPTSELLER && numSellerRatings > 0)
+				else if(theOfferAccept.feedback[0].nFeedbackUser == ACCEPTSELLER && numSellerRatings > 0)
 					theOfferAccept.feedback[0].nRating = 0;
 				if(feedbackBuyerCount >= 10 && theOfferAccept.feedback[0].nFeedbackUser == ACCEPTBUYER)
 				{
@@ -2899,13 +2899,13 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 
 void HandleAcceptFeedback(const COfferAccept& accept, COffer& offer, vector<COffer> &vtxPos)
 {
-	if(accept.feedback.nRating > 0)
+	if(accept.feedback[0].nRating > 0)
 	{
 		string aliasStr;
 		CPubKey key;
-		if(accept.feedback.nFeedbackUser == ACCEPTBUYER)
+		if(accept.feedback[0].nFeedbackUser == ACCEPTBUYER)
 			aliasStr = stringFromVch(accept.vchBuyerAlias);
-		else if(accept.feedback.nFeedbackUser == ACCEPTSELLER)
+		else if(accept.feedback[0].nFeedbackUser == ACCEPTSELLER)
 			aliasStr = stringFromVch(offer.vchAlias);
 		CSyscoinAddress address = CSyscoinAddress(aliasStr);
 		if(address.IsValid() && address.isAlias)
@@ -2917,7 +2917,7 @@ void HandleAcceptFeedback(const COfferAccept& accept, COffer& offer, vector<COff
 				
 				CAliasIndex alias = vtxPos.back();
 				alias.nRatingCount++;
-				alias.nRating += accept.feedback.nRating;
+				alias.nRating += accept.feedback[0].nRating;
 				PutToAliasList(vtxPos, alias);
 				paliasdb->WriteAlias(vchAlias, vchFromString(address.ToString()), vtxPos);
 			}
@@ -3083,7 +3083,8 @@ UniValue offeracceptfeedback(const UniValue& params, bool fHelp) {
 		sellerFeedback.vchFeedback = vchFeedback;
 		sellerFeedback.nRating = nRating;
 		sellerFeedback.nHeight = chainActive.Tip()->nHeight;
-		offer.accept.feedback = sellerFeedback;
+		offer.accept.feedback.clear();
+		offer.accept.feedback.push_back(sellerFeedback);
 		wtxAliasIn = pwalletMain->GetWalletTx(buyeraliastx.GetHash());
 		if (wtxAliasIn == NULL)
 			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 560a - " + _("Buyer alias is not in your wallet"));
@@ -3100,7 +3101,8 @@ UniValue offeracceptfeedback(const UniValue& params, bool fHelp) {
 		buyerFeedback.vchFeedback = vchFeedback;
 		buyerFeedback.nRating = nRating;
 		buyerFeedback.nHeight = chainActive.Tip()->nHeight;
-		offer.accept.feedback = buyerFeedback;
+		offer.accept.feedback.clear();
+		offer.accept.feedback.push_back(buyerFeedback);
 		wtxAliasIn = pwalletMain->GetWalletTx(selleraliastx.GetHash());
 		if (wtxAliasIn == NULL)
 			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 560c - " + _("Seller alias is not in your wallet"));
