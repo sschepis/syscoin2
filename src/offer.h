@@ -76,7 +76,7 @@ public:
         return !(a == b);
     }
 
-    void SetNull() { txHash.SetNull() && nHeight = 0; nRating = 0; nFeedbackUser = 0; vchFeedback.clear();}
+    void SetNull() { txHash.SetNull(); nHeight = 0; nRating = 0; nFeedbackUser = 0; vchFeedback.clear();}
     bool IsNull() const { return ( txHash.IsNull() && nHeight == 0 && nRating == 0 && nFeedbackUser == 0 && vchFeedback.empty()); }
 };
 struct acceptfeedbacksort {
