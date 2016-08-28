@@ -95,7 +95,7 @@ public:
 	std::vector<unsigned char> vchLinkAccept;	
 	std::vector<unsigned char> vchLinkOffer;
 	std::vector<unsigned char> vchMessage;
-	vector<CAcceptFeedback> feedback;
+	std::vector<CAcceptFeedback> feedback;
 	COfferAccept() {
         SetNull();
     }
