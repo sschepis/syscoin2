@@ -883,14 +883,9 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 50 - " + _("Invalid feedback transaction");
 					return error(errorMessage.c_str());
 				}
-				if(IsAliasOp(prevAliasOp))
+				if(!IsAliasOp(prevAliasOp))
 				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 50a - " + _("Must use alias as input to an accept feedback");
-					return error(errorMessage.c_str());
-				}
-				if (vvchPrevAliasArgs[0] != theOffer.vchLinkAlias)
-				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 51 - " + _("Offeraccept feedback mismatch");
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 51 - " + _("Must use alias as input to an accept feedback");
 					return error(errorMessage.c_str());
 				}
 				if(theOfferAccept.feedback.vchFeedback.empty())
@@ -933,7 +928,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			}
 			if (IsAliasOp(prevAliasOp) && theOffer.vchLinkAlias != vvchPrevAliasArgs[0])
 			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 57 - " + _("Whitelist alias guid mismatch");
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 57 - " + _("Alias input guid mismatch");
 				return error(errorMessage.c_str());
 			}
 			if (vvchArgs[1].size() > MAX_GUID_LENGTH)
@@ -1288,12 +1283,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					return true;
 				}
 				// ensure we don't add same feedback twice (feedback in db should be older than current height)
-				if(theOfferAccept.feedback.nHeight < nHeight)
-				{
-					theOfferAccept.feedback.nHeight = nHeight;
-					theOfferAccept.feedback.txHash = tx.GetHash();
-				}
-				else
+				if(theOfferAccept.feedback.nHeight >= nHeight)
 				{
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 89b - " + _("Feedback in db is newer than the current height");
 					return true;
@@ -2533,9 +2523,11 @@ bool CreateLinkedOfferAcceptRecipients(vector<CRecipient> &vecSend, const CAmoun
 			continue;
 		if(vvchOffer[0] != offerGUID)
 			continue;
+		if(vvchOffer[2] != vchFromString("0"))
+			continue;
 		COffer offer(tx);
 		CAmount nTotalValue = ( nPrice * offer.accept.nQty );
-		scriptPubKeyAccept << CScript::EncodeOP_N(OP_OFFER_ACCEPT) << linkedOfferGUID << vvchOffer[1] << vvchOffer[2] << vchHashOffer << OP_2DROP << OP_2DROP << OP_DROP; 
+		scriptPubKeyAccept << CScript::EncodeOP_N(OP_OFFER_ACCEPT) << linkedOfferGUID << vvchOffer[1] << vchFromString("0") << vchHashOffer << OP_2DROP << OP_2DROP << OP_DROP; 
 		scriptPubKeyAccept += scriptPubKeyDestination;
 		scriptPubKeyPayment += scriptPubKeyDestination;
 		CRecipient acceptRecipient;
