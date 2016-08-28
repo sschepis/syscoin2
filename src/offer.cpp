@@ -2881,7 +2881,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	return res;
 }
 
-void HandleAcceptFeedback(const COfferAccept& accept, const COffer& offer, const vector<COffer> &vtxPos)
+void HandleAcceptFeedback(const COfferAccept& accept, const COffer& offer, vector<COffer> &vtxPos)
 {
 	if(accept.feedback.nRating > 0)
 	{

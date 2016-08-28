@@ -483,7 +483,7 @@ public:
             std::vector<std::pair<std::vector<unsigned char>, COffer> >& offerScan);
 
 };
-void HandleAcceptFeedback(const COfferAccept& accept, const COffer& offer, const std::vector<COffer> &vtxPos);
+void HandleAcceptFeedback(const COfferAccept& accept, const COffer& offer, std::vector<COffer> &vtxPos);
 void FindFeedbackInAccept(const std::vector<unsigned char> &vchAccept, const std::vector<COffer> &vtxPos, int &numBuyerRatings, int &numSellerRatings, int &feedbackBuyerCount, int &feedbackSellerCount);
 void GetFeedbackInAccept(std::vector<CAcceptFeedback> &feedback, int &avgRating, const std::vector<unsigned char> &vchAccept, const AcceptUser type, const std::vector<COffer> &vtxPos);
 bool GetAcceptByHash(std::vector<COffer> &offerList,  COfferAccept &ca);
