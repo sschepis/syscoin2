@@ -1313,7 +1313,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				}
 				if(feedbackSellerCount >= 10 && theOfferAccept.feedback[0].nFeedbackUser == ACCEPTSELLER)
 				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 90a - " + _("Cannot exceed 10 seller feedbacks"");
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 90a - " + _("Cannot exceed 10 seller feedbacks");
 					return true;
 				}
 				if(theOfferAccept.feedback[0].nFeedbackUser == ACCEPTBUYER && numBuyerRatings > numSellerRatings)
@@ -3236,13 +3236,13 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 		vector<CAcceptFeedback> buyerFeedBacks, sellerFeedBacks;
 		if( !theOffer.vchLinkOffer.empty())
 		{
-			GetFeedback(buyerFeedBacks, avgBuyerRating, ca.vchAcceptRand,ACCEPTBUYER, ca.feedback);
-			GetFeedback(sellerFeedBacks, avgSellerRating, ca.vchAcceptRand,ACCEPTSELLER, ca.feedback);
+			GetFeedback(buyerFeedBacks, avgBuyerRating, ACCEPTBUYER, ca.feedback);
+			GetFeedback(sellerFeedBacks, avgSellerRating, ACCEPTSELLER, ca.feedback);
 		}
 		else
 		{
-			GetFeedback(buyerFeedBacks, avgBuyerRating, ca.vchAcceptRand,ACCEPTBUYER, ca.feedback);
-			GetFeedback(sellerFeedBacks, avgSellerRating, ca.vchAcceptRand,ACCEPTSELLER, ca.feedback);
+			GetFeedback(buyerFeedBacks, avgBuyerRating, ACCEPTBUYER, ca.feedback);
+			GetFeedback(sellerFeedBacks, avgSellerRating, ACCEPTSELLER, ca.feedback);
 		}
         string sHeight = strprintf("%llu", ca.nHeight);
 		oOfferAccept.push_back(Pair("id", stringFromVch(vchAcceptRand)));
