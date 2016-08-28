@@ -1311,8 +1311,9 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 90b - " + _("Cannot leave multiple seller feedbacks you must wait for a buyer reply first");
 					return true;
 				}
+				offerAccept.feedback = theOfferAccept.feedback;
 				if(!dontaddtodb)
-					HandleAcceptFeedback(theOfferAccept, theOffer);	
+					HandleAcceptFeedback(offerAccept, theOffer, vtxPos);	
 				return true;
 			
 			}
@@ -2880,7 +2881,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	return res;
 }
 
-void HandleAcceptFeedback(const COfferAccept& accept, const COffer& offer)
+void HandleAcceptFeedback(const COfferAccept& accept, const COffer& offer, const vector<COffer> &vtxPos)
 {
 	if(accept.feedback.nRating > 0)
 	{
@@ -2904,9 +2905,10 @@ void HandleAcceptFeedback(const COfferAccept& accept, const COffer& offer)
 				PutToAliasList(vtxPos, alias);
 				paliasdb->WriteAlias(vchAlias, vchFromString(address.ToString()), vtxPos);
 			}
-		}
-			
+		}		
 	}
+	offer.PutToOfferList(vtxPos);
+	pofferdb->WriteOffer(offer.vchOffer, vtxPos))
 }
 void FindFeedbackInAccept(const vector<unsigned char> &vchAccept,  const vector<COffer> &vtxPos, int &numBuyerRatings, int &numSellerRatings, int &feedbackBuyerCount, int &feedbackSellerCount)
 {
