@@ -56,7 +56,7 @@ bool foundOfferLinkInWallet(const vector<unsigned char> &vchOffer, const vector<
 						if(foundOffer)
 							break;
 
-						if (!foundOffer && opIn == OP_OFFER_ACCEPT) {
+						if (!foundOffer && opIn == OP_OFFER_ACCEPT && vvchIn[2] != vchFromString("1"))) {
 							foundOffer = true; 
 							vchOfferAcceptLink = vvchIn[1];
 						}
@@ -451,7 +451,7 @@ bool DecodeOfferTx(const CTransaction& tx, int& op, int& nOut,
 	for (unsigned int i = 0; i < tx.vout.size(); i++) {
 		const CTxOut& out = tx.vout[i];
 		if (DecodeOfferScript(out.scriptPubKey, op, vvch)) {
-			if(op == OP_OFFER_ACCEPT)
+			if(op == OP_OFFER_ACCEPT && vvch[2] == vchFromString("1"))
 				continue;
 			nOut = i; found = true;
 			break;
@@ -3199,8 +3199,6 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 				continue;
 			if(op != OP_OFFER_ACCEPT)
 				continue;
-			if(vvch[2] == vchFromString("1"))
-				continue;
 			if(ca.vchAcceptRand == vvch[1])
 				break;
 		}
@@ -3619,7 +3617,9 @@ UniValue offerlist(const UniValue& params, bool fHelp) {
             	|| !IsOfferOp(op) 
             	|| (op == OP_OFFER_ACCEPT))
                 continue;
-
+			// dont show feedback outputs as accepts
+			if(vvch[2] == vchFromString("1"))
+				continue;
             // get the txn name
             vchOffer = vvch[0];
 
