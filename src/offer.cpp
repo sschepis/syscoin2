@@ -2985,7 +2985,7 @@ UniValue offeracceptfeedback(const UniValue& params, bool fHelp) {
     CTransaction tx;
 	COffer offer;
 	COfferAccept theOfferAccept;
-	const CWalletTx *wtxAliasIn;
+	const CWalletTx *wtxAliasIn = NULL;
 
 	if (!GetTxOfOfferAccept(vchOffer, vchAcceptRand, offer, theOfferAccept, tx))
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 553 - " + _("Could not find this offer accept"));
