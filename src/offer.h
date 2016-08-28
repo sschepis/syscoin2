@@ -34,7 +34,6 @@ public:
 	unsigned char nRating;
 	unsigned char nFeedbackUser;
 	uint256 txHash;
-	uint64_t nHeight;
 	
     CAcceptFeedback() {
         SetNull();
@@ -51,7 +50,6 @@ public:
 		READWRITE(nRating);
 		READWRITE(nFeedbackUser);
 		READWRITE(nHeight);
-		READWRITE(txHash);
 	}
 
     friend bool operator==(const CAcceptFeedback &a, const CAcceptFeedback &b) {
@@ -60,7 +58,6 @@ public:
 		&& a.nRating == b.nRating
 		&& a.nFeedbackUser == b.nFeedbackUser
 		&& a.nHeight == b.nHeight
-		&& a.txHash == b.txHash
         );
     }
 
@@ -69,7 +66,6 @@ public:
 		nRating = b.nRating;
 		nFeedbackUser = b.nFeedbackUser;
 		nHeight = b.nHeight;
-		txHash = b.txHash;
         return *this;
     }
 
@@ -77,8 +73,8 @@ public:
         return !(a == b);
     }
 
-    void SetNull() { txHash.SetNull(); nHeight = 0; nRating = 0; nFeedbackUser = 0; vchFeedback.clear();}
-    bool IsNull() const { return (txHash.IsNull() && nHeight == 0 && nRating == 0 && nFeedbackUser == 0 && vchFeedback.empty()); }
+    void SetNull() { nHeight = 0; nRating = 0; nFeedbackUser = 0; vchFeedback.clear();}
+    bool IsNull() const { return ( nHeight == 0 && nRating == 0 && nFeedbackUser == 0 && vchFeedback.empty()); }
 };
 struct acceptfeedbacksort {
     bool operator ()(const CAcceptFeedback& a, const CAcceptFeedback& b) {
@@ -99,7 +95,7 @@ public:
 	std::vector<unsigned char> vchLinkAccept;	
 	std::vector<unsigned char> vchLinkOffer;
 	std::vector<unsigned char> vchMessage;
-	CAcceptFeedback feedback;
+	vector<CAcceptFeedback> feedBack,
 	COfferAccept() {
         SetNull();
     }
@@ -161,8 +157,8 @@ public:
         return !(a == b);
     }
 
-    void SetNull() { vchMessage.clear(); vchLinkAccept.clear(); vchLinkOffer.clear(); feedback.SetNull(); vchEscrow.clear(); vchAcceptRand.clear(); nHeight = nAcceptHeight = nPrice = nQty = 0; txHash.SetNull(); txBTCId.SetNull(); vchBuyerAlias.clear();}
-    bool IsNull() const { return (vchMessage.empty() && vchLinkAccept.empty() && vchLinkOffer.empty() && feedback.IsNull() && vchEscrow.empty() && vchAcceptRand.empty() && txHash.IsNull() && nHeight == 0 && nAcceptHeight == 0 &&nPrice == 0 && nQty == 0 && txBTCId.IsNull() && vchBuyerAlias.empty()); }
+    void SetNull() { vchMessage.clear(); vchLinkAccept.clear(); vchLinkOffer.clear(); feedback.clear(); vchEscrow.clear(); vchAcceptRand.clear(); nHeight = nAcceptHeight = nPrice = nQty = 0; txHash.SetNull(); txBTCId.SetNull(); vchBuyerAlias.clear();}
+    bool IsNull() const { return (vchMessage.empty() && vchLinkAccept.empty() && vchLinkOffer.empty() && feedback.empty() && vchEscrow.empty() && vchAcceptRand.empty() && txHash.IsNull() && nHeight == 0 && nAcceptHeight == 0 &&nPrice == 0 && nQty == 0 && txBTCId.IsNull() && vchBuyerAlias.empty()); }
 
 };
 class COfferLinkWhitelistEntry {
@@ -484,8 +480,8 @@ public:
 
 };
 void HandleAcceptFeedback(const COfferAccept& accept, COffer& offer, std::vector<COffer> &vtxPos);
-void FindFeedbackInAccept(const std::vector<unsigned char> &vchAccept, const std::vector<COffer> &vtxPos, int &numBuyerRatings, int &numSellerRatings, int &feedbackBuyerCount, int &feedbackSellerCount);
-void GetFeedbackInAccept(std::vector<CAcceptFeedback> &feedback, int &avgRating, const std::vector<unsigned char> &vchAccept, const AcceptUser type, const std::vector<COffer> &vtxPos);
+void FindFeedback(const std::vector<CAcceptFeedback> &feedback, int &numBuyerRatings, int &numSellerRatings, int &feedbackBuyerCount, int &feedbackSellerCount);
+void GetFeedback(std::vector<CAcceptFeedback> &feedback, int &avgRating, const AcceptUser type, const std::vector<CAcceptFeedback>& feedBack);
 bool GetAcceptByHash(std::vector<COffer> &offerList,  COfferAccept &ca);
 bool GetTxOfOfferAccept(const std::vector<unsigned char> &vchOffer, const std::vector<unsigned char> &vchOfferAccept,
 		COffer &theOffer, COfferAccept &theOfferAccept, CTransaction& tx);

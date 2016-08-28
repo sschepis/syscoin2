@@ -57,7 +57,7 @@ static bool CreateSyscoinTransactionRecord(TransactionRecord& sub, int op, const
 		break;
 	case OP_OFFER_ACCEPT:
 		offer = COffer(wtx);
-		if(!offer.accept.feedback.IsNull())
+		if(!offer.accept.feedback.empty())
 		{
 			if(type == SEND)
 				sub.type = TransactionRecord::OfferAcceptFeedback;
