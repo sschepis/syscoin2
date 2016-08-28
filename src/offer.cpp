@@ -2908,7 +2908,7 @@ void HandleAcceptFeedback(const COfferAccept& accept, const COffer& offer, vecto
 		}		
 	}
 	offer.PutToOfferList(vtxPos);
-	pofferdb->WriteOffer(offer.vchOffer, vtxPos))
+	pofferdb->WriteOffer(offer.vchOffer, vtxPos);
 }
 void FindFeedbackInAccept(const vector<unsigned char> &vchAccept,  const vector<COffer> &vtxPos, int &numBuyerRatings, int &numSellerRatings, int &feedbackBuyerCount, int &feedbackSellerCount)
 {
