@@ -56,7 +56,7 @@ bool foundOfferLinkInWallet(const vector<unsigned char> &vchOffer, const vector<
 						if(foundOffer)
 							break;
 
-						if (!foundOffer && opIn == OP_OFFER_ACCEPT && vvchIn[2] != vchFromString("1"))) {
+						if (!foundOffer && opIn == OP_OFFER_ACCEPT) {
 							foundOffer = true; 
 							vchOfferAcceptLink = vvchIn[1];
 						}
