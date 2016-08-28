@@ -3019,14 +3019,8 @@ UniValue offeracceptfeedback(const UniValue& params, bool fHelp) {
 			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 556 - " + _("Buyer address does not refer to a key"));
 		CKey vchSecret;
 		if (!pwalletMain->GetKey(keyID, vchSecret))
-			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 557 - " + _("Private key for buyer address is not know"));
-		wtxAliasIn = pwalletMain->GetWalletTx(buyeraliastx.GetHash());
-		if (wtxAliasIn == NULL)
-			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 557a - " + _("Buyer alias is not in your wallet"));
+			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 557 - " + _("Private key for buyer address is not known"));
 
-		if (ExistsInMempool(buyerAlias.vchAlias, OP_ALIAS_ACTIVATE) || ExistsInMempool(buyerAlias.vchAlias, OP_ALIAS_UPDATE)) {
-			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 557b - There are pending operations on that alias");
-		}
 		scriptPubKeyOrig= GetScriptForDestination(buyerKey.GetID());
 		scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << buyerAlias.vchAlias << buyerAlias.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
 		scriptPubKeyAlias += scriptPubKeyOrig;
@@ -3037,34 +3031,24 @@ UniValue offeracceptfeedback(const UniValue& params, bool fHelp) {
 	{
 		foundBuyerKey = false;
 	}
-	if(!foundBuyerKey)
-	{
-		try
-		{
-			CKeyID keyID;
-			if (!sellerAddress.GetKeyID(keyID))
-				throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 558 - " + _("Seller address does not refer to a key"));
-			CKey vchSecret;
-			if (!pwalletMain->GetKey(keyID, vchSecret))
-				throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 559 - " + _("Private key for seller address is not known"));
-			wtxAliasIn = pwalletMain->GetWalletTx(selleraliastx.GetHash());
-			if (wtxAliasIn == NULL)
-				throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 559a - " + _("Seller alias is not in your wallet"));
 
-			if (ExistsInMempool(sellerAlias.vchAlias, OP_ALIAS_ACTIVATE) || ExistsInMempool(sellerAlias.vchAlias, OP_ALIAS_UPDATE)) {
-				throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 559b - There are pending operations on that alias");
-			}
-			scriptPubKeyOrig= GetScriptForDestination(sellerKey.GetID());
-			scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << sellerAlias.vchAlias << sellerAlias.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
-			scriptPubKeyAlias += scriptPubKeyOrig;
-			vchLinkAlias = sellerAlias.vchAlias;
-			foundSellerKey = true;
-		}
-		catch(...)
-		{
-			foundSellerKey = false;
-		}
+	try
+	{
+		CKeyID keyID;
+		if (!sellerAddress.GetKeyID(keyID))
+			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 558 - " + _("Seller address does not refer to a key"));
+		CKey vchSecret;
+		if (!pwalletMain->GetKey(keyID, vchSecret))
+			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 559 - " + _("Private key for seller address is not known"));
+		vchLinkAlias = sellerAlias.vchAlias;
+		foundSellerKey = true;
+		foundBuyerKey = false;
 	}
+	catch(...)
+	{
+		foundSellerKey = false;
+	}
+	
 	
      	// check for existing escrow 's
 	if (ExistsInMempool(vvch[0], OP_OFFER_ACCEPT)) {
@@ -3082,6 +3066,14 @@ UniValue offeracceptfeedback(const UniValue& params, bool fHelp) {
 		sellerFeedback.nRating = nRating;
 		sellerFeedback.nHeight = chainActive.Tip()->nHeight;
 		offer.accept.feedback = sellerFeedback;
+		wtxAliasIn = pwalletMain->GetWalletTx(buyeraliastx.GetHash());
+		if (wtxAliasIn == NULL)
+			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 560a - " + _("Buyer alias is not in your wallet"));
+
+		if (ExistsInMempool(buyerAlias.vchAlias, OP_ALIAS_ACTIVATE) || ExistsInMempool(buyerAlias.vchAlias, OP_ALIAS_UPDATE)) {
+			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 5660b - There are pending operations on that alias");
+		}
+
 	}
 	// seller
 	else if(foundSellerKey)
@@ -3090,7 +3082,18 @@ UniValue offeracceptfeedback(const UniValue& params, bool fHelp) {
 		buyerFeedback.vchFeedback = vchFeedback;
 		buyerFeedback.nRating = nRating;
 		buyerFeedback.nHeight = chainActive.Tip()->nHeight;
-		offer.accept.feedback = buyerFeedback;	
+		offer.accept.feedback = buyerFeedback;
+		wtxAliasIn = pwalletMain->GetWalletTx(selleraliastx.GetHash());
+		if (wtxAliasIn == NULL)
+			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 560c - " + _("Seller alias is not in your wallet"));
+
+		if (ExistsInMempool(sellerAlias.vchAlias, OP_ALIAS_ACTIVATE) || ExistsInMempool(sellerAlias.vchAlias, OP_ALIAS_UPDATE)) {
+			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 560d - There are pending operations on that alias");
+		}
+		scriptPubKeyOrig= GetScriptForDestination(sellerKey.GetID());
+		scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << sellerAlias.vchAlias << sellerAlias.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
+		scriptPubKeyAlias += scriptPubKeyOrig;
+
 	}
 	else
 	{
