@@ -26,7 +26,7 @@ CScript RemoveOfferScriptPrefix(const CScript& scriptIn);
 extern bool IsSys21Fork(const uint64_t& nHeight);
 enum FeedbackUser {
     FEEDBACKBUYER=1,
-	FEEDBACKBUYER=2,
+	FEEDBACKSELLER=2,
 	FEEDBACKARBITER=3
 };
 class CFeedback {
