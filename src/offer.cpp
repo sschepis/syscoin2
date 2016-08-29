@@ -1319,8 +1319,8 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 90c - " + _("Cannot leave multiple seller feedbacks you must wait for a buyer reply first");
 					return true;
 				}
-				offer.accept.feedback[0].txHash = tx.GetHash();
-				offer.accept.feedback[0].nHeight = nHeight;
+				theOfferAccept.feedback[0].txHash = tx.GetHash();
+				theOfferAccept.feedback[0].nHeight = nHeight;
 				offer.accept.feedback.push_back(theOfferAccept.feedback[0]);	
 				if(!dontaddtodb)
 					HandleAcceptFeedback(offer.accept, offer, vtxPos);	
