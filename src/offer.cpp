@@ -1302,12 +1302,12 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 90 - " + _("Cannot exceed 10 buyer feedbacks");
 					return true;
 				}
-				if(feedbackSellerCount >= 10 && theOfferAccept.feedback[0].nFeedbackUser == ACCEPTSELLER)
+				else if(feedbackSellerCount >= 10 && theOfferAccept.feedback[0].nFeedbackUser == ACCEPTSELLER)
 				{
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 90a - " + _("Cannot exceed 10 seller feedbacks");
 					return true;
 				}
-				if(theOfferAccept.feedback[0].nFeedbackUser == ACCEPTBUYER && numBuyerRatings > numSellerRatings)
+				else if(theOfferAccept.feedback[0].nFeedbackUser == ACCEPTBUYER && numBuyerRatings > numSellerRatings)
 				{
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 90b - " + _("Cannot leave multiple buyer feedbacks you must wait for a seller reply first");
 					return true;

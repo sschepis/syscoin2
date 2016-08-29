@@ -458,7 +458,9 @@ BOOST_AUTO_TEST_CASE (generate_offeracceptfeedback)
 
 	// then buyer can leave feedback
 	OfferAcceptFeedback("node2", offerguid, acceptguid, "feedbackbuyer", "5", ACCEPTSELLER, true);
-	// buyer can't leave feedback twice in a row
+	// he can leave one more reply if he wishes to
+	OfferAcceptFeedback("node2", offerguid, acceptguid, "feedbackbuyer2", "5", A4CEPTSELLER, true);
+	// buyer can't leave more than 2 feedbacks without a reply
 	BOOST_CHECK_THROW(CallRPC("node2", offerfeedbackstr), runtime_error);
 
 	// create up to 10 replies each
@@ -487,7 +489,8 @@ BOOST_AUTO_TEST_CASE (generate_offeracceptfeedback)
 
 	// then seller can leave feedback
 	OfferAcceptFeedback("node1", offerguid, acceptguid, "feedbackseller", "5", ACCEPTBUYER, true);
-	// seller can't leave feedback twice in a row
+	OfferAcceptFeedback("node1", offerguid, acceptguid, "feedbackseller2", "4", ACCEPTBUYER, true);
+	// seller can't leave feedback two replies in a row
 	BOOST_CHECK_THROW(CallRPC("node1", offerfeedbackstr), runtime_error);
 
 
