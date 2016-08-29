@@ -1254,7 +1254,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				// if feedback is for buyer then we need to ensure attached input alias was from seller
 				if(theOfferAccept.feedback[0].nFeedbackUser == ACCEPTBUYER)
 				{
-					if(theOffer.vchLinkAlias != offer.vchAlias)
+					if(serializedOffer.vchLinkAlias != offer.vchAlias)
 					{
 						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 88a - " + _("Only seller can leaver buyer feedback");
 						return true;
@@ -1262,7 +1262,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				}
 				else if(theOfferAccept.feedback[0].nFeedbackUser == ACCEPTSELLER)
 				{
-					if(theOffer.vchLinkAlias != offerAccept.vchBuyerAlias)
+					if(serializedOffer.vchLinkAlias != offerAccept.vchBuyerAlias)
 					{
 						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 88b - " + _("Only buyer can leave seller feedback");
 						return true;
@@ -3084,7 +3084,9 @@ UniValue offeracceptfeedback(const UniValue& params, bool fHelp) {
 		if (ExistsInMempool(buyerAlias.vchAlias, OP_ALIAS_ACTIVATE) || ExistsInMempool(buyerAlias.vchAlias, OP_ALIAS_UPDATE)) {
 			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 5660b - There are pending operations on that alias");
 		}
-
+		scriptPubKeyOrig= GetScriptForDestination(buyerKey.GetID());
+		scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << buyeraliastx.vchAlias << buyeraliastx.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
+		scriptPubKeyAlias += scriptPubKeyOrig;
 	}
 	// seller
 	else if(foundSellerKey)
