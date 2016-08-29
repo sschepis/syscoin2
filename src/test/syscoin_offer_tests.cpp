@@ -481,7 +481,7 @@ BOOST_AUTO_TEST_CASE (generate_offeracceptfeedback)
 
 	// perform a valid accept
 	acceptguid = OfferAccept("node1", "node2", "buyeraliasfeedback", offerguid, "1", "message");
-	GenerateBlocks("node2", 5);
+	GenerateBlocks(5, "node2");
 	// this time buyer leaves feedback first
 	OfferAcceptFeedback("node2", offerguid, acceptguid, "feedbackbuyer", "1", ACCEPTSELLER, true);
 	// buyer can't leave feedback twice in a row
