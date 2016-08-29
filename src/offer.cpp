@@ -414,8 +414,7 @@ bool GetTxOfOfferAccept(const vector<unsigned char> &vchOffer, const vector<unsi
 	GetAcceptByHash(vtxPos, theOfferAccept, theOffer);
 	if(theOfferAccept.IsNull())
 		return false;
-	int nHeight = vtxPos.back().nHeight;
-	if ((nHeight + GetOfferExpirationDepth())
+	if (( vtxPos.back().nHeight + GetOfferExpirationDepth())
 			< chainActive.Tip()->nHeight) {
 		string offer = stringFromVch(vchOfferAccept);
 		if(fDebug)
@@ -423,7 +422,7 @@ bool GetTxOfOfferAccept(const vector<unsigned char> &vchOffer, const vector<unsi
 		return false;
 	}
 
-	if (!GetSyscoinTransaction(nHeight, theOfferAccept.txHash, tx, Params().GetConsensus()))
+	if (!GetSyscoinTransaction(theOfferAccept.nHeight, theOfferAccept.txHash, tx, Params().GetConsensus()))
 		return false;
 
 	return true;
@@ -1508,9 +1507,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					return true;
 				}					
 			}
-
 			
-
 
 			theOfferAccept.nHeight = nHeight;
 			theOfferAccept.vchAcceptRand = vvchArgs[1];
