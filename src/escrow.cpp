@@ -777,17 +777,17 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 							serializedEscrow.sellerFeedback.nRating = 0;
 						if(numArbiterRatings > 0)
 							serializedEscrow.arbiterFeedback.nRating = 0;
-						if(buyerFeedbackCount >= 10 && !serializedEscrow.buyerFeedback.IsNull())
+						if(feedbackBuyerCount >= 10 && !serializedEscrow.buyerFeedback.IsNull())
 						{
 							errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4049 - " + _("Cannot exceed 10 buyer feedbacks");
 							return true;
 						}
-						if(sellerFeedbackCount >= 10 && !serializedEscrow.sellerFeedback.IsNull())
+						if(feedbackSellerCount >= 10 && !serializedEscrow.sellerFeedback.IsNull())
 						{
 							errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4050 - " + _("Cannot exceed 10 seller feedbacks");
 							return true;
 						}
-						if(arbiterFeedbackCount >= 10 && !serializedEscrow.arbiterFeedback.IsNull())
+						if(feedbackArbiterCount >= 10 && !serializedEscrow.arbiterFeedback.IsNull())
 						{
 							errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4051 - " + _("Cannot exceed 10 arbiter feedbacks");
 							return true;
@@ -886,7 +886,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 	}
     return true;
 }
-void HandleEscrowFeedback(const CEscrow& serializedEscrow, const CEscrow& dbEscrow, vector<CEscrow> &vtxPos)
+void HandleEscrowFeedback(const CEscrow& serializedEscrow, CEscrow& dbEscrow, vector<CEscrow> &vtxPos)
 {
 	if(serializedEscrow.buyerFeedback.nRating > 0)
 	{
@@ -907,7 +907,7 @@ void HandleEscrowFeedback(const CEscrow& serializedEscrow, const CEscrow& dbEscr
 		}
 			
 	}
-	if(escrow.sellerFeedback.nRating > 0)
+	if(serializedEscrow.sellerFeedback.nRating > 0)
 	{
 		CSyscoinAddress address = CSyscoinAddress(stringFromVch(dbEscrow.vchSellerAlias));
 		if(address.IsValid() && address.isAlias)
@@ -924,7 +924,7 @@ void HandleEscrowFeedback(const CEscrow& serializedEscrow, const CEscrow& dbEscr
 			}
 		}
 	}
-	if(escrow.arbiterFeedback.nRating > 0)
+	if(serializedEscrow.arbiterFeedback.nRating > 0)
 	{
 		CSyscoinAddress address = CSyscoinAddress(stringFromVch(dbEscrow.vchArbiterAlias));
 		if(address.IsValid() && address.isAlias)

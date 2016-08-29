@@ -183,5 +183,5 @@ public:
 
 bool GetTxOfEscrow(const std::vector<unsigned char> &vchEscrow, CEscrow& txPos, CTransaction& tx);
 bool GetTxAndVtxOfEscrow(const std::vector<unsigned char> &vchEscrow, CEscrow& txPos, CTransaction& tx, std::vector<CEscrow> &vtxPos);
-void HandleEscrowFeedback(const CEscrow& serializedEscrow, const CEscrow& dbEscrow, std::vector<CEscrow> &vtxPos);
+void HandleEscrowFeedback(const CEscrow& serializedEscrow, CEscrow& dbEscrow, std::vector<CEscrow> &vtxPos);
 #endif // ESCROW_H
