@@ -480,7 +480,7 @@ BOOST_AUTO_TEST_CASE (generate_offeracceptfeedback)
 	BOOST_CHECK_THROW(r = CallRPC("node1", offerfeedbackstr), runtime_error);
 
 	// perform a valid accept
-	acceptguid = OfferAccept("node1", "node2", "buyeraliasfeedback", offerguid, "1", "message")
+	acceptguid = OfferAccept("node1", "node2", "buyeraliasfeedback", offerguid, "1", "message");
 	GenerateBlocks("node2", 5);
 	// this time buyer leaves feedback first
 	OfferAcceptFeedback("node2", offerguid, acceptguid, "feedbackbuyer", "1", ACCEPTSELLER, true);
