@@ -3030,10 +3030,6 @@ UniValue offeracceptfeedback(const UniValue& params, bool fHelp) {
 		CKey vchSecret;
 		if (!pwalletMain->GetKey(keyID, vchSecret))
 			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 557 - " + _("Private key for buyer address is not known"));
-
-		scriptPubKeyOrig= GetScriptForDestination(buyerKey.GetID());
-		scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << buyerAlias.vchAlias << buyerAlias.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
-		scriptPubKeyAlias += scriptPubKeyOrig;
 		vchLinkAlias = buyerAlias.vchAlias;
 		foundBuyerKey = true;
 	}
@@ -3087,6 +3083,7 @@ UniValue offeracceptfeedback(const UniValue& params, bool fHelp) {
 		scriptPubKeyOrig= GetScriptForDestination(buyerKey.GetID());
 		scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << buyerAlias.vchAlias << buyerAlias.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
 		scriptPubKeyAlias += scriptPubKeyOrig;
+		scriptPubKeyOrig= GetScriptForDestination(sellerKey.GetID());
 	}
 	// seller
 	else if(foundSellerKey)
@@ -3107,6 +3104,7 @@ UniValue offeracceptfeedback(const UniValue& params, bool fHelp) {
 		scriptPubKeyOrig= GetScriptForDestination(sellerKey.GetID());
 		scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << sellerAlias.vchAlias << sellerAlias.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
 		scriptPubKeyAlias += scriptPubKeyOrig;
+		scriptPubKeyOrig= GetScriptForDestination(buyerKey.GetID());
 
 	}
 	else
