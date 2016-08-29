@@ -3229,7 +3229,7 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 		if( !theOffer.vchLinkOffer.empty())
 		{
 			GetFeedback(buyerFeedBacks, avgBuyerRating, FEEDBACKBUYER, ca.feedback);
-			GetFeedback(sellerFeedBacks, avgSellerRating, FEEDBACKACCEPTSELLER, ca.feedback);
+			GetFeedback(sellerFeedBacks, avgSellerRating, FEEDBACKSELLER, ca.feedback);
 		}
 		else
 		{
