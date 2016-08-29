@@ -3085,7 +3085,7 @@ UniValue offeracceptfeedback(const UniValue& params, bool fHelp) {
 			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 5660b - There are pending operations on that alias");
 		}
 		scriptPubKeyOrig= GetScriptForDestination(buyerKey.GetID());
-		scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << buyeraliastx.vchAlias << buyeraliastx.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
+		scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << buyerAlias.vchAlias << buyerAlias.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
 		scriptPubKeyAlias += scriptPubKeyOrig;
 	}
 	// seller
