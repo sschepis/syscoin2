@@ -414,8 +414,7 @@ bool GetTxOfOfferAccept(const vector<unsigned char> &vchOffer, const vector<unsi
 	GetAcceptByHash(vtxPos, theOfferAccept, theOffer);
 	if(theOfferAccept.IsNull())
 		return false;
-	int nHeight = vtxPos.back().nHeight;
-	if ((nHeight + GetOfferExpirationDepth())
+	if (( vtxPos.back().nHeight + GetOfferExpirationDepth())
 			< chainActive.Tip()->nHeight) {
 		string offer = stringFromVch(vchOfferAccept);
 		if(fDebug)
@@ -423,7 +422,7 @@ bool GetTxOfOfferAccept(const vector<unsigned char> &vchOffer, const vector<unsi
 		return false;
 	}
 
-	if (!GetSyscoinTransaction(nHeight, theOfferAccept.txHash, tx, Params().GetConsensus()))
+	if (!GetSyscoinTransaction(theOffer.nHeight, theOffer.txHash, tx, Params().GetConsensus()))
 		return false;
 
 	return true;
@@ -950,6 +949,11 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			if (theOfferAccept.vchAcceptRand.size() > MAX_GUID_LENGTH)
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 60 - " + _("Offer accept hex guid too long");
+				return error(errorMessage.c_str());
+			}
+			if(theOfferAccept.vchAcceptRand != vvchArgs[1])
+			{
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 60a - " + _("Offer accept hex guid mismatch");
 				return error(errorMessage.c_str());
 			}
 			if (theOfferAccept.vchLinkAccept.size() > MAX_GUID_LENGTH)
@@ -1508,11 +1512,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					return true;
 				}					
 			}
-			
-
-			theOfferAccept.nHeight = nHeight;
-			theOfferAccept.vchAcceptRand = vvchArgs[1];
-			theOfferAccept.txHash = tx.GetHash();
 			theOffer.accept = theOfferAccept;
 		}
 		
@@ -3200,8 +3199,8 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
         // get transaction pointed to by offer
 
         CTransaction txA;
-        uint256 txHashA= ca.txHash;
-        if (!GetSyscoinTransaction(ca.nHeight, txHashA, txA, Params().GetConsensus()))
+        uint256 txHashA= acceptOffer.txHash;
+        if (!GetSyscoinTransaction(acceptOffer.nHeight, txHashA, txA, Params().GetConsensus()))
 		{
 			error(strprintf("failed to accept read transaction from disk: %s", txHashA.GetHex()).c_str());
 			continue;
@@ -3222,7 +3221,7 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 
 		const vector<unsigned char> &vchAcceptRand = vvch[1];		
 		string sTime;
-		CBlockIndex *pindex = chainActive[ca.nHeight];
+		CBlockIndex *pindex = chainActive[acceptOffer.nHeight];
 		if (pindex) {
 			sTime = strprintf("%llu", pindex->nTime);
 		}
@@ -3238,9 +3237,9 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 			GetFeedback(buyerFeedBacks, avgBuyerRating, ACCEPTBUYER, ca.feedback);
 			GetFeedback(sellerFeedBacks, avgSellerRating, ACCEPTSELLER, ca.feedback);
 		}
-        string sHeight = strprintf("%llu", ca.nHeight);
+        string sHeight = strprintf("%llu", acceptOffer.nHeight);
 		oOfferAccept.push_back(Pair("id", stringFromVch(vchAcceptRand)));
-		oOfferAccept.push_back(Pair("txid", ca.txHash.GetHex()));
+		oOfferAccept.push_back(Pair("txid", acceptOffer.txHash.GetHex()));
 		string strBTCId = "";
 		if(!ca.txBTCId.IsNull())
 			strBTCId = ca.txBTCId.GetHex();

@@ -88,8 +88,6 @@ class COfferAccept {
 public:
 	std::vector<unsigned char> vchAcceptRand;
 	std::vector<unsigned char> vchEscrow;
-	uint256 txHash;
-	uint64_t nHeight;
 	uint64_t nAcceptHeight;
 	unsigned int nQty;
 	float nPrice;
@@ -107,8 +105,6 @@ public:
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
 		READWRITE(vchAcceptRand);
-		READWRITE(txHash);
-		READWRITE(VARINT(nHeight));
 		READWRITE(VARINT(nAcceptHeight));
         READWRITE(VARINT(nQty));
     	READWRITE(nPrice);
@@ -124,8 +120,6 @@ public:
     friend bool operator==(const COfferAccept &a, const COfferAccept &b) {
         return (
 		a.vchAcceptRand == b.vchAcceptRand
-        && a.txHash == b.txHash
-        && a.nHeight == b.nHeight
 		&& a.nAcceptHeight == b.nAcceptHeight
         && a.nQty == b.nQty
         && a.nPrice == b.nPrice
@@ -140,9 +134,6 @@ public:
     }
 
     COfferAccept operator=(const COfferAccept &b) {
-		vchAcceptRand = b.vchAcceptRand;
-        txHash = b.txHash;
-        nHeight = b.nHeight;
 		nAcceptHeight = b.nAcceptHeight;
         nQty = b.nQty;
         nPrice = b.nPrice;
@@ -160,8 +151,8 @@ public:
         return !(a == b);
     }
 
-    void SetNull() { vchMessage.clear(); vchLinkAccept.clear(); vchLinkOffer.clear(); feedback.clear(); vchEscrow.clear(); vchAcceptRand.clear(); nHeight = nAcceptHeight = nPrice = nQty = 0; txHash.SetNull(); txBTCId.SetNull(); vchBuyerAlias.clear();}
-    bool IsNull() const { return (vchMessage.empty() && vchLinkAccept.empty() && vchLinkOffer.empty() && feedback.empty() && vchEscrow.empty() && vchAcceptRand.empty() && txHash.IsNull() && nHeight == 0 && nAcceptHeight == 0 &&nPrice == 0 && nQty == 0 && txBTCId.IsNull() && vchBuyerAlias.empty()); }
+    void SetNull() { vchMessage.clear(); vchLinkAccept.clear(); vchLinkOffer.clear(); feedback.clear(); vchEscrow.clear(); vchAcceptRand.clear();  nAcceptHeight = nPrice = nQty = 0; txBTCId.SetNull(); vchBuyerAlias.clear();}
+    bool IsNull() const { return (vchMessage.empty() && vchLinkAccept.empty() && vchLinkOffer.empty() && feedback.empty() && vchEscrow.empty() && vchAcceptRand.empty() && nAcceptHeight == 0 &&nPrice == 0 && nQty == 0 && txBTCId.IsNull() && vchBuyerAlias.empty()); }
 
 };
 class COfferLinkWhitelistEntry {
