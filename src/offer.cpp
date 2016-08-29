@@ -411,17 +411,10 @@ bool GetTxOfOfferAccept(const vector<unsigned char> &vchOffer, const vector<unsi
 	if (!pofferdb->ReadOffer(vchOffer, vtxPos) || vtxPos.empty()) return false;
 	theOfferAccept.SetNull();
 	theOfferAccept.vchAcceptRand = vchOfferAccept;
-	GetAcceptByHash(vtxPos, theOfferAccept);
+	GetAcceptByHash(vtxPos, theOfferAccept, theOffer);
 	if(theOfferAccept.IsNull())
 		return false;
 	int nHeight = theOfferAccept.nHeight;
-	theOffer.nHeight = theOfferAccept.nAcceptHeight;
-	if(!theOffer.GetOfferFromList(vtxPos))
-	{
-		if(fDebug)
-			LogPrintf("GetTxOfOfferAccept() : cannot find offer from this offer accept position");
-		return false;
-	}
 	if ((nHeight + GetOfferExpirationDepth())
 			< chainActive.Tip()->nHeight) {
 		string offer = stringFromVch(vchOfferAccept);
@@ -1326,11 +1319,11 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 90c - " + _("Cannot leave multiple seller feedbacks you must wait for a buyer reply first");
 					return true;
 				}
-				theOfferAccept.feedback[0].txHash = tx.GetHash();
-				theOfferAccept.feedback[0].nHeight = nHeight;
-				offerAccept.feedback.push_back(theOfferAccept.feedback[0]);			
+				offer.accept.feedback[0].txHash = tx.GetHash();
+				offer.accept.feedback[0].nHeight = nHeight;
+				offer.accept.feedback.push_back(theOfferAccept.feedback[0]);	
 				if(!dontaddtodb)
-					HandleAcceptFeedback(offerAccept, theOffer, vtxPos);	
+					HandleAcceptFeedback(offer.accept, offer, vtxPos);	
 				return true;
 			
 			}
@@ -3554,7 +3547,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 					continue;
 				oOfferAccept.push_back(Pair("offer_discount_percentage", strprintf("%.2f%%", 100.0f - 100.0f*(theOfferAccept.nPrice/theOffer.GetPrice()))));	
 				int precision = 2;
-				CAmount nPricePerUnit = convertCurrencyCodeToSyscoin(theOffer.vchAliasPeg, theOffer.sCurrencyCode, theOfferAccept.nPrice, theOfferAccept.nAcceptHeight, precision);
+				CAmount nPricePerUnit = convertCurrencyCodeToSyscoin(theOffer.vchAliasPeg, theOffer.sCurrencyCode, theOfferAccept.nPrice, theOfferAccept.nAcceptHeight-1, precision);
 				oOfferAccept.push_back(Pair("systotal", ValueFromAmount(nPricePerUnit * theOfferAccept.nQty)));
 				
 				oOfferAccept.push_back(Pair("price", strprintf("%.*f", precision, theOffer.GetPrice() ))); 
@@ -3930,7 +3923,7 @@ int GetNumberOfAccepts(const std::vector<COffer> &offerList) {
     }
     return count;
 }
-bool GetAcceptByHash(std::vector<COffer> &offerList, COfferAccept &ca) {
+bool GetAcceptByHash(std::vector<COffer> &offerList, COfferAccept &ca, COffer &offer) {
 	if(offerList.empty())
 		return false;
 	for(std::vector<COffer>::reverse_iterator it = offerList.rbegin(); it != offerList.rend(); ++it) {
@@ -3940,9 +3933,11 @@ bool GetAcceptByHash(std::vector<COffer> &offerList, COfferAccept &ca) {
 			continue;
         if(myoffer.accept.vchAcceptRand == ca.vchAcceptRand) {
             ca = myoffer.accept;
+			offer = myOffer;
 			return true;
         }
     }
     ca = offerList.back().accept;
+	offer = offerList.back();
 	return false;
 }
