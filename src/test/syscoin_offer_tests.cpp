@@ -467,9 +467,8 @@ BOOST_AUTO_TEST_CASE (generate_offeracceptfeedback)
 	for(int i =0;i<9;i++)
 	{
 		// keep alive
-		AliasUpdate("node1", "selleraliasfeedback", "changeddata2", "privdata2");
 		AliasUpdate("node2", "buyeraliasfeedback", "changeddata2", "privdata2");
-
+		OfferUpdate("node1", "selleraliasfeedback", offerguid, "category", "titlenew", "90", "0.01", "descriptionnew", "USD");
 		// seller can reply but not rate
 		OfferAcceptFeedback("node1", offerguid, acceptguid, "feedbackseller1", "2", ACCEPTBUYER, false);
 		// buyer can reply but not rate
