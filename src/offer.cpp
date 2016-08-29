@@ -951,11 +951,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 60 - " + _("Offer accept hex guid too long");
 				return error(errorMessage.c_str());
 			}
-			if(theOfferAccept.vchAcceptRand != vvchArgs[1])
-			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 60a - " + _("Offer accept hex guid mismatch");
-				return error(errorMessage.c_str());
-			}
 			if (theOfferAccept.vchLinkAccept.size() > MAX_GUID_LENGTH)
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 61 - " + _("Offer link accept hex guid too long");
@@ -1512,6 +1507,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					return true;
 				}					
 			}
+			theOfferAccept.vchAcceptRand = vvchArgs[1];
 			theOffer.accept = theOfferAccept;
 		}
 		
