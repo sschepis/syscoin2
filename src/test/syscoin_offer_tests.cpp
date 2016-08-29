@@ -471,8 +471,11 @@ BOOST_AUTO_TEST_CASE (generate_offeracceptfeedback)
 		OfferUpdate("node1", "selleraliasfeedback", offerguid, "category", "titlenew", "90", "0.01", "descriptionnew", "USD");
 		// seller can reply but not rate
 		OfferAcceptFeedback("node1", offerguid, acceptguid, "feedbackseller1", "2", ACCEPTBUYER, false);
-		// buyer can reply but not rate
-		OfferAcceptFeedback("node2", offerguid, acceptguid, "feedbackbuyer1", "3", ACCEPTSELLER, false);
+		if(i < 8)
+		{
+			// buyer can reply but not rate
+			OfferAcceptFeedback("node2", offerguid, acceptguid, "feedbackbuyer1", "3", ACCEPTSELLER, false);
+		}
 	}
 
 	// now you can't leave any more feedback as a seller
