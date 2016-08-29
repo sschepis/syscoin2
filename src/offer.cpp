@@ -444,8 +444,6 @@ bool DecodeOfferTx(const CTransaction& tx, int& op, int& nOut,
 	for (unsigned int i = 0; i < tx.vout.size(); i++) {
 		const CTxOut& out = tx.vout[i];
 		if (DecodeOfferScript(out.scriptPubKey, op, vvch)) {
-			if(op == OP_OFFER_ACCEPT && vvch[2] == vchFromString("1"))
-				continue;
 			nOut = i; found = true;
 			break;
 		}
