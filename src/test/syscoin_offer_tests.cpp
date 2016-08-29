@@ -478,7 +478,7 @@ BOOST_AUTO_TEST_CASE (generate_offeracceptfeedback)
 
 	// now you can't leave any more feedback as a seller
 	BOOST_CHECK_THROW(r = CallRPC("node1", offerfeedbackstr), runtime_error);
-z
+
 	// perform a valid accept
 	acceptguid = OfferAccept("node1", "node2", "buyeraliasfeedback", offerguid, "1", "message")
 	GenerateBlocks("node2", 5);
