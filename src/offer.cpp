@@ -1282,8 +1282,8 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 89a - " + _("Cannot leave feedback for linked offers");
 					return true;
 				}
-				int numBuyerRatings, numSellerRatings, feedbackBuyerCount, feedbackSellerCount;				
-				FindFeedback(offerAccept.feedback, numBuyerRatings, numSellerRatings, feedbackBuyerCount, feedbackSellerCount);
+				int numBuyerRatings, numSellerRatings, feedbackBuyerCount, numArbiterRatings, feedbackSellerCount, feedbackArbiterCount;				
+				FindFeedback(offerAccept.feedback, numBuyerRatings, numSellerRatings, numArbiterRatings,feedbackBuyerCount, feedbackSellerCount, feedbackArbiterCount);
 				// has this user (nFeedbackUser) already rated? if so set desired rating to 0
 				if(theOfferAccept.feedback[0].nFeedbackUser == FEEDBACKBUYER && numBuyerRatings > 0)
 					theOfferAccept.feedback[0].nRating = 0;
@@ -2938,7 +2938,7 @@ void FindFeedback(const vector<CFeedback> &feedback, int &numBuyerRatings, int &
 		}
 	}
 }
-void GetFeedback(vector<CAcceptFeedback> &feedBackSorted, int &avgRating, const FeedbackUser type, const vector<CFeedback>& feedBack)
+void GetFeedback(vector<CFeedback> &feedBackSorted, int &avgRating, const FeedbackUser type, const vector<CFeedback>& feedBack)
 {
 	float nRating = 0;
 	int nRatingCount = 0;
