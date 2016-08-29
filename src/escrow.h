@@ -3,8 +3,7 @@
 
 #include "rpcserver.h"
 #include "dbwrapper.h"
-#include "script/script.h"
-#include "serialize.h"
+#include "feedback.h"
 class CWalletTx;
 class CTransaction;
 class CReserveKey;

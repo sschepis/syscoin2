@@ -3,8 +3,7 @@
 
 #include "rpcserver.h"
 #include "dbwrapper.h"
-#include "script/script.h"
-#include "serialize.h"
+#include "feedback.h"
 class CWalletTx;
 class CTransaction;
 class CReserveKey;
@@ -24,67 +23,6 @@ int GetOfferExpirationDepth();
 std::string offerFromOp(int op);
 CScript RemoveOfferScriptPrefix(const CScript& scriptIn);
 extern bool IsSys21Fork(const uint64_t& nHeight);
-enum FeedbackUser {
-    FEEDBACKBUYER=1,
-	FEEDBACKSELLER=2,
-	FEEDBACKARBITER=3
-};
-class CFeedback {
-public:
-	std::vector<unsigned char> vchFeedback;
-	unsigned char nRating;
-	unsigned char nFeedbackUser;
-	uint64_t nHeight;
-	uint256 txHash;
-    CFeedback() {
-        SetNull();
-    }
-    CFeedback(unsigned char nAcceptFeedbackUser) {
-        SetNull();
-		nFeedbackUser = nAcceptFeedbackUser;
-    }
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-		READWRITE(vchFeedback);
-		READWRITE(nRating);
-		READWRITE(nFeedbackUser);
-		READWRITE(nHeight);
-		READWRITE(txHash);
-	}
-
-    friend bool operator==(const CFeedback &a, const CFeedback &b) {
-        return (
-        a.vchFeedback == b.vchFeedback
-		&& a.nRating == b.nRating
-		&& a.nFeedbackUser == b.nFeedbackUser
-		&& a.nHeight == b.nHeight
-		&& a.txHash == b.txHash
-        );
-    }
-
-    CFeedback operator=(const CFeedback &b) {
-        vchFeedback = b.vchFeedback;
-		nRating = b.nRating;
-		nFeedbackUser = b.nFeedbackUser;
-		nHeight = b.nHeight;
-		txHash = b.txHash;
-        return *this;
-    }
-
-    friend bool operator!=(const CFeedback &a, const CFeedback &b) {
-        return !(a == b);
-    }
-
-    void SetNull() { txHash.SetNull(); nHeight = 0; nRating = 0; nFeedbackUser = 0; vchFeedback.clear();}
-    bool IsNull() const { return ( txHash.IsNull() && nHeight == 0 && nRating == 0 && nFeedbackUser == 0 && vchFeedback.empty()); }
-};
-struct acceptfeedbacksort {
-    bool operator ()(const CFeedback& a, const CFeedback& b) {
-        return a.nHeight < b.nHeight;
-    }
-};
 class COfferAccept {
 public:
 	std::vector<unsigned char> vchAcceptRand;

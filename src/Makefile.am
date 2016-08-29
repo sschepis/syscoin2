@@ -90,6 +90,7 @@ SYSCOIN_CORE_H = \
   message.h \
   cert.h \
   escrow.h \
+  feedback.h \
   messagecrypter.h \
   addrman.h \
   alert.h \

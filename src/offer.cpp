@@ -2960,7 +2960,7 @@ void GetFeedback(vector<CFeedback> &feedBackSorted, int &avgRating, const Feedba
 	}
 	avgRating = (int)roundf(nRating);
 	if(feedBackSorted.size() > 0)
-		sort(feedBackSorted.begin(), feedBackSorted.end(), acceptfeedbacksort());
+		sort(feedBackSorted.begin(), feedBackSorted.end(), feedbacksort());
 	
 }
 UniValue offeracceptfeedback(const UniValue& params, bool fHelp) {
