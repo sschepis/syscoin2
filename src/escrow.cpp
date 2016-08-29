@@ -1286,7 +1286,8 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 		sellerAddressOnActivate = CSyscoinAddress(pubKey.GetID());
 	}
 
-
+	const CWalletTx *wtxAliasIn = NULL;
+	CScript scriptPubKeyAlias;
 	bool foundSellerKey = false;
 	try
 	{
@@ -1333,7 +1334,7 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	// who is initiating release arbiter or buyer?
 	try
 	{
-		arbiterSigning = true;
+
 		// try arbiter
 		CKeyID keyID;
 		if (!arbiterAddressOnActivate.GetKeyID(keyID))
@@ -1342,6 +1343,18 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 		if (!pwalletMain->GetKey(keyID, vchSecret))
 			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4091 - " + _("Private key for arbiter address is not known"));
 		strPrivateKey = CSyscoinSecret(vchSecret).ToString();
+		wtxAliasIn = pwalletMain->GetWalletTx(arbiteraliastx.GetHash());
+		if (wtxAliasIn == NULL)
+			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR ERRCODE: 524 - This alias is not in your wallet");
+		if (ExistsInMempool(arbiterAlias.vchAlias, OP_ALIAS_ACTIVATE) || ExistsInMempool(arbiterAlias.vchAlias, OP_ALIAS_UPDATE)) {
+			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR ERRCODE: 524a - There are pending operations on that alias");
+		}
+		CScript scriptPubKeyOrig;
+		scriptPubKeyOrig= GetScriptForDestination(arbiterKey.GetID());
+			
+		scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << arbiterAlias.vchAlias << arbiterAlias.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
+		scriptPubKeyAlias += scriptPubKeyOrig;
+		arbiterSigning = true;
 	}
 	catch(...)
 	{
@@ -1354,6 +1367,18 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 		if (!pwalletMain->GetKey(keyID, vchSecret))
 			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4093 - " + _("Buyer or Arbiter private keys not known"));
 		strPrivateKey = CSyscoinSecret(vchSecret).ToString();
+		wtxAliasIn = pwalletMain->GetWalletTx(buyeraliastx.GetHash());
+		if (wtxAliasIn == NULL)
+			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR ERRCODE: 524 - This alias is not in your wallet");
+		if (ExistsInMempool(buyerAlias.vchAlias, OP_ALIAS_ACTIVATE) || ExistsInMempool(buyerAlias.vchAlias, OP_ALIAS_UPDATE)) {
+			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR ERRCODE: 524a - There are pending operations on that alias");
+		}
+		CScript scriptPubKeyOrig;
+		scriptPubKeyOrig= GetScriptForDestination(buyerKey.GetID());
+			
+		scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << buyerAlias.vchAlias << buyerAlias.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
+		scriptPubKeyAlias += scriptPubKeyOrig;
+
 	}
     // check for existing escrow 's
 	if (ExistsInMempool(vchEscrow, OP_ESCROW_ACTIVATE) || ExistsInMempool(vchEscrow, OP_ESCROW_RELEASE) || ExistsInMempool(vchEscrow, OP_ESCROW_REFUND) || ExistsInMempool(vchEscrow, OP_ESCROW_COMPLETE)) {
@@ -1461,6 +1486,10 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	CreateRecipient(scriptPubKey, recipient);
 	vecSend.push_back(recipient);
 
+	CRecipient aliasRecipient;
+	CreateRecipient(scriptPubKeyAlias, aliasRecipient);
+	vecSend.push_back(c);
+
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
 	CRecipient fee;
@@ -1469,8 +1498,7 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 
 	const CWalletTx * wtxInOffer=NULL;
 	const CWalletTx * wtxInCert=NULL;
-	const CWalletTx * wtxInAlias=NULL;
-	SendMoneySyscoin(vecSend, recipient.nAmount+fee.nAmount, false, wtx, wtxInOffer, wtxInCert, wtxInAlias, wtxIn);
+	SendMoneySyscoin(vecSend, recipient.nAmount+fee.nAmount+aliasRecipient.nAmount, false, wtx, wtxInOffer, wtxInCert, wtxAliasIn, wtxIn);
 	UniValue ret(UniValue::VARR);
 	ret.push_back(wtx.GetHash().GetHex());
 	return ret;
