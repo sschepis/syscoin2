@@ -1508,6 +1508,10 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					return true;
 				}					
 			}
+
+			
+
+
 			theOfferAccept.nHeight = nHeight;
 			theOfferAccept.vchAcceptRand = vvchArgs[1];
 			theOfferAccept.txHash = tx.GetHash();
