@@ -3933,7 +3933,7 @@ bool GetAcceptByHash(std::vector<COffer> &offerList, COfferAccept &ca, COffer &o
 			continue;
         if(myoffer.accept.vchAcceptRand == ca.vchAcceptRand) {
             ca = myoffer.accept;
-			offer = myOffer;
+			offer = myoffer;
 			return true;
         }
     }
