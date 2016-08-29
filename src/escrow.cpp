@@ -2329,11 +2329,11 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
 	// seller
 	else if(foundSellerKey)
 	{
-		CFeedback buyerFeedback(SELLER);
+		CFeedback buyerFeedback(FEEDBACKSELLER);
 		buyerFeedback.vchFeedback = vchFeedbackPrimary;
 		buyerFeedback.nRating = nRatingPrimary;
 		buyerFeedback.nHeight = chainActive.Tip()->nHeight;
-		CFeedback arbiterFeedback(SELLER);
+		CFeedback arbiterFeedback(FEEDBACKSELLER);
 		arbiterFeedback.vchFeedback = vchFeedbackSecondary;
 		arbiterFeedback.nRating = nRatingSecondary;
 		arbiterFeedback.nHeight = chainActive.Tip()->nHeight;
@@ -2343,11 +2343,11 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
 	// arbiter
 	else if(foundArbiterKey)
 	{
-		CFeedback buyerFeedback(ARBITER);
+		CFeedback buyerFeedback(FEEDBACKARBITER);
 		buyerFeedback.vchFeedback = vchFeedbackPrimary;
 		buyerFeedback.nRating = nRatingPrimary;
 		buyerFeedback.nHeight = chainActive.Tip()->nHeight;
-		CFeedback sellerFeedback(ARBITER);
+		CFeedback sellerFeedback(FEEDBACKARBITER);
 		sellerFeedback.vchFeedback = vchFeedbackSecondary;
 		sellerFeedback.nRating = nRatingSecondary;
 		sellerFeedback.nHeight = chainActive.Tip()->nHeight;
