@@ -949,7 +949,7 @@ void HandleEscrowFeedback(const CEscrow& serializedEscrow, const CEscrow& dbEscr
 		dbEscrow.feedback.push_back(serializedEscrow.arbiterFeedback);
 
 	PutToEscrowList(vtxPos, dbEscrow);
-	pofferdb->WriteEscrow(dbEscrow.vchEscrow, vtxPos);
+	pescrowdb->WriteEscrow(dbEscrow.vchEscrow, vtxPos);
 }
 
 UniValue escrownew(const UniValue& params, bool fHelp) {
