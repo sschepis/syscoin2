@@ -105,11 +105,11 @@ void OfferAcceptInfoDialog::SetFeedbackUI(const UniValue &feedbackObj, const QSt
 		QLabel *userLabel = new QLabel(tr("From:"));
 
 		QString userStr = "";
-		if(user == ACCEPTBUYER)
+		if(user == FEEDBACKBUYER)
 		{
 			userStr = tr("%1 (Merchant)").arg(seller);
 		}
-		else if(user == ACCEPTSELLER)
+		else if(user == FEEDBACKSELLER)
 		{
 			userStr = tr("%1 (Buyer)").arg(buyer);
 		}

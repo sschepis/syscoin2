@@ -24,21 +24,22 @@ int GetOfferExpirationDepth();
 std::string offerFromOp(int op);
 CScript RemoveOfferScriptPrefix(const CScript& scriptIn);
 extern bool IsSys21Fork(const uint64_t& nHeight);
-enum AcceptUser {
-    ACCEPTBUYER=1,
-	ACCEPTSELLER=2
+enum FeedbackUser {
+    FEEDBACKBUYER=1,
+	FEEDBACKBUYER=2,
+	FEEDBACKARBITER=3
 };
-class CAcceptFeedback {
+class CFeedback {
 public:
 	std::vector<unsigned char> vchFeedback;
 	unsigned char nRating;
 	unsigned char nFeedbackUser;
 	uint64_t nHeight;
 	uint256 txHash;
-    CAcceptFeedback() {
+    CFeedback() {
         SetNull();
     }
-    CAcceptFeedback(unsigned char nAcceptFeedbackUser) {
+    CFeedback(unsigned char nAcceptFeedbackUser) {
         SetNull();
 		nFeedbackUser = nAcceptFeedbackUser;
     }
@@ -53,7 +54,7 @@ public:
 		READWRITE(txHash);
 	}
 
-    friend bool operator==(const CAcceptFeedback &a, const CAcceptFeedback &b) {
+    friend bool operator==(const CFeedback &a, const CFeedback &b) {
         return (
         a.vchFeedback == b.vchFeedback
 		&& a.nRating == b.nRating
@@ -63,7 +64,7 @@ public:
         );
     }
 
-    CAcceptFeedback operator=(const CAcceptFeedback &b) {
+    CFeedback operator=(const CFeedback &b) {
         vchFeedback = b.vchFeedback;
 		nRating = b.nRating;
 		nFeedbackUser = b.nFeedbackUser;
@@ -72,7 +73,7 @@ public:
         return *this;
     }
 
-    friend bool operator!=(const CAcceptFeedback &a, const CAcceptFeedback &b) {
+    friend bool operator!=(const CFeedback &a, const CFeedback &b) {
         return !(a == b);
     }
 
@@ -80,7 +81,7 @@ public:
     bool IsNull() const { return ( txHash.IsNull() && nHeight == 0 && nRating == 0 && nFeedbackUser == 0 && vchFeedback.empty()); }
 };
 struct acceptfeedbacksort {
-    bool operator ()(const CAcceptFeedback& a, const CAcceptFeedback& b) {
+    bool operator ()(const CFeedback& a, const CFeedback& b) {
         return a.nHeight < b.nHeight;
     }
 };
@@ -98,7 +99,7 @@ public:
 	std::vector<unsigned char> vchLinkAccept;	
 	std::vector<unsigned char> vchLinkOffer;
 	std::vector<unsigned char> vchMessage;
-	std::vector<CAcceptFeedback> feedback;
+	std::vector<CFeedback> feedback;
 	COfferAccept() {
         SetNull();
     }
@@ -482,9 +483,9 @@ public:
             std::vector<std::pair<std::vector<unsigned char>, COffer> >& offerScan);
 
 };
-void HandleAcceptFeedback(const COfferAccept& accept, COffer& offer, std::vector<COffer> &vtxPos);
-void FindFeedback(const std::vector<CAcceptFeedback> &feedback, int &numBuyerRatings, int &numSellerRatings, int &feedbackBuyerCount, int &feedbackSellerCount);
-void GetFeedback(std::vector<CAcceptFeedback> &feedback, int &avgRating, const AcceptUser type, const std::vector<CAcceptFeedback>& feedBack);
+void HandleAcceptFeedback(const CFeedback& feedback, COffer& offer, std::vector<COffer> &vtxPos);
+void FindFeedback(const std::vector<CFeedback> &feedback, int &numBuyerRatings, int &numSellerRatings,int &numArbiterRatings, int &feedbackBuyerCount, int &feedbackSellerCount, int &feedbackArbiterCount);
+void GetFeedback(std::vector<CFeedback> &feedback, int &avgRating, const FeedbackUser type, const std::vector<CFeedback>& feedBack);
 bool GetAcceptByHash(std::vector<COffer> &offerList,  COfferAccept &ca,  COffer &offer);
 bool GetTxOfOfferAccept(const std::vector<unsigned char> &vchOffer, const std::vector<unsigned char> &vchOfferAccept,
 		COffer &theOffer, COfferAccept &theOfferAccept, CTransaction& tx);

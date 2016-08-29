@@ -100,15 +100,15 @@ void EscrowInfoDialog::SetFeedbackUI(const UniValue &escrowFeedback, const QStri
 		QLabel *userLabel = new QLabel(tr("From:"));
 
 		QString userStr = "";
-		if(user == BUYER)
+		if(user == FEEDBACKBUYER)
 		{
 			userStr = tr("%1 (Buyer)").arg(buyer);
 		}
-		else if(user == SELLER)
+		else if(user == FEEDBACKSELLER)
 		{
 			userStr = tr("%1 (Merchant)").arg(seller);
 		}
-		else if(user == ARBITER)
+		else if(user == FEEDBACKARBITER)
 		{
 			userStr = tr("%1 (Arbiter)").arg(arbiter);
 		}
