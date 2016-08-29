@@ -948,7 +948,7 @@ void HandleEscrowFeedback(const CEscrow& serializedEscrow, const CEscrow& dbEscr
 	if(!serializedEscrow.arbiterFeedback.IsNull())
 		dbEscrow.feedback.push_back(serializedEscrow.arbiterFeedback);
 
-	dbEscrow.PutToEscrowList(vtxPos);
+	PutToEscrowList(vtxPos, dbEscrow);
 	pofferdb->WriteEscrow(dbEscrow.vchEscrow, vtxPos);
 }
 
