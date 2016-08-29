@@ -3484,10 +3484,10 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 				if (!GetTxOfOfferAccept(vchOffer, vchAcceptRand, theOffer, theOfferAccept, acceptTx))
 					continue;
 				// get last active accepts only
-				if (vNamesI.find(vchAcceptRand) != vNamesI.end() && (theOfferAccept.nHeight <= vNamesI[vchAcceptRand] || vNamesI[vchAcceptRand] < 0))
+				if (vNamesI.find(vchAcceptRand) != vNamesI.end() && (theOffer.nHeight <= vNamesI[vchAcceptRand] || vNamesI[vchAcceptRand] < 0))
 					continue;	
 				string offer = stringFromVch(vchOffer);
-				string sHeight = strprintf("%llu", theOfferAccept.nHeight);
+				string sHeight = strprintf("%llu", theOffer.nHeight);
 				vector<COffer> vtxPos;
 				if (!pofferdb->ReadOffer(vchOffer, vtxPos))
 					continue;
@@ -3572,7 +3572,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 					strMessage = string("Encrypted for owner of offer");
 				oOfferAccept.push_back(Pair("pay_message", strMessage));
 				oRes.push_back(oOfferAccept);
-				vNamesI[vchAcceptRand] = theOfferAccept.nHeight;
+				vNamesI[vchAcceptRand] = theOffer.nHeight;
 			}
         }
 	}
