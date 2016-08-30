@@ -3238,8 +3238,12 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 		vector<CFeedback> buyerFeedBacks, sellerFeedBacks;
 		if( !theOffer.vchLinkOffer.empty())
 		{
-			GetFeedback(buyerFeedBacks, avgBuyerRating, FEEDBACKBUYER, ca.feedback);
-			GetFeedback(sellerFeedBacks, avgSellerRating, FEEDBACKSELLER, ca.feedback);
+			COffer linkOffer;
+			COfferAccept linkOfferAccept;
+			CTransaction linkAcceptTx;
+			GetTxOfOfferAccept(theOffer.vchLinkOffer, ca.vchAcceptRand, linkOffer, linkOfferAccept, linkAcceptTx);	
+			GetFeedback(buyerFeedBacks, avgBuyerRating, FEEDBACKBUYER, linkOfferAccept.feedback);
+			GetFeedback(sellerFeedBacks, avgSellerRating, FEEDBACKSELLER, linkOfferAccept.feedback);
 		}
 		else
 		{
