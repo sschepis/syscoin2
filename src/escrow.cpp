@@ -671,9 +671,9 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				}
 				else if(op == OP_ESCROW_RELEASE)
 				{
-					if(serializedEscrow.vchLinkAlias != theEscrow.vchBuyerAlias)
+					if(serializedEscrow.vchLinkAlias != theEscrow.vchBuyerAlias && serializedEscrow.vchLinkAlias != theEscrow.vchArbiterAlias)
 					{
-						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4045c - " + _("Only buyer can initiate an escrow release");
+						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4045c - " + _("Only buyer or arbiter can initiate an escrow release");
 						return true;
 					}
 				}
