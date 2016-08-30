@@ -442,7 +442,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				}
 				if(theEscrow.bWhitelist && !IsAliasOp(prevAliasOp))
 				{
-					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4014 - " + _(Alias input missing for whitelist escrow activation");
+					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4014 - " + _("Alias input missing for whitelist escrow activation");
 					return error(errorMessage.c_str());
 				}
 				if(IsAliasOp(prevAliasOp) && (theEscrow.bWhitelist == false || vvchPrevAliasArgs[0] != theEscrow.vchBuyerAlias))
