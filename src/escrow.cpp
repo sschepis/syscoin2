@@ -319,7 +319,13 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 	{
 		theEscrow.SetNull();
 	}
-
+	// null usually when pruned or when accept is done
+	if(theEscrow.IsNull() && !(op == OP_ESCROW_COMPLETE && vvchArgs[1] == vchFromString("0")))
+	{
+		if(fDebug)
+			LogPrintf("SYSCOIN_ESCROW_CONSENSUS_ERROR: Null escrow, skipping...\n");	
+		return true;
+	}	
 	vector<vector<unsigned char> > vvchPrevArgs, vvchPrevAliasArgs;
 	if(fJustCheck)
 	{
@@ -532,11 +538,6 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				}		
 				else
 				{
-					if (!theEscrow.IsNull())
-					{
-						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4031 - " + _("Escrow complete must be empty");
-						return error(errorMessage.c_str());
-					}
 					if (vvchPrevArgs[0] != vvchArgs[0])
 					{
 						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4031 - " + _("Escrow input guid mismatch");
