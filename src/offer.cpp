@@ -2630,7 +2630,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	const CWalletTx *wtxEscrowIn = NULL;
 	CEscrow escrow;
 	vector<vector<unsigned char> > escrowVvch;
-	vector<unsigned char> vchEscrowWhitelistAlias;
+	vector<unsigned char> vchWhitelistAlias;
 	if(!vchEscrowTxHash.empty())
 	{
 		uint256 escrowTxHash(uint256S(stringFromVch(vchEscrowTxHash)));
@@ -2649,7 +2649,6 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 		// get escrow activation
 		vector<CEscrow> escrowVtxPos;
 		CTransaction escrowTx;
-		vector <unsigned char> vchWhitelistAlias;
 		if (GetTxAndVtxOfEscrow( escrowVvch[0], escrow, escrowTx, escrowVtxPos))
 		{
 			CScript scriptPubKeyEscrowBuyerDestination, scriptPubKeyEscrowSellerDestination, scriptPubKeyEscrowArbiterDestination;
@@ -2736,7 +2735,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 				vchWhitelistAlias = buyerAlias1.vchAlias;
 			wtxAliasIn = pwalletMain->GetWalletTx(buyeraliastx.GetHash());		
 			CPubKey currentKey(buyerAlias1.vchPubKey);
-			scriptPubKeyAliasOrig = GetScriptForDestination(currfsentKey.GetID());
+			scriptPubKeyAliasOrig = GetScriptForDestination(currentKey.GetID());
 			scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << buyerAlias1.vchAlias  << buyerAlias1.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
 			scriptPubKeyAlias += scriptPubKeyAliasOrig;
 		}		
