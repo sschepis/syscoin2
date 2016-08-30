@@ -1266,7 +1266,7 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	CPubKey arbiterKey;
 	if(GetTxAndVtxOfAlias(escrow.vchArbiterAlias, arbiterAliasLatest, arbiteraliastx, aliasVtxPos, isExpired, true))
 	{
-		arbiterKey = CPubKey(arbiterAlias.vchPubKey);
+		arbiterKey = CPubKey(arbiterAliasLatest.vchPubKey);
 		arbiterAddress = CSyscoinAddress(arbiterKey.GetID());
 		arbiterAlias.nHeight = vtxPos.front().nHeight;
 		arbiterAlias.GetAliasFromList(aliasVtxPos);
@@ -1279,7 +1279,7 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	CPubKey buyerKey;
 	if(GetTxAndVtxOfAlias(escrow.vchBuyerAlias, buyerAliasLatest, buyeraliastx, aliasVtxPos, isExpired, true))
 	{
-		buyerKey = CPubKey(sellerAlias.vchPubKey);
+		buyerKey = CPubKey(buyerAliasLatest.vchPubKey);
 		buyerAddress = CSyscoinAddress(buyerKey.GetID());
 		buyerAlias.nHeight = vtxPos.front().nHeight;
 		buyerAlias.GetAliasFromList(aliasVtxPos);
@@ -1291,7 +1291,7 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	CPubKey sellerKey;
 	if(GetTxAndVtxOfAlias(escrow.vchSellerAlias, sellerAliasLatest, selleraliastx, aliasVtxPos, isExpired, true))
 	{
-		sellerKey = CPubKey(sellerAlias.vchPubKey);
+		sellerKey = CPubKey(sellerAliasLatest.vchPubKey);
 		sellerAddress = CSyscoinAddress(sellerKey.GetID());
 		sellerAlias.nHeight = vtxPos.front().nHeight;
 		sellerAlias.GetAliasFromList(aliasVtxPos);
@@ -1832,7 +1832,7 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 	CPubKey arbiterKey;
 	if(GetTxAndVtxOfAlias(escrow.vchArbiterAlias, arbiterAliasLatest, arbiteraliastx, aliasVtxPos, isExpired, true))
 	{
-		arbiterKey = CPubKey(arbiterAlias.vchPubKey);
+		arbiterKey = CPubKey(arbiterAliasLatest.vchPubKey);
 		arbiterAddress = CSyscoinAddress(arbiterKey.GetID());
 		arbiterAlias.nHeight = vtxPos.front().nHeight;
 		arbiterAlias.GetAliasFromList(aliasVtxPos);
@@ -1845,7 +1845,7 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 	CPubKey buyerKey;
 	if(GetTxAndVtxOfAlias(escrow.vchBuyerAlias, buyerAliasLatest, buyeraliastx, aliasVtxPos, isExpired, true))
 	{
-		buyerKey = CPubKey(buyerAlias.vchPubKey);
+		buyerKey = CPubKey(buyerAliasLatest.vchPubKey);
 		buyerAddress = CSyscoinAddress(buyerKey.GetID());
 		buyerAlias.nHeight = vtxPos.front().nHeight;
 		buyerAlias.GetAliasFromList(aliasVtxPos);
@@ -1857,7 +1857,7 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 	CPubKey sellerKey;
 	if(GetTxAndVtxOfAlias(escrow.vchSellerAlias, sellerAliasLatest, selleraliastx, aliasVtxPos, isExpired, true))
 	{
-		sellerKey = CPubKey(sellerAlias.vchPubKey);
+		sellerKey = CPubKey(sellerAliasLatest.vchPubKey);
 		sellerAlias.nHeight = vtxPos.front().nHeight;
 		sellerAlias.GetAliasFromList(aliasVtxPos);
 		CPubKey pubKey(sellerAlias.vchPubKey);
@@ -2096,7 +2096,7 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 	const CWalletTx *wtxAliasIn = NULL;
 	if(GetTxAndVtxOfAlias(escrow.vchBuyerAlias, buyerAliasLatest, aliastx, aliasVtxPos, isExpired, true))
 	{
-		buyerKey = CPubKey(buyerAlias.vchPubKey);
+		buyerKey = CPubKey(buyerAliasLatest.vchPubKey);
 		buyerAlias.nHeight = vtxPos.front().nHeight;
 		buyerAlias.GetAliasFromList(aliasVtxPos);
 		CPubKey pubKey(buyerAlias.vchPubKey);
