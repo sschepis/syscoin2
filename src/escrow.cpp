@@ -408,7 +408,6 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 			errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4008 - " + _("Escrow offer guid too long");
 			return error(errorMessage.c_str());
 		}
-
 		if(theEscrow.rawTx.size() > MAX_STANDARD_TX_SIZE)
 		{
 			errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4009 - " + _("Escrow raw transaction too big");
@@ -440,7 +439,17 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4014 - " + _("Cannot leave feedback in escrow activation");
 					return error(errorMessage.c_str());
-				}				
+				}
+				if(theEscrow.bWhitelist && !IsAliasOp(prevAliasOp))
+				{
+					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4014 - " + _(Alias input missing for whitelist escrow activation");
+					return error(errorMessage.c_str());
+				}
+				if(IsAliasOp(prevAliasOp) && (theEscrow.bWhitelist == false || vvchPrevAliasArgs[0] != theEscrow.vchBuyerAlias))
+				{
+					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4014 - " + _("Whitelist guid mismatch");
+					return error(errorMessage.c_str());
+				}
 				break;
 			case OP_ESCROW_RELEASE:
 				if(!IsAliasOp(prevAliasOp) || theEscrow.vchLinkAlias != vvchPrevAliasArgs[0] )
@@ -992,6 +1001,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	if (!GetTxOfAlias(vchAlias, buyeralias, buyeraliastx))
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4061 - " + _("Could not find buyer alias with this name"));
 
+	CPubKey buyerKey(buyeralias.vchPubKey);
     if(!IsSyscoinTxMine(buyeraliastx, "alias")) {
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4062 - " + _("This alias is not yours."));
     }
@@ -1020,6 +1030,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 
 	CScript scriptPubKeyAlias, scriptPubKeyAliasOrig;
 	COfferLinkWhitelistEntry foundEntry;
+	bool bWhitelist = false;
 	if(!theOffer.vchLinkOffer.empty())
 	{
 	
@@ -1049,9 +1060,9 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 			// make sure its in your wallet (you control this alias)
 			if (IsSyscoinTxMine(buyeraliastx, "alias")) 
 			{
+				bWhitelist = true;
 				wtxAliasIn = pwalletMain->GetWalletTx(buyeraliastx.GetHash());		
-				CPubKey currentKey(buyeralias.vchPubKey);
-				scriptPubKeyAliasOrig = GetScriptForDestination(currentKey.GetID());
+				scriptPubKeyAliasOrig = GetScriptForDestination(buyerKey.GetID());
 				scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << buyeralias.vchAlias  << buyeralias.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
 				scriptPubKeyAlias += scriptPubKeyAliasOrig;
 			}			
@@ -1158,6 +1169,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	newEscrow.escrowInputTxHash = escrowWtx.GetHash();
 	newEscrow.nPricePerUnit = nPricePerUnit;
 	newEscrow.nHeight = chainActive.Tip()->nHeight;
+	newEscrow.bWhitelist = bWhitelist;
 
 	const vector<unsigned char> &data = newEscrow.Serialize();
     uint256 hash = Hash(data.begin(), data.end());

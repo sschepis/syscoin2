@@ -631,6 +631,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	CTransaction linkedTx;
 	uint64_t heightToCheckAgainst;
 	COfferLinkWhitelistEntry entry;
+	vector<unsigned char> vchWhitelistAlias;
 	CCert theCert;
 	CAliasIndex theAlias, alias;
 	CTransaction aliasTx;
@@ -1424,6 +1425,8 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					if(heightToCheckAgainst > fundingEscrow.nHeight){
 						heightToCheckAgainst = fundingEscrow.nHeight;
 					}
+					if(escrowVtxPos.back().bWhitelist)
+						vchWhitelistAlias = escrowVtxPos.back().vchBuyerAlias;
 				}
 				else
 				{
@@ -1448,24 +1451,26 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 105 - " + _("Cannot find the alias you are trying to use for an offer discount. Perhaps it is expired");
 					return true;
 				}
-				// try to get the whitelist entry here from the sellers whitelist, apply the discount with GetPrice()
-				myPriceOffer.linkWhitelist.GetLinkEntryByHash(serializedOffer.vchLinkAlias, entry);
-				if(entry.IsNull())
-				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 106 - " + _("Cannot find the alias entry in the offer's affiliate list");
-					return true;
-				}
+				// if there is no escrow being used here, vchWhitelistAlias should be empty so if the buyer uses an alias for a discount or a exclusive whitelist buy, then get the guid
+				if(vchWhitelistAlias.empty())
+					vchWhitelistAlias = serializedOffer.vchLinkAlias;
 			}
 			
 			if(!theOfferAccept.txBTCId.IsNull() && stringFromVch(myPriceOffer.sCurrencyCode) != "BTC")
 			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 107 - " + _("Cannot pay for offer in bitcoins if its currency is not set to BTC");
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 106 - " + _("Cannot pay for offer in bitcoins if its currency is not set to BTC");
 				return true;
 			}
 			// check that user pays enough in syscoin if the currency of the offer is not directbtc purchase
 			if(theOfferAccept.txBTCId.IsNull())
 			{
-	
+				// try to get the whitelist entry here from the sellers whitelist, apply the discount with GetPrice()
+				myPriceOffer.linkWhitelist.GetLinkEntryByHash(vchWhitelistAlias, entry);
+				if(entry.IsNull())
+				{
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 107 - " + _("Cannot find the alias entry in the offer's affiliate list");
+					return true;
+				}	
 				float priceAtTimeOfAccept = myPriceOffer.GetPrice(entry);
 				if(priceAtTimeOfAccept != theOfferAccept.nPrice)
 				{
@@ -2644,6 +2649,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 		// get escrow activation
 		vector<CEscrow> escrowVtxPos;
 		CTransaction escrowTx;
+		vector <unsigned char> vchWhitelistAlias;
 		if (GetTxAndVtxOfEscrow( escrowVvch[0], escrow, escrowTx, escrowVtxPos))
 		{
 			CScript scriptPubKeyEscrowBuyerDestination, scriptPubKeyEscrowSellerDestination, scriptPubKeyEscrowArbiterDestination;
@@ -2652,6 +2658,8 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 			// update height if it is bigger than escrow creation height, we want earlier of two, linked height or escrow creation to index into sysrates check
 			if(nHeight > fundingEscrow.nHeight)
 				nHeight = fundingEscrow.nHeight;
+			if(escrow.bWhitelist)
+				vchWhitelistAlias = escrow.vchBuyerAlias;
 			CAliasIndex arbiterAlias, buyerAlias, sellerAlias;
 			CTransaction aliastx;
 			GetTxOfAlias(fundingEscrow.vchArbiterAlias, arbiterAlias, aliastx, true);
@@ -2711,7 +2719,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 
 
 	const CWalletTx *wtxAliasIn = NULL;
-
+	
 	COfferLinkWhitelistEntry foundEntry;
 	theOffer.linkWhitelist.GetLinkEntryByHash(buyerAlias1.vchAlias, foundEntry);
 	// only non linked offers can have discounts applied via whitelist for buyer
@@ -2724,15 +2732,18 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 		// make sure its in your wallet (you control this alias)
 		if (IsSyscoinTxMine(buyeraliastx, "alias")) 
 		{
+			if(vchWhitelistAlias.empty())
+				vchWhitelistAlias = buyerAlias1.vchAlias;
 			wtxAliasIn = pwalletMain->GetWalletTx(buyeraliastx.GetHash());		
 			CPubKey currentKey(buyerAlias1.vchPubKey);
-			scriptPubKeyAliasOrig = GetScriptForDestination(currentKey.GetID());
+			scriptPubKeyAliasOrig = GetScriptForDestination(currfsentKey.GetID());
 			scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << buyerAlias1.vchAlias  << buyerAlias1.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
 			scriptPubKeyAlias += scriptPubKeyAliasOrig;
 		}		
 		
 	}
-
+	// re-get the whitelist entry (if escrow entry exists use that otherwise get the buyer alias passed in to function)
+	theOffer.linkWhitelist.GetLinkEntryByHash(vchWhitelistAlias, foundEntry);
 	unsigned int memPoolQty = QtyOfPendingAcceptsInMempool(vchOffer);
 	if(vtxPos.back().nQty != -1 && vtxPos.back().nQty < ((!txAccept.vchEscrow.empty()? 0: nQty)+memPoolQty))
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 545 - " + _("Not enough remaining quantity to fulfill this orderaccept"));
