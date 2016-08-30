@@ -1466,7 +1466,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			{
 				// try to get the whitelist entry here from the sellers whitelist, apply the discount with GetPrice()
 				myPriceOffer.linkWhitelist.GetLinkEntryByHash(vchWhitelistAlias, entry);
-				if(entry.IsNull())
+				if(entry.IsNull() && !vchWhitelistAlias.empty())
 				{
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 107 - " + _("Cannot find the alias entry in the offer's affiliate list");
 					return true;
