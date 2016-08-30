@@ -80,6 +80,7 @@ public:
 		READWRITE(VARINT(nHeight));
 		READWRITE(VARINT(nQty));
 		READWRITE(VARINT(nPricePerUnit));
+		READWRITE(VARINT(op));
         READWRITE(vchBuyerAlias);	
 		READWRITE(vchEscrow);
 		READWRITE(vchLinkAlias);
@@ -87,7 +88,6 @@ public:
 		READWRITE(sellerFeedback);	
 		READWRITE(arbiterFeedback);	
 		READWRITE(feedback);	
-		READWRITE(VARINT(op));
 	}
 
     friend bool operator==(const CEscrow &a, const CEscrow &b) {
