@@ -11,15 +11,17 @@ class CFeedback {
 public:
 	std::vector<unsigned char> vchFeedback;
 	unsigned char nRating;
-	unsigned char nFeedbackUser;
+	unsigned char nFeedbackUserTo;
+	unsigned char nFeedbackUserFrom;
 	uint64_t nHeight;
 	uint256 txHash;
     CFeedback() {
         SetNull();
     }
-    CFeedback(unsigned char nAcceptFeedbackUser) {
+    CFeedback(unsigned char nAcceptFeedbackUserFrom, unsigned char nAcceptFeedbackUserTo) {
         SetNull();
-		nFeedbackUser = nAcceptFeedbackUser;
+		nFeedbackUserFrom = nAcceptFeedbackUserFrom;
+		nFeedbackUserTo = nAcceptFeedbackUserTo;
     }
     ADD_SERIALIZE_METHODS;
 
@@ -27,7 +29,8 @@ public:
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
 		READWRITE(vchFeedback);
 		READWRITE(nRating);
-		READWRITE(nFeedbackUser);
+		READWRITE(nFeedbackUserFrom);
+		READWRITE(nFeedbackUserTo);
 		READWRITE(nHeight);
 		READWRITE(txHash);
 	}
@@ -36,7 +39,8 @@ public:
         return (
         a.vchFeedback == b.vchFeedback
 		&& a.nRating == b.nRating
-		&& a.nFeedbackUser == b.nFeedbackUser
+		&& a.nFeedbackUserFrom == b.nFeedbackUserFrom
+		&& a.nFeedbackUserTo == b.nFeedbackUserTo
 		&& a.nHeight == b.nHeight
 		&& a.txHash == b.txHash
         );
@@ -45,7 +49,8 @@ public:
     CFeedback operator=(const CFeedback &b) {
         vchFeedback = b.vchFeedback;
 		nRating = b.nRating;
-		nFeedbackUser = b.nFeedbackUser;
+		nFeedbackUserFrom = b.nFeedbackUserFrom;
+		nFeedbackUserTo = b.nFeedbackUserTo;
 		nHeight = b.nHeight;
 		txHash = b.txHash;
         return *this;
@@ -55,8 +60,8 @@ public:
         return !(a == b);
     }
 
-    void SetNull() { txHash.SetNull(); nHeight = 0; nRating = 0; nFeedbackUser = 0; vchFeedback.clear();}
-    bool IsNull() const { return ( txHash.IsNull() && nHeight == 0 && nRating == 0 && nFeedbackUser == 0 && vchFeedback.empty()); }
+    void SetNull() { txHash.SetNull(); nHeight = 0; nRating = 0; nFeedbackUserFrom = 0; nFeedbackUserTo = 0; vchFeedback.clear();}
+    bool IsNull() const { return ( txHash.IsNull() && nHeight == 0 && nRating == 0 && nFeedbackUserFrom == 0 && nFeedbackUserTo == 0 && vchFeedback.empty()); }
 };
 struct feedbacksort {
     bool operator ()(const CFeedback& a, const CFeedback& b) {

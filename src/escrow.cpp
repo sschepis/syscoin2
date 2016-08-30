@@ -394,19 +394,14 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 			errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4004 - " + _("Escrow redeem script too long");
 			return error(errorMessage.c_str());
 		}
-		if(theEscrow.buyerFeedback.vchFeedback.size() > MAX_VALUE_LENGTH)
+		if(theEscrow.feedback.size() > 0 && theEscrow.feedback[0].vchFeedback.size() > MAX_VALUE_LENGTH)
 		{
-			errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4005 - " + _("Buyer feedback too long");
+			errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4005 - " + _("Feedback too long");
 			return error(errorMessage.c_str());
 		}
-		if(theEscrow.sellerFeedback.vchFeedback.size() > MAX_VALUE_LENGTH)
+		if(theEscrow.feedback.size() > 1 && theEscrow.feedback[1].vchFeedback.size() > MAX_VALUE_LENGTH)
 		{
-			errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4006 - " + _("Seller feedback too long");
-			return error(errorMessage.c_str());
-		}
-		if(theEscrow.arbiterFeedback.vchFeedback.size() > MAX_VALUE_LENGTH)
-		{
-			errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4007 - " + _("Arbiter feedback too long");
+			errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4006 - " + _("Feedback too long");
 			return error(errorMessage.c_str());
 		}
 		if(theEscrow.vchOffer.size() > MAX_ID_LENGTH)
@@ -441,7 +436,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4013 - " + _("Escrow Guid mismatch");
 					return error(errorMessage.c_str());
 				}
-				if(!theEscrow.buyerFeedback.IsNull() || !theEscrow.sellerFeedback.IsNull() || !theEscrow.arbiterFeedback.IsNull())
+				if(!theEscrow.feedback.empty())
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4014 - " + _("Cannot leave feedback in escrow activation");
 					return error(errorMessage.c_str());
@@ -474,7 +469,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4016 - " + _("Escrow input guid mismatch");
 					return error(errorMessage.c_str());
 				}	
-				if(!theEscrow.buyerFeedback.IsNull() || !theEscrow.sellerFeedback.IsNull() || !theEscrow.arbiterFeedback.IsNull())
+				if(!theEscrow.feedback.empty())
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4017 - " + _("Cannot leave feedback in escrow release");
 					return error(errorMessage.c_str());
@@ -505,34 +500,9 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4020a - " + _("Alias input mismatch");
 						return error(errorMessage.c_str());
 					}
-					if(prevOp != OP_ESCROW_COMPLETE && prevOp != OP_ESCROW_REFUND)
+					if(theEscrow.feedback.empty())
 					{
-						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4025 - " + _("Can only leave feedback for a completed escrow");
-						return error(errorMessage.c_str());
-					}
-					if(theEscrow.buyerFeedback.IsNull() && theEscrow.sellerFeedback.IsNull() && theEscrow.arbiterFeedback.IsNull())
-					{
-						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4026 - " + _("Cannot leave empty feedback");
-						return error(errorMessage.c_str());
-					}
-					if(prevOp == OP_ESCROW_COMPLETE && vvchPrevArgs[1] == vchFromString("1") && theEscrow.buyerFeedback.vchFeedback.size() <= 0 && theEscrow.sellerFeedback.vchFeedback.size() <= 0 && theEscrow.arbiterFeedback.vchFeedback.size() <= 0)
-					{
-						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4027 - " + _("Feedback reply must leave a message");
-						return error(errorMessage.c_str());
-					}
-					if(theEscrow.buyerFeedback.nRating < 0 || theEscrow.buyerFeedback.nRating > 5)
-					{
-						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4028 - " + _("Invalid buyer rating, must be less than or equal to 5 and greater than or equal to 0");
-						return error(errorMessage.c_str());
-					}
-					if(theEscrow.sellerFeedback.nRating < 0 || theEscrow.sellerFeedback.nRating > 5)
-					{
-						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4029 - " + _("Invalid seller rating, must be less than or equal to 5 and greater than or equal to 0");
-						return error(errorMessage.c_str());
-					}
-					if(theEscrow.arbiterFeedback.nRating < 0 || theEscrow.arbiterFeedback.nRating > 5)
-					{
-						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4030 - " + _("Invalid arbiter rating, must be less than or equal to 5 and greater than or equal to 0");
+						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4027 - " + _("Feedback must leave a message");
 						return error(errorMessage.c_str());
 					}
 				}		
@@ -599,7 +569,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 					}
 				}
 				// Check input
-				if(!theEscrow.buyerFeedback.IsNull() || !theEscrow.sellerFeedback.IsNull() || !theEscrow.arbiterFeedback.IsNull())
+				if(!theEscrow.feedback.empty())
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4040 - " + _("Cannot leave feedback in escrow refund");
 					return error(errorMessage.c_str());
@@ -724,80 +694,85 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				if(op == OP_ESCROW_COMPLETE)
 				{
 					if(vvchArgs[1] == vchFromString("1"))
-					{
-						if((serializedEscrow.sellerFeedback.nFeedbackUser == FEEDBACKBUYER || serializedEscrow.arbiterFeedback.nFeedbackUser == FEEDBACKBUYER) && serializedEscrow.vchLinkAlias != theEscrow.vchBuyerAlias)
+					{	
+						if(serializedEscrow.feedback.size() != 2)
+						{
+							errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4027 - " + _("Invalid number of escrow feedbacks provided");
+							return true;
+						}
+						if(serializedEscrow.feedback[0].nFeedbackUserFrom ==  serializedEscrow.feedback[0].nFeedbackUserTo ||
+							serializedEscrow.feedback[1].nFeedbackUserFrom ==  serializedEscrow.feedback[1].nFeedbackUserTo)
+						{
+							errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4027 - " + _("Cannot send yourself feedback");
+							return true;
+						}
+						else if(serializedEscrow.feedback[0].vchFeedback.size() <= 0 || serializedEscrow.feedback[1].vchFeedback.size() <= 0)
+						{
+							errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4027 - " + _("Feedback must leave a message");
+							return true;
+						}
+						else if(serializedEscrow.feedback[0].nRating < 0 || serializedEscrow.feedback[0].nRating > 5 ||
+							serializedEscrow.feedback[1].nRating < 0 || serializedEscrow.feedback[1].nRating > 5)
+						{
+							errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4028 - " + _("Invalid rating, must be less than or equal to 5 and greater than or equal to 0");
+							return true;
+						}
+						else if((serializedEscrow.feedback[0].nFeedbackUserFrom == FEEDBACKBUYER || serializedEscrow.feedback[1].nFeedbackUserFrom == FEEDBACKBUYER) && serializedEscrow.vchLinkAlias != theEscrow.vchBuyerAlias)
 						{
 							errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 88a - " + _("Only buyer can leave buyer feedback");
 							return true;
 						}
-						else if((serializedEscrow.buyerFeedback.nFeedbackUser == FEEDBACKSELLER || serializedEscrow.arbiterFeedback.nFeedbackUser == FEEDBACKSELLER) && serializedEscrow.vchLinkAlias != theEscrow.vchSellerAlias)
+						else if((serializedEscrow.feedback[0].nFeedbackUserFrom == FEEDBACKSELLER || serializedEscrow.feedback[1].nFeedbackUserFrom == FEEDBACKSELLER) && serializedEscrow.vchLinkAlias != theEscrow.vchSellerAlias)
 						{
 							errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 88a - " + _("Only seller can leave buyer feedback");
 							return true;
 						}
-						else if((serializedEscrow.buyerFeedback.nFeedbackUser == FEEDBACKARBITER || serializedEscrow.sellerFeedback.nFeedbackUser == FEEDBACKARBITER) && serializedEscrow.vchLinkAlias != theEscrow.vchArbiterAlias)
+						else if((serializedEscrow.feedback[0].nFeedbackUserFrom == FEEDBACKARBITER || serializedEscrow.feedback[0].nFeedbackUserFrom == FEEDBACKARBITER) && serializedEscrow.vchLinkAlias != theEscrow.vchArbiterAlias)
 						{
 							errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 88a - " + _("Only arbiter can leave arbiter feedback");
 							return true;
 						}
-						int count = 0;
-						// ensure feedback is valid
-						// ensure you aren't leaving feedback for yourself
-						if(!serializedEscrow.buyerFeedback.IsNull() && serializedEscrow.buyerFeedback.nFeedbackUser != FEEDBACKBUYER)
-						{
-							serializedEscrow.buyerFeedback.nHeight = nHeight;
-							serializedEscrow.buyerFeedback.txHash = tx.GetHash();
-							count++;
-						}
-						else
-							serializedEscrow.buyerFeedback.SetNull();
-
-						if(!serializedEscrow.sellerFeedback.IsNull() && serializedEscrow.sellerFeedback.nFeedbackUser != FEEDBACKSELLER)
-						{
-							serializedEscrow.sellerFeedback.nHeight = nHeight;
-							serializedEscrow.sellerFeedback.txHash = tx.GetHash();
-							count++;
-						}
-						else
-							serializedEscrow.sellerFeedback.SetNull();
-
-
-						if(!serializedEscrow.arbiterFeedback.IsNull() && serializedEscrow.arbiterFeedback.nFeedbackUser != FEEDBACKARBITER)
-						{
-							serializedEscrow.arbiterFeedback.nHeight = nHeight;
-							serializedEscrow.arbiterFeedback.txHash = tx.GetHash();
-							count++;
-						}
-						else
-							serializedEscrow.arbiterFeedback.SetNull();
-
-						// can't leave more than 2 feedbacks at once
-						if(count > 2)
-						{
-							errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4048 - " + _("Cannot leave more than 2 feedbacks in the same transaction");
-							return true;
-						}
+						serializedEscrow.feedback[0].nHeight = nHeight;
+						serializedEscrow.feedback[0].txHash = tx.GetHash();
+						serializedEscrow.feedback[1].nHeight = nHeight;
+						serializedEscrow.feedback[1].txHash = tx.GetHash();
 						int numBuyerRatings, numSellerRatings, numArbiterRatings, feedbackBuyerCount, feedbackSellerCount, feedbackArbiterCount;				
 						FindFeedback(theEscrow.feedback, numBuyerRatings, numSellerRatings, numArbiterRatings, feedbackBuyerCount, feedbackSellerCount, feedbackArbiterCount);
 
-						// has this user (nFeedbackUser) already rated?
+						// has this user already rated?
 						if(numBuyerRatings > 0)
-							serializedEscrow.buyerFeedback.nRating = 0;
+						{
+							if(serializedEscrow.feedback[0].nFeedbackUserTo == FEEDBACKBUYER)
+								serializedEscrow.feedback[0].nRating = 0;
+							else if(serializedEscrow.feedback[1].nFeedbackUserTo == FEEDBACKBUYER)
+								serializedEscrow.feedback[1].nRating = 0;
+						}
 						if(numSellerRatings > 0)
-							serializedEscrow.sellerFeedback.nRating = 0;
+						{
+							if(serializedEscrow.feedback[0].nFeedbackUserTo == FEEDBACKSELLER)
+								serializedEscrow.feedback[0].nRating = 0;
+							else if(serializedEscrow.feedback[1].nFeedbackUserTo == FEEDBACKSELLER)
+								serializedEscrow.feedback[1].nRating = 0;
+						}
 						if(numArbiterRatings > 0)
-							serializedEscrow.arbiterFeedback.nRating = 0;
-						if(feedbackBuyerCount >= 10 && !serializedEscrow.buyerFeedback.IsNull())
+						{
+							if(serializedEscrow.feedback[0].nFeedbackUserTo == FEEDBACKARBITER)
+								serializedEscrow.feedback[0].nRating = 0;
+							else if(serializedEscrow.feedback[1].nFeedbackUserTo == FEEDBACKARBITER)
+								serializedEscrow.feedback[1].nRating = 0;
+						}
+
+						if(feedbackBuyerCount >= 10 && (serializedEscrow.feedback[0].nFeedbackUserFrom == FEEDBACKBUYER || serializedEscrow.feedback[1].nFeedbackUserFrom == FEEDBACKBUYER))
 						{
 							errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4049 - " + _("Cannot exceed 10 buyer feedbacks");
 							return true;
 						}
-						if(feedbackSellerCount >= 10 && !serializedEscrow.sellerFeedback.IsNull())
+						if(feedbackSellerCount >= 10 && (serializedEscrow.feedback[0].nFeedbackUserFrom == FEEDBACKSELLER || serializedEscrow.feedback[1].nFeedbackUserFrom == FEEDBACKSELLER))
 						{
 							errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4050 - " + _("Cannot exceed 10 seller feedbacks");
 							return true;
 						}
-						if(feedbackArbiterCount >= 10 && !serializedEscrow.arbiterFeedback.IsNull())
+						if(feedbackArbiterCount >= 10 && (serializedEscrow.feedback[0].nFeedbackUserFrom == FEEDBACKARBITER || serializedEscrow.feedback[1].nFeedbackUserFrom == FEEDBACKARBITER))
 						{
 							errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4051 - " + _("Cannot exceed 10 arbiter feedbacks");
 							return true;
@@ -898,66 +873,36 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 }
 void HandleEscrowFeedback(const CEscrow& serializedEscrow, CEscrow& dbEscrow, vector<CEscrow> &vtxPos)
 {
-	if(serializedEscrow.buyerFeedback.nRating > 0)
+	for(int i =0;i<serializedEscrow.feedback.size();i++)
 	{
-		CSyscoinAddress address = CSyscoinAddress(stringFromVch(dbEscrow.vchBuyerAlias));
-		if(address.IsValid() && address.isAlias)
+		if(serializedEscrow.feedback[i].nRating > 0)
 		{
-			vector<CAliasIndex> vtxPos;
-			const vector<unsigned char> &vchAlias = vchFromString(address.aliasName);
-			if (paliasdb->ReadAlias(vchAlias, vtxPos) && !vtxPos.empty())
+			CSyscoinAddress address;
+			if(serializedEscrow.feedback[i].nFeedbackUserTo == FEEDBACKBUYER)
+				address = CSyscoinAddress(stringFromVch(dbEscrow.vchBuyerAlias));
+			else if(serializedEscrow.feedback[i].nFeedbackUserTo == FEEDBACKSELLER)
+				address = CSyscoinAddress(stringFromVch(dbEscrow.vchSellerAlias));
+			else if(serializedEscrow.feedback[i].nFeedbackUserTo == FEEDBACKARBITER)
+				address = CSyscoinAddress(stringFromVch(dbEscrow.vchArbiterAlias));
+			if(address.IsValid() && address.isAlias)
 			{
+				vector<CAliasIndex> vtxPos;
+				const vector<unsigned char> &vchAlias = vchFromString(address.aliasName);
+				if (paliasdb->ReadAlias(vchAlias, vtxPos) && !vtxPos.empty())
+				{
+					
+					CAliasIndex alias = vtxPos.back();
+					alias.nRatingCount++;
+					alias.nRating += serializedEscrow.feedback[0].nRating;
+					PutToAliasList(vtxPos, alias);
+					paliasdb->WriteAlias(vchAlias, vchFromString(address.ToString()), vtxPos);
+				}
+			}
 				
-				CAliasIndex alias = vtxPos.back();
-				alias.nRatingCount++;
-				alias.nRating += serializedEscrow.buyerFeedback.nRating;
-				PutToAliasList(vtxPos, alias);
-				paliasdb->WriteAlias(vchAlias, vchFromString(address.ToString()), vtxPos);
-			}
 		}
-			
+		if(!serializedEscrow.feedback[0].IsNull())
+			dbEscrow.feedback.push_back(serializedEscrow.feedback[0]);
 	}
-	if(serializedEscrow.sellerFeedback.nRating > 0)
-	{
-		CSyscoinAddress address = CSyscoinAddress(stringFromVch(dbEscrow.vchSellerAlias));
-		if(address.IsValid() && address.isAlias)
-		{
-			vector<CAliasIndex> vtxPos;
-			const vector<unsigned char> &vchAlias = vchFromString(address.aliasName);
-			if (paliasdb->ReadAlias(vchAlias, vtxPos) && !vtxPos.empty())
-			{
-				CAliasIndex alias = vtxPos.back();
-				alias.nRatingCount++;
-				alias.nRating += serializedEscrow.sellerFeedback.nRating;
-				PutToAliasList(vtxPos, alias);
-				paliasdb->WriteAlias(vchAlias, vchFromString(address.ToString()), vtxPos);
-			}
-		}
-	}
-	if(serializedEscrow.arbiterFeedback.nRating > 0)
-	{
-		CSyscoinAddress address = CSyscoinAddress(stringFromVch(dbEscrow.vchArbiterAlias));
-		if(address.IsValid() && address.isAlias)
-		{
-			vector<CAliasIndex> vtxPos;
-			const vector<unsigned char> &vchAlias = vchFromString(address.aliasName);
-			if (paliasdb->ReadAlias(vchAlias, vtxPos) && !vtxPos.empty())
-			{
-				CAliasIndex alias = vtxPos.back();
-				alias.nRatingCount++;
-				alias.nRating += serializedEscrow.arbiterFeedback.nRating;
-				PutToAliasList(vtxPos, alias);
-				paliasdb->WriteAlias(vchAlias, vchFromString(address.ToString()), vtxPos);
-			}
-		}
-	}
-	if(!serializedEscrow.buyerFeedback.IsNull())
-		dbEscrow.feedback.push_back(serializedEscrow.buyerFeedback);
-	if(!serializedEscrow.sellerFeedback.IsNull())
-		dbEscrow.feedback.push_back(serializedEscrow.sellerFeedback);
-	if(!serializedEscrow.arbiterFeedback.IsNull())
-		dbEscrow.feedback.push_back(serializedEscrow.arbiterFeedback);
-
 	PutToEscrowList(vtxPos, dbEscrow);
 	pescrowdb->WriteEscrow(dbEscrow.vchEscrow, vtxPos);
 }
@@ -2330,14 +2275,7 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
     if (!GetTxOfEscrow( vchEscrow, 
 		escrow, tx))
         throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4153 - " + _("Could not find a escrow with this key"));
-    vector<vector<unsigned char> > vvch;
-    int op, nOut;
-    if (!DecodeEscrowTx(tx, op, nOut, vvch) 
-    	|| !IsEscrowOp(op))
-        throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4154 - " + _("Could not decode escrow transaction"));
-	const CWalletTx *wtxIn = pwalletMain->GetWalletTx(tx.GetHash());
-	if (wtxIn == NULL)
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4155 - " + _("This escrow is not in your wallet"));
+
 	CAliasIndex arbiterAliasLatest, buyerAliasLatest, sellerAliasLatest;
 	CTransaction arbiteraliastx, selleraliastx, buyeraliastx;
 	GetTxOfAlias(escrow.vchArbiterAlias, arbiterAliasLatest, arbiteraliastx, true);
@@ -2432,10 +2370,7 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
 	{
 		foundArbiterKey = false;
 	}
-     	// check for existing escrow 's
-	if (ExistsInMempool(vchEscrow, OP_ESCROW_ACTIVATE) || ExistsInMempool(vchEscrow, OP_ESCROW_RELEASE) || ExistsInMempool(vchEscrow, OP_ESCROW_REFUND) || ExistsInMempool(vchEscrow, OP_ESCROW_COMPLETE) ) {
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4162 - " + _("There are pending operations on that escrow"));
-	}
+
 	escrow.ClearEscrow();
 	escrow.op = OP_ESCROW_COMPLETE;
 	escrow.nHeight = chainActive.Tip()->nHeight;
@@ -2443,44 +2378,44 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
 	// buyer
 	if(foundBuyerKey)
 	{
-		CFeedback sellerFeedback(FEEDBACKBUYER);
+		CFeedback sellerFeedback(FEEDBACKBUYER, FEEDBACKSELLER);
 		sellerFeedback.vchFeedback = vchFeedbackPrimary;
 		sellerFeedback.nRating = nRatingPrimary;
 		sellerFeedback.nHeight = chainActive.Tip()->nHeight;
-		CFeedback arbiterFeedback(FEEDBACKBUYER);
+		CFeedback arbiterFeedback(FEEDBACKBUYER, FEEDBACKARBITER);
 		arbiterFeedback.vchFeedback = vchFeedbackSecondary;
 		arbiterFeedback.nRating = nRatingSecondary;
 		arbiterFeedback.nHeight = chainActive.Tip()->nHeight;
-		escrow.arbiterFeedback = arbiterFeedback;
-		escrow.sellerFeedback = sellerFeedback;
+		escrow.feedback.push_back(arbiterFeedback);
+		escrow.feedback.push_back(sellerFeedback);
 	}
 	// seller
 	else if(foundSellerKey)
 	{
-		CFeedback buyerFeedback(FEEDBACKSELLER);
+		CFeedback buyerFeedback(FEEDBACKSELLER, FEEDBACKBUYER);
 		buyerFeedback.vchFeedback = vchFeedbackPrimary;
 		buyerFeedback.nRating = nRatingPrimary;
 		buyerFeedback.nHeight = chainActive.Tip()->nHeight;
-		CFeedback arbiterFeedback(FEEDBACKSELLER);
+		CFeedback arbiterFeedback(FEEDBACKSELLER, FEEDBACKARBITER);
 		arbiterFeedback.vchFeedback = vchFeedbackSecondary;
 		arbiterFeedback.nRating = nRatingSecondary;
 		arbiterFeedback.nHeight = chainActive.Tip()->nHeight;
-		escrow.buyerFeedback = buyerFeedback;
-		escrow.arbiterFeedback = arbiterFeedback;
+		escrow.feedback.push_back(buyerFeedback);
+		escrow.feedback.push_back(arbiterFeedback);
 	}
 	// arbiter
 	else if(foundArbiterKey)
 	{
-		CFeedback buyerFeedback(FEEDBACKARBITER);
+		CFeedback buyerFeedback(FEEDBACKARBITER, FEEDBACKBUYER);
 		buyerFeedback.vchFeedback = vchFeedbackPrimary;
 		buyerFeedback.nRating = nRatingPrimary;
 		buyerFeedback.nHeight = chainActive.Tip()->nHeight;
-		CFeedback sellerFeedback(FEEDBACKARBITER);
+		CFeedback sellerFeedback(FEEDBACKARBITER, FEEDBACKSELLER);
 		sellerFeedback.vchFeedback = vchFeedbackSecondary;
 		sellerFeedback.nRating = nRatingSecondary;
 		sellerFeedback.nHeight = chainActive.Tip()->nHeight;
-		escrow.buyerFeedback = buyerFeedback;
-		escrow.sellerFeedback = sellerFeedback;
+		escrow.feedback.push_back(buyerFeedback);
+		escrow.feedback.push_back(sellerFeedback);
 	}
 	else
 	{
@@ -2533,6 +2468,7 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
 	CreateFeeRecipient(scriptData, data, fee);
 	vecSend.push_back(fee);
 
+	const CWalletTx * wtxIn=NULL;
 	const CWalletTx * wtxInOffer=NULL;
 	const CWalletTx * wtxInCert=NULL;
 	SendMoneySyscoin(vecSend, recipientBuyer.nAmount+recipientSeller.nAmount+recipientArbiter.nAmount+fee.nAmount+aliasRecipient.nAmount, false, wtx, wtxInOffer, wtxInCert, wtxAliasIn, wtxIn);
@@ -2625,7 +2561,7 @@ UniValue escrowinfo(const UniValue& params, bool fHelp) {
 		oFeedback.push_back(Pair("txid", buyerFeedBacks[i].txHash.GetHex()));
 		oFeedback.push_back(Pair("time", sFeedbackTime));
 		oFeedback.push_back(Pair("rating", buyerFeedBacks[i].nRating));
-		oFeedback.push_back(Pair("feedbackuser", buyerFeedBacks[i].nFeedbackUser));
+		oFeedback.push_back(Pair("feedbackuser", buyerFeedBacks[i].nFeedbackUserFrom));
 		oFeedback.push_back(Pair("feedback", stringFromVch(buyerFeedBacks[i].vchFeedback)));
 		oBuyerFeedBack.push_back(oFeedback);
 	}
@@ -2643,7 +2579,7 @@ UniValue escrowinfo(const UniValue& params, bool fHelp) {
 		oFeedback.push_back(Pair("txid", sellerFeedBacks[i].txHash.GetHex()));
 		oFeedback.push_back(Pair("time", sFeedbackTime));
 		oFeedback.push_back(Pair("rating", sellerFeedBacks[i].nRating));
-		oFeedback.push_back(Pair("feedbackuser", sellerFeedBacks[i].nFeedbackUser));
+		oFeedback.push_back(Pair("feedbackuser", sellerFeedBacks[i].nFeedbackUserFrom));
 		oFeedback.push_back(Pair("feedback", stringFromVch(sellerFeedBacks[i].vchFeedback)));
 		oSellerFeedBack.push_back(oFeedback);
 	}
@@ -2661,7 +2597,7 @@ UniValue escrowinfo(const UniValue& params, bool fHelp) {
 		oFeedback.push_back(Pair("txid", arbiterFeedBacks[i].txHash.GetHex()));
 		oFeedback.push_back(Pair("time", sFeedbackTime));
 		oFeedback.push_back(Pair("rating", arbiterFeedBacks[i].nRating));
-		oFeedback.push_back(Pair("feedbackuser", arbiterFeedBacks[i].nFeedbackUser));
+		oFeedback.push_back(Pair("feedbackuser", arbiterFeedBacks[i].nFeedbackUserFrom));
 		oFeedback.push_back(Pair("feedback", stringFromVch(arbiterFeedBacks[i].vchFeedback)));
 		oArbiterFeedBack.push_back(oFeedback);
 	}
@@ -2814,7 +2750,7 @@ UniValue escrowlist(const UniValue& params, bool fHelp) {
 			oFeedback.push_back(Pair("txid", buyerFeedBacks[i].txHash.GetHex()));
 			oFeedback.push_back(Pair("time", sFeedbackTime));
 			oFeedback.push_back(Pair("rating", buyerFeedBacks[i].nRating));
-			oFeedback.push_back(Pair("feedbackuser", buyerFeedBacks[i].nFeedbackUser));
+			oFeedback.push_back(Pair("feedbackuser", buyerFeedBacks[i].nFeedbackUserFrom));
 			oFeedback.push_back(Pair("feedback", stringFromVch(buyerFeedBacks[i].vchFeedback)));
 			oBuyerFeedBack.push_back(oFeedback);
 		}
@@ -2832,7 +2768,7 @@ UniValue escrowlist(const UniValue& params, bool fHelp) {
 			oFeedback.push_back(Pair("txid", sellerFeedBacks[i].txHash.GetHex()));
 			oFeedback.push_back(Pair("time", sFeedbackTime));
 			oFeedback.push_back(Pair("rating", sellerFeedBacks[i].nRating));
-			oFeedback.push_back(Pair("feedbackuser", sellerFeedBacks[i].nFeedbackUser));
+			oFeedback.push_back(Pair("feedbackuser", sellerFeedBacks[i].nFeedbackUserFrom));
 			oFeedback.push_back(Pair("feedback", stringFromVch(sellerFeedBacks[i].vchFeedback)));
 			oSellerFeedBack.push_back(oFeedback);
 		}
@@ -2850,7 +2786,7 @@ UniValue escrowlist(const UniValue& params, bool fHelp) {
 			oFeedback.push_back(Pair("txid", arbiterFeedBacks[i].txHash.GetHex()));
 			oFeedback.push_back(Pair("time", sFeedbackTime));
 			oFeedback.push_back(Pair("rating", arbiterFeedBacks[i].nRating));
-			oFeedback.push_back(Pair("feedbackuser", arbiterFeedBacks[i].nFeedbackUser));
+			oFeedback.push_back(Pair("feedbackuser", arbiterFeedBacks[i].nFeedbackUserFrom));
 			oFeedback.push_back(Pair("feedback", stringFromVch(arbiterFeedBacks[i].vchFeedback)));
 			oArbiterFeedBack.push_back(oFeedback);
 		}
@@ -3066,7 +3002,7 @@ UniValue escrowfilter(const UniValue& params, bool fHelp) {
 			}
 			oFeedback.push_back(Pair("time", sFeedbackTime));
 			oFeedback.push_back(Pair("rating", buyerFeedBacks[i].nRating));
-			oFeedback.push_back(Pair("feedbackuser", buyerFeedBacks[i].nFeedbackUser));
+			oFeedback.push_back(Pair("feedbackuser", buyerFeedBacks[i].nFeedbackUserFrom));
 			oFeedback.push_back(Pair("feedback", stringFromVch(buyerFeedBacks[i].vchFeedback)));
 			oBuyerFeedBack.push_back(oFeedback);
 		}
@@ -3083,7 +3019,7 @@ UniValue escrowfilter(const UniValue& params, bool fHelp) {
 			}
 			oFeedback.push_back(Pair("time", sFeedbackTime));
 			oFeedback.push_back(Pair("rating", sellerFeedBacks[i].nRating));
-			oFeedback.push_back(Pair("feedbackuser", sellerFeedBacks[i].nFeedbackUser));
+			oFeedback.push_back(Pair("feedbackuser", sellerFeedBacks[i].nFeedbackUserFrom));
 			oFeedback.push_back(Pair("feedback", stringFromVch(sellerFeedBacks[i].vchFeedback)));
 			oSellerFeedBack.push_back(oFeedback);
 		}
@@ -3100,7 +3036,7 @@ UniValue escrowfilter(const UniValue& params, bool fHelp) {
 			}
 			oFeedback.push_back(Pair("time", sFeedbackTime));
 			oFeedback.push_back(Pair("rating", arbiterFeedBacks[i].nRating));
-			oFeedback.push_back(Pair("feedbackuser", arbiterFeedBacks[i].nFeedbackUser));
+			oFeedback.push_back(Pair("feedbackuser", arbiterFeedBacks[i].nFeedbackUserFrom));
 			oFeedback.push_back(Pair("feedback", stringFromVch(arbiterFeedBacks[i].vchFeedback)));
 			oArbiterFeedBack.push_back(oFeedback);
 		}

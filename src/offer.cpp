@@ -1252,7 +1252,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					return true;
 				}
 				// if feedback is for buyer then we need to ensure attached input alias was from seller
-				if(theOfferAccept.feedback[0].nFeedbackUser == FEEDBACKBUYER)
+				if(theOfferAccept.feedback[0].nFeedbackUserFrom == FEEDBACKBUYER)
 				{
 					if(serializedOffer.vchLinkAlias != offer.vchAlias)
 					{
@@ -1260,7 +1260,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						return true;
 					}
 				}
-				else if(theOfferAccept.feedback[0].nFeedbackUser == FEEDBACKSELLER)
+				else if(theOfferAccept.feedback[0].nFeedbackUserFrom == FEEDBACKSELLER)
 				{
 					if(serializedOffer.vchLinkAlias != offerAccept.vchBuyerAlias)
 					{
@@ -1285,27 +1285,27 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				}
 				int numBuyerRatings, numSellerRatings, feedbackBuyerCount, numArbiterRatings, feedbackSellerCount, feedbackArbiterCount;				
 				FindFeedback(offerAccept.feedback, numBuyerRatings, numSellerRatings, numArbiterRatings,feedbackBuyerCount, feedbackSellerCount, feedbackArbiterCount);
-				// has this user (nFeedbackUser) already rated? if so set desired rating to 0
-				if(theOfferAccept.feedback[0].nFeedbackUser == FEEDBACKBUYER && numBuyerRatings > 0)
+				// has this user already rated? if so set desired rating to 0
+				if(theOfferAccept.feedback[0].nFeedbackUserTo == FEEDBACKBUYER && numBuyerRatings > 0)
 					theOfferAccept.feedback[0].nRating = 0;
-				else if(theOfferAccept.feedback[0].nFeedbackUser == FEEDBACKSELLER && numSellerRatings > 0)
+				else if(theOfferAccept.feedback[0].nFeedbackUserTo == FEEDBACKSELLER && numSellerRatings > 0)
 					theOfferAccept.feedback[0].nRating = 0;
-				if(feedbackBuyerCount >= 10 && theOfferAccept.feedback[0].nFeedbackUser == FEEDBACKBUYER)
+				if(feedbackBuyerCount >= 10 && theOfferAccept.feedback[0].nFeedbackUserFrom == FEEDBACKBUYER)
 				{
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 90 - " + _("Cannot exceed 10 buyer feedbacks");
 					return true;
 				}
-				else if(feedbackSellerCount >= 10 && theOfferAccept.feedback[0].nFeedbackUser == FEEDBACKSELLER)
+				else if(feedbackSellerCount >= 10 && theOfferAccept.feedback[0].nFeedbackUserFrom == FEEDBACKSELLER)
 				{
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 90a - " + _("Cannot exceed 10 seller feedbacks");
 					return true;
 				}
-				else if(theOfferAccept.feedback[0].nFeedbackUser == FEEDBACKBUYER && feedbackBuyerCount > feedbackSellerCount)
+				else if(theOfferAccept.feedback[0].nFeedbackUserFrom == FEEDBACKBUYER && feedbackBuyerCount > feedbackSellerCount)
 				{
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 90b - " + _("Cannot leave multiple buyer feedbacks you must wait for a seller reply first");
 					return true;
 				}
-				else if(theOfferAccept.feedback[0].nFeedbackUser == FEEDBACKSELLER && feedbackSellerCount > feedbackBuyerCount)
+				else if(theOfferAccept.feedback[0].nFeedbackUserFrom == FEEDBACKSELLER && feedbackSellerCount > feedbackBuyerCount)
 				{
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 90c - " + _("Cannot leave multiple seller feedbacks you must wait for a buyer reply first");
 					return true;
@@ -2896,9 +2896,9 @@ void HandleAcceptFeedback(const CFeedback& feedback, COffer& offer, vector<COffe
 	{
 		string aliasStr;
 		CPubKey key;
-		if(feedback.nFeedbackUser == FEEDBACKBUYER)
+		if(feedback.nFeedbackUserTo == FEEDBACKBUYER)
 			aliasStr = stringFromVch(offer.accept.vchBuyerAlias);
-		else if(feedback.nFeedbackUser == FEEDBACKSELLER)
+		else if(feedback.nFeedbackUserTo == FEEDBACKSELLER)
 			aliasStr = stringFromVch(offer.vchAlias);
 		CSyscoinAddress address = CSyscoinAddress(aliasStr);
 		if(address.IsValid() && address.isAlias)
@@ -2927,19 +2927,19 @@ void FindFeedback(const vector<CFeedback> &feedback, int &numBuyerRatings, int &
 	{	
 		if(!feedback[i].IsNull())
 		{
-			if(feedback[i].nFeedbackUser == FEEDBACKBUYER)
+			if(feedback[i].nFeedbackUserTo == FEEDBACKBUYER)
 			{
 				feedbackBuyerCount++;
 				if(feedback[i].nRating > 0)
 					numBuyerRatings++;
 			}
-			else if(feedback[i].nFeedbackUser == FEEDBACKSELLER)
+			else if(feedback[i].nFeedbackUserTo == FEEDBACKSELLER)
 			{
 				feedbackSellerCount++;
 				if(feedback[i].nRating > 0)
 					numSellerRatings++;
 			}
-			else if(feedback[i].nFeedbackUser == FEEDBACKARBITER)
+			else if(feedback[i].nFeedbackUserTo == FEEDBACKARBITER)
 			{
 				feedbackArbiterCount++;
 				if(feedback[i].nRating > 0)
@@ -2954,7 +2954,7 @@ void GetFeedback(vector<CFeedback> &feedBackSorted, int &avgRating, const Feedba
 	int nRatingCount = 0;
 	for(unsigned int i =0;i<feedBack.size();i++)
 	{
-		if(!feedBack[i].IsNull() && feedBack[i].nFeedbackUser == type)
+		if(!feedBack[i].IsNull() && feedBack[i].nFeedbackUserTo == type)
 		{
 			if(feedBack[i].nRating > 0)
 			{
@@ -2973,6 +2973,7 @@ void GetFeedback(vector<CFeedback> &feedBackSorted, int &avgRating, const Feedba
 		sort(feedBackSorted.begin(), feedBackSorted.end(), feedbacksort());
 	
 }
+
 UniValue offeracceptfeedback(const UniValue& params, bool fHelp) {
     if (fHelp || params.size() != 4)
         throw runtime_error(
@@ -3075,7 +3076,7 @@ UniValue offeracceptfeedback(const UniValue& params, bool fHelp) {
 	// buyer
 	if(foundBuyerKey)
 	{
-		CFeedback sellerFeedback(FEEDBACKSELLER);
+		CFeedback sellerFeedback(FEEDBACKBUYER, FEEDBACKSELLER);
 		sellerFeedback.vchFeedback = vchFeedback;
 		sellerFeedback.nRating = nRating;
 		sellerFeedback.nHeight = chainActive.Tip()->nHeight;
@@ -3096,7 +3097,7 @@ UniValue offeracceptfeedback(const UniValue& params, bool fHelp) {
 	// seller
 	else if(foundSellerKey)
 	{
-		CFeedback buyerFeedback(FEEDBACKBUYER);
+		CFeedback buyerFeedback(FEEDBACKSELLER, FEEDBACKBUYER);
 		buyerFeedback.vchFeedback = vchFeedback;
 		buyerFeedback.nRating = nRating;
 		buyerFeedback.nHeight = chainActive.Tip()->nHeight;
@@ -3328,7 +3329,7 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 			oFeedback.push_back(Pair("txid", buyerFeedBacks[j].txHash.GetHex()));
 			oFeedback.push_back(Pair("time", sFeedbackTime));
 			oFeedback.push_back(Pair("rating", buyerFeedBacks[j].nRating));
-			oFeedback.push_back(Pair("feedbackuser", buyerFeedBacks[j].nFeedbackUser));
+			oFeedback.push_back(Pair("feedbackuser", buyerFeedBacks[j].nFeedbackUserFrom));
 			oFeedback.push_back(Pair("feedback", stringFromVch(buyerFeedBacks[j].vchFeedback)));
 			oBuyerFeedBack.push_back(oFeedback);
 		}
@@ -3345,7 +3346,7 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 			oFeedback.push_back(Pair("txid", sellerFeedBacks[j].txHash.GetHex()));
 			oFeedback.push_back(Pair("time", sFeedbackTime));
 			oFeedback.push_back(Pair("rating", sellerFeedBacks[j].nRating));
-			oFeedback.push_back(Pair("feedbackuser", sellerFeedBacks[j].nFeedbackUser));
+			oFeedback.push_back(Pair("feedbackuser", sellerFeedBacks[j].nFeedbackUserFrom));
 			oFeedback.push_back(Pair("feedback", stringFromVch(sellerFeedBacks[j].vchFeedback)));
 			oSellerFeedBack.push_back(oFeedback);
 		}
