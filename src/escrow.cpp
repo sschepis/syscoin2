@@ -2371,7 +2371,7 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
 			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 5660b - There are pending operations on that alias");
 		}
 		CScript scriptPubKeyAliasOrig= GetScriptForDestination(buyerKey.GetID());
-		scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << buyerAliasLatest.vchAlias << buyerAliasLatest.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
+		scriptPubKeyAlias = CScript() << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << buyerAliasLatest.vchAlias << buyerAliasLatest.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
 		scriptPubKeyAlias += scriptPubKeyAliasOrig;
 		foundBuyerKey = true;
 		vchLinkAlias = buyerAliasLatest.vchAlias;
@@ -2397,7 +2397,7 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
 			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 560d - There are pending operations on that alias");
 		}
 		CScript scriptPubKeyAliasOrig = GetScriptForDestination(sellerKey.GetID());
-		scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << sellerAliasLatest.vchAlias << sellerAliasLatest.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
+		scriptPubKeyAlias = CScript() << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << sellerAliasLatest.vchAlias << sellerAliasLatest.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
 		scriptPubKeyAlias += scriptPubKeyAliasOrig;
 		vchLinkAlias = sellerAliasLatest.vchAlias;
 		foundSellerKey = true;
@@ -2423,7 +2423,7 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
 			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 560d - There are pending operations on that alias");
 		}
 		CScript scriptPubKeyAliasOrig = GetScriptForDestination(arbiterKey.GetID());
-		scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << arbiterAliasLatest.vchAlias << arbiterAliasLatest.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
+		scriptPubKeyAlias  = CScript() << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << arbiterAliasLatest.vchAlias << arbiterAliasLatest.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
 		scriptPubKeyAlias += scriptPubKeyAliasOrig;
 		vchLinkAlias = arbiterAliasLatest.vchAlias;
 		foundArbiterKey = true;
