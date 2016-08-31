@@ -164,11 +164,11 @@ BOOST_AUTO_TEST_CASE (generate_escrowfeedback)
 	AliasNew("node3", "arbiterescrowfeedback", "somedata");
 
 	string qty = "1";
-	string offerguid = OfferNew("node2", "sellerescrowfeedback", "category", "title", "100", "0.05", "description", "GBP");
-	string guid = EscrowNew("node1", "buyerescrowfeedback", offerguid, qty, "message", "arbiterescrowfeedback", "sellerescrowfeedback");
+	string offerguid = OfferNew("node1", "sellerescrowfeedback", "category", "title", "100", "0.05", "description", "GBP");
+	string guid = EscrowNew("node2", "buyerescrowfeedback", offerguid, qty, "message", "arbiterescrowfeedback", "sellerescrowfeedback");
 	EscrowRelease("node3", guid);
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "escrowinfo " + guid));
-	EscrowClaimRelease("node2", guid);
+	EscrowClaimRelease("node1", guid);
 	// seller leaves feedback first
 	EscrowFeedback("node1", guid, "feedbackbuyer", "1", FEEDBACKBUYER, "feedbackarbiter", "2", FEEDBACKARBITER, true);
 	// seller can't leave feedback twice in a row
