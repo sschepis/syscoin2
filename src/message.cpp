@@ -434,10 +434,6 @@ UniValue messagenew(const UniValue& params, bool fHelp) {
 	CTransaction aliastx;
 	if (!GetTxOfAlias(vchFromString(strFromAddress), aliasFrom, aliastx, true))
 		throw runtime_error("SYSCOIN_MESSAGE_RPC_ERROR: ERRCODE: 3016 - " + _("Could not find an alias with this name"));
-	// check for existing pending alias updates
-	if (ExistsInMempool(vchFromString(strFromAddress), OP_ALIAS_UPDATE)) {
-		throw runtime_error("SYSCOIN_MESSAGE_RPC_ERROR: ERRCODE: 3017 - " + _("There are pending operations on that alias"));
-	}
     if(!IsSyscoinTxMine(aliastx, "alias")) {
 		throw runtime_error("SYSCOIN_MESSAGE_RPC_ERROR: ERRCODE: 3018 - " + _("This alias is not yours"));
     }

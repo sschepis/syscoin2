@@ -290,87 +290,6 @@ unsigned int QtyOfPendingAcceptsInMempool(const vector<unsigned char>& vchToFind
 	return nQty;
 
 }
-bool ExistsInMempool(const std::vector<unsigned char> &vchToFind, opcodetype type)
-{
-	LOCK(mempool.cs);
-	for (CTxMemPool::indexed_transaction_set::iterator mi = mempool.mapTx.begin();
-             mi != mempool.mapTx.end(); ++mi)
-        {
-        const CTransaction& tx = mi->GetTx();
-		if (tx.IsCoinBase() || !CheckFinalTx(tx))
-			continue;
-		vector<vector<unsigned char> > vvch;
-		int op, nOut;
-		if(IsAliasOp(type))
-		{
-			if(DecodeAliasTx(tx, op, nOut, vvch))
-			{
-				if(op == type)
-				{
-					if(vvch.size() >= 1 && vchToFind == vvch[0])
-					{
-						return true;
-					}
-				}
-			}
-		}
-		else if(IsOfferOp(type))
-		{
-			if(DecodeOfferTx(tx, op, nOut, vvch))
-			{
-				if(op == type)
-				{
-					if(vvch.size() >= 1 && vchToFind == vvch[0])
-					{
-						return true;
-					}
-				}
-			}
-		}
-		else if(IsCertOp(type))
-		{
-			if(DecodeCertTx(tx, op, nOut, vvch))
-			{
-				if(op == type)
-				{
-					if(vvch.size() >= 1 && vchToFind == vvch[0])
-					{
-						return true;
-					}
-				}
-			}
-		}
-		else if(IsEscrowOp(type))
-		{
-			if(DecodeEscrowTx(tx, op, nOut, vvch))
-			{
-				if(op == type)
-				{
-					if(vvch.size() >= 1 && vchToFind == vvch[0])
-					{
-						return true;
-					}
-				}
-			}
-		}
-		else if(IsMessageOp(type))
-		{
-			if(DecodeMessageTx(tx, op, nOut, vvch))
-			{
-				if(op == type)
-				{
-					if(vvch.size() >= 1 && vchToFind == vvch[0])
-					{
-						return true;
-					}
-				}
-			}
-		}
-	}
-	return false;
-
-}
-
 CAmount convertCurrencyCodeToSyscoin(const vector<unsigned char> &vchAliasPeg, const vector<unsigned char> &vchCurrencyCode, const float &nPrice, const unsigned int &nHeight, int &precision)
 {
 	CAmount sysPrice = 0;
@@ -1542,10 +1461,6 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 
 	EnsureWalletIsUnlocked();
 
-	// check for existing pending aliases
-	if (ExistsInMempool(vchAlias, OP_ALIAS_ACTIVATE)) {
-		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 1022 - " + _("There are pending operations on that alias"));
-	}
 	
 
 	CPubKey defaultKey;
@@ -1682,10 +1597,6 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 	if (!pwalletMain->GetKey(keyID, vchSecret))
 		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 1026b - " + _("Private key for alias is not known"));
 	
-	// check for existing pending aliases
-	if (ExistsInMempool(vchAlias, OP_ALIAS_ACTIVATE) || ExistsInMempool(vchAlias, OP_ALIAS_UPDATE)) {
-		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 1027 - " + _("There are pending operations on that alias"));
-	}
 	vector<unsigned char> vchPrivateKey;
 	if(vchPubKeyByte.empty())
 	{

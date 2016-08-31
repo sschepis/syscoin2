@@ -685,9 +685,7 @@ UniValue certnew(const UniValue& params, bool fHelp) {
 	wtxAliasIn = pwalletMain->GetWalletTx(aliastx.GetHash());
 	if (wtxAliasIn == NULL)
 		throw runtime_error("SYSCOIN_CERTIFICATE_CONSENSUS_ERROR ERRCODE: 2023b - " + _("This alias is not in your wallet"));
-	if (ExistsInMempool(vchAlias, OP_ALIAS_ACTIVATE) || ExistsInMempool(vchAlias, OP_ALIAS_UPDATE)) {
-		throw runtime_error("SYSCOIN_CERTIFICATE_CONSENSUS_ERROR ERRCODE: 2023c - " + _("There are pending operations on that alias"));
-	}
+
 
 	if(params.size() >= 6)
 		vchCat = vchFromValue(params[5]);
@@ -838,18 +836,11 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
 	if (wtxAliasIn == NULL)
 		throw runtime_error("SYSCOIN_CERTIFICATE_CONSENSUS_ERROR ERRCODE: 2026b - " + _("This alias is not in your wallet"));
 
-	if (ExistsInMempool(vchAlias, OP_ALIAS_ACTIVATE) || ExistsInMempool(vchAlias, OP_ALIAS_UPDATE)) {
-		throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR ERRCODE: 2026c - " + _("There are pending operations on that alias"));
-	}
 		
     // make sure cert is in wallet
 	wtxIn = pwalletMain->GetWalletTx(tx.GetHash());
 	if (wtxIn == NULL || !IsSyscoinTxMine(tx, "cert"))
 		throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2027 - " + _("This cert is not in your wallet"));
-      	// check for existing cert 's
-	if (ExistsInMempool(vchCert, OP_CERT_ACTIVATE) || ExistsInMempool(vchCert, OP_CERT_UPDATE) || ExistsInMempool(vchCert, OP_CERT_TRANSFER)) {
-		throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2028 - " + _("There are pending operations on that cert"));
-	}
 
 	CCert copyCert = theCert;
 	theCert.ClearCert();
@@ -957,9 +948,6 @@ UniValue certtransfer(const UniValue& params, bool fHelp) {
 	if (wtxAliasIn == NULL)
 		throw runtime_error("SYSCOIN_CERTIFICATE_CONSENSUS_ERROR ERRCODE: 2032b - " + _("This alias is not in your wallet"));
 
-	if (ExistsInMempool(vchAlias, OP_ALIAS_ACTIVATE) || ExistsInMempool(vchAlias, OP_ALIAS_UPDATE)) {
-		throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR ERRCODE: 2032c - " + _("There are pending operations on that alias"));
-	}
 	CPubKey fromKey = CPubKey(fromAlias.vchPubKey);
 
 	// check to see if certificate in wallet
@@ -967,9 +955,6 @@ UniValue certtransfer(const UniValue& params, bool fHelp) {
 	if (wtxIn == NULL || !IsSyscoinTxMine(*wtxIn, "cert"))
 		throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2033 - " + _("This certificate is not in your wallet"));
 
-	if (ExistsInMempool(vchCert, OP_CERT_UPDATE) || ExistsInMempool(vchCert, OP_CERT_TRANSFER)) {
-		throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2034 - " + _("There are pending operations on that cert"));
-	}
 	// if cert is private, decrypt the data
 	vector<unsigned char> vchData = theCert.vchData;
 	if(theCert.bPrivate)
