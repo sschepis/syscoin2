@@ -864,7 +864,8 @@ void EscrowFeedback(const string& node, const string& escrowguid, const string& 
 
 	UniValue r;
 	string escrowfeedbackstr = "escrowfeedback " + escrowguid + " " + feedbackprimary + " " + ratingprimary + " " + feedbacksecondary + " " + ratingsecondary;
-	
+	bool foundsecondary = false;
+	bool foundprimary = false;
 
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, escrowfeedbackstr));
 	const UniValue &arr = r.get_array();
