@@ -164,8 +164,8 @@ BOOST_AUTO_TEST_CASE (generate_escrowfeedback)
 	AliasNew("node3", "arbiterescrowfeedback", "somedata");
 
 	string qty = "1";
-	string offerguid = OfferNew("node2", "selleralias111", "category", "title", "100", "0.05", "description", "GBP");
-	string guid = EscrowNew("node1", "buyeralias1", offerguid, qty, "message", "arbiteralias1", "selleralias111");
+	string offerguid = OfferNew("node2", "sellerescrowfeedback", "category", "title", "100", "0.05", "description", "GBP");
+	string guid = EscrowNew("node1", "buyerescrowfeedback", offerguid, qty, "message", "arbiterescrowfeedback", "sellerescrowfeedback");
 	EscrowRelease("node3", guid);
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "escrowinfo " + guid));
 	EscrowClaimRelease("node2", guid);
