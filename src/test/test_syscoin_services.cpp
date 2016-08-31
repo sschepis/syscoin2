@@ -860,7 +860,7 @@ void OfferAcceptFeedback(const string& node, const string& offerguid, const stri
 	BOOST_CHECK(find_value(r.get_obj(), "feedback").get_str() == feedback);
 	BOOST_CHECK(find_value(r.get_obj(), "feedbackuser").get_int() == user);
 }
-void EscrowFeedback(const string& node, const string& escrowguid, const string& feedbackprimary, const string& ratingprimary, const char& userprimary, string& feedbacksecondary, const string& ratingsecondary, const char& usersecondary, const bool israting) {
+void EscrowFeedback(const string& node, const string& escrowguid, const string& feedbackprimary, const string& ratingprimary,  char userprimary, const string& feedbacksecondary, const string& ratingsecondary,  char usersecondary, const bool israting) {
 
 	UniValue r;
 	string escrowfeedbackstr = "escrowfeedback " + escrowguid + " " + feedbackprimary + " " + ratingprimary + " " + feedbacksecondary + " " + ratingsecondary;
