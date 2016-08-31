@@ -762,34 +762,34 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 								serializedEscrow.feedback[1].nRating = 0;
 						}
 
-						if(feedbackBuyerCount >= 10 && (serializedEscrow.feedback[0].nFeedbackUserFrom == FEEDBACKBUYER || serializedEscrow.feedback[1].nFeedbackUserFrom == FEEDBACKBUYER))
+						if(feedbackBuyerCount >= 10 && (serializedEscrow.feedback[0].nFeedbackUserTo == FEEDBACKBUYER || serializedEscrow.feedback[1].nFeedbackUserTo == FEEDBACKBUYER))
 						{
 							errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4049 - " + _("Cannot exceed 10 buyer feedbacks");
 							return true;
 						}
-						else if(feedbackSellerCount >= 10 && (serializedEscrow.feedback[0].nFeedbackUserFrom == FEEDBACKSELLER || serializedEscrow.feedback[1].nFeedbackUserFrom == FEEDBACKSELLER))
+						else if(feedbackSellerCount >= 10 && (serializedEscrow.feedback[0].nFeedbackUserTo == FEEDBACKSELLER || serializedEscrow.feedback[1].nFeedbackUserTo == FEEDBACKSELLER))
 						{
 							errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4050 - " + _("Cannot exceed 10 seller feedbacks");
 							return true;
 						}
-						else if(feedbackArbiterCount >= 10 && (serializedEscrow.feedback[0].nFeedbackUserFrom == FEEDBACKARBITER || serializedEscrow.feedback[1].nFeedbackUserFrom == FEEDBACKARBITER))
+						else if(feedbackArbiterCount >= 10 && (serializedEscrow.feedback[0].nFeedbackUserTo == FEEDBACKARBITER || serializedEscrow.feedback[1].nFeedbackUserTo == FEEDBACKARBITER))
 						{
 							errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4051 - " + _("Cannot exceed 10 arbiter feedbacks");
 							return true;
 						}
-						else if(serializedEscrow.feedback[0].nFeedbackUserFrom == FEEDBACKBUYER && feedbackBuyerCount > feedbackSellerCount && feedbackBuyerCount > feedbackArbiterCount)
+						else if(serializedEscrow.feedback[0].nFeedbackUserTo == FEEDBACKBUYER && feedbackBuyerCount > feedbackSellerCount && feedbackBuyerCount > feedbackArbiterCount)
 						{
-							errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 90b - " + _("Cannot leave multiple buyer feedbacks you must wait for a reply first");
+							errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 90b - " + _("Cannot leave multiple buyer feedbacks you must wait for a reply first");
 							return true;
 						}
-						else if(serializedEscrow.feedback[0].nFeedbackUserFrom == FEEDBACKSELLER && feedbackSellerCount > feedbackBuyerCount && feedbackSellerCount > feedbackArbiterCount)
+						else if(serializedEscrow.feedback[0].nFeedbackUserTo == FEEDBACKSELLER && feedbackSellerCount > feedbackBuyerCount && feedbackSellerCount > feedbackArbiterCount)
 						{
-							errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 90c - " + _("Cannot leave multiple seller feedbacks you must wait for a reply first");
+							errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 90c - " + _("Cannot leave multiple seller feedbacks you must wait for a reply first");
 							return true;
 						}
-						else if(serializedEscrow.feedback[0].nFeedbackUserFrom == FEEDBACKARBITER && feedbackArbiterCount > feedbackBuyerCount && feedbackArbiterCount > feedbackSellerCount)
+						else if(serializedEscrow.feedback[0].nFeedbackUserTo == FEEDBACKARBITER && feedbackArbiterCount > feedbackBuyerCount && feedbackArbiterCount > feedbackSellerCount)
 						{
-							errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 90c - " + _("Cannot leave multiple arbiter feedbacks you must wait for a reply first");
+							errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 90c - " + _("Cannot leave multiple arbiter feedbacks you must wait for a reply first");
 							return true;
 						}
 						if(!dontaddtodb)

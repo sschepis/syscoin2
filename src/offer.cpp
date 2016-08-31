@@ -1290,22 +1290,22 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					theOfferAccept.feedback[0].nRating = 0;
 				else if(theOfferAccept.feedback[0].nFeedbackUserTo == FEEDBACKSELLER && numSellerRatings > 0)
 					theOfferAccept.feedback[0].nRating = 0;
-				if(feedbackBuyerCount >= 10 && theOfferAccept.feedback[0].nFeedbackUserFrom == FEEDBACKBUYER)
+				if(feedbackBuyerCount >= 10 && theOfferAccept.feedback[0].nFeedbackUserTo == FEEDBACKBUYER)
 				{
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 90 - " + _("Cannot exceed 10 buyer feedbacks");
 					return true;
 				}
-				else if(feedbackSellerCount >= 10 && theOfferAccept.feedback[0].nFeedbackUserFrom == FEEDBACKSELLER)
+				else if(feedbackSellerCount >= 10 && theOfferAccept.feedback[0].nFeedbackUserTo == FEEDBACKSELLER)
 				{
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 90a - " + _("Cannot exceed 10 seller feedbacks");
 					return true;
 				}
-				else if(theOfferAccept.feedback[0].nFeedbackUserFrom == FEEDBACKBUYER && feedbackBuyerCount > feedbackSellerCount)
+				else if(theOfferAccept.feedback[0].nFeedbackUserTo == FEEDBACKBUYER && feedbackBuyerCount > feedbackSellerCount)
 				{
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 90b - " + _("Cannot leave multiple buyer feedbacks you must wait for a seller reply first");
 					return true;
 				}
-				else if(theOfferAccept.feedback[0].nFeedbackUserFrom == FEEDBACKSELLER && feedbackSellerCount > feedbackBuyerCount)
+				else if(theOfferAccept.feedback[0].nFeedbackUserTo == FEEDBACKSELLER && feedbackSellerCount > feedbackBuyerCount)
 				{
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 90c - " + _("Cannot leave multiple seller feedbacks you must wait for a buyer reply first");
 					return true;
