@@ -475,7 +475,7 @@ void SendMoneySyscoin(const vector<CRecipient> &vecSend, CAmount nValue, bool fS
 	}
 	
     if (justcheck != "1" && !pwalletMain->CommitTransaction(wtxNew, reservekey))
-        throw runtime_error("Error: The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.");
+        throw runtime_error("SYSCOIN_RPC_ERROR ERRCODE: 9000 - " + _("The Syscoin input (alias, certificate, offer, escrow) you are trying to use for this transaction is invalid or not confirmed yet! Please wait a block and try again..."));
 }
 void SendMoney(const CTxDestination &address, CAmount nValue, bool fSubtractFeeFromAmount, CWalletTx& wtxNew)
 {
