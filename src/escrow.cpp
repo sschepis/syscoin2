@@ -706,7 +706,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 							errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4027 - " + _("Cannot send yourself feedback");
 							return true;
 						}
-						else if(serializedEscrow.feedback[0].vchFeedback.size() <= 0 || serializedEscrow.feedback[1].vchFeedback.size() <= 0)
+						else if(serializedEscrow.feedback[0].vchFeedback.size() <= 0 && serializedEscrow.feedback[1].vchFeedback.size() <= 0)
 						{
 							errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4027 - " + _("Feedback must leave a message");
 							return true;
@@ -915,8 +915,7 @@ void HandleEscrowFeedback(const CEscrow& serializedEscrow, CEscrow& dbEscrow, ve
 			}
 				
 		}
-		if(!serializedEscrow.feedback[0].IsNull())
-			dbEscrow.feedback.push_back(serializedEscrow.feedback[0]);
+		dbEscrow.feedback.push_back(serializedEscrow.feedback[i]);
 	}
 	PutToEscrowList(vtxPos, dbEscrow);
 	pescrowdb->WriteEscrow(dbEscrow.vchEscrow, vtxPos);

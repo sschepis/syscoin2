@@ -860,6 +860,43 @@ void OfferAcceptFeedback(const string& node, const string& offerguid, const stri
 	BOOST_CHECK(find_value(r.get_obj(), "feedback").get_str() == feedback);
 	BOOST_CHECK(find_value(r.get_obj(), "feedbackuser").get_int() == user);
 }
+void EscrowFeedback(const string& node, const string& escrowguid, const string& feedbackprimary, const string& ratingprimary, const char& userprimary, string& feedbacksecondary, const string& ratingsecondary, const char& usersecondary, const bool israting) {
+
+	UniValue r;
+	string escrowfeedbackstr = "escrowfeedback " + escrowguid + " " + feedbackprimary + " " + ratingprimary + " " + feedbacksecondary + " " + ratingsecondary;
+	
+
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, escrowfeedbackstr));
+	const UniValue &arr = r.get_array();
+	string escrowTxid = arr[0].get_str();
+	// ensure mempool blocks second tx until it confirms
+	BOOST_CHECK_THROW(CallRPC(node, escrowfeedbackstr), runtime_error);	
+
+	GenerateBlocks(10, node);
+	string ratingprimarystr = (israting? ratingprimary: "0");
+	string ratingsecondarystr = (israting? ratingsecondary: "0");
+	r = FindEscrowFeedback(node, escrowguid, escrowTxid);
+	const UniValue &arrayFeedbackValue = r.get_array();
+	for(int j=0;j<arrayFeedbackValue.size();j++)
+	{
+		r = arrayFeedbackValue[j].get_obj();
+		if(find_value(r.get_obj(), "feedbackuser").get_int()  == userprimary)
+		{
+			BOOST_CHECK(find_value(r.get_obj(), "txid").get_str() == escrowTxid);
+			BOOST_CHECK(find_value(r.get_obj(), "rating").get_int() == atoi(ratingprimarystr.c_str()));
+			BOOST_CHECK(find_value(r.get_obj(), "feedback").get_str() == feedbackprimary);
+			foundprimary = true;
+		}
+		else  if(find_value(r.get_obj(), "feedbackuser").get_int()  == usersecondary)
+		{
+			BOOST_CHECK(find_value(r.get_obj(), "txid").get_str() == escrowTxid);
+			BOOST_CHECK(find_value(r.get_obj(), "rating").get_int() == atoi(ratingsecondarystr.c_str()));
+			BOOST_CHECK(find_value(r.get_obj(), "feedback").get_str() == feedbacksecondary);
+			foundsecondary = true;
+		}
+	}
+	BOOST_CHECK(foundprimary && foundsecondary); 
+}
 // offeraccept <alias> <guid> [quantity] [message]
 const string OfferAccept(const string& ownernode, const string& node, const string& aliasname, const string& offerguid, const string& qty, const string& pay_message, const string& resellernode) {
 
@@ -1116,6 +1153,62 @@ const UniValue FindOfferAccept(const string& node, const string& offerguid, cons
 	}
 	if(!nocheck)
 		BOOST_CHECK(!ret.isNull());
+	return ret;
+}
+const UniValue FindEscrowFeedback(const string& node, const string& escrowguid, const string& escrowtxid, bool nocheck)
+{
+	UniValue r;
+	UniValue ret(UniValue::VARR);
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowinfo " + escrowguid));
+	
+	const UniValue &arrayBuyerFeedbackObject = find_value(r.get_obj(), "buyer_feedback");
+	const UniValue &arraySellerFeedbackObject  = find_value(r.get_obj(), "seller_feedback");
+	const UniValue &arrayArbiterFeedbackObject  = find_value(r.get_obj(), "arbiter_feedback");
+	if(arrayBuyerFeedbackObject.type() == UniValue::VARR)
+	{
+		const UniValue &arrayBuyerFeedbackValue = arrayBuyerFeedbackObject.get_array();
+		for(int j=0;j<arrayBuyerFeedbackValue.size();j++)
+		{
+			const UniValue& arrayBuyerFeedback = arrayBuyerFeedbackValue[j].get_obj();
+			const string &escrowFeedbackTxid = find_value(arrayBuyerFeedback, "txid").get_str();
+			if(escrowFeedbackTxid == escrowtxid)
+			{
+				ret.push_back(arrayBuyerFeedback);
+				break;
+			}
+		}
+	}
+	if(arraySellerFeedbackObject.type() == UniValue::VARR)
+	{
+		const UniValue &arraySellerFeedbackValue = arraySellerFeedbackObject.get_array();
+		for(int j=0;j<arraySellerFeedbackValue.size();j++)
+		{
+			const UniValue &arraySellerFeedback = arraySellerFeedbackValue[j].get_obj();
+			const string &escrowFeedbackTxid = find_value(arraySellerFeedback, "txid").get_str();
+			if(escrowFeedbackTxid == escrowtxid)
+			{
+				ret.push_back(arraySellerFeedback);
+				break;
+			}
+		}
+	}
+	if(arrayArbiterFeedbackObject.type() == UniValue::VARR)
+	{
+		const UniValue &arrayArbiterFeedbackValue = arrayArbiterFeedbackObject.get_array();
+		for(int j=0;j<arrayArbiterFeedbackValue.size();j++)
+		{
+			const UniValue &arrayArbiterFeedback = arrayArbiterFeedbackValue[j].get_obj();
+			const string &escrowFeedbackTxid = find_value(arrayArbiterFeedback, "txid").get_str();
+			if(escrowFeedbackTxid == escrowtxid)
+			{
+				ret.push_back(arrayArbiterFeedback);
+				break;
+				
+			}
+		}
+	}
+	if(!nocheck)
+		BOOST_CHECK(!ret.empty());
 	return ret;
 }
 const UniValue FindOfferAcceptFeedback(const string& node, const string& offerguid, const string& acceptguid,const string& accepttxid, bool nocheck)

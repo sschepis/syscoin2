@@ -149,6 +149,66 @@ BOOST_AUTO_TEST_CASE (generate_escrowrelease_arbiter)
 
 
 }
+BOOST_AUTO_TEST_CASE (generate_escrowfeedback)
+{
+	printf("Running generate_escrowfeedback...\n");
+	UniValue r;
+	
+	GenerateBlocks(5);
+	GenerateBlocks(5, "node2");
+	GenerateBlocks(5, "node3");
+
+	AliasNew("node1", "sellerescrowfeedback", "somedata");
+	AliasNew("node2", "buyerescrowfeedback", "somedata");
+	AliasNew("node3", "arbiterescrowfeedback", "somedata");
+
+	UniValue r;
+	string qty = "1";
+	string offerguid = OfferNew("node2", "selleralias111", "category", "title", "100", "0.05", "description", "GBP");
+	string guid = EscrowNew("node1", "buyeralias1", offerguid, qty, "message", "arbiteralias1", "selleralias111");
+	EscrowRelease("node3", guid);
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "escrowinfo " + guid));
+	EscrowClaimRelease("node2", guid);
+	// seller leaves feedback first
+	EscrowFeedback("node1", guid, "feedbackbuyer", "1", FEEDBACKBUYER, "feedbackarbiter", "2", FEEDBACKARBITER, true);
+	// seller can't leave feedback twice in a row
+	string escrowfeedbackstr = "escrowfeedback " + guid + " testfeedback 1 testfeedback 2";
+	BOOST_CHECK_THROW(CallRPC("node1", escrowfeedbackstr), runtime_error);
+
+	// then buyer can leave feedback
+	EscrowFeedback("node2",  "feedbackseller", "1", FEEDBACKSELLER, "feedbackarbiter", "3", FEEDBACKARBITER, true);
+	// he can leave one more reply if he wishes to
+	EscrowFeedback("node2",  "feedbackseller", "1", FEEDBACKSELLER, "feedbackarbiter", "3", FEEDBACKARBITER, false);
+	// buyer can't leave more than 2 feedbacks without a reply
+	BOOST_CHECK_THROW(CallRPC("node2", escrowfeedbackstr), runtime_error);
+
+	// and arbiter can also leave feedback
+	EscrowFeedback("node3",  "feedbackbuyer", "4", FEEDBACKBUYER, "feedbackseller", "2", FEEDBACKSELLER, true);
+	// he can leave one more reply if he wishes to
+	EscrowFeedback("node3",  "feedbackbuyer", "4", FEEDBACKBUYER, "feedbackseller", "2", FEEDBACKSELLER, false);
+	// arbiter can't leave more than 2 feedbacks without a reply
+	BOOST_CHECK_THROW(CallRPC("node3", escrowfeedbackstr), runtime_error);
+
+	// create up to 10 replies each
+	for(int i =0;i<9;i++)
+	{
+		// keep alive
+		AliasUpdate("node2", "buyeraliasfeedback", "changeddata2", "privdata2");
+		
+		// seller can reply but not rate
+		EscrowFeedback("node1", guid, "feedbackbuyer", "1", FEEDBACKBUYER, "feedbackarbiter", "2", FEEDBACKARBITER, false);
+		if(i < 8)
+		{
+			// buyer and arbiter can reply but not rate
+			EscrowFeedback("node2",  "feedbackseller", "1", FEEDBACKSELLER, "feedbackarbiter", "3", FEEDBACKARBITER, false);
+			EscrowFeedback("node3",  "feedbackbuyer", "4", FEEDBACKBUYER, "feedbackseller", "2", FEEDBACKSELLER, false);
+		}
+	}
+	// now you can't leave any more feedbacks
+	BOOST_CHECK_THROW(CallRPC("node1", escrowfeedbackstr), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node2", escrowfeedbackstr), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node3", escrowfeedbackstr), runtime_error);
+}
 BOOST_AUTO_TEST_CASE (generate_escrow_linked_release)
 {
 	printf("Running generate_escrow_linked_release...\n");
