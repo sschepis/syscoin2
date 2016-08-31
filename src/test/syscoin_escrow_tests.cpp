@@ -163,7 +163,6 @@ BOOST_AUTO_TEST_CASE (generate_escrowfeedback)
 	AliasNew("node2", "buyerescrowfeedback", "somedata");
 	AliasNew("node3", "arbiterescrowfeedback", "somedata");
 
-	UniValue r;
 	string qty = "1";
 	string offerguid = OfferNew("node2", "selleralias111", "category", "title", "100", "0.05", "description", "GBP");
 	string guid = EscrowNew("node1", "buyeralias1", offerguid, qty, "message", "arbiteralias1", "selleralias111");
