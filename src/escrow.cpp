@@ -2393,9 +2393,6 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
 		arbiterFeedback.nHeight = chainActive.Tip()->nHeight;
 		escrow.feedback.push_back(arbiterFeedback);
 		escrow.feedback.push_back(sellerFeedback);
-		if (ExistsInMempool(buyerAliasLatest.vchAlias, OP_ALIAS_ACTIVATE) || ExistsInMempool(buyerAliasLatest.vchAlias, OP_ALIAS_UPDATE)) {
-			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR ERRCODE: 5660b - There are pending operations on that alias");
-		}
 	}
 	// seller
 	else if(foundSellerKey)
@@ -2410,9 +2407,6 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
 		arbiterFeedback.nHeight = chainActive.Tip()->nHeight;
 		escrow.feedback.push_back(buyerFeedback);
 		escrow.feedback.push_back(arbiterFeedback);
-		if (ExistsInMempool(sellerAliasLatest.vchAlias, OP_ALIAS_ACTIVATE) || ExistsInMempool(sellerAliasLatest.vchAlias, OP_ALIAS_UPDATE)) {
-			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR ERRCODE: 560d - There are pending operations on that alias");
-		}
 	}
 	// arbiter
 	else if(foundArbiterKey)
@@ -2427,9 +2421,6 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
 		sellerFeedback.nHeight = chainActive.Tip()->nHeight;
 		escrow.feedback.push_back(buyerFeedback);
 		escrow.feedback.push_back(sellerFeedback);
-		if (ExistsInMempool(arbiterAliasLatest.vchAlias, OP_ALIAS_ACTIVATE) || ExistsInMempool(arbiterAliasLatest.vchAlias, OP_ALIAS_UPDATE)) {
-			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR ERRCODE: 560d - There are pending operations on that alias");
-		}
 	}
 	else
 	{
