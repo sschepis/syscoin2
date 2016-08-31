@@ -1254,17 +1254,17 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				// if feedback is for buyer then we need to ensure attached input alias was from seller
 				if(theOfferAccept.feedback[0].nFeedbackUserFrom == FEEDBACKBUYER)
 				{
-					if(serializedOffer.vchLinkAlias != offer.vchAlias)
+					if(serializedOffer.vchLinkAlias != offerAccept.vchBuyerAlias)
 					{
-						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 88a - " + _("Only seller can leaver buyer feedback");
+						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 88a - " + _("Only seller can leaver the buyer feedback");
 						return true;
 					}
 				}
 				else if(theOfferAccept.feedback[0].nFeedbackUserFrom == FEEDBACKSELLER)
 				{
-					if(serializedOffer.vchLinkAlias != offerAccept.vchBuyerAlias)
+					if(serializedOffer.vchLinkAlias != offer.vchAlias)
 					{
-						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 88b - " + _("Only buyer can leave seller feedback");
+						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 88b - " + _("Only buyer can leave the seller feedback");
 						return true;
 					}
 				}
