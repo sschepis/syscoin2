@@ -193,9 +193,6 @@ BOOST_AUTO_TEST_CASE (generate_escrowfeedback)
 	// create up to 10 replies each
 	for(int i =0;i<9;i++)
 	{
-		// keep alive
-		AliasUpdate("node2", "buyeraliasfeedback", "changeddata2", "privdata2");
-		
 		// seller can reply but not rate
 		EscrowFeedback("node1", guid, "feedbackbuyer", "1", FEEDBACKBUYER, "feedbackarbiter", "2", FEEDBACKARBITER, false);
 		if(i < 8)
