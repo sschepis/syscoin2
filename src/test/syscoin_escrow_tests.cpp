@@ -169,6 +169,7 @@ BOOST_AUTO_TEST_CASE (generate_escrowfeedback)
 	EscrowRelease("node3", guid);
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "escrowinfo " + guid));
 	EscrowClaimRelease("node1", guid);
+	GenerateBlocks(5);
 	// seller leaves feedback first
 	EscrowFeedback("node1", guid, "feedbackbuyer", "1", FEEDBACKBUYER, "feedbackarbiter", "2", FEEDBACKARBITER, true);
 	// seller can't leave feedback twice in a row
