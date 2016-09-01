@@ -2552,7 +2552,7 @@ UniValue escrowinfo(const UniValue& params, bool fHelp) {
 	{
 		UniValue oFeedback(UniValue::VOBJ);
 		string sFeedbackTime;
-		CBlockIndex *pindex = chainActive[buyerFeedBacks[i].nHeight];
+		CBlockIndex *pindex = chainActive[arbiterFeedBacks[i].nHeight];
 		if (pindex) {
 			sFeedbackTime = strprintf("%llu", pindex->nTime);
 		}
@@ -2741,7 +2741,7 @@ UniValue escrowlist(const UniValue& params, bool fHelp) {
 		{
 			UniValue oFeedback(UniValue::VOBJ);
 			string sFeedbackTime;
-			CBlockIndex *pindex = chainActive[buyerFeedBacks[i].nHeight];
+			CBlockIndex *pindex = chainActive[arbiterFeedBacks[i].nHeight];
 			if (pindex) {
 				sFeedbackTime = strprintf("%llu", pindex->nTime);
 			}
@@ -2992,7 +2992,7 @@ UniValue escrowfilter(const UniValue& params, bool fHelp) {
 		{
 			UniValue oFeedback(UniValue::VOBJ);
 			string sFeedbackTime;
-			CBlockIndex *pindex = chainActive[buyerFeedBacks[i].nHeight];
+			CBlockIndex *pindex = chainActive[arbiterFeedBacks[i].nHeight];
 			if (pindex) {
 				sFeedbackTime = strprintf("%llu", pindex->nTime);
 			}
