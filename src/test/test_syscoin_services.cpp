@@ -881,19 +881,19 @@ void EscrowFeedback(const string& node, const string& escrowguid, const string& 
 	const UniValue &arrayFeedbackValue = r.get_array();
 	for(int j=0;j<arrayFeedbackValue.size();j++)
 	{
-		r = arrayFeedbackValue[j].get_obj();
-		if(find_value(r.get_obj(), "feedbackuser").get_int()  == userprimary)
+		const UniValue & feedbackObj = arrayFeedbackValue[j].get_obj();
+		if(find_value(feedbackObj, "feedbackuser").get_int()  == userprimary)
 		{
-			BOOST_CHECK(find_value(r.get_obj(), "txid").get_str() == escrowTxid);
-			BOOST_CHECK(find_value(r.get_obj(), "rating").get_int() == atoi(ratingprimarystr.c_str()));
-			BOOST_CHECK(find_value(r.get_obj(), "feedback").get_str() == feedbackprimary);
+			BOOST_CHECK(find_value(feedbackObj, "txid").get_str() == escrowTxid);
+			BOOST_CHECK(find_value(feedbackObj, "rating").get_int() == atoi(ratingprimarystr.c_str()));
+			BOOST_CHECK(find_value(feedbackObj, "feedback").get_str() == feedbackprimary);
 			foundprimary = true;
 		}
-		else  if(find_value(r.get_obj(), "feedbackuser").get_int()  == usersecondary)
+		else  if(find_value(feedbackObj.get_obj(), "feedbackuser").get_int()  == usersecondary)
 		{
-			BOOST_CHECK(find_value(r.get_obj(), "txid").get_str() == escrowTxid);
-			BOOST_CHECK(find_value(r.get_obj(), "rating").get_int() == atoi(ratingsecondarystr.c_str()));
-			BOOST_CHECK(find_value(r.get_obj(), "feedback").get_str() == feedbacksecondary);
+			BOOST_CHECK(find_value(feedbackObj, "txid").get_str() == escrowTxid);
+			BOOST_CHECK(find_value(feedbackObj, "rating").get_int() == atoi(ratingsecondarystr.c_str()));
+			BOOST_CHECK(find_value(feedbackObj, "feedback").get_str() == feedbacksecondary);
 			foundsecondary = true;
 		}
 	}
@@ -1162,10 +1162,10 @@ const UniValue FindEscrowFeedback(const string& node, const string& escrowguid, 
 	UniValue r;
 	UniValue ret(UniValue::VARR);
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowinfo " + escrowguid));
-	
-	const UniValue &arrayBuyerFeedbackObject = find_value(r.get_obj(), "buyer_feedback");
-	const UniValue &arraySellerFeedbackObject  = find_value(r.get_obj(), "seller_feedback");
-	const UniValue &arrayArbiterFeedbackObject  = find_value(r.get_obj(), "arbiter_feedback");
+	const UniValue& escrowObj = r.get_obj();
+	const UniValue &arrayBuyerFeedbackObject = find_value(escrowObj, "buyer_feedback");
+	const UniValue &arraySellerFeedbackObject  = find_value(escrowObj, "seller_feedback");
+	const UniValue &arrayArbiterFeedbackObject  = find_value(escrowObj, "arbiter_feedback");
 	if(arrayBuyerFeedbackObject.type() == UniValue::VARR)
 	{
 		const UniValue &arrayBuyerFeedbackValue = arrayBuyerFeedbackObject.get_array();
