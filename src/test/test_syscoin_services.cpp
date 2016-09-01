@@ -877,6 +877,7 @@ void EscrowFeedback(const string& node, const string& escrowguid, const string& 
 	string ratingprimarystr = (israting? ratingprimary: "0");
 	string ratingsecondarystr = (israting? ratingsecondary: "0");
 	r = FindEscrowFeedback(node, escrowguid, escrowTxid);
+	BOOST_CHECK(r.type() == UniValue::VARR);
 	const UniValue &arrayFeedbackValue = r.get_array();
 	for(int j=0;j<arrayFeedbackValue.size();j++)
 	{
