@@ -882,14 +882,14 @@ void EscrowFeedback(const string& node, const string& escrowguid, const string& 
 	for(int j=0;j<arrayFeedbackValue.size();j++)
 	{
 		const UniValue & feedbackObj = arrayFeedbackValue[j].get_obj();
-		if(find_value(feedbackObj, "feedbackuser").get_int()  == userprimary)
+		if(find_value(feedbackObj, "feedbackuser").get_int()  == atoi(userprimary))
 		{
 			BOOST_CHECK(find_value(feedbackObj, "txid").get_str() == escrowTxid);
 			BOOST_CHECK(find_value(feedbackObj, "rating").get_int() == atoi(ratingprimarystr.c_str()));
 			BOOST_CHECK(find_value(feedbackObj, "feedback").get_str() == feedbackprimary);
 			foundprimary = true;
 		}
-		else  if(find_value(feedbackObj.get_obj(), "feedbackuser").get_int()  == usersecondary)
+		else if(find_value(feedbackObj.get_obj(), "feedbackuser").get_int()  == atoi(usersecondary))
 		{
 			BOOST_CHECK(find_value(feedbackObj, "txid").get_str() == escrowTxid);
 			BOOST_CHECK(find_value(feedbackObj, "rating").get_int() == atoi(ratingsecondarystr.c_str()));
