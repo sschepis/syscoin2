@@ -890,8 +890,8 @@ void EscrowFeedback(const string& node, const string& escrowguid, const string& 
 			if(foundFeedback == 0 && escrowFeedbackTxid == escrowTxid && (userprimary == ACCEPTBUYER || usersecondary == ACCEPTBUYER))
 			{
 				BOOST_CHECK_EQUAL(find_value(arrayArbiterFeedback, "feedbackuser").get_int(), ACCEPTBUYER);
-				BOOST_CHECK_EQUAL(find_value(arrayBuyerFeedback, "rating").get_int(), userprimary == ACCEPTBUYER? atoi(ratingprimarystr.c_str(): atoi(ratingsecondarystr.c_str());
-				BOOST_CHECK_EQUAL(find_value(arrayBuyerFeedback, "feedback").get_str() == feedbackprimary);
+				BOOST_CHECK_EQUAL(find_value(arrayBuyerFeedback, "rating").get_int(), userprimary == ACCEPTBUYER? atoi(ratingprimarystr.c_str(): atoi(ratingsecondarystr.c_str())));
+				BOOST_CHECK_EQUAL(find_value(arrayBuyerFeedback, "feedback").get_str() , feedbackprimary);
 				foundFeedback++;
 				break;
 			}
@@ -907,8 +907,8 @@ void EscrowFeedback(const string& node, const string& escrowguid, const string& 
 			if(foundFeedback <= 1 && escrowFeedbackTxid == escrowTxid && (userprimary == ACCEPTSELLER || usersecondary == ACCEPTSELLER))
 			{
 				BOOST_CHECK_EQUAL(find_value(arrayArbiterFeedback, "feedbackuser").get_int(), ACCEPTSELLER);
-				BOOST_CHECK_EQUAL(find_value(arraySellerFeedback, "rating").get_int(), userprimary == ACCEPTSELLER? atoi(ratingprimarystr.c_str(): atoi(ratingsecondarystr.c_str());
-				BOOST_CHECK_EQUAL(find_value(arraySellerFeedback, "feedback").get_str() == feedbackprimary);
+				BOOST_CHECK_EQUAL(find_value(arraySellerFeedback, "rating").get_int(), userprimary == ACCEPTSELLER? atoi(ratingprimarystr.c_str(): atoi(ratingsecondarystr.c_str())));
+				BOOST_CHECK_EQUAL(find_value(arraySellerFeedback, "feedback").get_str(), feedbackprimary);
 				foundFeedback++;
 				break;
 			}
@@ -924,8 +924,8 @@ void EscrowFeedback(const string& node, const string& escrowguid, const string& 
 			if(foundFeedback <= 1 && escrowFeedbackTxid == escrowTxid && (userprimary == ACCEPTARBITER || usersecondary == ACCEPTARBITER))
 			{
 				BOOST_CHECK_EQUAL(find_value(arrayArbiterFeedback, "feedbackuser").get_int(), ACCEPTARBITER);
-				BOOST_CHECK_EQUAL(find_value(arrayArbiterFeedback, "rating").get_int(), userprimary == ACCEPTARBITER? atoi(ratingprimarystr.c_str(): atoi(ratingsecondarystr.c_str());
-				BOOST_CHECK_EQUAL(find_value(arrayArbiterFeedback, "feedback").get_str() == feedbackprimary);
+				BOOST_CHECK_EQUAL(find_value(arrayArbiterFeedback, "rating").get_int(), userprimary == ACCEPTARBITER? atoi(ratingprimarystr.c_str(): atoi(ratingsecondarystr.c_str())));
+				BOOST_CHECK_EQUAL(find_value(arrayArbiterFeedback, "feedback").get_str() , feedbackprimary);
 				foundFeedback++;
 				break;
 			}
