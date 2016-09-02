@@ -460,39 +460,39 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 		}
 		if(!theCert.vchCert.empty() && theCert.vchCert != vvchArgs[0])
 		{
-			errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2007 - " + _("Guid in data output doesn't match guid in transaction");
+			errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2006 - " + _("Guid in data output doesn't match guid in transaction");
 			return error(errorMessage.c_str());
 		}
 		if (vvchArgs[0].size() > MAX_GUID_LENGTH)
 		{
-			errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2008 - " + _("Certificate hex guid too long");
+			errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2007 - " + _("Certificate hex guid too long");
 			return error(errorMessage.c_str());
 		}
 		switch (op) {
 		case OP_CERT_ACTIVATE:
 			if (foundCert)
 			{
-				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2009 - " + _("Certificate does use an input");
+				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2008 - " + _("Certificate does use an input");
 				return error(errorMessage.c_str());
 			}
 			if (theCert.vchCert != vvchArgs[0])
 			{
-				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2010 - " + _("Certificate guid mismatch");
+				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2009 - " + _("Certificate guid mismatch");
 				return error(errorMessage.c_str());
 			}
 			if(!theCert.vchLinkAlias.empty())
 			{
-				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2010a - " + _("Certificate linked alias not allowed in activate");
+				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2010 - " + _("Certificate linked alias not allowed in activate");
 				return error(errorMessage.c_str());
 			}
 			if(!IsAliasOp(prevAliasOp) || theCert.vchAlias != vvchPrevAliasArgs[0])
 			{
-				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2010b - " + _("Alias input mismatch");
+				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2011 - " + _("Alias input mismatch");
 				return error(errorMessage.c_str());
 			}
 			if((theCert.vchTitle.size() > MAX_NAME_LENGTH || theCert.vchTitle.empty()))
 			{
-				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2006 - " + _("Certificate title too big or is empty");
+				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2012 - " + _("Certificate title too big or is empty");
 				return error(errorMessage.c_str());
 			}
 			break;
@@ -501,34 +501,34 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 			// previous op must be a cert
 			if (!IsCertOp(prevOp))
 			{
-				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2011 - " + _("Certificate input transaction is of wrong type");
+				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2013 - " + _("Certificate input transaction is of wrong type");
 				return error(errorMessage.c_str());
 			}
 			if (vvchPrevArgs[0] != vvchArgs[0])
 			{
-				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2012 - " + _("Certificate input guid mismatch");
+				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2014 - " + _("Certificate input guid mismatch");
 				return error(errorMessage.c_str());
 			}
 			if(!theCert.vchLinkAlias.empty())
 			{
-				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2012a - " + _("Certificate linked alias not allowed in update");
+				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2015 - " + _("Certificate linked alias not allowed in update");
 				return error(errorMessage.c_str());
 			}
 			if(!theCert.IsNull())
 			{
 				if (theCert.vchCert != vvchArgs[0])
 				{
-					errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2013 - " + _("Certificate guid mismatch");
+					errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2016 - " + _("Certificate guid mismatch");
 					return error(errorMessage.c_str());
 				}
 				if(theCert.vchTitle.size() > MAX_NAME_LENGTH)
 				{
-					errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2013a - " + _("Certificate title too big");
+					errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2017 - " + _("Certificate title too big");
 					return error(errorMessage.c_str());
 				}
 				if(!IsAliasOp(prevAliasOp) || theCert.vchAlias != vvchPrevAliasArgs[0])
 				{
-					errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2013b - " + _("Alias input mismatch");
+					errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2018 - " + _("Alias input mismatch");
 					return error(errorMessage.c_str());
 				}
 			}
@@ -538,28 +538,28 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 			// validate conditions
 			if ( !foundCert || !IsCertOp(prevOp))
 			{
-				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2014 - " + _("Certificate input transaction is of wrong type");
+				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2019 - " + _("Certificate input transaction is of wrong type");
 				return error(errorMessage.c_str());
 			}
 			if (vvchPrevArgs[0] != vvchArgs[0])
 			{
-				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2015 - " + _("Certificate input guid mismatch");
+				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2020 - " + _("Certificate input guid mismatch");
 				return error(errorMessage.c_str());
 			}
 			if (theCert.vchCert != vvchArgs[0])
 			{
-				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2016 - " + _("Certificate guid mismatch");
+				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2021 - " + _("Certificate guid mismatch");
 				return error(errorMessage.c_str());
 			}
 			if(!IsAliasOp(prevAliasOp) || theCert.vchAlias != vvchPrevAliasArgs[0])
 			{
-				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2016b - " + _("Alias input mismatch");
+				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2022 - " + _("Alias input mismatch");
 				return error(errorMessage.c_str());
 			}
 			break;
 
 		default:
-			errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2017 - " + _("Certificate transaction has unknown op");
+			errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2023 - " + _("Certificate transaction has unknown op");
 			return error(errorMessage.c_str());
 		}
 	}
@@ -573,7 +573,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 
 			if(!GetTxAndVtxOfCert(vvchArgs[0], dbCert, certTx, vtxPos))	
 			{
-				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2017a - " + _("Failed to read from certificate DB");
+				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2024 - " + _("Failed to read from certificate DB");
 				return true;
 			}
 			
@@ -598,7 +598,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 						// check to alias
 						if(!GetTxOfAlias(theCert.vchLinkAlias, alias, aliasTx))
 						{
-							errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2019 - " + _("Cannot find alias you are transfering to. It may be expired");
+							errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2025 - " + _("Cannot find alias you are transfering to. It may be expired");
 							theCert.vchAlias = dbCert.vchAlias;						
 						}
 						else
@@ -607,7 +607,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 				}
 				if(!GetTxOfAlias(theCert.vchAlias, alias, aliasTx))
 				{
-					errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2018 - " + _("Cannot find alias for this certificate. It may be expired");	
+					errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Cannot find alias for this certificate. It may be expired");	
 					theCert = dbCert;
 				}
 			}
@@ -618,12 +618,12 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 		{
 			if (!GetTxOfAlias(theCert.vchAlias, alias, aliasTx))
 			{
-				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2020 - " + _("Cannot find alias for this certificate. It may be expired");
+				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2027 - " + _("Cannot find alias for this certificate. It may be expired");
 				return true;
 			}
 			if (pcertdb->ExistsCert(vvchArgs[0]))
 			{
-				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2021 - " + _("Certificate already exists");
+				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Certificate already exists");
 				return true;
 			}
 		}
@@ -635,7 +635,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 
         if (!dontaddtodb && !pcertdb->WriteCert(vvchArgs[0], vtxPos))
 		{
-			errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2022 - " + _("Failed to write to certifcate DB");
+			errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2029 - " + _("Failed to write to certifcate DB");
             return error(errorMessage.c_str());
 		}
 		
@@ -677,14 +677,14 @@ UniValue certnew(const UniValue& params, bool fHelp) {
 	CAliasIndex theAlias;
 	const CWalletTx *wtxAliasIn = NULL;
 	if (!GetTxOfAlias(vchAlias, theAlias, aliastx, true))
-		throw runtime_error("SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2023 - " + _("failed to read alias from alias DB"));
+		throw runtime_error("SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2030 - " + _("failed to read alias from alias DB"));
 
 	if(!IsSyscoinTxMine(aliastx, "alias")) {
-		throw runtime_error("SYSCOIN_CERTIFICATE_CONSENSUS_ERROR ERRCODE: 2023a - " + _("This alias is not yours"));
+		throw runtime_error("SYSCOIN_CERTIFICATE_CONSENSUS_ERROR ERRCODE: 2031 - " + _("This alias is not yours"));
 	}
 	wtxAliasIn = pwalletMain->GetWalletTx(aliastx.GetHash());
 	if (wtxAliasIn == NULL)
-		throw runtime_error("SYSCOIN_CERTIFICATE_CONSENSUS_ERROR ERRCODE: 2023b - " + _("This alias is not in your wallet"));
+		throw runtime_error("SYSCOIN_CERTIFICATE_CONSENSUS_ERROR ERRCODE: 2032 - " + _("This alias is not in your wallet"));
 
 
 	if(params.size() >= 6)
@@ -726,7 +726,7 @@ UniValue certnew(const UniValue& params, bool fHelp) {
 		string strCipherText;
 		if(!EncryptMessage(theAlias.vchPubKey, vchData, strCipherText))
 		{
-			throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2024 - " + _("Could not encrypt certificate data"));
+			throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2033 - " + _("Could not encrypt certificate data"));
 		}
 		vchData = vchFromString(strCipherText);
 	}
@@ -822,25 +822,25 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
 	CCert theCert;
 	
     if (!GetTxOfCert( vchCert, theCert, tx, true))
-        throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2025 - " + _("Could not find a certificate with this key"));
+        throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2034 - " + _("Could not find a certificate with this key"));
 
 	CTransaction aliastx;
 	CAliasIndex theAlias;
 	const CWalletTx *wtxAliasIn = NULL;
 	if (!GetTxOfAlias(vchAlias, theAlias, aliastx, true))
-		throw runtime_error("SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Failed to read alias from alias DB"));
+		throw runtime_error("SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2035 - " + _("Failed to read alias from alias DB"));
 	if(!IsSyscoinTxMine(aliastx, "alias")) {
-		throw runtime_error("SYSCOIN_CERTIFICATE_CONSENSUS_ERROR ERRCODE: 2026a - " + _("This alias is not yours"));
+		throw runtime_error("SYSCOIN_CERTIFICATE_CONSENSUS_ERROR ERRCODE: 2036 - " + _("This alias is not yours"));
 	}
 	wtxAliasIn = pwalletMain->GetWalletTx(aliastx.GetHash());
 	if (wtxAliasIn == NULL)
-		throw runtime_error("SYSCOIN_CERTIFICATE_CONSENSUS_ERROR ERRCODE: 2026b - " + _("This alias is not in your wallet"));
+		throw runtime_error("SYSCOIN_CERTIFICATE_CONSENSUS_ERROR ERRCODE: 2037 - " + _("This alias is not in your wallet"));
 
 		
     // make sure cert is in wallet
 	wtxIn = pwalletMain->GetWalletTx(tx.GetHash());
 	if (wtxIn == NULL || !IsSyscoinTxMine(tx, "cert"))
-		throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2027 - " + _("This cert is not in your wallet"));
+		throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2038 - " + _("This cert is not in your wallet"));
 
 	CCert copyCert = theCert;
 	theCert.ClearCert();
@@ -854,7 +854,7 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
 		string strCipherText;
 		if(!EncryptMessage(theAlias.vchPubKey, vchData, strCipherText))
 		{
-			throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2029 - " + _("Could not encrypt certificate data"));
+			throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2039 - " + _("Could not encrypt certificate data"));
 		}
 		vchData = vchFromString(strCipherText);
 	}
@@ -918,7 +918,7 @@ UniValue certtransfer(const UniValue& params, bool fHelp) {
 	CTransaction tx;
 	CAliasIndex toAlias;
 	if (!GetTxOfAlias(vchAlias, toAlias, tx, true))
-		throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2030 - " + _("Failed to read transfer alias from DB"));
+		throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2040 - " + _("Failed to read transfer alias from DB"));
 
 	CPubKey xferKey = CPubKey(toAlias.vchPubKey);
 
@@ -933,27 +933,27 @@ UniValue certtransfer(const UniValue& params, bool fHelp) {
     CTransaction aliastx;
 	CCert theCert;
     if (!GetTxOfCert( vchCert, theCert, tx, true))
-        throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2031 - " + _("Could not find a certificate with this key"));
+        throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2041 - " + _("Could not find a certificate with this key"));
 
 	CAliasIndex fromAlias;
 	const CWalletTx *wtxAliasIn = NULL;
 	if(!GetTxOfAlias(theCert.vchAlias, fromAlias, aliastx, true))
 	{
-		 throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2032 - " + _("Could not find the certificate alias"));
+		 throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2042 - " + _("Could not find the certificate alias"));
 	}
 	if(!IsSyscoinTxMine(aliastx, "alias")) {
-		throw runtime_error("SYSCOIN_CERTIFICATE_CONSENSUS_ERROR ERRCODE: 2032a - " + _("This alias is not yours"));
+		throw runtime_error("SYSCOIN_CERTIFICATE_CONSENSUS_ERROR ERRCODE: 2043 - " + _("This alias is not yours"));
 	}
 	wtxAliasIn = pwalletMain->GetWalletTx(aliastx.GetHash());
 	if (wtxAliasIn == NULL)
-		throw runtime_error("SYSCOIN_CERTIFICATE_CONSENSUS_ERROR ERRCODE: 2032b - " + _("This alias is not in your wallet"));
+		throw runtime_error("SYSCOIN_CERTIFICATE_CONSENSUS_ERROR ERRCODE: 2044 - " + _("This alias is not in your wallet"));
 
 	CPubKey fromKey = CPubKey(fromAlias.vchPubKey);
 
 	// check to see if certificate in wallet
 	wtxIn = pwalletMain->GetWalletTx(theCert.txHash);
 	if (wtxIn == NULL || !IsSyscoinTxMine(*wtxIn, "cert"))
-		throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2033 - " + _("This certificate is not in your wallet"));
+		throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2045 - " + _("This certificate is not in your wallet"));
 
 	// if cert is private, decrypt the data
 	vector<unsigned char> vchData = theCert.vchData;
@@ -967,11 +967,11 @@ UniValue certtransfer(const UniValue& params, bool fHelp) {
 		if(DecryptMessage(fromAlias.vchPubKey, theCert.vchData, strData))
 			strDecryptedData = strData;
 		else
-			throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2035 - " + _("Could not decrypt certificate data"));
+			throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2046 - " + _("Could not decrypt certificate data"));
 		// encrypt using new key
 		if(!EncryptMessage(toAlias.vchPubKey, vchFromString(strDecryptedData), strCipherText))
 		{
-			throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2036 - " + _("Could not encrypt certificate data"));
+			throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2047 - " + _("Could not encrypt certificate data"));
 		}
 		vchData = vchFromString(strCipherText);
 	}	

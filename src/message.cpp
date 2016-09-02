@@ -435,11 +435,11 @@ UniValue messagenew(const UniValue& params, bool fHelp) {
 	if (!GetTxOfAlias(vchFromString(strFromAddress), aliasFrom, aliastx, true))
 		throw runtime_error("SYSCOIN_MESSAGE_RPC_ERROR: ERRCODE: 3016 - " + _("Could not find an alias with this name"));
     if(!IsSyscoinTxMine(aliastx, "alias")) {
-		throw runtime_error("SYSCOIN_MESSAGE_RPC_ERROR: ERRCODE: 3018 - " + _("This alias is not yours"));
+		throw runtime_error("SYSCOIN_MESSAGE_RPC_ERROR: ERRCODE: 3017 - " + _("This alias is not yours"));
     }
 	const CWalletTx *wtxAliasIn = pwalletMain->GetWalletTx(aliastx.GetHash());
 	if (wtxAliasIn == NULL)
-		throw runtime_error("SYSCOIN_MESSAGE_RPC_ERROR: ERRCODE: 3019 - " + _("This alias is not in your wallet"));
+		throw runtime_error("SYSCOIN_MESSAGE_RPC_ERROR: ERRCODE: 3018 - " + _("This alias is not in your wallet"));
 	CScript scriptPubKeyOrig, scriptPubKeyAliasOrig, scriptPubKey, scriptPubKeyAlias;
 
 	CPubKey FromPubKey = CPubKey(aliasFrom.vchPubKey);
@@ -449,7 +449,7 @@ UniValue messagenew(const UniValue& params, bool fHelp) {
 
 
 	if(!GetTxOfAlias(vchFromString(strToAddress), aliasTo, aliastx, true))
-		throw runtime_error("SYSCOIN_MESSAGE_RPC_ERROR: ERRCODE: 3020 - " + _("Failed to read to alias from alias DB"));
+		throw runtime_error("SYSCOIN_MESSAGE_RPC_ERROR: ERRCODE: 3019 - " + _("Failed to read to alias from alias DB"));
 	CPubKey ToPubKey = CPubKey(aliasTo.vchPubKey);
 
 
@@ -466,12 +466,12 @@ UniValue messagenew(const UniValue& params, bool fHelp) {
 	string strCipherTextTo;
 	if(!EncryptMessage(aliasTo.vchPubKey, vchMyMessage, strCipherTextTo))
 	{
-		throw runtime_error("SYSCOIN_MESSAGE_RPC_ERROR: ERRCODE: 3021 - " + _("Could not encrypt message data for receiver"));
+		throw runtime_error("SYSCOIN_MESSAGE_RPC_ERROR: ERRCODE: 3020 - " + _("Could not encrypt message data for receiver"));
 	}
 	string strCipherTextFrom;
 	if(!EncryptMessage(aliasFrom.vchPubKey, vchMyMessage, strCipherTextFrom))
 	{
-		throw runtime_error("SYSCOIN_MESSAGE_RPC_ERROR: ERRCODE: 3022 - " + _("Could not encrypt message data for sender"));
+		throw runtime_error("SYSCOIN_MESSAGE_RPC_ERROR: ERRCODE: 3021 - " + _("Could not encrypt message data for sender"));
 	}
 
     // build message
