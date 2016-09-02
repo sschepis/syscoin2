@@ -889,8 +889,11 @@ void EscrowFeedback(const string& node, const string& escrowguid, const string& 
 			const string &escrowFeedbackTxid = find_value(arrayBuyerFeedback, "txid").get_str();
 			if(foundFeedback == 0 && escrowFeedbackTxid == escrowTxid && (userprimary == FEEDBACKBUYER || usersecondary == FEEDBACKBUYER))
 			{
-				BOOST_CHECK_EQUAL(find_value(arrayArbiterFeedback, "feedbackuser").get_int(), FEEDBACKBUYER);
-				BOOST_CHECK_EQUAL(find_value(arrayBuyerFeedback, "rating").get_int(), userprimary == FEEDBACKBUYER? atoi(ratingprimarystr.c_str(): atoi(ratingsecondarystr.c_str())));
+				BOOST_CHECK_EQUAL(find_value(arrayBuyerFeedback, "feedbackuser").get_int(), FEEDBACKBUYER);
+				if(userprimary == FEEDBACKBUYER)
+					BOOST_CHECK_EQUAL(find_value(arrayBuyerFeedback, "rating").get_int(), atoi(ratingprimarystr.c_str()));
+				else
+					BOOST_CHECK_EQUAL(find_value(arrayBuyerFeedback, "rating").get_int(), atoi(ratingsecondarytr.c_str()));
 				BOOST_CHECK_EQUAL(find_value(arrayBuyerFeedback, "feedback").get_str() , feedbackprimary);
 				foundFeedback++;
 				break;
@@ -906,8 +909,11 @@ void EscrowFeedback(const string& node, const string& escrowguid, const string& 
 			const string &escrowFeedbackTxid = find_value(arraySellerFeedback, "txid").get_str();
 			if(foundFeedback <= 1 && escrowFeedbackTxid == escrowTxid && (userprimary == FEEDBACKSELLER || usersecondary == FEEDBACKSELLER))
 			{
-				BOOST_CHECK_EQUAL(find_value(arrayArbiterFeedback, "feedbackuser").get_int(), FEEDBACKSELLER);
-				BOOST_CHECK_EQUAL(find_value(arraySellerFeedback, "rating").get_int(), userprimary == FEEDBACKSELLER? atoi(ratingprimarystr.c_str(): atoi(ratingsecondarystr.c_str())));
+				BOOST_CHECK_EQUAL(find_value(arraySellerFeedback, "feedbackuser").get_int(), FEEDBACKSELLER);
+				if(userprimary == FEEDBACKSELLER)
+					BOOST_CHECK_EQUAL(find_value(arraySellerFeedback, "rating").get_int(), atoi(ratingprimarystr.c_str()));
+				else
+					BOOST_CHECK_EQUAL(find_value(arraySellerFeedback, "rating").get_int(), atoi(ratingsecondarytr.c_str()));
 				BOOST_CHECK_EQUAL(find_value(arraySellerFeedback, "feedback").get_str(), feedbackprimary);
 				foundFeedback++;
 				break;
@@ -924,7 +930,10 @@ void EscrowFeedback(const string& node, const string& escrowguid, const string& 
 			if(foundFeedback <= 1 && escrowFeedbackTxid == escrowTxid && (userprimary == FEEDBACKARBITER || usersecondary == FEEDBACKARBITER))
 			{
 				BOOST_CHECK_EQUAL(find_value(arrayArbiterFeedback, "feedbackuser").get_int(), FEEDBACKARBITER);
-				BOOST_CHECK_EQUAL(find_value(arrayArbiterFeedback, "rating").get_int(), userprimary == FEEDBACKARBITER? atoi(ratingprimarystr.c_str(): atoi(ratingsecondarystr.c_str())));
+				if(userprimary == FEEDBACKARBITER)
+					BOOST_CHECK_EQUAL(find_value(arrayArbiterFeedback, "rating").get_int(), atoi(ratingprimarystr.c_str()));
+				else
+					BOOST_CHECK_EQUAL(find_value(arrayArbiterFeedback, "rating").get_int(), atoi(ratingsecondarytr.c_str()));
 				BOOST_CHECK_EQUAL(find_value(arrayArbiterFeedback, "feedback").get_str() , feedbackprimary);
 				foundFeedback++;
 				break;
