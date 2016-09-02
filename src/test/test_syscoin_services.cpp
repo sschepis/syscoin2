@@ -886,7 +886,7 @@ void EscrowFeedback(const string& node, const string& escrowguid, const string& 
 		printf("feedbackuser %d\n", find_value(feedbackObj, "feedbackuser").get_int());
 		if(find_value(feedbackObj, "feedbackuser").get_int()  == userprimary)
 		{
-			printf("found primary\n);
+			printf("found primary\n");
 			BOOST_CHECK(find_value(feedbackObj, "txid").get_str() == escrowTxid);
 			BOOST_CHECK(find_value(feedbackObj, "rating").get_int() == atoi(ratingprimarystr.c_str()));
 			BOOST_CHECK(find_value(feedbackObj, "feedback").get_str() == feedbackprimary);
@@ -894,7 +894,7 @@ void EscrowFeedback(const string& node, const string& escrowguid, const string& 
 		}
 		else if(find_value(feedbackObj, "feedbackuser").get_int() == usersecondary)
 		{
-			printf("found secondary\n);
+			printf("found secondary\n");
 			BOOST_CHECK(find_value(feedbackObj, "txid").get_str() == escrowTxid);
 			BOOST_CHECK(find_value(feedbackObj, "rating").get_int() == atoi(ratingsecondarystr.c_str()));
 			BOOST_CHECK(find_value(feedbackObj, "feedback").get_str() == feedbacksecondary);
