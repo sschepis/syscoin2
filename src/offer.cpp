@@ -2864,19 +2864,19 @@ void FindFeedback(const vector<CFeedback> &feedback, int &numBuyerRatings, int &
 	{	
 		if(!feedback[i].IsNull())
 		{
-			if(feedback[i].nFeedbackUserTo == FEEDBACKBUYER)
+			if(feedback[i].nFeedbackUserFrom == FEEDBACKBUYER)
 			{
 				feedbackBuyerCount++;
 				if(feedback[i].nRating > 0)
 					numBuyerRatings++;
 			}
-			else if(feedback[i].nFeedbackUserTo == FEEDBACKSELLER)
+			else if(feedback[i].nFeedbackUserFrom == FEEDBACKSELLER)
 			{
 				feedbackSellerCount++;
 				if(feedback[i].nRating > 0)
 					numSellerRatings++;
 			}
-			else if(feedback[i].nFeedbackUserTo == FEEDBACKARBITER)
+			else if(feedback[i].nFeedbackUserFrom == FEEDBACKARBITER)
 			{
 				feedbackArbiterCount++;
 				if(feedback[i].nRating > 0)
