@@ -1286,9 +1286,9 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				int numBuyerRatings, numSellerRatings, feedbackBuyerCount, numArbiterRatings, feedbackSellerCount, feedbackArbiterCount;				
 				FindFeedback(offerAccept.feedback, numBuyerRatings, numSellerRatings, numArbiterRatings,feedbackBuyerCount, feedbackSellerCount, feedbackArbiterCount);
 				// has this user already rated? if so set desired rating to 0
-				if(theOfferAccept.feedback[0].nFeedbackUserTo == FEEDBACKBUYER && numBuyerRatings > 0)
+				if(theOfferAccept.feedback[0].nFeedbackUserFrom == FEEDBACKBUYER && numBuyerRatings > 0)
 					theOfferAccept.feedback[0].nRating = 0;
-				else if(theOfferAccept.feedback[0].nFeedbackUserTo == FEEDBACKSELLER && numSellerRatings > 0)
+				else if(theOfferAccept.feedback[0].nFeedbackUserFrom == FEEDBACKSELLER && numSellerRatings > 0)
 					theOfferAccept.feedback[0].nRating = 0;
 				if(feedbackBuyerCount >= 10 && theOfferAccept.feedback[0].nFeedbackUserFrom == FEEDBACKBUYER)
 				{
@@ -2864,30 +2864,21 @@ void FindFeedback(const vector<CFeedback> &feedback, int &numBuyerRatings, int &
 	{	
 		if(!feedback[i].IsNull())
 		{
-			if(feedback[i].nFeedbackUserFrom == FEEDBACKBUYER)
-			{
-				feedbackBuyerCount++;
-			}
-			else if(feedback[i].nFeedbackUserFrom == FEEDBACKSELLER)
-			{
-				feedbackSellerCount++;
-			}
-			else if(feedback[i].nFeedbackUserFrom == FEEDBACKARBITER)
-			{
-				feedbackArbiterCount++;
-			}
 			if(feedback[i].nFeedbackUserTo == FEEDBACKBUYER)
 			{
+				feedbackBuyerCount++;
 				if(feedback[i].nRating > 0)
 					numBuyerRatings++;
 			}
 			else if(feedback[i].nFeedbackUserTo == FEEDBACKSELLER)
 			{
+				feedbackSellerCount++;
 				if(feedback[i].nRating > 0)
 					numSellerRatings++;
 			}
 			else if(feedback[i].nFeedbackUserTo == FEEDBACKARBITER)
 			{
+				feedbackArbiterCount++;
 				if(feedback[i].nRating > 0)
 					numArbiterRatings++;
 			}

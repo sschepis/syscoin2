@@ -742,23 +742,23 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 						// has this user already rated?
 						if(numBuyerRatings > 0)
 						{
-							if(serializedEscrow.feedback[0].nFeedbackUserTo == FEEDBACKBUYER)
+							if(serializedEscrow.feedback[0].nFeedbackUserFrom == FEEDBACKBUYER)
 								serializedEscrow.feedback[0].nRating = 0;
-							else if(serializedEscrow.feedback[1].nFeedbackUserTo == FEEDBACKBUYER)
+							else if(serializedEscrow.feedback[1].nFeedbackUserFrom == FEEDBACKBUYER)
 								serializedEscrow.feedback[1].nRating = 0;
 						}
 						if(numSellerRatings > 0)
 						{
-							if(serializedEscrow.feedback[0].nFeedbackUserTo == FEEDBACKSELLER)
+							if(serializedEscrow.feedback[0].nFeedbackUserFrom == FEEDBACKSELLER)
 								serializedEscrow.feedback[0].nRating = 0;
-							else if(serializedEscrow.feedback[1].nFeedbackUserTo == FEEDBACKSELLER)
+							else if(serializedEscrow.feedback[1].nFeedbackUserFrom == FEEDBACKSELLER)
 								serializedEscrow.feedback[1].nRating = 0;
 						}
 						if(numArbiterRatings > 0)
 						{
-							if(serializedEscrow.feedback[0].nFeedbackUserTo == FEEDBACKARBITER)
+							if(serializedEscrow.feedback[0].nFeedbackUserFrom == FEEDBACKARBITER)
 								serializedEscrow.feedback[0].nRating = 0;
-							else if(serializedEscrow.feedback[1].nFeedbackUserTo == FEEDBACKARBITER)
+							else if(serializedEscrow.feedback[1].nFeedbackUserFrom == FEEDBACKARBITER)
 								serializedEscrow.feedback[1].nRating = 0;
 						}
 
