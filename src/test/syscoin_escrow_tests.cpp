@@ -188,22 +188,6 @@ BOOST_AUTO_TEST_CASE (generate_escrowfeedback)
 	// he can more if he wishes to
 	EscrowFeedback("node3",  guid,  "feedbackbuyer", "4", FEEDBACKBUYER, "feedbackseller", "2", FEEDBACKSELLER, false);
 	EscrowFeedback("node3",  guid,  "feedbackbuyer", "4", FEEDBACKBUYER, "feedbackseller", "2", FEEDBACKSELLER, false);
-
-
-	// create up to 10 replies each
-	for(int i =0;i<7;i++)
-	{
-		// can reply but not rate
-		EscrowFeedback("node1", guid, "feedbackbuyer", "1", FEEDBACKBUYER, "feedbackarbiter", "2", FEEDBACKARBITER, false);
-		EscrowFeedback("node2",  guid,  "feedbackseller", "1", FEEDBACKSELLER, "feedbackarbiter", "3", FEEDBACKARBITER, false);
-		EscrowFeedback("node3",  guid,  "feedbackbuyer", "4", FEEDBACKBUYER, "feedbackseller", "2", FEEDBACKSELLER, false);
-		
-	}
-	// now you can't leave any more feedbacks
-	string escrowfeedbackstr = "escrowfeedback " + guid + " testfeedback 1 testfeedback 2";
-	BOOST_CHECK_THROW(CallRPC("node1", escrowfeedbackstr), runtime_error);
-	BOOST_CHECK_THROW(CallRPC("node2", escrowfeedbackstr), runtime_error);
-	BOOST_CHECK_THROW(CallRPC("node3", escrowfeedbackstr), runtime_error);
 }
 BOOST_AUTO_TEST_CASE (generate_escrow_linked_release)
 {
