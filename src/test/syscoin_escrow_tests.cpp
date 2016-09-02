@@ -172,37 +172,35 @@ BOOST_AUTO_TEST_CASE (generate_escrowfeedback)
 	GenerateBlocks(5);
 	// seller leaves feedback first
 	EscrowFeedback("node1", guid, "feedbackbuyer", "1", FEEDBACKBUYER, "feedbackarbiter", "2", FEEDBACKARBITER, true);
-	// seller can't leave feedback twice in a row
-	string escrowfeedbackstr = "escrowfeedback " + guid + " testfeedback 1 testfeedback 2";
-	BOOST_CHECK_THROW(CallRPC("node1", escrowfeedbackstr), runtime_error);
+	// he can more if he wishes to
+	EscrowFeedback("node1", guid, "feedbackbuyer", "1", FEEDBACKBUYER, "feedbackarbiter", "2", FEEDBACKARBITER, false);
+	EscrowFeedback("node1", guid, "feedbackbuyer", "1", FEEDBACKBUYER, "feedbackarbiter", "2", FEEDBACKARBITER, false);
+
 
 	// then buyer can leave feedback
 	EscrowFeedback("node2", guid, "feedbackseller", "1", FEEDBACKSELLER, "feedbackarbiter", "3", FEEDBACKARBITER, true);
-	// he can leave one more reply if he wishes to
+	// he can more if he wishes to
 	EscrowFeedback("node2",  guid,  "feedbackseller", "1", FEEDBACKSELLER, "feedbackarbiter", "3", FEEDBACKARBITER, false);
-	// buyer can't leave more than 2 feedbacks without a reply
-	BOOST_CHECK_THROW(CallRPC("node2", escrowfeedbackstr), runtime_error);
+	EscrowFeedback("node2",  guid,  "feedbackseller", "1", FEEDBACKSELLER, "feedbackarbiter", "3", FEEDBACKARBITER, false);
 
 	// and arbiter can also leave feedback
 	EscrowFeedback("node3",  guid,  "feedbackbuyer", "4", FEEDBACKBUYER, "feedbackseller", "2", FEEDBACKSELLER, true);
-	// he can leave one more reply if he wishes to
+	// he can more if he wishes to
 	EscrowFeedback("node3",  guid,  "feedbackbuyer", "4", FEEDBACKBUYER, "feedbackseller", "2", FEEDBACKSELLER, false);
-	// arbiter can't leave more than 2 feedbacks without a reply
-	BOOST_CHECK_THROW(CallRPC("node3", escrowfeedbackstr), runtime_error);
+	EscrowFeedback("node3",  guid,  "feedbackbuyer", "4", FEEDBACKBUYER, "feedbackseller", "2", FEEDBACKSELLER, false);
+
 
 	// create up to 10 replies each
-	for(int i =0;i<9;i++)
+	for(int i =0;i<7;i++)
 	{
-		// seller can reply but not rate
+		// can reply but not rate
 		EscrowFeedback("node1", guid, "feedbackbuyer", "1", FEEDBACKBUYER, "feedbackarbiter", "2", FEEDBACKARBITER, false);
-		if(i < 8)
-		{
-			// buyer and arbiter can reply but not rate
-			EscrowFeedback("node2",  guid,  "feedbackseller", "1", FEEDBACKSELLER, "feedbackarbiter", "3", FEEDBACKARBITER, false);
-			EscrowFeedback("node3",  guid,  "feedbackbuyer", "4", FEEDBACKBUYER, "feedbackseller", "2", FEEDBACKSELLER, false);
-		}
+		EscrowFeedback("node2",  guid,  "feedbackseller", "1", FEEDBACKSELLER, "feedbackarbiter", "3", FEEDBACKARBITER, false);
+		EscrowFeedback("node3",  guid,  "feedbackbuyer", "4", FEEDBACKBUYER, "feedbackseller", "2", FEEDBACKSELLER, false);
+		
 	}
 	// now you can't leave any more feedbacks
+	string escrowfeedbackstr = "escrowfeedback " + guid + " testfeedback 1 testfeedback 2";
 	BOOST_CHECK_THROW(CallRPC("node1", escrowfeedbackstr), runtime_error);
 	BOOST_CHECK_THROW(CallRPC("node2", escrowfeedbackstr), runtime_error);
 	BOOST_CHECK_THROW(CallRPC("node3", escrowfeedbackstr), runtime_error);

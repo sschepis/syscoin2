@@ -452,31 +452,27 @@ BOOST_AUTO_TEST_CASE (generate_offeracceptfeedback)
 	string acceptguid = OfferAccept("node1", "node2", "buyeraliasfeedback", offerguid, "1", "message");
 	// seller leaves feedback first
 	OfferAcceptFeedback("node1", offerguid, acceptguid, "feedbackseller", "1", FEEDBACKSELLER, true);
-	// seller can't leave feedback twice in a row
-	string offerfeedbackstr = "offeracceptfeedback " + offerguid + " " + acceptguid + " testfeedback 1";
-	BOOST_CHECK_THROW(CallRPC("node1", offerfeedbackstr), runtime_error);
+	// seller can leave feedback twice in a row
+	OfferAcceptFeedback("node1", offerguid, acceptguid, "feedbackseller", "1", FEEDBACKSELLER, false);
 
 	// then buyer can leave feedback
 	OfferAcceptFeedback("node2", offerguid, acceptguid, "feedbackbuyer", "5", FEEDBACKBUYER, true);
-	// he can leave one more reply if he wishes to
+	// can leave feedback twice in  arow
 	OfferAcceptFeedback("node2", offerguid, acceptguid, "feedbackbuyer2", "5", FEEDBACKBUYER, false);
-	// buyer can't leave more than 2 feedbacks without a reply
-	BOOST_CHECK_THROW(CallRPC("node2", offerfeedbackstr), runtime_error);
 
 	// create up to 10 replies each
-	for(int i =0;i<9;i++)
+	for(int i =0;i<8;i++)
 	{
 		// keep alive
 		OfferUpdate("node1", "selleraliasfeedback", offerguid, "category", "titlenew", "90", "0.01", "descriptionnew", "USD");
 		// seller can reply but not rate
 		OfferAcceptFeedback("node1", offerguid, acceptguid, "feedbackseller1", "2", FEEDBACKSELLER, false);
-		if(i < 8)
-		{
-			// buyer can reply but not rate
-			OfferAcceptFeedback("node2", offerguid, acceptguid, "feedbackbuyer1", "3", FEEDBACKBUYER, false);
-		}
-	}
 
+		// buyer can reply but not rate
+		OfferAcceptFeedback("node2", offerguid, acceptguid, "feedbackbuyer1", "3", FEEDBACKBUYER, false);
+		
+	}
+	string offerfeedbackstr = "offeracceptfeedback " + offerguid + " " + acceptguid + " testfeedback 1";
 	// now you can't leave any more feedback as a seller
 	BOOST_CHECK_THROW(r = CallRPC("node1", offerfeedbackstr), runtime_error);
 
@@ -485,18 +481,14 @@ BOOST_AUTO_TEST_CASE (generate_offeracceptfeedback)
 	GenerateBlocks(5, "node2");
 	// this time buyer leaves feedback first
 	OfferAcceptFeedback("node2", offerguid, acceptguid, "feedbackbuyer", "1", FEEDBACKBUYER, true);
-	// buyer can't leave feedback twice in a row
-	offerfeedbackstr = "offeracceptfeedback " + offerguid + " " + acceptguid + " testfeedback 1";
-	BOOST_CHECK_THROW(CallRPC("node2", offerfeedbackstr), runtime_error);
+	// buyer can leave feedback three times in a row
+	OfferAcceptFeedback("node2", offerguid, acceptguid, "feedbackbuyer", "1", FEEDBACKBUYER, false);
+	OfferAcceptFeedback("node2", offerguid, acceptguid, "feedbackbuyer", "1", FEEDBACKBUYER, false);
 
 	// then seller can leave feedback
 	OfferAcceptFeedback("node1", offerguid, acceptguid, "feedbackseller", "5", FEEDBACKSELLER, true);
 	OfferAcceptFeedback("node1", offerguid, acceptguid, "feedbackseller2", "4", FEEDBACKSELLER, false);
-	// seller can't leave feedback two replies in a row
-	BOOST_CHECK_THROW(CallRPC("node1", offerfeedbackstr), runtime_error);
-
-
-
+	OfferAcceptFeedback("node1", offerguid, acceptguid, "feedbackseller2", "4", FEEDBACKSELLER, false);
 }
 BOOST_AUTO_TEST_CASE (generate_offerexpired)
 {

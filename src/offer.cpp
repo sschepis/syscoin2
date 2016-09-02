@@ -1290,24 +1290,14 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					theOfferAccept.feedback[0].nRating = 0;
 				else if(theOfferAccept.feedback[0].nFeedbackUserTo == FEEDBACKSELLER && numSellerRatings > 0)
 					theOfferAccept.feedback[0].nRating = 0;
-				if(feedbackBuyerCount >= 10 && theOfferAccept.feedback[0].nFeedbackUserTo == FEEDBACKBUYER)
+				if(feedbackBuyerCount >= 10 && theOfferAccept.feedback[0].nFeedbackUserFrom == FEEDBACKBUYER)
 				{
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 90 - " + _("Cannot exceed 10 buyer feedbacks");
 					return true;
 				}
-				else if(feedbackSellerCount >= 10 && theOfferAccept.feedback[0].nFeedbackUserTo == FEEDBACKSELLER)
+				else if(feedbackSellerCount >= 10 && theOfferAccept.feedback[0].nFeedbackUserFrom == FEEDBACKSELLER)
 				{
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 90a - " + _("Cannot exceed 10 seller feedbacks");
-					return true;
-				}
-				else if(theOfferAccept.feedback[0].nFeedbackUserTo == FEEDBACKBUYER && feedbackBuyerCount > feedbackSellerCount)
-				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 90b - " + _("Cannot leave multiple buyer feedbacks you must wait for a seller reply first");
-					return true;
-				}
-				else if(theOfferAccept.feedback[0].nFeedbackUserTo == FEEDBACKSELLER && feedbackSellerCount > feedbackBuyerCount)
-				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 90c - " + _("Cannot leave multiple seller feedbacks you must wait for a buyer reply first");
 					return true;
 				}
 				theOfferAccept.feedback[0].txHash = tx.GetHash();
@@ -2874,21 +2864,30 @@ void FindFeedback(const vector<CFeedback> &feedback, int &numBuyerRatings, int &
 	{	
 		if(!feedback[i].IsNull())
 		{
-			if(feedback[i].nFeedbackUserTo == FEEDBACKBUYER)
+			if(feedback[i].nFeedbackUserFrom == FEEDBACKBUYER)
 			{
 				feedbackBuyerCount++;
+			}
+			else if(feedback[i].nFeedbackUserFrom == FEEDBACKSELLER)
+			{
+				feedbackSellerCount++;
+			}
+			else if(feedback[i].nFeedbackUserFrom == FEEDBACKARBITER)
+			{
+				feedbackArbiterCount++;
+			}
+			if(feedback[i].nFeedbackUserTo == FEEDBACKBUYER)
+			{
 				if(feedback[i].nRating > 0)
 					numBuyerRatings++;
 			}
 			else if(feedback[i].nFeedbackUserTo == FEEDBACKSELLER)
 			{
-				feedbackSellerCount++;
 				if(feedback[i].nRating > 0)
 					numSellerRatings++;
 			}
 			else if(feedback[i].nFeedbackUserTo == FEEDBACKARBITER)
 			{
-				feedbackArbiterCount++;
 				if(feedback[i].nRating > 0)
 					numArbiterRatings++;
 			}
