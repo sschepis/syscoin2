@@ -916,7 +916,7 @@ void EscrowFeedback(const string& node, const string& escrowguid, const string& 
 			const string &escrowFeedbackTxid = find_value(arraySellerFeedback, "txid").get_str();
 			if(foundFeedback <= 1 && escrowFeedbackTxid == escrowTxid && (userprimary == FEEDBACKSELLER || usersecondary == FEEDBACKSELLER))
 			{
-				BOOST_CHECK_(find_value(arraySellerFeedback, "feedbackuser").get_int() != FEEDBACKSELLER);
+				BOOST_CHECK(find_value(arraySellerFeedback, "feedbackuser").get_int() != FEEDBACKSELLER);
 				if(userprimary == FEEDBACKSELLER)
 				{
 					BOOST_CHECK_EQUAL(find_value(arraySellerFeedback, "feedback").get_str(), feedbackprimary);
