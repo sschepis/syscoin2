@@ -1312,16 +1312,19 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				theOfferAccept.nQty = 1;
 			// update qty if not an escrow accept (since that updates qty on escrow creation, and refunds qty on escrow refund)
 			// also if this offer you are accepting is linked to another offer don't need to update qty (once the root accept is done this offer qty will be updated)
-			if(theOffer.nQty != -1 && theOfferAccept.vchEscrow.empty() && theOffer.vchLinkOffer.empty())
+			if(theOffer.nQty != -1 && theOfferAccept.vchEscrow.empty())
 			{
 				if((theOfferAccept.nQty > theOffer.nQty))
 				{
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 104 - " + _("Not enough quantity left in this offer for this purchase");
 					return true;
-				}				
-				theOffer.nQty -= theOfferAccept.nQty;
-				if(theOffer.nQty < 0)
-					theOffer.nQty = 0;
+				}	
+				if(theOffer.vchLinkOffer.empty())
+				{
+					theOffer.nQty -= theOfferAccept.nQty;
+					if(theOffer.nQty < 0)
+						theOffer.nQty = 0;
+				}
 				
 			}
 		
@@ -1485,15 +1488,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					}
 				}												
 			}	
-			// if not escrow check qty to see if enough, escrow creation already deducts qty
-			if(theOfferAccept.vchEscrow.empty())
-			{
-				if(theOfferAccept.nQty <= 0 || (theOffer.nQty != -1 && theOfferAccept.nQty > theOffer.nQty) || (!linkOffer.IsNull() && theOfferAccept.nQty > linkOffer.nQty && linkOffer.nQty != -1))
-				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 123 - " + _("Offer does not have enough quantity left for this purchase");
-					return true;
-				}					
-			}
 			
 
 			theOfferAccept.nHeight = nHeight;
