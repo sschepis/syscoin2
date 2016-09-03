@@ -1409,7 +1409,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				{
 					// we want the initial funding escrow transaction height as when to calculate this offer accept price
 					CEscrow fundingEscrow = escrowVtxPos.front();
-					if(fundingEscrow.vchOffer != vvchArgs[0])
+					if((fundingEscrow.vchOffer != theOffer.vchOffer && linkOffer.IsNull()) || (!linkOffer.IsNull() && fundingEscrow.vchOffer != linkOffer.vchOffer ))
 					{
 						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 115 - " + _("Escrow guid does not match the guid of the offer you are accepting");
 						return true;
