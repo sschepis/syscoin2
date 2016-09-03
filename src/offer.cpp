@@ -2683,7 +2683,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	theOffer.linkWhitelist.GetLinkEntryByHash(vchWhitelistAlias, foundEntry);
 	unsigned int memPoolQty = QtyOfPendingAcceptsInMempool(vchOffer);
 	if(vtxPos.back().nQty != -1 && vtxPos.back().nQty < ((!txAccept.vchEscrow.empty()? 0: nQty)+memPoolQty))
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 181 - " + _("Not enough remaining quantity to fulfill this orderaccept"));
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 181 - " + _("Not enough remaining quantity to fulfill this order"));
 
 	int precision = 2;
 	CAmount nPrice = convertCurrencyCodeToSyscoin(theOffer.vchAliasPeg, theOffer.sCurrencyCode, theOffer.GetPrice(foundEntry), nHeight, precision);
