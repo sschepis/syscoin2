@@ -1486,7 +1486,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				}												
 			}	
 			// if not escrow check qty to see if enough, escrow creation already deducts qty
-			if(!theOfferAccept.vchEscrow.empty())
+			if(theOfferAccept.vchEscrow.empty())
 			{
 				if(theOfferAccept.nQty <= 0 || (theOffer.nQty != -1 && theOfferAccept.nQty > theOffer.nQty) || (!linkOffer.IsNull() && theOfferAccept.nQty > linkOffer.nQty && linkOffer.nQty != -1))
 				{
