@@ -1397,12 +1397,12 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				}
 			}
 			// if this accept was done via an escrow release, we get the height from escrow and use that to lookup the price at the time
-			if(!theOffer.accept.vchEscrow.empty())
+			if(!theOfferAccept.vchEscrow.empty())
 			{		
 				vector<CEscrow> escrowVtxPos;
 				CEscrow escrow;
 				CTransaction escrowTx;
-				if (GetTxAndVtxOfEscrow( theOffer.accept.vchEscrow, escrow, escrowTx, escrowVtxPos))
+				if (GetTxAndVtxOfEscrow( theOfferAccept.vchEscrow, escrow, escrowTx, escrowVtxPos))
 				{
 					// we want the initial funding escrow transaction height as when to calculate this offer accept price
 					CEscrow fundingEscrow = escrowVtxPos.front();
@@ -1486,7 +1486,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				}												
 			}	
 			// if not escrow check qty to see if enough, escrow creation already deducts qty
-			if(!theOffer.accept.vchEscrow.empty())
+			if(!theOfferAccept.vchEscrow.empty())
 			{
 				if(theOfferAccept.nQty <= 0 || (theOffer.nQty != -1 && theOfferAccept.nQty > theOffer.nQty) || (!linkOffer.IsNull() && theOfferAccept.nQty > linkOffer.nQty && linkOffer.nQty != -1))
 				{
@@ -3503,7 +3503,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 				CTransaction buyeraliastx;
 				GetTxOfAlias(theOfferAccept.vchBuyerAlias, theBuyerAlias, buyeraliastx, true);
 
-				// if you paid for this offer but the buyer alias isn't yours anymore skip
+				// if you paid for this offer but the buyer alias isn't yours skip (linked accepts shouldnt show as purchases by merchant or reseller)
 				if(!IsSyscoinTxMine(acceptTx, "offer") && !IsSyscoinTxMine(buyeraliastx, "alias"))
 					continue;				
 				string strMessage = string("");
