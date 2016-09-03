@@ -3466,8 +3466,6 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 						}
 					}
 				}
-				if(!theOfferAccept.vchEscrow.empty() && vchOfferAcceptLink.empty())
-					continue;
 				bool isExpired = false;
 				vector<CAliasIndex> aliasVtxPos;
 				CAliasIndex theAlias;
