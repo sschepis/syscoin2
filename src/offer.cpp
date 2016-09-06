@@ -3145,7 +3145,7 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 		CTransaction txA;
 		COfferAccept ca;
 		COffer acceptOffer;
-		if(!GetTxOfOfferAccept(vtxPos[i].vchOffer, vtxPos[i].accept.vchAcceptRand, acceptOffer, ca, txA);
+		if(!GetTxOfOfferAccept(vtxPos[i].vchOffer, vtxPos[i].accept.vchAcceptRand, acceptOffer, ca, txA))
 			continue;
 
 		UniValue oOfferAccept(UniValue::VOBJ);
