@@ -427,6 +427,27 @@ bool GetTxOfOfferAccept(const vector<unsigned char> &vchOffer, const vector<unsi
 
 	return true;
 }
+bool GetTxAndVtxOfOfferAccept(const vector<unsigned char> &vchOffer, const vector<unsigned char> &vchOfferAccept,
+		COffer &theOffer, COfferAccept &theOfferAccept, CTransaction& tx, vector<COffer> &vtxPos) {
+	if (!pofferdb->ReadOffer(vchOffer, vtxPos) || vtxPos.empty()) return false;
+	theOfferAccept.SetNull();
+	theOfferAccept.vchAcceptRand = vchOfferAccept;
+	GetAcceptByHash(vtxPos, theOfferAccept, theOffer);
+	if(theOfferAccept.IsNull())
+		return false;
+	if (( vtxPos.back().nHeight + GetOfferExpirationDepth())
+			< chainActive.Tip()->nHeight) {
+		string offer = stringFromVch(vchOfferAccept);
+		if(fDebug)
+			LogPrintf("GetTxOfOfferAccept(%s) : expired", offer.c_str());
+		return false;
+	}
+
+	if (!GetSyscoinTransaction(theOfferAccept.nHeight, theOfferAccept.txHash, tx, Params().GetConsensus()))
+		return false;
+
+	return true;
+}
 bool DecodeAndParseOfferTx(const CTransaction& tx, int& op, int& nOut,
 		vector<vector<unsigned char> >& vvch)
 {
@@ -3119,11 +3140,18 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 	vector<unsigned char> vchValue;
 	UniValue aoOfferAccepts(UniValue::VARR);
 	for(int i=vtxPos.size()-1;i>=0;i--) {
+		vector<CEscrow> escrowVtxPos;
+		CTransaction escrowTx;
+		CEscrow escrow;
+		GetTxAndVtxOfEscrow( vtxPos[i].vchEscrow, escrow, escrowTx, escrowVtxPos);
+		
 		COfferAccept ca = vtxPos[i].accept;
 		COffer acceptOffer;
 		acceptOffer.nHeight = ca.nAcceptHeight;
 		if(ca.IsNull())
 			continue;
+		if(!escrowVtxPos.empty())
+			acceptOffer.nHeight = escrowVtxPos.front().nHeight;
 		if(!acceptOffer.GetOfferFromList(vtxPos))
 			continue;
 		UniValue oOfferAccept(UniValue::VOBJ);
@@ -3210,7 +3238,7 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 		oOfferAccept.push_back(Pair("linkofferaccept", linkAccept));
 		if(!FindOfferAcceptPayment(txA, ca.nPrice) && ca.txBTCId.IsNull())
 			continue;
-		oOfferAccept.push_back(Pair("offer_discount_percentage", strprintf("%.2f%%", 100.0f - 100.0f*(ca.nPrice/theOffer.GetPrice()))));			
+		oOfferAccept.push_back(Pair("offer_discount_percentage", strprintf("%.2f%%", 100.0f - 100.0f*(ca.nPrice/acceptOffer.GetPrice()))));			
 		oOfferAccept.push_back(Pair("escrowlink", stringFromVch(ca.vchEscrow)));
 		int precision = 2;
 		CAmount nPricePerUnit = convertCurrencyCodeToSyscoin(acceptOffer.vchAliasPeg, acceptOffer.sCurrencyCode, ca.nPrice, ca.nAcceptHeight-1, precision);
@@ -3417,8 +3445,19 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 				const vector<unsigned char> &vchAcceptRand = vvch[1];			
 				CTransaction offerTx, acceptTx;
 				COffer theOffer;
-				if (!GetTxOfOfferAccept(vchOffer, vchAcceptRand, theOffer, theOfferAccept, acceptTx))
+				vector<CEscrow> vtxPos;
+				if (!GetTxAndVtxOfOfferAccept(vchOffer, vchAcceptRand, theOffer, theOfferAccept, acceptTx, vtxPos))
 					continue;
+				vector<CEscrow> escrowVtxPos;
+				CTransaction escrowTx;
+				CEscrow escrow;
+				GetTxAndVtxOfEscrow( theOffer.vchEscrow, escrow, escrowTx, escrowVtxPos);
+				if(!escrowVtxPos.empty())
+				{
+					theOffer.nHeight = escrowVtxPos.front().nHeight;
+					if(!theOffer.GetOfferFromList(vtxPos))
+						continue;
+				}
 				// get last active accepts only
 				if (vNamesI.find(vchAcceptRand) != vNamesI.end() && (theOfferAccept.nHeight <= vNamesI[vchAcceptRand] || vNamesI[vchAcceptRand] < 0))
 					continue;	
