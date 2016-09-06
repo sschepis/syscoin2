@@ -3143,13 +3143,14 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 		vector<CEscrow> escrowVtxPos;
 		CTransaction escrowTx;
 		CEscrow escrow;
-		GetTxAndVtxOfEscrow( vtxPos[i].vchEscrow, escrow, escrowTx, escrowVtxPos);
-		
+
 		COfferAccept ca = vtxPos[i].accept;
-		COffer acceptOffer;
-		acceptOffer.nHeight = ca.nAcceptHeight;
 		if(ca.IsNull())
 			continue;
+		GetTxAndVtxOfEscrow( ca.vchEscrow, escrow, escrowTx, escrowVtxPos);
+		
+		COffer acceptOffer;
+		acceptOffer.nHeight = ca.nAcceptHeight;
 		if(!escrowVtxPos.empty())
 			acceptOffer.nHeight = escrowVtxPos.front().nHeight;
 		if(!acceptOffer.GetOfferFromList(vtxPos))
@@ -3451,7 +3452,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 				vector<CEscrow> escrowVtxPos;
 				CTransaction escrowTx;
 				CEscrow escrow;
-				GetTxAndVtxOfEscrow( theOffer.vchEscrow, escrow, escrowTx, escrowVtxPos);
+				GetTxAndVtxOfEscrow( theOfferAccept.vchEscrow, escrow, escrowTx, escrowVtxPos);
 				if(!escrowVtxPos.empty())
 				{
 					theOffer.nHeight = escrowVtxPos.front().nHeight;
