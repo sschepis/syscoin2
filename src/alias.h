@@ -58,16 +58,21 @@ public:
 	}
     bool GetAliasFromList(std::vector<CAliasIndex> &aliasList) {
         if(aliasList.size() == 0) return false;
+		if(nHeight <= 0)
+			return aliasList.front();
 		CAliasIndex myAlias = aliasList.back();
-		// find the closest alias without going over in height, assuming aliasList orders entries by nHeight ascending
-        for(std::vector<CAliasIndex>::reverse_iterator it = aliasList.rbegin(); it != aliasList.rend(); ++it) {
-            const CAliasIndex &a = *it;
-			// skip if this height is greater than our alias height
-			if(a.nHeight > nHeight)
-				continue;
-            myAlias = a;
-			break;
-        }
+		if(myAlias.nHeight >= nHeight)
+		{
+			// find the closest alias without going over in height, assuming aliasList orders entries by nHeight ascending
+			for(std::vector<CAliasIndex>::reverse_iterator it = aliasList.rbegin(); it != aliasList.rend(); ++it) {
+				const CAliasIndex &a = *it;
+				// skip if this height is greater than our alias height
+				if(a.nHeight > nHeight)
+					continue;
+				myAlias = a;
+				break;
+			}
+		}
         *this = myAlias;
         return true;
     }
