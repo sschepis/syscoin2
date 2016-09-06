@@ -3226,7 +3226,7 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 		if(acceptOffer.GetPrice() > 0)
 			oOfferAccept.push_back(Pair("offer_discount_percentage", strprintf("%.2f%%", 100.0f - 100.0f*(ca.nPrice/acceptOffer.GetPrice()))));		
 		else
-			oOfferAccept.push_back(Pair("offer_discount_percentage", "0%");		
+			oOfferAccept.push_back(Pair("offer_discount_percentage", "0%"));		
 
 		oOfferAccept.push_back(Pair("escrowlink", stringFromVch(ca.vchEscrow)));
 		int precision = 2;
@@ -3490,7 +3490,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 				if(theOffer.GetPrice() > 0)
 					oOfferAccept.push_back(Pair("offer_discount_percentage", strprintf("%.2f%%", 100.0f - 100.0f*(theOfferAccept.nPrice/theOffer.GetPrice()))));		
 				else
-					oOfferAccept.push_back(Pair("offer_discount_percentage", "0%");		
+					oOfferAccept.push_back(Pair("offer_discount_percentage", "0%"));		
 
 
 				int precision = 2;
