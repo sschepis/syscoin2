@@ -2719,14 +2719,20 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	{
 		if(!theOffer.vchLinkOffer.empty())
 		{
-			CAliasIndex theLinkedAlias;
-			if (!GetTxOfAlias( vchAlias, theLinkedAlias, aliastx, true))
-				throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 183 - " + _("Could not find an alias with this guid"));
+			CTransaction linkedOfferTx;
+			COffer linkedOffer;
+			if (GetTxOfOffer( theOffer.vchLinkOffer, linkedOffer, linkedOfferTx, true))
+			{
+				CAliasIndex theLinkedAlias;
+				if (!GetTxOfAlias(linkedOffer.vchAlias, theLinkedAlias, aliastx, true))
+					throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 183 - " + _("Could not find an alias with this guid"));
 
-			// encrypt to root offer owner if this is a linked offer you are accepting
-			if(!EncryptMessage(theLinkedAlias.vchPubKey, vchMessage, strCipherText))
-				throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 184 - " + _("Could not encrypt message to seller"));
-				
+				// encrypt to root offer owner if this is a linked offer you are accepting
+				if(!EncryptMessage(theLinkedAlias.vchPubKey, vchMessage, strCipherText))
+					throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 184 - " + _("Could not encrypt message to seller"));
+			}
+			else
+				throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 184a - " + _("Could not encrypt message to seller"));				
 		}
 		else
 		{
