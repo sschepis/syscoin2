@@ -3147,9 +3147,10 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 		COfferAccept ca;
 		COffer acceptOffer;
 		GetTxOfOfferAccept(vtxPos[i].vchOffer, vtxPos[i].accept.vchAcceptRand, acceptOffer, ca, txA, true);
-
-
+		if(ca.IsNull())
+			continue;
 		UniValue oOfferAccept(UniValue::VOBJ);
+		bool foundAcceptInTx = false;
 		for (unsigned int j = 0; j < txA.vout.size(); j++)
 		{
 			if (!IsSyscoinScript(txA.vout[j].scriptPubKey, op, vvch))
@@ -3159,9 +3160,12 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 			if(vvch[2] == vchFromString("1"))
 				continue;
 			if(ca.vchAcceptRand == vvch[1])
+			{
+				foundAcceptInTx = true;
 				break;
+			}
 		}
-		if(op != OP_OFFER_ACCEPT)
+		if(!foundAcceptInTx)
 			continue;
 
 		const vector<unsigned char> &vchAcceptRand = vvch[1];		
@@ -3435,7 +3439,8 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 				CTransaction offerTx, acceptTx;
 				COffer theOffer;
 				GetTxOfOfferAccept(vchOffer, vchAcceptRand, theOffer, theOfferAccept, acceptTx, true);
-
+				if(theOfferAccept.IsNull())
+					continue;
 				// get last active accepts only
 				if (vNamesI.find(vchAcceptRand) != vNamesI.end() && (theOfferAccept.nHeight <= vNamesI[vchAcceptRand] || vNamesI[vchAcceptRand] < 0))
 					continue;	
