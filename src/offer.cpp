@@ -421,7 +421,7 @@ bool GetTxOfOfferAccept(const vector<unsigned char> &vchOffer, const vector<unsi
 		vector<CEscrow> escrowVtxPos;
 		CTransaction escrowTx;
 		CEscrow escrow;
-		if(!GetTxAndVtxOfEscrow( ca.vchEscrow, escrow, escrowTx, escrowVtxPos))
+		if(!GetTxAndVtxOfEscrow( theOfferAccept.vchEscrow, escrow, escrowTx, escrowVtxPos))
 		{
 			if(fDebug)
 				LogPrintf("GetTxOfOfferAccept() : cannot find escrow related to this offer accept");
