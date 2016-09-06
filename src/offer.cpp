@@ -3127,7 +3127,7 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 		GetTxOfOfferAccept(vtxPos[i].vchOffer, vtxPos[i].accept.vchAcceptRand, acceptOffer, ca, txA, true);
 		if(ca.IsNull())
 			continue;
-		acceptOffer.nHeight = theOfferAccept.nAcceptHeight;
+		acceptOffer.nHeight = ca.nAcceptHeight;
 		if(!ca.vchEscrow.empty())
 		{
 			vector<CEscrow> escrowVtxPos;
