@@ -428,7 +428,28 @@ bool GetTxOfOfferAccept(const vector<unsigned char> &vchOffer, const vector<unsi
 
 	return true;
 }
+bool GetTxAndVtxOfOfferAccept(const vector<unsigned char> &vchOffer, const vector<unsigned char> &vchOfferAccept,
+		COffer &acceptOffer,  COfferAccept &theOfferAccept, CTransaction& tx, vector<COffer> &vtxPos, bool skipExpiresCheck) {
+	if (!pofferdb->ReadOffer(vchOffer, vtxPos) || vtxPos.empty()) return false;
+	theOfferAccept.SetNull();
+	theOfferAccept.vchAcceptRand = vchOfferAccept;
+	GetAcceptByHash(vtxPos, theOfferAccept, acceptOffer);
+	if(theOfferAccept.IsNull())
+		return false;
 
+	if (!skipExpiresCheck && ( vtxPos.back().nHeight + GetOfferExpirationDepth())
+			< chainActive.Tip()->nHeight) {
+		string offer = stringFromVch(vchOfferAccept);
+		if(fDebug)
+			LogPrintf("GetTxOfOfferAccept(%s) : expired", offer.c_str());
+		return false;
+	}
+
+	if (!GetSyscoinTransaction(theOfferAccept.nHeight, theOfferAccept.txHash, tx, Params().GetConsensus()))
+		return false;
+
+	return true;
+}
 bool DecodeAndParseOfferTx(const CTransaction& tx, int& op, int& nOut,
 		vector<vector<unsigned char> >& vvch)
 {
@@ -3429,7 +3450,8 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 				const vector<unsigned char> &vchAcceptRand = vvch[1];			
 				CTransaction offerTx, acceptTx;
 				COffer theOffer;
-				GetTxOfOfferAccept(vchOffer, vchAcceptRand, theOffer, theOfferAccept, acceptTx, true);
+				vector<COffer> vtxPos;
+				GetTxAndVtxOfOfferAccept(vchOffer, vchAcceptRand, theOffer, theOfferAccept, acceptTx, vtxPos, true);
 				if(theOfferAccept.IsNull())
 					continue;
 				theOffer.nHeight = theOfferAccept.nAcceptHeight;

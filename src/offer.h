@@ -427,6 +427,8 @@ void GetFeedback(std::vector<CFeedback> &feedback, int &avgRating, const Feedbac
 bool GetAcceptByHash(std::vector<COffer> &offerList,  COfferAccept &ca,  COffer &offer);
 bool GetTxOfOfferAccept(const std::vector<unsigned char> &vchOffer, const std::vector<unsigned char> &vchOfferAccept,
 		COffer &theOffer, COfferAccept &theOfferAccept, CTransaction& tx, bool skipExpiresCheck=false);
+bool GetTxAndVtxOfOfferAccept(const std::vector<unsigned char> &vchOffer, const std::vector<unsigned char> &vchOfferAccept,
+		COffer &theOffer, COfferAccept &theOfferAccept, CTransaction& tx, std::vector<COffer> &vtxPos, bool skipExpiresCheck=false);
 bool GetTxOfOffer(const std::vector<unsigned char> &vchOffer, COffer& txPos, CTransaction& tx, bool skipExpiresCheck=false);
 bool GetTxAndVtxOfOffer(const std::vector<unsigned char> &vchOffer, 
 				  COffer& txPos, CTransaction& tx, std::vector<COffer> &vtxPos, bool skipExpiresCheck=false);
