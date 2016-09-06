@@ -58,7 +58,7 @@ public:
 	}
     bool GetAliasFromList(std::vector<CAliasIndex> &aliasList) {
         if(aliasList.size() == 0) return false;
-		CAliasIndex myAlias = aliasList.front();
+		CAliasIndex myAlias = aliasList.back();
 		// find the closest alias without going over in height, assuming aliasList orders entries by nHeight ascending
         for(std::vector<CAliasIndex>::reverse_iterator it = aliasList.rbegin(); it != aliasList.rend(); ++it) {
             const CAliasIndex &a = *it;
