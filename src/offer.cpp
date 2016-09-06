@@ -1285,7 +1285,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				}
 				else if(theOfferAccept.feedback[0].nFeedbackUserFrom == FEEDBACKSELLER)
 				{
-					if(serializedOffer.vchLinkAlias != offer.vchAlias)
+					if(serializedOffer.vchLinkAlias != acceptOffer.vchAlias)
 					{
 						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 98 - " + _("Only buyer can leave the seller feedback");
 						return true;
@@ -1301,7 +1301,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 100 - " + _("Cannot leave feedback for an offer used by an escrow, use Manage Escrow to leave feedback instead");
 					return true;
 				}
-				if(!offer.vchLinkOffer.empty())
+				if(!acceptOffer.vchLinkOffer.empty())
 				{
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 101 - " + _("Cannot leave feedback for linked offers");
 					return true;
