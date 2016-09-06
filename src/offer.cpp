@@ -3446,7 +3446,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 				const vector<unsigned char> &vchAcceptRand = vvch[1];			
 				CTransaction offerTx, acceptTx;
 				COffer theOffer;
-				vector<CEscrow> vtxPos;
+				vector<COffer> vtxPos;
 				if (!GetTxAndVtxOfOfferAccept(vchOffer, vchAcceptRand, theOffer, theOfferAccept, acceptTx, vtxPos))
 					continue;
 				vector<CEscrow> escrowVtxPos;
@@ -3464,12 +3464,6 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 					continue;	
 				string offer = stringFromVch(vchOffer);
 				string sHeight = strprintf("%llu", theOfferAccept.nHeight);
-				vector<COffer> vtxPos;
-				if (!pofferdb->ReadOffer(vchOffer, vtxPos))
-					continue;
-				if (vtxPos.size() < 1)
-					continue;
-
 				oOfferAccept.push_back(Pair("offer", offer));
 				oOfferAccept.push_back(Pair("title", stringFromVch(theOffer.sTitle)));
 				oOfferAccept.push_back(Pair("id", stringFromVch(vchAcceptRand)));
