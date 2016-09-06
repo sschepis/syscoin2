@@ -406,7 +406,7 @@ bool GetTxAndVtxOfOffer(const vector<unsigned char> &vchOffer,
 	return true;
 }
 bool GetTxOfOfferAccept(const vector<unsigned char> &vchOffer, const vector<unsigned char> &vchOfferAccept,
-		COffer &theOffer, COfferAccept &theOfferAccept, CTransaction& tx) {
+		COffer &theOffer, COfferAccept &theOfferAccept, CTransaction& tx, bool skipExpiresCheck) {
 	vector<COffer> vtxPos;
 	if (!pofferdb->ReadOffer(vchOffer, vtxPos) || vtxPos.empty()) return false;
 	theOfferAccept.SetNull();
@@ -425,7 +425,8 @@ bool GetTxOfOfferAccept(const vector<unsigned char> &vchOffer, const vector<unsi
 		{
 			if(fDebug)
 				LogPrintf("GetTxOfOfferAccept() : cannot find escrow related to this offer accept");
-			return false;
+			if(!skipExpiresCheck)
+				return false;
 		}
 		theOffer.nHeight = escrowVtxPos.front().nHeight;
 	}
@@ -436,7 +437,7 @@ bool GetTxOfOfferAccept(const vector<unsigned char> &vchOffer, const vector<unsi
 		return false;
 	}
 
-	if (( vtxPos.back().nHeight + GetOfferExpirationDepth())
+	if (!skipExpiresCheck && ( vtxPos.back().nHeight + GetOfferExpirationDepth())
 			< chainActive.Tip()->nHeight) {
 		string offer = stringFromVch(vchOfferAccept);
 		if(fDebug)
@@ -3145,8 +3146,8 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 		CTransaction txA;
 		COfferAccept ca;
 		COffer acceptOffer;
-		if(!GetTxOfOfferAccept(vtxPos[i].vchOffer, vtxPos[i].accept.vchAcceptRand, acceptOffer, ca, txA))
-			continue;
+		GetTxOfOfferAccept(vtxPos[i].vchOffer, vtxPos[i].accept.vchAcceptRand, acceptOffer, ca, txA, true);
+
 
 		UniValue oOfferAccept(UniValue::VOBJ);
 		for (unsigned int j = 0; j < txA.vout.size(); j++)
@@ -3176,7 +3177,7 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 			COffer linkOffer;
 			COfferAccept linkOfferAccept;
 			CTransaction linkAcceptTx;
-			GetTxOfOfferAccept(theOffer.vchLinkOffer, ca.vchAcceptRand, linkOffer, linkOfferAccept, linkAcceptTx);	
+			GetTxOfOfferAccept(theOffer.vchLinkOffer, ca.vchAcceptRand, linkOffer, linkOfferAccept, linkAcceptTx, true);	
 			GetFeedback(buyerFeedBacks, avgBuyerRating, FEEDBACKBUYER, linkOfferAccept.feedback);
 			GetFeedback(sellerFeedBacks, avgSellerRating, FEEDBACKSELLER, linkOfferAccept.feedback);
 		}
@@ -3429,8 +3430,8 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 				const vector<unsigned char> &vchAcceptRand = vvch[1];			
 				CTransaction offerTx, acceptTx;
 				COffer theOffer;
-				if (!GetTxOfOfferAccept(vchOffer, vchAcceptRand, theOffer, theOfferAccept, acceptTx))
-					continue;
+				GetTxOfOfferAccept(vchOffer, vchAcceptRand, theOffer, theOfferAccept, acceptTx, true);
+
 				// get last active accepts only
 				if (vNamesI.find(vchAcceptRand) != vNamesI.end() && (theOfferAccept.nHeight <= vNamesI[vchAcceptRand] || vNamesI[vchAcceptRand] < 0))
 					continue;	
