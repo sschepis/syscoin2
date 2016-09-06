@@ -1409,7 +1409,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				}	
 				// if this is an accept for a linked offer, the root offer is set to exclusive mode and reseller doesn't have an alias in the whitelist, you cannot accept this linked offer
 				// serializedOffer.vchLinkAlias is validated below if its not empty
-				if(serializedOffer.vchLinkAlias.empty() && offer.linkWhitelist.bExclusiveResell)
+				if(serializedOffer.vchLinkAlias.empty() && theOffer.linkWhitelist.bExclusiveResell)
 				{
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 113 - " + _("Cannot pay for this linked offer because you don't own an alias from its affiliate list. Root offer is set to exclusive mode");
 					return true;
