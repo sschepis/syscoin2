@@ -406,36 +406,14 @@ bool GetTxAndVtxOfOffer(const vector<unsigned char> &vchOffer,
 	return true;
 }
 bool GetTxOfOfferAccept(const vector<unsigned char> &vchOffer, const vector<unsigned char> &vchOfferAccept,
-		COffer &theOffer, COfferAccept &theOfferAccept, CTransaction& tx, bool skipExpiresCheck) {
+		COffer &acceptOffer,  COfferAccept &theOfferAccept, CTransaction& tx, bool skipExpiresCheck) {
 	vector<COffer> vtxPos;
 	if (!pofferdb->ReadOffer(vchOffer, vtxPos) || vtxPos.empty()) return false;
 	theOfferAccept.SetNull();
 	theOfferAccept.vchAcceptRand = vchOfferAccept;
-	GetAcceptByHash(vtxPos, theOfferAccept);
+	GetAcceptByHash(vtxPos, theOfferAccept, acceptOffer);
 	if(theOfferAccept.IsNull())
 		return false;
-
-	theOffer.nHeight = theOfferAccept.nAcceptHeight;
-	if(!theOfferAccept.vchEscrow.empty())
-	{
-		vector<CEscrow> escrowVtxPos;
-		CTransaction escrowTx;
-		CEscrow escrow;
-		if(!GetTxAndVtxOfEscrow( theOfferAccept.vchEscrow, escrow, escrowTx, escrowVtxPos))
-		{
-			if(fDebug)
-				LogPrintf("GetTxOfOfferAccept() : cannot find escrow related to this offer accept");
-			if(!skipExpiresCheck)
-				return false;
-		}
-		theOffer.nHeight = escrowVtxPos.front().nHeight;
-	}
-	if(!theOffer.GetOfferFromList(vtxPos))
-	{
-		if(fDebug)
-			LogPrintf("GetTxOfOfferAccept() : cannot find offer from this offer position");
-		return false;
-	}
 
 	if (!skipExpiresCheck && ( vtxPos.back().nHeight + GetOfferExpirationDepth())
 			< chainActive.Tip()->nHeight) {
@@ -1269,8 +1247,8 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			{
 				CTransaction acceptTx;
 				COfferAccept offerAccept;
-				COffer offer;
-				if (!GetTxOfOfferAccept(vvchArgs[0], vvchArgs[1], offer, offerAccept, acceptTx))
+				COffer acceptOffer;
+				if (!GetTxOfOfferAccept(vvchArgs[0], vvchArgs[1], acceptOffer, offerAccept, acceptTx))
 				{
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 96 - " + _("Could not find offer accept from mempool or disk");
 					return true;
@@ -1327,7 +1305,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				theOfferAccept.feedback[0].txHash = tx.GetHash();
 				theOfferAccept.feedback[0].nHeight = nHeight;
 				if(!dontaddtodb)
-					HandleAcceptFeedback(theOfferAccept.feedback[0], offer, vtxPos);	
+					HandleAcceptFeedback(theOfferAccept.feedback[0], acceptOffer, vtxPos);	
 				return true;
 			
 			}
@@ -3149,6 +3127,19 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 		GetTxOfOfferAccept(vtxPos[i].vchOffer, vtxPos[i].accept.vchAcceptRand, acceptOffer, ca, txA, true);
 		if(ca.IsNull())
 			continue;
+		acceptOffer.nHeight = theOfferAccept.nAcceptHeight;
+		if(!ca.vchEscrow.empty())
+		{
+			vector<CEscrow> escrowVtxPos;
+			CTransaction escrowTx;
+			CEscrow escrow;
+			GetTxAndVtxOfEscrow( ca.vchEscrow, escrow, escrowTx, escrowVtxPos);
+			if(!escrowVtxPos.empty())
+				acceptOffer.nHeight = escrowVtxPos.front().nHeight;
+		}
+		acceptOffer.GetOfferFromList(vtxPos);
+		
+
 		UniValue oOfferAccept(UniValue::VOBJ);
 		bool foundAcceptInTx = false;
 		for (unsigned int j = 0; j < txA.vout.size(); j++)
@@ -3441,6 +3432,18 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 				GetTxOfOfferAccept(vchOffer, vchAcceptRand, theOffer, theOfferAccept, acceptTx, true);
 				if(theOfferAccept.IsNull())
 					continue;
+				theOffer.nHeight = theOfferAccept.nAcceptHeight;
+				if(!theOfferAccept.vchEscrow.empty())
+				{
+					vector<CEscrow> escrowVtxPos;
+					CTransaction escrowTx;
+					CEscrow escrow;
+					GetTxAndVtxOfEscrow( theOfferAccept.vchEscrow, escrow, escrowTx, escrowVtxPos);
+					if(!escrowVtxPos.empty())
+						theOffer.nHeight = escrowVtxPos.front().nHeight;
+				}
+				theOffer.GetOfferFromList(vtxPos);
+
 				// get last active accepts only
 				if (vNamesI.find(vchAcceptRand) != vNamesI.end() && (theOfferAccept.nHeight <= vNamesI[vchAcceptRand] || vNamesI[vchAcceptRand] < 0))
 					continue;	
@@ -3875,7 +3878,7 @@ int GetNumberOfAccepts(const std::vector<COffer> &offerList) {
     }
     return count;
 }
-bool GetAcceptByHash(std::vector<COffer> &offerList, COfferAccept &ca) {
+bool GetAcceptByHash(std::vector<COffer> &offerList, COfferAccept &ca, COffer &offer) {
 	if(offerList.empty())
 		return false;
 	for(std::vector<COffer>::reverse_iterator it = offerList.rbegin(); it != offerList.rend(); ++it) {
@@ -3885,9 +3888,11 @@ bool GetAcceptByHash(std::vector<COffer> &offerList, COfferAccept &ca) {
 			continue;
         if(myoffer.accept.vchAcceptRand == ca.vchAcceptRand) {
             ca = myoffer.accept;
+			offer = myoffer;
 			return true;
         }
     }
     ca = offerList.back().accept;
+	offer = offerList.back();
 	return false;
 }
