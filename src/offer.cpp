@@ -411,9 +411,31 @@ bool GetTxOfOfferAccept(const vector<unsigned char> &vchOffer, const vector<unsi
 	if (!pofferdb->ReadOffer(vchOffer, vtxPos) || vtxPos.empty()) return false;
 	theOfferAccept.SetNull();
 	theOfferAccept.vchAcceptRand = vchOfferAccept;
-	GetAcceptByHash(vtxPos, theOfferAccept, theOffer);
+	GetAcceptByHash(vtxPos, theOfferAccept);
 	if(theOfferAccept.IsNull())
 		return false;
+
+	theOffer.nHeight = theOfferAccept.nAcceptHeight;
+	if(!theOfferAccept.vchEscrow.empty())
+	{
+		vector<CEscrow> escrowVtxPos;
+		CTransaction escrowTx;
+		CEscrow escrow;
+		if(!GetTxAndVtxOfEscrow( ca.vchEscrow, escrow, escrowTx, escrowVtxPos))
+		{
+			if(fDebug)
+				LogPrintf("GetTxOfOfferAccept() : cannot find escrow related to this offer accept");
+			return false;
+		}
+		theOffer.nHeight = escrowVtxPos.front().nHeight;
+	}
+	if(!theOffer.GetOfferFromList(vtxPos))
+	{
+		if(fDebug)
+			LogPrintf("GetTxOfOfferAccept() : cannot find offer from this offer position");
+		return false;
+	}
+
 	if (( vtxPos.back().nHeight + GetOfferExpirationDepth())
 			< chainActive.Tip()->nHeight) {
 		string offer = stringFromVch(vchOfferAccept);
@@ -427,27 +449,7 @@ bool GetTxOfOfferAccept(const vector<unsigned char> &vchOffer, const vector<unsi
 
 	return true;
 }
-bool GetTxAndVtxOfOfferAccept(const vector<unsigned char> &vchOffer, const vector<unsigned char> &vchOfferAccept,
-		COffer &theOffer, COfferAccept &theOfferAccept, CTransaction& tx, vector<COffer> &vtxPos) {
-	if (!pofferdb->ReadOffer(vchOffer, vtxPos) || vtxPos.empty()) return false;
-	theOfferAccept.SetNull();
-	theOfferAccept.vchAcceptRand = vchOfferAccept;
-	GetAcceptByHash(vtxPos, theOfferAccept, theOffer);
-	if(theOfferAccept.IsNull())
-		return false;
-	if (( vtxPos.back().nHeight + GetOfferExpirationDepth())
-			< chainActive.Tip()->nHeight) {
-		string offer = stringFromVch(vchOfferAccept);
-		if(fDebug)
-			LogPrintf("GetTxOfOfferAccept(%s) : expired", offer.c_str());
-		return false;
-	}
 
-	if (!GetSyscoinTransaction(theOfferAccept.nHeight, theOfferAccept.txHash, tx, Params().GetConsensus()))
-		return false;
-
-	return true;
-}
 bool DecodeAndParseOfferTx(const CTransaction& tx, int& op, int& nOut,
 		vector<vector<unsigned char> >& vvch)
 {
@@ -1407,7 +1409,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				}	
 				// if this is an accept for a linked offer, the root offer is set to exclusive mode and reseller doesn't have an alias in the whitelist, you cannot accept this linked offer
 				// serializedOffer.vchLinkAlias is validated below if its not empty
-				if(serializedOffer.vchLinkAlias.empty() && theOffer.linkWhitelist.bExclusiveResell)
+				if(serializedOffer.vchLinkAlias.empty() && offer.linkWhitelist.bExclusiveResell)
 				{
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 113 - " + _("Cannot pay for this linked offer because you don't own an alias from its affiliate list. Root offer is set to exclusive mode");
 					return true;
@@ -3140,32 +3142,11 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 	vector<unsigned char> vchValue;
 	UniValue aoOfferAccepts(UniValue::VARR);
 	for(int i=vtxPos.size()-1;i>=0;i--) {
-		vector<CEscrow> escrowVtxPos;
-		CTransaction escrowTx;
-		CEscrow escrow;
+		CTransaction txA;
+		if(!GetTxOfOfferAccept(vtxPos[i].vchOffer, vtxPos[i].accept.vchAcceptRand, acceptOffer, ca, txA);
+			continue;
 
-		COfferAccept ca = vtxPos[i].accept;
-		if(ca.IsNull())
-			continue;
-		GetTxAndVtxOfEscrow( ca.vchEscrow, escrow, escrowTx, escrowVtxPos);
-		
-		COffer acceptOffer;
-		acceptOffer.nHeight = ca.nAcceptHeight;
-		if(!escrowVtxPos.empty())
-			acceptOffer.nHeight = escrowVtxPos.front().nHeight;
-		if(!acceptOffer.GetOfferFromList(vtxPos))
-			continue;
 		UniValue oOfferAccept(UniValue::VOBJ);
-
-        // get transaction pointed to by offer
-
-        CTransaction txA;
-        uint256 txHashA= ca.txHash;
-        if (!GetSyscoinTransaction(ca.nHeight, txHashA, txA, Params().GetConsensus()))
-		{
-			error(strprintf("failed to accept read transaction from disk: %s", txHashA.GetHex()).c_str());
-			continue;
-		}
 		for (unsigned int j = 0; j < txA.vout.size(); j++)
 		{
 			if (!IsSyscoinScript(txA.vout[j].scriptPubKey, op, vvch))
@@ -3446,19 +3427,8 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 				const vector<unsigned char> &vchAcceptRand = vvch[1];			
 				CTransaction offerTx, acceptTx;
 				COffer theOffer;
-				vector<COffer> vtxPos;
-				if (!GetTxAndVtxOfOfferAccept(vchOffer, vchAcceptRand, theOffer, theOfferAccept, acceptTx, vtxPos))
+				if (!GetTxOfOfferAccept(vchOffer, vchAcceptRand, theOffer, theOfferAccept, acceptTx))
 					continue;
-				vector<CEscrow> escrowVtxPos;
-				CTransaction escrowTx;
-				CEscrow escrow;
-				GetTxAndVtxOfEscrow( theOfferAccept.vchEscrow, escrow, escrowTx, escrowVtxPos);
-				if(!escrowVtxPos.empty())
-				{
-					theOffer.nHeight = escrowVtxPos.front().nHeight;
-					if(!theOffer.GetOfferFromList(vtxPos))
-						continue;
-				}
 				// get last active accepts only
 				if (vNamesI.find(vchAcceptRand) != vNamesI.end() && (theOfferAccept.nHeight <= vNamesI[vchAcceptRand] || vNamesI[vchAcceptRand] < 0))
 					continue;	
@@ -3888,7 +3858,7 @@ int GetNumberOfAccepts(const std::vector<COffer> &offerList) {
     }
     return count;
 }
-bool GetAcceptByHash(std::vector<COffer> &offerList, COfferAccept &ca, COffer &offer) {
+bool GetAcceptByHash(std::vector<COffer> &offerList, COfferAccept &ca) {
 	if(offerList.empty())
 		return false;
 	for(std::vector<COffer>::reverse_iterator it = offerList.rbegin(); it != offerList.rend(); ++it) {
@@ -3898,11 +3868,9 @@ bool GetAcceptByHash(std::vector<COffer> &offerList, COfferAccept &ca, COffer &o
 			continue;
         if(myoffer.accept.vchAcceptRand == ca.vchAcceptRand) {
             ca = myoffer.accept;
-			offer = myoffer;
 			return true;
         }
     }
     ca = offerList.back().accept;
-	offer = offerList.back();
 	return false;
 }
