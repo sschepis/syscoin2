@@ -3223,7 +3223,11 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 		oOfferAccept.push_back(Pair("linkofferaccept", linkAccept));
 		if(!FindOfferAcceptPayment(txA, ca.nPrice) && ca.txBTCId.IsNull())
 			continue;
-		oOfferAccept.push_back(Pair("offer_discount_percentage", strprintf("%.2f%%", 100.0f - 100.0f*(ca.nPrice/acceptOffer.GetPrice()))));			
+		if(acceptOffer.GetPrice() > 0)
+			oOfferAccept.push_back(Pair("offer_discount_percentage", strprintf("%.2f%%", 100.0f - 100.0f*(ca.nPrice/acceptOffer.GetPrice()))));		
+		else
+			oOfferAccept.push_back(Pair("offer_discount_percentage", "0%");		
+
 		oOfferAccept.push_back(Pair("escrowlink", stringFromVch(ca.vchEscrow)));
 		int precision = 2;
 		CAmount nPricePerUnit = convertCurrencyCodeToSyscoin(acceptOffer.vchAliasPeg, acceptOffer.sCurrencyCode, ca.nPrice, ca.nAcceptHeight-1, precision);
@@ -3483,7 +3487,12 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 				oOfferAccept.push_back(Pair("linkofferaccept", linkAccept));
 				if(!FindOfferAcceptPayment(acceptTx, theOfferAccept.nPrice) && theOfferAccept.txBTCId.IsNull())
 					continue;
-				oOfferAccept.push_back(Pair("offer_discount_percentage", strprintf("%.2f%%", 100.0f - 100.0f*(theOfferAccept.nPrice/theOffer.GetPrice()))));	
+				if(acceptOffer.GetPrice() > 0)
+					oOfferAccept.push_back(Pair("offer_discount_percentage", strprintf("%.2f%%", 100.0f - 100.0f*(theOfferAccept.nPrice/theOffer.GetPrice()))));		
+				else
+					oOfferAccept.push_back(Pair("offer_discount_percentage", "0%");		
+
+
 				int precision = 2;
 				CAmount nPricePerUnit = convertCurrencyCodeToSyscoin(theOffer.vchAliasPeg, theOffer.sCurrencyCode, theOfferAccept.nPrice, theOfferAccept.nAcceptHeight-1, precision);
 				oOfferAccept.push_back(Pair("systotal", ValueFromAmount(nPricePerUnit * theOfferAccept.nQty)));
