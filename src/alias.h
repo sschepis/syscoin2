@@ -59,7 +59,10 @@ public:
     bool GetAliasFromList(std::vector<CAliasIndex> &aliasList) {
         if(aliasList.size() == 0) return false;
 		if(nHeight <= 0)
-			return aliasList.front();
+		{
+			*this = aliasList.front();
+			return true;
+		}
 		CAliasIndex myAlias = aliasList.back();
 		if(myAlias.nHeight >= nHeight)
 		{

@@ -315,7 +315,10 @@ public:
     bool GetOfferFromList(std::vector<COffer> &offerList) {
         if(offerList.size() == 0) return false;
 		if(nHeight <= 0)
-			return offerList.front();
+		{
+			*this = offerList.front();
+			return true;
+		}
 		COffer myOffer = offerList.back();
 		// only need to check offerList if the height of the last tx is greater or equal to than the one we are checking (its in between somewhere)
 		// otherwise we will just use the last tx because its gauranteed that its height is largest of any tx in offerList
