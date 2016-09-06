@@ -3487,7 +3487,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 				oOfferAccept.push_back(Pair("linkofferaccept", linkAccept));
 				if(!FindOfferAcceptPayment(acceptTx, theOfferAccept.nPrice) && theOfferAccept.txBTCId.IsNull())
 					continue;
-				if(acceptOffer.GetPrice() > 0)
+				if(theOffer.GetPrice() > 0)
 					oOfferAccept.push_back(Pair("offer_discount_percentage", strprintf("%.2f%%", 100.0f - 100.0f*(theOfferAccept.nPrice/theOffer.GetPrice()))));		
 				else
 					oOfferAccept.push_back(Pair("offer_discount_percentage", "0%");		
