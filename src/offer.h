@@ -325,7 +325,7 @@ public:
             const COffer &o = *it;
 			// skip if this is an offeraccept or height is greater than our offer height
 			// for linked offers it doesnt care if its an accept because parent offer updates linked offers without creating a service tx
-			if(o.vchLinkOffer.empty() && !o.accept.IsNull()) || o.nHeight > nHeight)
+			if((o.vchLinkOffer.empty() && !o.accept.IsNull()) || o.nHeight > nHeight)
 				continue;
             myOffer = o;
 			break;
