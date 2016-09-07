@@ -3155,20 +3155,21 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 		if(ca.IsNull())
 			continue;
 
+		acceptOffer.ClearOffer();
+		acceptOffer.nHeight = ca.nAcceptHeight;
 		if(!ca.vchEscrow.empty())
 		{
 			vector<CEscrow> escrowVtxPos;
 			CTransaction escrowTx;
 			CEscrow escrow;
 			GetTxAndVtxOfEscrow( ca.vchEscrow, escrow, escrowTx, escrowVtxPos);
-			if(!escrowVtxPos.empty())
+			if(!escrowVtxPos.empty() &&  escrowVtxPos.front().nHeight < acceptOffer.nHeight)
 			{
-				acceptOffer.ClearOffer();
-				acceptOffer.nHeight = escrowVtxPos.front().nHeight;
-				acceptOffer.GetOfferFromList(vtxPos);
+				acceptOffer.nHeight = escrowVtxPos.front().nHeight;					
 			}
 		}
-		
+		acceptOffer.GetOfferFromList(vtxPos);
+
 
 		UniValue oOfferAccept(UniValue::VOBJ);
 		bool foundAcceptInTx = false;
@@ -3463,19 +3464,20 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 				if(theOfferAccept.IsNull())
 					continue;
 
+				theOffer.ClearOffer();
+				theOffer.nHeight = theOfferAccept.nAcceptHeight;
 				if(!theOfferAccept.vchEscrow.empty())
 				{
 					vector<CEscrow> escrowVtxPos;
 					CTransaction escrowTx;
 					CEscrow escrow;
 					GetTxAndVtxOfEscrow( theOfferAccept.vchEscrow, escrow, escrowTx, escrowVtxPos);
-					if(!escrowVtxPos.empty())
+					if(!escrowVtxPos.empty() &&  escrowVtxPos.front().nHeight < theOffer.nHeight)
 					{
-						theOffer.ClearOffer();
-						theOffer.nHeight = escrowVtxPos.front().nHeight;
-						theOffer.GetOfferFromList(vtxPos);
+						theOffer.nHeight = escrowVtxPos.front().nHeight;					
 					}
 				}
+				theOffer.GetOfferFromList(vtxPos);
 
 
 				string offer = stringFromVch(vchOffer);
