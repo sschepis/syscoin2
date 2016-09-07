@@ -3415,7 +3415,6 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
     if (params.size() == 1)
         vchOfferToFind = vchFromValue(params[0]);	
 	vector<unsigned char> vchEscrow;	
-    map< vector<unsigned char>, int > vNamesI;
     UniValue oRes(UniValue::VARR);
     {
 
@@ -3472,9 +3471,6 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 				}
 				theOffer.GetOfferFromList(vtxPos);
 
-				// get last active accepts only
-				if (vNamesI.find(vchAcceptRand) != vNamesI.end() && (theOfferAccept.nHeight <= vNamesI[vchAcceptRand] || vNamesI[vchAcceptRand] < 0))
-					continue;	
 				string offer = stringFromVch(vchOffer);
 				string sHeight = strprintf("%llu", theOfferAccept.nHeight);
 				oOfferAccept.push_back(Pair("offer", offer));
@@ -3489,25 +3485,6 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 				oOfferAccept.push_back(Pair("height", sHeight));
 				oOfferAccept.push_back(Pair("quantity", strprintf("%d", theOfferAccept.nQty)));
 				oOfferAccept.push_back(Pair("currency", stringFromVch(theOffer.sCurrencyCode)));
-				vector<unsigned char> vchOfferAcceptLink;
-				bool foundOffer = false;
-				for (unsigned int j = 0; j < acceptTx.vin.size(); j++) {
-					vector<vector<unsigned char> > vvchIn;
-					int opIn;
-					const COutPoint *prevOutput = &acceptTx.vin[j].prevout;
-					if(!GetPreviousInput(prevOutput, opIn, vvchIn))
-						continue;
-					if(foundOffer)
-						break;
-
-					if (!foundOffer && IsOfferOp(opIn)) {
-						if(opIn == OP_OFFER_ACCEPT)
-						{
-							vchOfferAcceptLink = vvchIn[1];
-							foundOffer = true; 
-						}
-					}
-				}
 				bool isExpired = false;
 				vector<CAliasIndex> aliasVtxPos;
 				CAliasIndex theAlias;
@@ -3517,10 +3494,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 					theAlias.nHeight = theOffer.nHeight;
 					theAlias.GetAliasFromList(aliasVtxPos);
 				}
-				string linkAccept = "";
-				if(!vchOfferAcceptLink.empty())
-					linkAccept = stringFromVch(vchOfferAcceptLink);
-				oOfferAccept.push_back(Pair("linkofferaccept", linkAccept));
+
 				if(!FindOfferAcceptPayment(acceptTx, theOfferAccept.nPrice) && theOfferAccept.txBTCId.IsNull())
 					continue;
 				if(theOffer.GetPrice() > 0)
@@ -3558,7 +3532,6 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 					strMessage = string("Encrypted for owner of offer");
 				oOfferAccept.push_back(Pair("pay_message", strMessage));
 				oRes.push_back(oOfferAccept);
-				vNamesI[vchAcceptRand] = theOfferAccept.nHeight;
 			}
         }
 	}
