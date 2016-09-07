@@ -3154,7 +3154,7 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 		GetTxOfOfferAccept(vtxPos[i].vchOffer, vtxPos[i].accept.vchAcceptRand, acceptOffer, ca, txA, true);
 		if(ca.IsNull())
 			continue;
-		acceptOffer.nHeight = ca.nAcceptHeight;
+
 		if(!ca.vchEscrow.empty())
 		{
 			vector<CEscrow> escrowVtxPos;
@@ -3162,9 +3162,12 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 			CEscrow escrow;
 			GetTxAndVtxOfEscrow( ca.vchEscrow, escrow, escrowTx, escrowVtxPos);
 			if(!escrowVtxPos.empty())
+			{
+				acceptOffer.ClearOffer();
 				acceptOffer.nHeight = escrowVtxPos.front().nHeight;
+				acceptOffer.GetOfferFromList(vtxPos);
+			}
 		}
-		acceptOffer.GetOfferFromList(vtxPos);
 		
 
 		UniValue oOfferAccept(UniValue::VOBJ);
@@ -3252,7 +3255,7 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 
 		oOfferAccept.push_back(Pair("escrowlink", stringFromVch(ca.vchEscrow)));
 		int precision = 2;
-		CAmount nPricePerUnit = convertCurrencyCodeToSyscoin(acceptOffer.vchAliasPeg, acceptOffer.sCurrencyCode, ca.nPrice, ca.nAcceptHeight-1, precision);
+		CAmount nPricePerUnit = convertCurrencyCodeToSyscoin(acceptOffer.vchAliasPeg, acceptOffer.sCurrencyCode, ca.nPrice, acceptOffer.nHeight, precision);
 		oOfferAccept.push_back(Pair("systotal", ValueFromAmount(nPricePerUnit * ca.nQty)));
 		oOfferAccept.push_back(Pair("sysprice", ValueFromAmount(nPricePerUnit)));
 		oOfferAccept.push_back(Pair("price", strprintf("%.*f", precision, ca.nPrice ))); 	
@@ -3459,7 +3462,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 				GetTxAndVtxOfOfferAccept(vchOffer, vchAcceptRand, theOffer, theOfferAccept, acceptTx, vtxPos, true);
 				if(theOfferAccept.IsNull())
 					continue;
-				theOffer.nHeight = theOfferAccept.nAcceptHeight;
+
 				if(!theOfferAccept.vchEscrow.empty())
 				{
 					vector<CEscrow> escrowVtxPos;
@@ -3467,9 +3470,13 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 					CEscrow escrow;
 					GetTxAndVtxOfEscrow( theOfferAccept.vchEscrow, escrow, escrowTx, escrowVtxPos);
 					if(!escrowVtxPos.empty())
+					{
+						theOffer.ClearOffer();
 						theOffer.nHeight = escrowVtxPos.front().nHeight;
+						theOffer.GetOfferFromList(vtxPos);
+					}
 				}
-				theOffer.GetOfferFromList(vtxPos);
+
 
 				string offer = stringFromVch(vchOffer);
 				string sHeight = strprintf("%llu", theOfferAccept.nHeight);
@@ -3504,7 +3511,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 
 
 				int precision = 2;
-				CAmount nPricePerUnit = convertCurrencyCodeToSyscoin(theOffer.vchAliasPeg, theOffer.sCurrencyCode, theOfferAccept.nPrice, theOfferAccept.nAcceptHeight-1, precision);
+				CAmount nPricePerUnit = convertCurrencyCodeToSyscoin(theOffer.vchAliasPeg, theOffer.sCurrencyCode, theOfferAccept.nPrice, theOffer.nHeight, precision);
 				oOfferAccept.push_back(Pair("systotal", ValueFromAmount(nPricePerUnit * theOfferAccept.nQty)));
 				
 				oOfferAccept.push_back(Pair("price", strprintf("%.*f", precision, theOffer.GetPrice() ))); 
