@@ -44,7 +44,7 @@ OfferAcceptDialogBTC::OfferAcceptDialogBTC(WalletModel* model, const PlatformSty
 	string strfPrice = strprintf("%f", dblPrice);
 	QString fprice = QString::fromStdString(strfPrice);
 	string strCurrencyCode = currencyCode.toStdString();
-	ui->escrowDisclaimer->setText(tr("<font color='blue'>Please note escrow is not available since you are paying in BTC, only SYS payments can be escrowed. </font>"));
+	ui->escrowDisclaimer->setText(tr("<font color='blue'>Please note escrow is not available since you are paying in BTC, only SYS payments can be escrowed</font>"));
 	ui->bitcoinInstructionLabel->setText(tr("After paying for this item, please enter the Bitcoin Transaction ID and click on the confirm button below. You may use the QR Code to the left to scan the payment request into your wallet or click on the Open BTC Wallet if you are on the desktop and have Bitcoin Core installed."));
 	ui->acceptMessage->setText(tr("Are you sure you want to purchase <b>%1</b> of <b>%2</b> from merchant <b>%3</b>? To complete your purchase please pay %4 BTC to %5 using your Bitcoin wallet.").arg(quantity).arg(title).arg(sellerAlias).arg(fprice).arg(address));
 	string strPrice = strprintf("%f", dblPrice);
@@ -68,7 +68,7 @@ OfferAcceptDialogBTC::OfferAcceptDialogBTC(WalletModel* model, const PlatformSty
 	connect(ui->openBtcWalletButton, SIGNAL(clicked()), this, SLOT(openBTCWallet()));
 
 #ifdef USE_QRCODE
-	QString message = "Payment for offer ID " + this->offer + " on Syscoin Decentralized Marketplace.";
+	QString message = tr("Payment on Syscoin Decentralized Marketplace for offer ID %1").arg(this->offer);
 	SendCoinsRecipient info;
 	info.address = this->address;
 	info.label = this->sellerAlias;
@@ -291,7 +291,7 @@ void OfferAcceptDialogBTC::acceptOffer(){
 }
 void OfferAcceptDialogBTC::openBTCWallet()
 {
-	QString message = "Payment for offer ID " + this->offer + " on Syscoin Decentralized Marketplace.";
+	QString message = tr("Payment on Syscoin Decentralized Marketplace for offer ID %1").this->offer);
 	SendCoinsRecipient info;
 	info.address = this->address;
 	info.label = this->sellerAlias;
