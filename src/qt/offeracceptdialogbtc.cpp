@@ -291,7 +291,7 @@ void OfferAcceptDialogBTC::acceptOffer(){
 }
 void OfferAcceptDialogBTC::openBTCWallet()
 {
-	QString message = tr("Payment on Syscoin Decentralized Marketplace for Offer ID %1").this->offer);
+	QString message = tr("Payment on Syscoin Decentralized Marketplace for Offer ID %1").arg(this->offer);
 	SendCoinsRecipient info;
 	info.address = this->address;
 	info.label = this->sellerAlias;
