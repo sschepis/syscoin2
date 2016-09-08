@@ -3552,7 +3552,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 				vector<unsigned char> sCurrencyCode;
 				vector<unsigned char> vchAliasPeg;
 				float offerPrice;
-				if(!myLinkedVtxPos.empty())
+				if(!offerLinkVtxPos.empty())
 				{
 					sCurrencyCode = linkOffer.sCurrencyCode;
 					vchAliasPeg =  linkOffer.vchAliasPeg;
