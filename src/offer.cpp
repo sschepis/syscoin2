@@ -662,6 +662,9 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	vector<string> rateList;
 	vector<string> categories;
 	vector<COffer> offerVtxPos;
+	vector<unsigned char> sCurrencyCode;
+	vector<unsigned char> vchAliasPeg;
+	float offerPrice;
 	string category;
 	int precision = 2;
 	CAmount nRate;
@@ -1459,11 +1462,23 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			}
 
 			myPriceOffer.nHeight = heightToCheckAgainst;
-			// if linked offer then get offer from this position from root offer history because the linked offer may not have history of changes (root offer can update linked offer without tx)
-			if(offerVtxPos.empty())
-				myPriceOffer.GetOfferFromList(vtxPos);
+			linkOffer.nHeight = heightToCheckAgainst;
+			// if linked offer then get offer info from root offer history because the linked offer may not have history of changes (root offer can update linked offer without tx)	
+			myPriceOffer.GetOfferFromList(vtxPos);	
+			linkOffer.GetOfferFromList(offerVtxPos);
+
+			if(!offerVtxPos.empty())
+			{
+				sCurrencyCode = linkOffer.sCurrencyCode;
+				vchAliasPeg =  linkOffer.vchAliasPeg;
+				offerPrice = linkOffer.GetPrice();
+			}
 			else
-				myPriceOffer.GetOfferFromList(offerVtxPos);
+			{
+				sCurrencyCode = myPriceOffer.sCurrencyCode;
+				vchAliasPeg =  myPriceOffer.vchAliasPeg;
+				offerPrice = myPriceOffer.GetPrice();
+			}
 
 			// if the buyer uses an alias for a discount or a exclusive whitelist buy, then get the guid
 			if(!serializedOffer.vchLinkAlias.empty())
@@ -1478,7 +1493,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					vchWhitelistAlias = serializedOffer.vchLinkAlias;
 			}
 			
-			if(!theOfferAccept.txBTCId.IsNull() && stringFromVch(myPriceOffer.sCurrencyCode) != "BTC")
+			if(!theOfferAccept.txBTCId.IsNull() && stringFromVch(sCurrencyCode) != "BTC")
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 119 - " + _("Cannot pay for offer in bitcoins if its currency is not set to BTC");
 				return true;
@@ -1493,7 +1508,12 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 120 - " + _("Cannot find the alias entry in the offer's affiliate list");
 					return true;
 				}	
-				float priceAtTimeOfAccept = myPriceOffer.GetPrice(entry);
+				float priceAtTimeOfAccept = 0;
+				if(!entry.IsNull())
+					priceAtTimeOfAccept = myPriceOffer.GetPrice(entry);
+				else
+					priceAtTimeOfAccept = offerPrice;
+
 				if(priceAtTimeOfAccept != theOfferAccept.nPrice)
 				{
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 121 - " + _("Offer accept does not specify the correct payment amount");
@@ -1502,13 +1522,13 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 
 				int precision = 2;
 				// lookup the price of the offer in syscoin based on pegged alias at the block # when accept/escrow was made
-				CAmount nPrice = convertCurrencyCodeToSyscoin(myPriceOffer.vchAliasPeg, myPriceOffer.sCurrencyCode, priceAtTimeOfAccept, heightToCheckAgainst, precision)*theOfferAccept.nQty;
+				CAmount nPrice = convertCurrencyCodeToSyscoin(vchAliasPeg, sCurrencyCode, priceAtTimeOfAccept, heightToCheckAgainst, precision)*theOfferAccept.nQty;
 				if(!FindOfferAcceptPayment(tx, nPrice))
 				{
-					nPrice = convertCurrencyCodeToSyscoin(myPriceOffer.vchAliasPeg, myPriceOffer.sCurrencyCode, priceAtTimeOfAccept, heightToCheckAgainst+1, precision)*theOfferAccept.nQty;
+					nPrice = convertCurrencyCodeToSyscoin(vchAliasPeg, sCurrencyCode, priceAtTimeOfAccept, heightToCheckAgainst+1, precision)*theOfferAccept.nQty;
 					if(!FindOfferAcceptPayment(tx, nPrice))
 					{
-						nPrice = convertCurrencyCodeToSyscoin(myPriceOffer.vchAliasPeg, myPriceOffer.sCurrencyCode, priceAtTimeOfAccept, heightToCheckAgainst-1, precision)*theOfferAccept.nQty;
+						nPrice = convertCurrencyCodeToSyscoin(vchAliasPeg, sCurrencyCode, priceAtTimeOfAccept, heightToCheckAgainst-1, precision)*theOfferAccept.nQty;
 						if(!FindOfferAcceptPayment(tx, nPrice))
 						{
 							errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 122 - " + _("Offer accept does not pay enough according to the offer price");
@@ -2660,11 +2680,24 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 				
 	// get offer price at the time of accept
 	theOffer.nHeight = nHeight;
-	if(offerLinkVtxPos.empty())
-		theOffer.GetOfferFromList(vtxPos);
+	linkOffer.nHeight = nHeight;
+	theOffer.GetOfferFromList(vtxPos);
+	linkOffer.GetOfferFromList(offerLinkVtxPos);
+	vector<unsigned char> sCurrencyCode;
+	vector<unsigned char> vchAliasPeg;
+	float offerPrice;
+	if(!offerLinkVtxPos.empty())
+	{
+		sCurrencyCode = linkOffer.sCurrencyCode;
+		vchAliasPeg =  linkOffer.vchAliasPeg;
+		offerPrice = linkOffer.GetPrice();
+	}
 	else
-		theOffer.GetOfferFromList(offerLinkVtxPos);
-
+	{
+		sCurrencyCode = theOffer.sCurrencyCode;
+		vchAliasPeg =  theOffer.vchAliasPeg;
+		offerPrice = theOffer.GetPrice();
+	}
 
 	CTransaction aliastx,buyeraliastx;
 	CAliasIndex theAlias,tmpAlias;
@@ -2723,7 +2756,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 181 - " + _("Not enough remaining quantity to fulfill this order"));
 
 	int precision = 2;
-	CAmount nPrice = convertCurrencyCodeToSyscoin(theOffer.vchAliasPeg, theOffer.sCurrencyCode, theOffer.GetPrice(foundEntry), nHeight, precision);
+	CAmount nPrice = convertCurrencyCodeToSyscoin(vchAliasPeg, sCurrencyCode, !foundEntry.IsNull()? theOffer.GetPrice(foundEntry): offerPrice, nHeight, precision);
 	if(nPrice == 0)
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 182 - " + _("Could not find currency in the peg alias"));
 	string strCipherText = "";
@@ -2762,13 +2795,13 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 
 	txAccept.vchAcceptRand = vchAccept;
 	txAccept.nQty = nQty;
-	txAccept.nPrice = theOffer.GetPrice(foundEntry);
+	txAccept.nPrice = !foundEntry.IsNull()? theOffer.GetPrice(foundEntry) : offerPrice;
 	// if we have a linked offer accept then use height from linked accept (the one buyer makes, not the reseller). We need to do this to make sure we convert price at the time of initial buyer's accept.
 	// in checkescrowinput we override this if its from an escrow release, just like above.
 	txAccept.nAcceptHeight = nHeight;
 	txAccept.vchBuyerAlias = vchBuyerAlias;
 	txAccept.vchMessage = vchPaymentMessage;
-    CAmount nTotalValue = ( nPrice * nQty );
+    CAmount nTotalValue = ( txAccept.nPrice * nQty );
     
 	// send one to ourselves to we can leave feedback (notice the last opcode is 1 to denote its a special feedback output for the buyer to be able to leave feedback first and not a normal accept output)
 	if(!vchBTCTxId.empty())
@@ -3160,6 +3193,7 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 	UniValue oOffer(UniValue::VOBJ);
 	vector<unsigned char> vchValue;
 	UniValue aoOfferAccepts(UniValue::VARR);
+	
 	for(int i=vtxPos.size()-1;i>=0;i--) {
 		CTransaction txA;
 		COfferAccept ca;
@@ -3167,8 +3201,7 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 		GetTxOfOfferAccept(vtxPos[i].vchOffer, vtxPos[i].accept.vchAcceptRand, acceptOffer, ca, txA, true);
 		if(ca.IsNull())
 			continue;
-
-		acceptOffer.nHeight = ca.nAcceptHeight;
+		int nHeight;
 		if(!ca.vchEscrow.empty())
 		{
 			vector<CEscrow> escrowVtxPos;
@@ -3177,14 +3210,28 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 			GetTxAndVtxOfEscrow( ca.vchEscrow, escrow, escrowTx, escrowVtxPos);
 			if(!escrowVtxPos.empty() &&  escrowVtxPos.front().nHeight < acceptOffer.nHeight)
 			{
-				acceptOffer.nHeight = escrowVtxPos.front().nHeight;					
+				nHeight = escrowVtxPos.front().nHeight;					
 			}
 		}
-		if(myLinkedVtxPos.empty())
-			acceptOffer.GetOfferFromList(vtxPos);
+		linkOffer.nHeight = nHeight;
+		acceptOffer.nHeight = nHeight;	
+		acceptOffer.GetOfferFromList(vtxPos);
+		linkOffer.GetOfferFromList(myLinkedVtxPos);
+		vector<unsigned char> sCurrencyCode;
+		vector<unsigned char> vchAliasPeg;
+		float offerPrice;
+		if(!myLinkedVtxPos.empty())
+		{
+			sCurrencyCode = linkOffer.sCurrencyCode;
+			vchAliasPeg =  linkOffer.vchAliasPeg;
+			offerPrice = linkOffer.GetPrice();
+		}
 		else
-			acceptOffer.GetOfferFromList(myLinkedVtxPos);
-
+		{
+			sCurrencyCode = acceptOffer.sCurrencyCode;
+			vchAliasPeg =  acceptOffer.vchAliasPeg;
+			offerPrice = acceptOffer.GetPrice();
+		}
 
 
 		UniValue oOfferAccept(UniValue::VOBJ);
@@ -3238,7 +3285,7 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 		oOfferAccept.push_back(Pair("height", sHeight));
 		oOfferAccept.push_back(Pair("time", sTime));
 		oOfferAccept.push_back(Pair("quantity", strprintf("%d", ca.nQty)));
-		oOfferAccept.push_back(Pair("currency", stringFromVch(acceptOffer.sCurrencyCode)));
+		oOfferAccept.push_back(Pair("currency", sCurrencyCode));
 		vector<unsigned char> vchOfferAcceptLink;
 		bool foundOffer = false;
 		for (unsigned int j = 0; j < txA.vin.size(); j++) {
@@ -3266,13 +3313,13 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 		if(!FindOfferAcceptPayment(txA, ca.nPrice) && ca.txBTCId.IsNull())
 			continue;
 		if(acceptOffer.GetPrice() > 0)
-			oOfferAccept.push_back(Pair("offer_discount_percentage", strprintf("%.2f%%", 100.0f - 100.0f*(ca.nPrice/acceptOffer.GetPrice()))));		
+			oOfferAccept.push_back(Pair("offer_discount_percentage", strprintf("%.2f%%", 100.0f - 100.0f*(ca.nPrice/offerPrice))));		
 		else
 			oOfferAccept.push_back(Pair("offer_discount_percentage", "0%"));		
 
 		oOfferAccept.push_back(Pair("escrowlink", stringFromVch(ca.vchEscrow)));
 		int precision = 2;
-		CAmount nPricePerUnit = convertCurrencyCodeToSyscoin(acceptOffer.vchAliasPeg, acceptOffer.sCurrencyCode, ca.nPrice, acceptOffer.nHeight, precision);
+		CAmount nPricePerUnit = convertCurrencyCodeToSyscoin(vchAliasPeg, sCurrencyCode, ca.nPrice, ca.nAcceptHeight, precision);
 		oOfferAccept.push_back(Pair("systotal", ValueFromAmount(nPricePerUnit * ca.nQty)));
 		oOfferAccept.push_back(Pair("sysprice", ValueFromAmount(nPricePerUnit)));
 		oOfferAccept.push_back(Pair("price", strprintf("%.*f", precision, ca.nPrice ))); 	
@@ -3479,8 +3526,8 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 				GetTxAndVtxOfOfferAccept(vchOffer, vchAcceptRand, theOffer, theOfferAccept, acceptTx, vtxPos, true);
 				if(theOfferAccept.IsNull())
 					continue;
-
-				theOffer.nHeight = theOfferAccept.nAcceptHeight;
+				int nHeight;
+				nHeight = theOfferAccept.nAcceptHeight;
 				if(!theOfferAccept.vchEscrow.empty())
 				{
 					vector<CEscrow> escrowVtxPos;
@@ -3489,7 +3536,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 					GetTxAndVtxOfEscrow( theOfferAccept.vchEscrow, escrow, escrowTx, escrowVtxPos);
 					if(!escrowVtxPos.empty() &&  escrowVtxPos.front().nHeight < theOffer.nHeight)
 					{
-						theOffer.nHeight = escrowVtxPos.front().nHeight;					
+						nHeight = escrowVtxPos.front().nHeight;					
 					}
 				}
 				COffer linkOffer;
@@ -3497,10 +3544,26 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 				CTransaction linkedTx;
 				GetTxAndVtxOfOffer( theOffer.vchLinkOffer, linkOffer, linkedTx, offerLinkVtxPos, true);
 
-				if(offerLinkVtxPos.empty())
-					theOffer.GetOfferFromList(vtxPos);
+				theOffer.nHeight = nHeight;
+				theOffer.GetOfferFromList(vtxPos);
+				linkOffer.nHeight = nHeight;
+				linkOffer.GetOfferFromList(offerLinkVtxPos);
+
+				vector<unsigned char> sCurrencyCode;
+				vector<unsigned char> vchAliasPeg;
+				float offerPrice;
+				if(!myLinkedVtxPos.empty())
+				{
+					sCurrencyCode = linkOffer.sCurrencyCode;
+					vchAliasPeg =  linkOffer.vchAliasPeg;
+					offerPrice = linkOffer.GetPrice();
+				}
 				else
-					theOffer.GetOfferFromList(offerLinkVtxPos);
+				{
+					sCurrencyCode = theOffer.sCurrencyCode;
+					vchAliasPeg =  theOffer.vchAliasPeg;
+					offerPrice = theOffer.GetPrice();
+				}
 
 				string offer = stringFromVch(vchOffer);
 				string sHeight = strprintf("%llu", theOfferAccept.nHeight);
@@ -3515,7 +3578,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 				oOfferAccept.push_back(Pair("buyer", stringFromVch(theOfferAccept.vchBuyerAlias)));
 				oOfferAccept.push_back(Pair("height", sHeight));
 				oOfferAccept.push_back(Pair("quantity", strprintf("%d", theOfferAccept.nQty)));
-				oOfferAccept.push_back(Pair("currency", stringFromVch(theOffer.sCurrencyCode)));
+				oOfferAccept.push_back(Pair("currency", sCurrencyCode));
 				bool isExpired = false;
 				vector<CAliasIndex> aliasVtxPos;
 				CAliasIndex theAlias;
@@ -3529,16 +3592,16 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 				if(!FindOfferAcceptPayment(acceptTx, theOfferAccept.nPrice) && theOfferAccept.txBTCId.IsNull())
 					continue;
 				if(theOffer.GetPrice() > 0)
-					oOfferAccept.push_back(Pair("offer_discount_percentage", strprintf("%.2f%%", 100.0f - 100.0f*(theOfferAccept.nPrice/theOffer.GetPrice()))));		
+					oOfferAccept.push_back(Pair("offer_discount_percentage", strprintf("%.2f%%", 100.0f - 100.0f*(theOfferAccept.nPrice/offerPrice))));		
 				else
 					oOfferAccept.push_back(Pair("offer_discount_percentage", "0%"));		
 
 
 				int precision = 2;
-				CAmount nPricePerUnit = convertCurrencyCodeToSyscoin(theOffer.vchAliasPeg, theOffer.sCurrencyCode, theOfferAccept.nPrice, theOffer.nHeight, precision);
+				CAmount nPricePerUnit = convertCurrencyCodeToSyscoin(vchAliasPeg, sCurrencyCode, theOfferAccept.nPrice, nHeight, precision);
 				oOfferAccept.push_back(Pair("systotal", ValueFromAmount(nPricePerUnit * theOfferAccept.nQty)));
 				
-				oOfferAccept.push_back(Pair("price", strprintf("%.*f", precision, theOffer.GetPrice() ))); 
+				oOfferAccept.push_back(Pair("price", strprintf("%.*f", precision, offerPrice ))); 
 				oOfferAccept.push_back(Pair("total", strprintf("%.*f", precision, theOfferAccept.nPrice * theOfferAccept.nQty ))); 
 				// this accept is for me(something ive sold) if this offer is mine
 				oOfferAccept.push_back(Pair("ismine", IsSyscoinTxMine(acceptTx, "offer") && IsSyscoinTxMine(aliastx, "alias")? "true" : "false"));
