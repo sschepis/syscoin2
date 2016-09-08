@@ -79,6 +79,12 @@ EditCertDialog::EditCertDialog(Mode mode, QWidget *parent) :
     mapper = new QDataWidgetMapper(this);
     mapper->setSubmitPolicy(QDataWidgetMapper::ManualSubmit);
 	aliasChanged(ui->aliasEdit->currentText());
+	if(mode == TransferCert)
+	{
+		ui->safeSearchEdit->setEnabled(false);
+		ui->safeSearchDisclaimer->setVisible(false);
+		ui->categoryEdit->setEnabled(false);
+	}
 	
 }
 	

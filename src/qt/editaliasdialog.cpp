@@ -52,6 +52,8 @@ EditAliasDialog::EditAliasDialog(Mode mode, QWidget *parent) :
         setWindowTitle(tr("Transfer Alias"));
 		ui->aliasEdit->setEnabled(false);
 		ui->nameEdit->setEnabled(false);
+		ui->safeSearchEdit->setEnabled(false);
+		ui->safeSearchDisclaimer->setVisible(false);
 		ui->privateEdit->setEnabled(false);
 		ui->transferEdit->setVisible(true);
 		ui->transferLabel->setVisible(true);
