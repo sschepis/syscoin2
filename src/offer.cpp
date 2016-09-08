@@ -3140,9 +3140,9 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 		throw runtime_error("offer has been banned");
 	CTransaction linkTx;
 	COffer linkOffer;
+	vector<COffer> myLinkedVtxPos;
 	if( !theOffer.vchLinkOffer.empty())
 	{
-		vector<COffer> myLinkedVtxPos;
 		if(!GetTxAndVtxOfOffer( theOffer.vchLinkOffer, linkOffer, linkTx, myLinkedVtxPos, true))
 			throw runtime_error("failed to read linked offer transaction from disk");
 	}
@@ -3496,9 +3496,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 				vector<COffer> offerLinkVtxPos;
 				CTransaction linkedTx;
 				GetTxAndVtxOfOffer( theOffer.vchLinkOffer, linkOffer, linkedTx, offerLinkVtxPos, true);
-							
-				// get offer price at the time of accept
-				theOffer.nHeight = nHeight;
+
 				if(offerLinkVtxPos.empty())
 					theOffer.GetOfferFromList(vtxPos);
 				else
