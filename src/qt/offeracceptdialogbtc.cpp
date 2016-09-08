@@ -68,7 +68,7 @@ OfferAcceptDialogBTC::OfferAcceptDialogBTC(WalletModel* model, const PlatformSty
 	connect(ui->openBtcWalletButton, SIGNAL(clicked()), this, SLOT(openBTCWallet()));
 
 #ifdef USE_QRCODE
-	QString message = tr("Payment on Syscoin Decentralized Marketplace for offer ID %1").arg(this->offer);
+	QString message = tr("Payment on Syscoin Decentralized Marketplace for Offer ID %1").arg(this->offer);
 	SendCoinsRecipient info;
 	info.address = this->address;
 	info.label = this->sellerAlias;
@@ -291,7 +291,7 @@ void OfferAcceptDialogBTC::acceptOffer(){
 }
 void OfferAcceptDialogBTC::openBTCWallet()
 {
-	QString message = tr("Payment on Syscoin Decentralized Marketplace for offer ID %1").this->offer);
+	QString message = tr("Payment on Syscoin Decentralized Marketplace for Offer ID %1").this->offer);
 	SendCoinsRecipient info;
 	info.address = this->address;
 	info.label = this->sellerAlias;
