@@ -2801,7 +2801,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	txAccept.nAcceptHeight = nHeight;
 	txAccept.vchBuyerAlias = vchBuyerAlias;
 	txAccept.vchMessage = vchPaymentMessage;
-    CAmount nTotalValue = ( txAccept.nPrice * nQty );
+    CAmount nTotalValue = ( nPrice * nQty );
     
 	// send one to ourselves to we can leave feedback (notice the last opcode is 1 to denote its a special feedback output for the buyer to be able to leave feedback first and not a normal accept output)
 	if(!vchBTCTxId.empty())
