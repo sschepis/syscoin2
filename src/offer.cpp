@@ -3204,6 +3204,7 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 		if(ca.IsNull())
 			continue;
 		int nHeight;
+		nHeight = ca.nAcceptHeight;
 		if(!ca.vchEscrow.empty())
 		{
 			vector<CEscrow> escrowVtxPos;
