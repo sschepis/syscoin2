@@ -1471,6 +1471,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			{
 				sCurrencyCode = linkOffer.sCurrencyCode;
 				vchAliasPeg =  linkOffer.vchAliasPeg;
+				linkOffer.nCommission = myPriceOffer.nCommission;
 				offerPrice = linkOffer.GetPrice();
 			}
 			else
@@ -2690,6 +2691,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	{
 		sCurrencyCode = linkOffer.sCurrencyCode;
 		vchAliasPeg =  linkOffer.vchAliasPeg;
+		linkOffer.nCommission = theOffer.nCommission;
 		offerPrice = linkOffer.GetPrice();
 	}
 	else
@@ -3224,6 +3226,7 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 		{
 			sCurrencyCode = linkOffer.sCurrencyCode;
 			vchAliasPeg =  linkOffer.vchAliasPeg;
+			linkOffer.nCommission = acceptOffer.nCommission;
 			offerPrice = linkOffer.GetPrice();
 		}
 		else
@@ -3556,6 +3559,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 				{
 					sCurrencyCode = linkOffer.sCurrencyCode;
 					vchAliasPeg =  linkOffer.vchAliasPeg;
+					linkOffer.nCommission = theOffer.nCommission;
 					offerPrice = linkOffer.GetPrice();
 				}
 				else
