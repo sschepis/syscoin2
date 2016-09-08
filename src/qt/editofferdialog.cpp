@@ -559,7 +559,7 @@ bool EditOfferDialog::saveCurrentRow()
 		defaultPegAlias = settings.value("defaultPegAlias", "").toString();
 		 if (ui->aliasPegEdit->text() != defaultPegAlias) {
 			QMessageBox::StandardButton retval = QMessageBox::question(this, tr("Confirm Alias Peg"),
-                 tr("Warning: By default the system peg is <b>%1</b><br><br>%2").arg(defaultPegAlias).arg(tr("Are you sure you wish to choose this alias as your offer peg?")),
+                 tr("Warning: Are you sure you wish to choose this alias as your offer peg? By default the system peg is <b>%1</b>").arg(defaultPegAlias),
                  QMessageBox::Yes|QMessageBox::Cancel,
                  QMessageBox::Cancel);
 			if(retval == QMessageBox::Cancel)
