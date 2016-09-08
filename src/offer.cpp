@@ -3285,7 +3285,7 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 		oOfferAccept.push_back(Pair("height", sHeight));
 		oOfferAccept.push_back(Pair("time", sTime));
 		oOfferAccept.push_back(Pair("quantity", strprintf("%d", ca.nQty)));
-		oOfferAccept.push_back(Pair("currency", sCurrencyCode));
+		oOfferAccept.push_back(Pair("currency", stringFromVch(sCurrencyCode)));
 		vector<unsigned char> vchOfferAcceptLink;
 		bool foundOffer = false;
 		for (unsigned int j = 0; j < txA.vin.size(); j++) {
@@ -3578,7 +3578,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 				oOfferAccept.push_back(Pair("buyer", stringFromVch(theOfferAccept.vchBuyerAlias)));
 				oOfferAccept.push_back(Pair("height", sHeight));
 				oOfferAccept.push_back(Pair("quantity", strprintf("%d", theOfferAccept.nQty)));
-				oOfferAccept.push_back(Pair("currency", sCurrencyCode));
+				oOfferAccept.push_back(Pair("currency", stringFromVch(sCurrencyCode)));
 				bool isExpired = false;
 				vector<CAliasIndex> aliasVtxPos;
 				CAliasIndex theAlias;
