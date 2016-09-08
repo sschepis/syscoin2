@@ -1459,7 +1459,12 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			}
 
 			myPriceOffer.nHeight = heightToCheckAgainst;
-			myPriceOffer.GetOfferFromList(vtxPos);
+			// if linked offer then get offer from this position from root offer history because the linked offer may not have history of changes (root offer can update linked offer without tx)
+			if(offerVtxPos.empty())
+				myPriceOffer.GetOfferFromList(vtxPos);
+			else
+				myPriceOffer.GetOfferFromList(offerVtxPos);
+
 			// if the buyer uses an alias for a discount or a exclusive whitelist buy, then get the guid
 			if(!serializedOffer.vchLinkAlias.empty())
 			{
@@ -2648,10 +2653,18 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 			txAccept.vchEscrow = escrowVvch[0]; 		
 		}	
 	}
-
-	// get offer price at the time of accept from buyer
+	COffer linkOffer;
+	vector<COffer> offerLinkVtxPos;
+	CTransaction linkedTx;
+	GetTxAndVtxOfOffer( theOffer.vchLinkOffer, linkOffer, linkedTx, offerLinkVtxPos, true);
+				
+	// get offer price at the time of accept
 	theOffer.nHeight = nHeight;
-	theOffer.GetOfferFromList(vtxPos);
+	if(offerLinkVtxPos.empty())
+		theOffer.GetOfferFromList(vtxPos);
+	else
+		theOffer.GetOfferFromList(offerLinkVtxPos);
+
 
 	CTransaction aliastx,buyeraliastx;
 	CAliasIndex theAlias,tmpAlias;
@@ -3155,7 +3168,6 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 		if(ca.IsNull())
 			continue;
 
-		acceptOffer.ClearOffer();
 		acceptOffer.nHeight = ca.nAcceptHeight;
 		if(!ca.vchEscrow.empty())
 		{
@@ -3168,7 +3180,11 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 				acceptOffer.nHeight = escrowVtxPos.front().nHeight;					
 			}
 		}
-		acceptOffer.GetOfferFromList(vtxPos);
+		if(myLinkedVtxPos.empty())
+			acceptOffer.GetOfferFromList(vtxPos);
+		else
+			acceptOffer.GetOfferFromList(myLinkedVtxPos);
+
 
 
 		UniValue oOfferAccept(UniValue::VOBJ);
@@ -3464,7 +3480,6 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 				if(theOfferAccept.IsNull())
 					continue;
 
-				theOffer.ClearOffer();
 				theOffer.nHeight = theOfferAccept.nAcceptHeight;
 				if(!theOfferAccept.vchEscrow.empty())
 				{
@@ -3477,8 +3492,17 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 						theOffer.nHeight = escrowVtxPos.front().nHeight;					
 					}
 				}
-				theOffer.GetOfferFromList(vtxPos);
-
+				COffer linkOffer;
+				vector<COffer> offerLinkVtxPos;
+				CTransaction linkedTx;
+				GetTxAndVtxOfOffer( theOffer.vchLinkOffer, linkOffer, linkedTx, offerLinkVtxPos, true);
+							
+				// get offer price at the time of accept
+				theOffer.nHeight = nHeight;
+				if(offerLinkVtxPos.empty())
+					theOffer.GetOfferFromList(vtxPos);
+				else
+					theOffer.GetOfferFromList(offerLinkVtxPos);
 
 				string offer = stringFromVch(vchOffer);
 				string sHeight = strprintf("%llu", theOfferAccept.nHeight);
