@@ -2398,46 +2398,46 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 		scriptPubKeyCert += scriptPubKeyOrig;
 	}
 	
-	
-
-
-
 
 	COffer offerCopy = theOffer;
 	theOffer.ClearOffer();
 	theOffer.nHeight = chainActive.Tip()->nHeight;
-	CAmount nRate;
-	vector<string> rateList;
-	// get precision & check for valid alias peg
-	int precision = 2;
-	if(vchAliasPeg.size() == 0)
-		vchAliasPeg = offerCopy.vchAliasPeg;
-	if(sCurrencyCode.empty() || sCurrencyCode == vchFromString("NONE"))
-		sCurrencyCode = offerCopy.sCurrencyCode;
-	if(getCurrencyToSYSFromAlias(vchAliasPeg, sCurrencyCode, nRate, chainActive.Tip()->nHeight, rateList,precision) != "")
-	{
-		string err = "SYSCOIN_OFFER_RPC_ERROR ERRCODE: 164 - " + _("Could not find currency in the peg alias");
-		throw runtime_error(err.c_str());
-	}
-
-	double minPrice = pow(10.0,-precision);
-	if(price < minPrice)
-		price = minPrice;
-	// update offer values
 	if(offerCopy.sCategory != vchCat)
 		theOffer.sCategory = vchCat;
-	if(offerCopy.vchAliasPeg != vchAliasPeg)
-		theOffer.vchAliasPeg = vchAliasPeg;
 	if(offerCopy.sTitle != vchTitle)
 		theOffer.sTitle = vchTitle;
 	if(offerCopy.sDescription != vchDesc)
 		theOffer.sDescription = vchDesc;
 	if(offerCopy.vchGeoLocation != vchGeoLocation)
 		theOffer.vchGeoLocation = vchGeoLocation;
-	if(offerCopy.sCurrencyCode != sCurrencyCode)
-		theOffer.sCurrencyCode = sCurrencyCode;
-	if(wtxCertIn != NULL)
-		theOffer.vchCert = vchCert;
+	// linked offers can't change these settings, they are overrided by parent info
+	if(offerCopy.vchLinkOffer.empty())
+	{
+		CAmount nRate;
+		vector<string> rateList;
+		// get precision & check for valid alias peg
+		int precision = 2;
+		if(vchAliasPeg.size() == 0)
+			vchAliasPeg = offerCopy.vchAliasPeg;
+		if(sCurrencyCode.empty() || sCurrencyCode == vchFromString("NONE"))
+			sCurrencyCode = offerCopy.sCurrencyCode;
+		if(getCurrencyToSYSFromAlias(vchAliasPeg, sCurrencyCode, nRate, chainActive.Tip()->nHeight, rateList,precision) != "")
+		{
+			string err = "SYSCOIN_OFFER_RPC_ERROR ERRCODE: 164 - " + _("Could not find currency in the peg alias");
+			throw runtime_error(err.c_str());
+		}
+
+		double minPrice = pow(10.0,-precision);
+		if(price < minPrice)
+			price = minPrice;
+
+		if(offerCopy.vchAliasPeg != vchAliasPeg)
+			theOffer.vchAliasPeg = vchAliasPeg;
+		if(offerCopy.sCurrencyCode != sCurrencyCode)
+			theOffer.sCurrencyCode = sCurrencyCode;
+		if(wtxCertIn != NULL)
+			theOffer.vchCert = vchCert;
+	}
 	theOffer.vchAlias = vchAlias;
 	theOffer.safeSearch = strSafeSearch == "Yes"? true: false;
 	theOffer.nQty = nQty;
