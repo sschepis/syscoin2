@@ -705,7 +705,8 @@ void updateBans(const vector<unsigned char> &banData)
 									}
 								}
 							}							
-						}					
+						}
+					}
 				}		
 			}
 		}
