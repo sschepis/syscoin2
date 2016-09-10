@@ -1190,6 +1190,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 							theOffer.vchAliasPeg = linkOffer.vchAliasPeg;
 							theOffer.sCategory = linkOffer.sCategory;
 							theOffer.sTitle = linkOffer.sTitle;
+							theOffer.safeSearch = linkOffer.safeSearch;
 							linkOffer.offerLinks.push_back(vvchArgs[0]);
 							linkOffer.PutToOfferList(myVtxPos);
 							// write parent offer
