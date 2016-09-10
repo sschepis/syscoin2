@@ -2512,7 +2512,7 @@ UniValue escrowinfo(const UniValue& params, bool fHelp) {
 	oEscrow.push_back(Pair("systotal", ValueFromAmount(ca.nPricePerUnit * ca.nQty)));
 	int64_t nEscrowFee = GetEscrowArbiterFee(ca.nPricePerUnit * ca.nQty);
 	oEscrow.push_back(Pair("sysfee", ValueFromAmount(nEscrowFee)));
-	oEscrow.push_back(Pair("total",  strprintf("%.*f", precision, ValueFromAmount(nEscrowFee).get_real() + (ca.nPrice * ca.nQty) )));
+	oEscrow.push_back(Pair("total",  strprintf("%.*f", precision, ValueFromAmount(nEscrowFee) + ValueFromAmount(ca.nPricePerUnit * ca.nQty))));
     oEscrow.push_back(Pair("txid", ca.txHash.GetHex()));
     oEscrow.push_back(Pair("height", sHeight));
 	string strMessage = string("");
