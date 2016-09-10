@@ -2450,7 +2450,7 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 		if(wtxCertIn != NULL)
 			theOffer.vchCert = vchCert;
 	}
-	theOffer.vchAlias = vchAlias;
+	theOffer.vchAlias = alias.vchAlias;
 	theOffer.safeSearch = strSafeSearch == "Yes"? true: false;
 	theOffer.nQty = nQty;
 	if (params.size() >= 10)
