@@ -2354,15 +2354,6 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	CAliasIndex alias;
 	CTransaction aliastx;
 	const CWalletTx *wtxAliasIn = NULL;
-	if (!GetTxOfAlias(vchAlias, alias, aliastx, true))
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 159 - " + _("Could not find an alias with this name"));
-
-	if(!IsSyscoinTxMine(aliastx, "alias")) {
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 160 - " + _("This alias is not yours"));
-	}
-	wtxAliasIn = pwalletMain->GetWalletTx(aliastx.GetHash());
-	if (wtxAliasIn == NULL)
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 161 - " + _("This alias is not in your wallet"));
 
 	// this is a syscoind txn
 	CWalletTx wtx;
@@ -2375,8 +2366,18 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	CTransaction tx, linktx;
 	COffer theOffer, linkOffer;
 	if (!GetTxOfOffer( vchOffer, theOffer, tx, true))
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 162 - " + _("Could not find an offer with this guid"));
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 159 - " + _("Could not find an offer with this guid"));
 	
+	if ((!vchAlias.empty() && !GetTxOfAlias(vchAlias, alias, aliastx, true)) || (vchAlias.empty() && !GetTxOfAlias(theOffer.vchAlias, alias, aliastx, true)))
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 160 - " + _("Could not find an alias with this name"));
+
+	if(!IsSyscoinTxMine(aliastx, "alias")) {
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 161 - " + _("This alias is not yours"));
+	}
+	wtxAliasIn = pwalletMain->GetWalletTx(aliastx.GetHash());
+	if (wtxAliasIn == NULL)
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 162 - " + _("This alias is not in your wallet"));
+
 	CPubKey currentKey(alias.vchPubKey);
 	scriptPubKeyOrig = GetScriptForDestination(currentKey.GetID());
 
@@ -2418,7 +2419,7 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 		vector<string> rateList;
 		// get precision & check for valid alias peg
 		int precision = 2;
-		if(vchAliasPeg.size() == 0)
+		if(vchAliasPeg.empty())
 			vchAliasPeg = offerCopy.vchAliasPeg;
 		if(sCurrencyCode.empty() || sCurrencyCode == vchFromString("NONE"))
 			sCurrencyCode = offerCopy.sCurrencyCode;
