@@ -155,7 +155,8 @@ public:
 
 	}
     bool GetLinkEntryByHash(const std::vector<unsigned char> &ahash, COfferLinkWhitelistEntry &entry) {
-    	for(unsigned int i=0;i<entries.size();i++) {
+    	entry.SetNull();
+		for(unsigned int i=0;i<entries.size();i++) {
     		if(entries[i].aliasLinkVchRand == ahash) {
     			entry = entries[i];
     			return true;

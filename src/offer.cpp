@@ -134,7 +134,6 @@ string makeOfferLinkAcceptTX(const COfferAccept& theOfferAccept, const vector<un
 	if(!foundOfferTx)
 		return "cannot accept a linked offer accept in linkedAcceptBlock";
 
-	CPubKey PubKey(theAlias.vchPubKey);
 	params.push_back(stringFromVch(theOffer.vchAlias));
 	params.push_back(stringFromVch(vchLinkOffer));
 	params.push_back("99");
@@ -1394,7 +1393,13 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				{
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 111 - " + _("This offer does not exist in the root offerLinks table");
 					return true;
-				}					
+				}
+				linkOffer.linkWhitelist.GetLinkEntryByHash(theOffer.vchAlias, entry);
+				if(entry.IsNull() && linkOffer.linkWhitelist.bExclusiveResell)
+				{
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 111a - " + _("Linked offer alias does not exist on the root offer affiliate list and toot offer is set to exclusive mode. You cannot accept this offer. Please contact the reseller and ask him to get the root offer merchant to put the reseller on his affiliate list for this offer");
+					return true;
+				}
 			}
 			
 			// find the payment from the tx outputs (make sure right amount of coins were paid for this offer accept), the payment amount found has to be exact	
@@ -1418,6 +1423,11 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 113 - " + _("Cannot pay for this linked offer because you don't own an alias from its affiliate list. Root offer is set to exclusive mode");
 					return true;
 				}	
+				if(!serializedOffer.vchLinkAlias.empty() && serializedOffer.vchLinkAlias != offer.vchAlias)
+				{
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 113a - " + _("Reseller alias and input alias mismatch");
+					return true;
+				}
 				theOfferAccept.nQty = theLinkedOfferAccept.nQty;
 				heightToCheckAgainst = theLinkedOfferAccept.nAcceptHeight;
 				if(theOfferAccept.vchBuyerAlias != theLinkedOfferAccept.vchBuyerAlias)
