@@ -632,6 +632,8 @@ UniValue messagelist(const UniValue& params, bool fHelp) {
 			aliasTo.nHeight = message.nHeight;
 			aliasTo.GetAliasFromList(aliasVtxPos);
 		}
+		if(!IsSyscoinTxMine(aliastx, "alias"))
+			continue;
 		oName.push_back(Pair("from", stringFromVch(message.vchAliasFrom)));
 		oName.push_back(Pair("to", stringFromVch(message.vchAliasTo)));
 
@@ -732,6 +734,8 @@ UniValue messagesentlist(const UniValue& params, bool fHelp) {
 			aliasTo.nHeight = message.nHeight;
 			aliasTo.GetAliasFromList(aliasVtxPos);
 		}
+		if(!IsSyscoinTxMine(aliastx, "alias"))
+			continue;
 		oName.push_back(Pair("from", stringFromVch(message.vchAliasFrom)));
 		oName.push_back(Pair("to", stringFromVch(message.vchAliasTo)));
 
