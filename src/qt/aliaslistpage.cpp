@@ -251,7 +251,7 @@ void AliasListPage::on_searchAlias_clicked(string GUID)
 		int buyer_rating = 0;
 		int buyer_ratingcount = 0;
 		int seller_rating = 0;
-		intseller_ratingcount = 0;
+		int seller_ratingcount = 0;
 		int arbiter_rating = 0;
 		int arbiter_ratingcount = 0;
 		int expires_in = 0;
