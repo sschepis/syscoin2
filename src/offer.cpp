@@ -766,11 +766,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 24 - " + _("Commission must be less than 256");
 					return error(errorMessage.c_str());
 				}
-				if(theOffer.nCommission <= 0)
-				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 25 - " + _("Commission must be greator than 0");
-					return error(errorMessage.c_str());
-				}
 				if(theOffer.bOnlyAcceptBTC)
 				{
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 26 - " + _("Linked offer cannot accept BTC only");
