@@ -127,8 +127,12 @@ void MyAliasListPage::setModel(WalletModel *walletModel, AliasTableModel *model)
     ui->tableView->setColumnWidth(1, 75); //expires on
     ui->tableView->setColumnWidth(2, 75); //expires in
     ui->tableView->setColumnWidth(3, 75); //expired status
-	ui->tableView->setColumnWidth(4, 100); //rating
-	ui->tableView->setColumnWidth(5, 50); //ratingcount
+	ui->tableView->setColumnWidth(4, 100); //buyerrating
+	ui->tableView->setColumnWidth(5, 50); //buyerratingcount
+	ui->tableView->setColumnWidth(6, 100); //sellerrrating
+	ui->tableView->setColumnWidth(7, 50); //sellerratingcount
+	ui->tableView->setColumnWidth(8, 100); //arbiterrating
+	ui->tableView->setColumnWidth(9, 50); //arbiterratingcount
 	ui->tableView->setItemDelegateForColumn(4, new StarDelegate);
 
     ui->tableView->horizontalHeader()->setStretchLastSection(true);
@@ -329,8 +333,12 @@ void MyAliasListPage::on_exportButton_clicked()
 	writer.addColumn("Expires On", AliasTableModel::ExpiresOn, Qt::EditRole);
 	writer.addColumn("Expires In", AliasTableModel::ExpiresIn, Qt::EditRole);
 	writer.addColumn("Expired", AliasTableModel::Expired, Qt::EditRole);
-	writer.addColumn("Rating", AliasTableModel::Rating, Qt::EditRole);
-	writer.addColumn("Rating Count", AliasTableModel::RatingCount, Qt::EditRole);
+	writer.addColumn("Buyer Rating", AliasTableModel::BuyerRating, Qt::EditRole);
+	writer.addColumn("Buyer Rating Count", AliasTableModel::BuyerRatingCount, Qt::EditRole);
+	writer.addColumn("Seller Rating", AliasTableModel::SellerRating, Qt::EditRole);
+	writer.addColumn("Seller Rating Count", AliasTableModel::SellerRatingCount, Qt::EditRole);
+	writer.addColumn("Arbiter Rating", AliasTableModel::ArbiterRating, Qt::EditRole);
+	writer.addColumn("Arbiter Rating Count", AliasTableModel::ArbiterRatingCount, Qt::EditRole);
     if(!writer.write())
     {
         QMessageBox::critical(this, tr("Error exporting"), tr("Could not write to file %1.").arg(filename),

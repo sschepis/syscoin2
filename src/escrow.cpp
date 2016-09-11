@@ -924,8 +924,23 @@ void HandleEscrowFeedback(const CEscrow& serializedEscrow, CEscrow& dbEscrow, ve
 				{
 					
 					CAliasIndex alias = vtxPos.back();
-					alias.nRatingCount++;
-					alias.nRating += serializedEscrow.feedback[0].nRating;
+					if(serializedEscrow.feedback[i].nFeedbackUserTo == FEEDBACKBUYER)
+					{
+						alias.nRatingCountAsBuyer++;
+						alias.nRatingAsBuyer += serializedEscrow.feedback[i].nRating;
+					}
+					else if(serializedEscrow.feedback[i].nFeedbackUserTo == FEEDBACKSELLER)
+					{
+						alias.nRatingCountAsSeller++;
+						alias.nRatingAsSeller += serializedEscrow.feedback[i].nRating;
+					}					
+					else if(serializedEscrow.feedback[i].nFeedbackUserTo == FEEDBACKARBITER)
+					{
+						alias.nRatingCountAsArbiter++;
+						alias.nRatingAsArbiter += serializedEscrow.feedback[i].nRating;
+					}
+
+
 					PutToAliasList(vtxPos, alias);
 					paliasdb->WriteAlias(vchAlias, vchFromString(address.ToString()), vtxPos);
 				}

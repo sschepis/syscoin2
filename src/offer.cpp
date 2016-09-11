@@ -3477,8 +3477,8 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 	oOffer.push_back(Pair("address", address.ToString()));
 
 	float rating = 0;
-	if(alias.nRatingCount > 0)
-		rating = roundf(alias.nRating/(float)alias.nRatingCount);
+	if(alias.nRatingCountAsSeller > 0)
+		rating = roundf(alias.nRatingAsSeller/(float)alias.nRatingCountAsSeller);
 	oOffer.push_back(Pair("alias_rating",(int)rating));
 	oOffer.push_back(Pair("geolocation", stringFromVch(theOffer.vchGeoLocation)));
 	oOffer.push_back(Pair("offers_sold", (int)aoOfferAccepts.size()));
@@ -3785,8 +3785,8 @@ UniValue offerlist(const UniValue& params, bool fHelp) {
 			
 			oName.push_back(Pair("alias", stringFromVch(theOfferA.vchAlias)));
 			float rating = 0;
-			if(theAlias.nRatingCount > 0)
-				rating = roundf(theAlias.nRating/(float)theAlias.nRatingCount);
+			if(theAlias.nRatingCountAsSeller > 0)
+				rating = roundf(theAlias.nRatingAsSeller/(float)theAlias.nRatingCountAsSeller);
 			oName.push_back(Pair("alias_rating",(int)rating));
 			oName.push_back(Pair("expires_in", expires_in));
 			oName.push_back(Pair("expires_on", expired_block));
@@ -3878,8 +3878,8 @@ UniValue offerhistory(const UniValue& params, bool fHelp) {
 			paliasdb->ReadAlias(theOfferA.vchAlias, vtxAliasPos);
 			oOffer.push_back(Pair("alias", stringFromVch(theOfferA.vchAlias)));
 			float rating = 0;
-			if(!vtxAliasPos.empty() && vtxAliasPos.back().nRatingCount > 0)
-				rating = roundf(vtxAliasPos.back().nRating/(float)vtxAliasPos.back().nRatingCount);
+			if(!vtxAliasPos.empty() && vtxAliasPos.back().nRatingCountAsSeller > 0)
+				rating = roundf(vtxAliasPos.back().nRatingAsSeller/(float)vtxAliasPos.back().nRatingCountAsSeller);
 			oOffer.push_back(Pair("alias_rating",(int)rating));
 			oOffer.push_back(Pair("expires_in", expires_in));
 			oOffer.push_back(Pair("expires_on", expired_block));
@@ -3970,8 +3970,8 @@ UniValue offerfilter(const UniValue& params, bool fHelp) {
 		oOffer.push_back(Pair("private", txOffer.bPrivate ? "Yes" : "No"));
 		oOffer.push_back(Pair("alias", stringFromVch(txOffer.vchAlias)));
 		float rating = 0;
-		if(!vtxAliasPos.empty() && vtxAliasPos.back().nRatingCount > 0)
-			rating = roundf(vtxAliasPos.back().nRating/(float)vtxAliasPos.back().nRatingCount);
+		if(!vtxAliasPos.empty() && vtxAliasPos.back().nRatingCountAsSeller > 0)
+			rating = roundf(vtxAliasPos.back().nRatingAsSeller/(float)vtxAliasPos.back().nRatingCountAsSeller);
 		oOffer.push_back(Pair("alias_rating",(int)rating));
 		oOffer.push_back(Pair("geolocation", stringFromVch(txOffer.vchGeoLocation)));
 		oOffer.push_back(Pair("expires_in", expires_in));

@@ -913,8 +913,12 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						theAlias.vchPrivateValue = dbAlias.vchPrivateValue;	
 					// user can't update safety level or rating after creation
 					theAlias.safetyLevel = dbAlias.safetyLevel;
-					theAlias.nRating = dbAlias.nRating;
-					theAlias.nRatingCount = dbAlias.nRatingCount;
+					theAlias.nRatingAsBuyer = dbAlias.nRatingAsBuyer;
+					theAlias.nRatingCountAsBuyer = dbAlias.nRatingCountAsBuyer;
+					theAlias.nRatingAsSeller = dbAlias.nRatingAsSeller;
+					theAlias.nRatingCountAsSeller = dbAlias.nRatingCountAsSeller;
+					theAlias.nRatingAsArbiter = dbAlias.nRatingAsArbiter;
+					theAlias.nRatingCountAsArbiter= dbAlias.nRatingCountAsArbiter;
 					theAlias.vchGUID = dbAlias.vchGUID;
 					theAlias.vchAlias = dbAlias.vchAlias;
 					
@@ -960,8 +964,12 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1023 - " + _("Trying to renew an alias that isn't expired");
 				return true;
 			}
-			theAlias.nRating = 0;
-			theAlias.nRatingCount = 0;
+			theAlias.nRatingAsBuyer = 0;
+			theAlias.nRatingCountAsBuyer = 0;
+			theAlias.nRatingAsSeller = 0;
+			theAlias.nRatingCountAsSeller = 0;
+			theAlias.nRatingAsArbiter = 0;
+			theAlias.nRatingCountAsArbiter = 0;
 		}
 		theAlias.nHeight = nHeight;
 		theAlias.txHash = tx.GetHash();
@@ -1786,11 +1794,21 @@ UniValue aliaslist(const UniValue& params, bool fHelp) {
 
 			oName.push_back(Pair("safesearch", alias.safeSearch ? "Yes" : "No"));
 			oName.push_back(Pair("safetylevel", alias.safetyLevel ));
-			float rating = 0;
-			if(alias.nRatingCount > 0)
-				rating = roundf(alias.nRating/(float)alias.nRatingCount);
-			oName.push_back(Pair("rating", (int)rating));
-			oName.push_back(Pair("ratingcount", alias.nRatingCount));
+			float ratingAsBuyer = 0;
+			if(alias.nRatingCountAsBuyer > 0)
+				ratingAsBuyer = roundf(alias.nRatingAsBuyer/(float)alias.nRatingCountAsBuyer);
+			float ratingAsSeller = 0;
+			if(alias.nRatingCountAsSeller > 0)
+				ratingAsSeller = roundf(alias.nRatingAsSeller/(float)alias.nRatingCountAsSeller);
+			float ratingAsArbiter = 0;
+			if(alias.nRatingCountAsArbiter > 0)
+				ratingAsArbiter = roundf(alias.nRatingAsArbiter/(float)alias.nRatingCountAsArbiter);
+			oName.push_back(Pair("buyer_rating", (int)ratingAsBuyer));
+			oName.push_back(Pair("buyer_ratingcount", alias.nRatingCountAsBuyer));
+			oName.push_back(Pair("seller_rating", (int)ratingAsSeller));
+			oName.push_back(Pair("seller_ratingcount", alias.nRatingCountAsSeller));
+			oName.push_back(Pair("arbiter_rating", (int)ratingAsArbiter));
+			oName.push_back(Pair("arbiter_ratingcount", alias.nRatingCountAsArbiter));
 			expired_block = nHeight + (alias.nRenewal*GetAliasExpirationDepth());
 			if(vchAlias != vchFromString("sysrates.peg") && vchAlias != vchFromString("sysban") && vchAlias != vchFromString("syscategory"))
 			{
@@ -1962,11 +1980,21 @@ UniValue aliasinfo(const UniValue& params, bool fHelp) {
 		oName.push_back(Pair("ismine", fAliasMine));
 		oName.push_back(Pair("safesearch", alias.safeSearch ? "Yes" : "No"));
 		oName.push_back(Pair("safetylevel", alias.safetyLevel ));
-		float rating = 0;
-		if(alias.nRatingCount > 0)
-			rating = roundf(alias.nRating/(float)alias.nRatingCount);
-		oName.push_back(Pair("rating", (int)rating));
-		oName.push_back(Pair("ratingcount", alias.nRatingCount));
+		float ratingAsBuyer = 0;
+		if(alias.nRatingCountAsBuyer > 0)
+			ratingAsBuyer = roundf(alias.nRatingAsBuyer/(float)alias.nRatingCountAsBuyer);
+		float ratingAsSeller = 0;
+		if(alias.nRatingCountAsSeller > 0)
+			ratingAsSeller = roundf(alias.nRatingAsSeller/(float)alias.nRatingCountAsSeller);
+		float ratingAsArbiter = 0;
+		if(alias.nRatingCountAsArbiter > 0)
+			ratingAsArbiter = roundf(alias.nRatingAsArbiter/(float)alias.nRatingCountAsArbiter);
+		oName.push_back(Pair("buyer_rating", (int)ratingAsBuyer));
+		oName.push_back(Pair("buyer_ratingcount", alias.nRatingCountAsBuyer));
+		oName.push_back(Pair("seller_rating", (int)ratingAsSeller));
+		oName.push_back(Pair("seller_ratingcount", alias.nRatingCountAsSeller));
+		oName.push_back(Pair("arbiter_rating", (int)ratingAsArbiter));
+		oName.push_back(Pair("arbiter_ratingcount", alias.nRatingCountAsArbiter));
         oName.push_back(Pair("lastupdate_height", nHeight));
 		expired_block = nHeight + (alias.nRenewal*GetAliasExpirationDepth());
 		if(vchAlias != vchFromString("sysrates.peg") && vchAlias != vchFromString("sysban") && vchAlias != vchFromString("syscategory"))
@@ -2051,11 +2079,21 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 			CSyscoinAddress address(PubKey.GetID());
 			oName.push_back(Pair("address", address.ToString()));
             oName.push_back(Pair("lastupdate_height", nHeight));
-			float rating = 0;
-			if(txPos2.nRatingCount > 0)
-				rating = roundf(txPos2.nRating/(float)txPos2.nRatingCount);
-			oName.push_back(Pair("rating", (int)rating));
-			oName.push_back(Pair("ratingcount", txPos2.nRatingCount));
+			float ratingAsBuyer = 0;
+			if(txPos2.nRatingCountAsBuyer > 0)
+				ratingAsBuyer = roundf(txPos2.nRatingAsBuyer/(float)txPos2.nRatingCountAsBuyer);
+			float ratingAsSeller = 0;
+			if(txPos2.nRatingCountAsSeller > 0)
+				ratingAsSeller = roundf(txPos2.nRatingAsSeller/(float)txPos2.nRatingCountAsSeller);
+			float ratingAsArbiter = 0;
+			if(txPos2.nRatingCountAsArbiter > 0)
+				ratingAsArbiter = roundf(txPos2.nRatingAsArbiter/(float)txPos2.nRatingCountAsArbiter);
+			oName.push_back(Pair("buyer_rating", (int)ratingAsBuyer));
+			oName.push_back(Pair("buyer_ratingcount", txPos2.nRatingCountAsBuyer));
+			oName.push_back(Pair("seller_rating", (int)ratingAsSeller));
+			oName.push_back(Pair("seller_ratingcount", txPos2.nRatingCountAsSeller));
+			oName.push_back(Pair("arbiter_rating", (int)ratingAsArbiter));
+			oName.push_back(Pair("arbiter_ratingcount", txPos2.nRatingCountAsArbiter));
 			expired_block = nHeight + (txPos2.nRenewal*GetAliasExpirationDepth()) ;
 			if(vchAlias != vchFromString("sysrates.peg") && vchAlias != vchFromString("sysban") && vchAlias != vchFromString("syscategory"))
 			{
@@ -2208,11 +2246,21 @@ UniValue aliasfilter(const UniValue& params, bool fHelp) {
 
 
         oName.push_back(Pair("lastupdate_height", nHeight));
-		float rating = 0;
-		if(alias.nRatingCount > 0)
-			rating = roundf(alias.nRating/(float)alias.nRatingCount);
-		oName.push_back(Pair("rating", (int)rating));
-		oName.push_back(Pair("ratingcount", alias.nRatingCount));
+		float ratingAsBuyer = 0;
+		if(alias.nRatingCountAsBuyer > 0)
+			ratingAsBuyer = roundf(alias.nRatingAsBuyer/(float)alias.nRatingCountAsBuyer);
+		float ratingAsSeller = 0;
+		if(alias.nRatingCountAsSeller > 0)
+			ratingAsSeller = roundf(alias.nRatingAsSeller/(float)alias.nRatingCountAsSeller);
+		float ratingAsArbiter = 0;
+		if(alias.nRatingCountAsArbiter > 0)
+			ratingAsArbiter = roundf(alias.nRatingAsArbiter/(float)alias.nRatingCountAsArbiter);
+		oName.push_back(Pair("buyer_rating", (int)ratingAsBuyer));
+		oName.push_back(Pair("buyer_ratingcount", alias.nRatingCountAsBuyer));
+		oName.push_back(Pair("seller_rating", (int)ratingAsSeller));
+		oName.push_back(Pair("seller_ratingcount", alias.nRatingCountAsSeller));
+		oName.push_back(Pair("arbiter_rating", (int)ratingAsArbiter));
+		oName.push_back(Pair("arbiter_ratingcount", alias.nRatingCountAsArbiter));
 		expired_block = nHeight + (alias.nRenewal*GetAliasExpirationDepth());
 		expires_in = expired_block - chainActive.Tip()->nHeight;
 		oName.push_back(Pair("expires_in", expires_in));
