@@ -103,12 +103,16 @@ public:
 					expires_in_str = "";
 					expires_on_str = "";
 					safesearch_str = "";
-					rating = 0;
-					ratingcount = 0;
 					expired = 0;
 					expires_in = 0;
 					expires_on = 0;
 					lastupdate_height = 0;
+					buyer_rating = 0;
+					buyer_ratingcount = 0;
+					seller_rating = 0;
+					seller_ratingcount = 0;
+					arbiter_rating = 0;
+					arbiter_ratingcount = 0;
 			
 					const UniValue &arr = result.get_array();
 				    for (unsigned int idx = 0; idx < arr.size(); idx++) {
