@@ -1155,9 +1155,9 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 							errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 81 - " + _("Cannot find this alias in the parent offer affiliate list");
 							theOffer.vchLinkOffer.clear();	
 						}
-						else if(theOffer.nCommission <= -entry.nDiscountPct)
+						else if(theOffer.nCommission < -entry.nDiscountPct)
 						{
-							errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 82 - " + _("You cannot re-sell at a lower price than the discount you received as an affiliate");
+							errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 82 - " + _("This commision would put the offer price at a lower price than the discount you received as an affiliate");
 							theOffer.vchLinkOffer.clear();	
 						}
 					}	
