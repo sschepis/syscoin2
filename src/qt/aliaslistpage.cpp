@@ -372,7 +372,7 @@ void AliasListPage::on_searchAlias_clicked(string GUID)
 						settings.value("safesearch", "").toString(),
 						buyer_rating, buyer_ratingcount,
 						seller_rating, seller_ratingcount,
-						arbiter_rating, arbiter_ratingcount,
+						arbiter_rating, arbiter_ratingcount
 						);
 					this->model->updateEntry(QString::fromStdString(name_str),
 						QString::fromStdString(value_str),
