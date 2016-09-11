@@ -333,7 +333,7 @@ void MyAliasListPage::on_exportButton_clicked()
 	writer.addColumn("Expires In", AliasTableModel::ExpiresIn, Qt::EditRole);
 	writer.addColumn("Expired", AliasTableModel::Expired, Qt::EditRole);
 	writer.addColumn("Buyer Rating", AliasTableModel::RatingAsBuyer, Qt::EditRole);
-	writer.addColumn("Buyer Rating Count", AliasTableModel::RatingCountAsBuyerc, Qt::EditRole);
+	writer.addColumn("Buyer Rating Count", AliasTableModel::RatingCountAsBuyer, Qt::EditRole);
 	writer.addColumn("Seller Rating", AliasTableModel::RatingAsSeller, Qt::EditRole);
 	writer.addColumn("Seller Rating Count", AliasTableModel::RatingCountAsSeller, Qt::EditRole);
 	writer.addColumn("Arbiter Rating", AliasTableModel::RatingAsArbiter, Qt::EditRole);
