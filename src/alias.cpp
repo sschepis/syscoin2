@@ -688,25 +688,19 @@ void updateBans(const vector<unsigned char> &banData)
 					offerBan.safetyLevel = severity;
 					offerBan.PutToOfferList(vtxOfferPos);
 					pofferdb->WriteOffer(vchGUID, vtxOfferPos);
-					if (pofferdb->ExistsOffer(offerBan.vchLinkOffer)) {
-						if (pofferdb->ReadOffer(offerBan.vchLinkOffer, myLinkVtxPos) && !myLinkVtxPos.empty())
-						{
-							COffer myLinkOffer = myLinkVtxPos.back();
-							// go through the linked offers, if any, and update the linked offer safety level
-							for(unsigned int i=0;i<myLinkOffer.offerLinks.size();i++) {
-								vector<COffer> myVtxPos;	
-								if (pofferdb->ExistsOffer(myLinkOffer.offerLinks[i])) {
-									if (pofferdb->ReadOffer(myLinkOffer.offerLinks[i], myVtxPos))
-									{
-										COffer offerLink = myVtxPos.back();					
-										offerLink.safetyLevel = severity;
-										offerLink.PutToOfferList(myVtxPos);
-										pofferdb->WriteOffer(myLinkOffer.offerLinks[i], myVtxPos);
-									}
-								}
-							}							
+					// go through the linked offers, if any, and update the linked offer safety level
+					for(unsigned int i=0;i<offerBan.offerLinks.size();i++) {
+						vector<COffer> myVtxPos;	
+						if (pofferdb->ExistsOffer(offerBan.offerLinks[i])) {
+							if (pofferdb->ReadOffer(offerBan.offerLinks[i], myVtxPos))
+							{
+								COffer offerLink = myVtxPos.back();					
+								offerLink.safetyLevel = severity;
+								offerLink.PutToOfferList(myVtxPos);
+								pofferdb->WriteOffer(offerBan.offerLinks[i], myVtxPos);
+							}
 						}
-					}
+					}	
 				}		
 			}
 		}
