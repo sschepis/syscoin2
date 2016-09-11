@@ -826,7 +826,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 			if (GetTxAndVtxOfOffer( theEscrow.vchOffer, dbOffer, txOffer, myVtxPos))
 			{
 
-				if(dbOffer.sCategory.size() > 0 && boost::algorithm::ends_with(stringFromVch(dbOffer.sCategory), "wanted"))
+				if(dbOffer.sCategory.size() > 0 && boost::algorithm::starts_with(stringFromVch(dbOffer.sCategory), "wanted"))
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4058 - " + _("Cannot purchase a wanted offer");
 				}
@@ -1015,7 +1015,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	if(theOffer.nQty != -1 && theOffer.nQty < (nQty+memPoolQty))
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4070 - " + _("Not enough remaining quantity to fulfill this escrow"));
 
-	if(theOffer.sCategory.size() > 0 && boost::algorithm::ends_with(stringFromVch(theOffer.sCategory), "wanted"))
+	if(theOffer.sCategory.size() > 0 && boost::algorithm::starts_with(stringFromVch(theOffer.sCategory), "wanted"))
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4071 - " + _("Cannot purchase a wanted offer"));
 
 	const CWalletTx *wtxAliasIn = NULL;
@@ -1036,6 +1036,10 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4073 - " + _("Could not find an alias with this identifier"));
 		if (linkedOffer.bOnlyAcceptBTC)
 			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4074 - " + _("Linked offer only accepts Bitcoins, linked offers currently only work with Syscoin payments"));
+		if(linkedOffer.sCategory.size() > 0 && boost::algorithm::starts_with(stringFromVch(linkedOffer.sCategory), "wanted"))
+			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4074a - " + _("Cannot purchase a wanted offer"));
+	
+		
 		selleralias = theLinkedAlias;
 	}
 	else
