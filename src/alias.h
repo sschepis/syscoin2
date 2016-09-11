@@ -123,7 +123,7 @@ public:
 		safeSearch = b.safeSearch;
 		nRatingAsBuyer = b.nRatingAsBuyer;
 		nRatingCountAsBuyer = b.nRatingCountAsBuyer;
-		nRatingAsSeller = b.nRatingAsSeller
+		nRatingAsSeller = b.nRatingAsSeller;
 		nRatingCountAsSeller = b.nRatingCountAsSeller;
 		nRatingAsArbiter = b.nRatingAsArbiter;
 		nRatingCountAsArbiter = b.nRatingCountAsArbiter;
