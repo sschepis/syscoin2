@@ -326,19 +326,18 @@ void MyAliasListPage::on_exportButton_clicked()
     if (filename.isNull()) return;
 
     CSVModelWriter writer(filename);
-
     // name, column, role
     writer.setModel(proxyModel);
     writer.addColumn("Alias", AliasTableModel::Name, Qt::EditRole);
 	writer.addColumn("Expires On", AliasTableModel::ExpiresOn, Qt::EditRole);
 	writer.addColumn("Expires In", AliasTableModel::ExpiresIn, Qt::EditRole);
 	writer.addColumn("Expired", AliasTableModel::Expired, Qt::EditRole);
-	writer.addColumn("Buyer Rating", AliasTableModel::BuyerRating, Qt::EditRole);
-	writer.addColumn("Buyer Rating Count", AliasTableModel::BuyerRatingCount, Qt::EditRole);
-	writer.addColumn("Seller Rating", AliasTableModel::SellerRating, Qt::EditRole);
-	writer.addColumn("Seller Rating Count", AliasTableModel::SellerRatingCount, Qt::EditRole);
-	writer.addColumn("Arbiter Rating", AliasTableModel::ArbiterRating, Qt::EditRole);
-	writer.addColumn("Arbiter Rating Count", AliasTableModel::ArbiterRatingCount, Qt::EditRole);
+	writer.addColumn("Buyer Rating", AliasTableModel::RatingAsBuyer, Qt::EditRole);
+	writer.addColumn("Buyer Rating Count", AliasTableModel::RatingCountAsBuyerc, Qt::EditRole);
+	writer.addColumn("Seller Rating", AliasTableModel::RatingAsSeller, Qt::EditRole);
+	writer.addColumn("Seller Rating Count", AliasTableModel::RatingCountAsSeller, Qt::EditRole);
+	writer.addColumn("Arbiter Rating", AliasTableModel::RatingAsArbiter, Qt::EditRole);
+	writer.addColumn("Arbiter Rating Count", AliasTableModel::RatingCountAsArbiter, Qt::EditRole);
     if(!writer.write())
     {
         QMessageBox::critical(this, tr("Error exporting"), tr("Could not write to file %1.").arg(filename),

@@ -210,7 +210,7 @@ public:
 
     }
 
-    void updateEntry(const QString &alias, const QString &value, const QString &privvalue, const QString &expires_on,const QString &expires_in, const QString &expired, const QString &safesearch, int buyer_rating, int buyer_ratingcount, , int seller_rating, int seller_ratingcount,, int arbiter_rating, int arbiter_ratingcount,AliasModelType type, int status)
+    void updateEntry(const QString &alias, const QString &value, const QString &privvalue, const QString &expires_on,const QString &expires_in, const QString &expired, const QString &safesearch, int buyer_rating, int buyer_ratingcount, int seller_rating, int seller_ratingcount, int arbiter_rating, int arbiter_ratingcount,AliasModelType type, int status)
     {
 		if(!parent || parent->modelType != type)
 		{
@@ -347,17 +347,17 @@ QVariant AliasTableModel::data(const QModelIndex &index, int role) const
             return rec->expired;
         case SafeSearch:
             return rec->safesearch;
-        case BuyerRating:
+        case RatingAsBuyer:
             return QVariant::fromValue(StarRating(rec->buyer_rating));
-        case BuyerRatingCount:
+        case RatingCountAsBuyer:
             return rec->buyer_ratingcount;
-        case SellerRating:
+        case RatingAsSeller:
             return QVariant::fromValue(StarRating(rec->seller_rating));
-        case SellerRatingCount:
+        case RatingCountAsSeller:
             return rec->seller_ratingcount;
-        case ArbiterRating:
+        case RatingAsArbiter:
             return QVariant::fromValue(StarRating(rec->arbiter_rating));
-        case ArbiterRatingCount:
+        case RatingCountAsArbiter:
             return rec->arbiter_ratingcount;
         }
     }
@@ -397,42 +397,42 @@ bool AliasTableModel::setData(const QModelIndex &index, const QVariant &value, i
     {
         switch(index.column())
         {
-        case BuyerRating:
+        case RatingAsBuyer:
             // Do nothing, if old value == new value
             if(rec->buyer_rating == value.toInt())
             {
                 editStatus = NO_CHANGES;
                 return false;
             }
-         case BuyerRatingCount:
+         case RatingCountAsBuyer:
             // Do nothing, if old value == new value
             if(rec->buyer_ratingcount == value.toInt())
             {
                 editStatus = NO_CHANGES;
                 return false;
             }               
-         case SellerRating:
+         case RatingAsSeller:
             // Do nothing, if old value == new value
             if(rec->seller_rating == value.toInt())
             {
                 editStatus = NO_CHANGES;
                 return false;
             }
-         case SellerRatingCount:
+         case RatingCountAsSeller:
             // Do nothing, if old value == new value
             if(rec->seller_sellercount == value.toInt())
             {
                 editStatus = NO_CHANGES;
                 return false;
             } 
-        case ArbiterRating:
+        case RatingAsArbiter:
             // Do nothing, if old value == new value
             if(rec->arbiter_rating == value.toInt())
             {
                 editStatus = NO_CHANGES;
                 return false;
             }
-         case ArbiterRatingCount:
+         case RatingCountAsArbiter:
             // Do nothing, if old value == new value
             if(rec->arbiter_ratingcount == value.toInt())
             {
