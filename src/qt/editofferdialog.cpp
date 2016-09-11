@@ -263,17 +263,20 @@ void EditOfferDialog::loadCategories()
 		boost::split(categories,categoryList[i],boost::is_any_of(">"));
 		if(categories.size() > 0)
 		{
-			for(unsigned int j = 0;j< categories.size(); j++)
+			if(categories.size() <= 2)
 			{
-				boost::algorithm::trim(categories[j]);
-				// only support 2 levels in qt GUI for categories
-				if(j == 0)
+				for(unsigned int j = 0;j< categories.size(); j++)
 				{
-					addParentItem(model, QString::fromStdString(categories[0]), QVariant(QString::fromStdString(categories[0])));
-				}
-				else if(j == 1)
-				{
-					addChildItem(model, QString::fromStdString(categories[1]), QVariant(QString::fromStdString(categoryList[i])));
+					boost::algorithm::trim(categories[j]);
+					// only support 2 levels in qt GUI for categories
+					if(j == 0)
+					{
+						addParentItem(model, QString::fromStdString(categories[0]), QVariant(QString::fromStdString(categories[0])));
+					}
+					else if(j == 1)
+					{
+						addChildItem(model, QString::fromStdString(categories[1]), QVariant(QString::fromStdString(categoryList[i])));
+					}
 				}
 			}
 		}

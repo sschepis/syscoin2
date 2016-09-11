@@ -112,7 +112,7 @@ void CertListPage::loadCategories()
 	{
 		vector<string> categories;
 		boost::split(categories,categoryList[i],boost::is_any_of(">"));
-		if(categories.size() > 0)
+		if(categories.size() > 0 && categories.size() <= 2)
 		{
 			for(unsigned int j = 0;j< categories.size(); j++)
 			{

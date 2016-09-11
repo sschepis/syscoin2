@@ -9,7 +9,6 @@
 
 #include <QFont>
 #include "rpcserver.h"
-#include "starrating.h"
 using namespace std;
 
 const QString AliasTableModel::Alias = "A";
@@ -353,15 +352,15 @@ QVariant AliasTableModel::data(const QModelIndex &index, int role) const
         case SafeSearch:
             return rec->safesearch;
         case RatingAsBuyer:
-            return rec->buyer_rating + " " + tr("Stars");
+			return QString::number(rec->buyer_rating) + " " + tr("Stars");
         case RatingCountAsBuyer:
             return rec->buyer_ratingcount;
         case RatingAsSeller:
-            return rec->seller_rating  + " " + tr("Stars");
+            return QString::number(rec->seller_rating)  + " " + tr("Stars");
         case RatingCountAsSeller:
             return rec->seller_ratingcount;
         case RatingAsArbiter:
-            return rec->arbiter_rating  + " " + tr("Stars");
+            return QString::number(rec->arbiter_rating)  + " " + tr("Stars");
         case RatingCountAsArbiter:
             return rec->arbiter_ratingcount;
         }
