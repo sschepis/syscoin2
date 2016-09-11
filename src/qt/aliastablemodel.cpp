@@ -91,6 +91,7 @@ public:
 			int arbiter_ratingcount = 0;
 			string safesearch_str;
 			int expires_in = 0;
+			int expires_on = 0;
 			
 			int lastupdate_height = 0;
 			try {
@@ -424,7 +425,7 @@ bool AliasTableModel::setData(const QModelIndex &index, const QVariant &value, i
             }
          case RatingCountAsSeller:
             // Do nothing, if old value == new value
-            if(rec->seller_sellercount == value.toInt())
+            if(rec->seller_ratingcount == value.toInt())
             {
                 editStatus = NO_CHANGES;
                 return false;
