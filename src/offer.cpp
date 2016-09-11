@@ -2930,8 +2930,21 @@ void HandleAcceptFeedback(const CFeedback& feedback, COffer& offer, vector<COffe
 			{
 				
 				CAliasIndex alias = vtxPos.back();
-				alias.nRatingCount++;
-				alias.nRating += feedback.nRating;
+				if(feedback.nFeedbackUserTo == FEEDBACKBUYER)
+				{
+					alias.nRatingCountAsBuyer++;
+					alias.nRatingAsBuyer += feedback.nRating;
+				}
+				else if(feedback.nFeedbackUserTo == FEEDBACKSELLER)
+				{
+					alias.nRatingCountAsSeller++;
+					alias.nRatingAsSeller += feedback.nRating;
+				}					
+				else if(feedback.nFeedbackUserTo == FEEDBACKARBITER)
+				{
+					alias.nRatingCountAsArbiter++;
+					alias.nRatingAsArbiter += feedback.nRating;
+				}
 				PutToAliasList(vtxPos, alias);
 				paliasdb->WriteAlias(vchAlias, vchFromString(address.ToString()), vtxPos);
 			}
