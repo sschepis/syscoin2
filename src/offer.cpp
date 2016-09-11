@@ -1161,10 +1161,15 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 83 - " + _("Cannot link to an offer that is already linked to another offer");
 						theOffer.vchLinkOffer.clear();	
 					}
+					else if(linkOffer.sCategory.size() > 0 && boost::algorithm::ends_with(stringFromVch(linkOffer.sCategory), "wanted"))
+					{
+						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 83a - " + _("Cannot link to a wanted offer");
+						theOffer.vchLinkOffer.clear();
+					}
 					else if(!theOffer.vchCert.empty() && theCert.vchAlias != linkOffer.vchAlias)
 					{
 						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 84 -" + _(" Cannot create this offer because the certificate alias does not match the offer alias");
-						return true;
+						theOffer.vchLinkOffer.clear();	
 					}
 					else if(linkOffer.bOnlyAcceptBTC)
 					{
@@ -1375,6 +1380,11 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				else if (linkOffer.bOnlyAcceptBTC)
 				{
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 109 - " + _("Linked offer only accepts Bitcoins, linked offers currently only work with Syscoin payments");
+					return true;
+				}
+				else if(linkOffer.sCategory.size() > 0 && boost::algorithm::ends_with(stringFromVch(linkOffer.sCategory), "wanted"))
+				{
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 109a - " + _("Cannot purchase a wanted offer");
 					return true;
 				}
 				else if(!serializedOffer.vchLinkAlias.empty())
