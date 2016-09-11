@@ -28,12 +28,11 @@ EditOfferDialog::EditOfferDialog(Mode mode, const QString &strCert,  const QStri
     ui->setupUi(this);
 
 	ui->aliasPegDisclaimer->setText(tr("<font color='blue'>Choose an alias which has peg information to allow exchange of currencies into SYS amounts based on the pegged values. Consumers will pay amounts based on this peg, the alias must be managed effectively or you may end up selling your offers for unexpected amounts.</font>"));
-	ui->privateDisclaimer->setText(tr("<font color='blue'>All offers are first listed as private. If you would like your offer to be public, please edit it after it is created.</font>"));
+	ui->privateDisclaimer->setText(tr("<font color='blue'>Choose if you would like the offer to be private or publicly listed on the marketplace.</font>"));
 	ui->offerLabel->setVisible(true);
 	ui->offerEdit->setVisible(true);
 	ui->offerEdit->setEnabled(false);
 	ui->aliasEdit->setEnabled(true);
-	ui->currencyDisclaimer->setVisible(true);
 	ui->privateEdit->setEnabled(true);
 	ui->privateEdit->clear();
 	ui->privateEdit->addItem(QString("No"));
@@ -42,6 +41,7 @@ EditOfferDialog::EditOfferDialog(Mode mode, const QString &strCert,  const QStri
 	ui->acceptBTCOnlyEdit->clear();
 	ui->acceptBTCOnlyEdit->addItem(QString("No"));
 	ui->acceptBTCOnlyEdit->addItem(QString("Yes"));
+	ui->currencyDisclaimer->setText(tr("<font color='blue'>You will receive payment in Syscoin equivalent to the Market-value of the currency you have selected.</font>"));
 	ui->btcOnlyDisclaimer->setText(tr("<font color='blue'>You will receive payment in Bitcoin if you have selected <b>Yes</b> to this option and <b>BTC</b> as the currency for the offer.</font>"));
 	cert = strCert;
 	ui->certEdit->clear();
@@ -68,7 +68,6 @@ EditOfferDialog::EditOfferDialog(Mode mode, const QString &strCert,  const QStri
 			ui->aliasEdit->setCurrentIndex(aliasIndex);
 		on_aliasPegEdit_editingFinished();
         setWindowTitle(tr("New Offer"));
-		ui->currencyDisclaimer->setText(tr("<font color='blue'>You will receive payment in Syscoin equivalent to the Market-value of the currency you have selected.</font>"));
         break;
     case EditOffer:
         setWindowTitle(tr("Edit Offer"));
@@ -84,7 +83,6 @@ EditOfferDialog::EditOfferDialog(Mode mode, const QString &strCert,  const QStri
 		ui->qtyEdit->setText("1");
 		ui->qtyEdit->setEnabled(false);
 		
-		ui->currencyDisclaimer->setText(tr("<font color='blue'>You will receive payment in Syscoin equivalent to the Market-value of the currency you have selected.</font>"));
 		int index = ui->categoryEdit->findText(strCategory);
 		if(index == -1)
 			index = ui->categoryEdit->findText(tr("certificates"));

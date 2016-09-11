@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>482</width>
-    <height>584</height>
+    <height>641</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -27,19 +27,6 @@
        <property name="horizontalSpacing">
         <number>12</number>
        </property>
-       <item row="6" column="1">
-        <spacer name="verticalSpacer">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>20</width>
-           <height>40</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
        <item row="0" column="0">
         <widget class="QLabel" name="offerLabel">
          <property name="text">
@@ -47,41 +34,8 @@
          </property>
         </widget>
        </item>
-       <item row="0" column="1">
-        <widget class="QLineEdit" name="offerEdit"/>
-       </item>
-       <item row="3" column="1">
-        <widget class="QLineEdit" name="priceEdit"/>
-       </item>
-       <item row="4" column="1">
-        <widget class="QLineEdit" name="qtyEdit"/>
-       </item>
-       <item row="5" column="1">
-        <widget class="QPlainTextEdit" name="descriptionEdit"/>
-       </item>
        <item row="1" column="1">
         <widget class="QLineEdit" name="nameEdit"/>
-       </item>
-       <item row="3" column="0">
-        <widget class="QLabel" name="priceLabel">
-         <property name="text">
-          <string>Price:</string>
-         </property>
-        </widget>
-       </item>
-       <item row="4" column="0">
-        <widget class="QLabel" name="qtyLabel">
-         <property name="text">
-          <string>Quantity:</string>
-         </property>
-        </widget>
-       </item>
-       <item row="5" column="0">
-        <widget class="QLabel" name="label_7">
-         <property name="text">
-          <string>Description:</string>
-         </property>
-        </widget>
        </item>
        <item row="1" column="0">
         <widget class="QLabel" name="label_6">
@@ -104,6 +58,82 @@
          </property>
         </widget>
        </item>
+       <item row="3" column="0">
+        <widget class="QLabel" name="priceLabel">
+         <property name="text">
+          <string>Price:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QLineEdit" name="offerEdit"/>
+       </item>
+       <item row="3" column="1">
+        <widget class="QLineEdit" name="priceEdit"/>
+       </item>
+       <item row="4" column="0">
+        <widget class="QLabel" name="qtyLabel">
+         <property name="text">
+          <string>Quantity:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="1">
+        <widget class="QLineEdit" name="qtyEdit"/>
+       </item>
+       <item row="8" column="1">
+        <widget class="QPlainTextEdit" name="descriptionEdit"/>
+       </item>
+       <item row="9" column="1">
+        <spacer name="verticalSpacer">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="8" column="0">
+        <widget class="QLabel" name="label_7">
+         <property name="text">
+          <string>Description:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="0">
+        <widget class="QLabel" name="currencyLabel">
+         <property name="text">
+          <string>Currency:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="1">
+        <widget class="QLabel" name="currencyDisclaimer">
+         <property name="text">
+          <string/>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="1">
+        <widget class="QComboBox" name="currencyEdit"/>
+       </item>
+       <item row="7" column="1">
+        <widget class="QComboBox" name="certEdit"/>
+       </item>
+       <item row="7" column="0">
+        <widget class="QLabel" name="certLabel">
+         <property name="text">
+          <string>Certificate:</string>
+         </property>
+        </widget>
+       </item>
       </layout>
      </widget>
      <widget class="QWidget" name="tab_advanced">
@@ -111,6 +141,9 @@
        <string>&amp;Advanced</string>
       </attribute>
       <layout class="QFormLayout" name="formLayout_2">
+       <property name="fieldGrowthPolicy">
+        <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+       </property>
        <item row="0" column="0">
         <widget class="QLabel" name="aliasLabel">
          <property name="text">
@@ -156,50 +189,16 @@
         </widget>
        </item>
        <item row="6" column="0">
-        <widget class="QLabel" name="currencyLabel">
-         <property name="text">
-          <string>Currency:</string>
-         </property>
-        </widget>
-       </item>
-       <item row="6" column="1">
-        <widget class="QComboBox" name="currencyEdit">
-         <property name="editable">
-          <bool>false</bool>
-         </property>
-        </widget>
-       </item>
-       <item row="7" column="1">
-        <widget class="QLabel" name="currencyDisclaimer">
-         <property name="text">
-          <string/>
-         </property>
-         <property name="wordWrap">
-          <bool>true</bool>
-         </property>
-        </widget>
-       </item>
-       <item row="8" column="0">
-        <widget class="QLabel" name="certLabel">
-         <property name="text">
-          <string>Certificate:</string>
-         </property>
-        </widget>
-       </item>
-       <item row="8" column="1">
-        <widget class="QComboBox" name="certEdit"/>
-       </item>
-       <item row="9" column="0">
         <widget class="QLabel" name="label_12">
          <property name="text">
           <string>Private:</string>
          </property>
         </widget>
        </item>
-       <item row="9" column="1">
+       <item row="6" column="1">
         <widget class="QComboBox" name="privateEdit"/>
        </item>
-       <item row="10" column="1">
+       <item row="7" column="1">
         <widget class="QLabel" name="privateDisclaimer">
          <property name="text">
           <string/>
@@ -209,17 +208,17 @@
          </property>
         </widget>
        </item>
-       <item row="11" column="0">
+       <item row="8" column="0">
         <widget class="QLabel" name="label_11">
          <property name="text">
           <string>Accept BTC Only:</string>
          </property>
         </widget>
        </item>
-       <item row="11" column="1">
+       <item row="8" column="1">
         <widget class="QComboBox" name="acceptBTCOnlyEdit"/>
        </item>
-       <item row="12" column="1">
+       <item row="9" column="1">
         <widget class="QLabel" name="btcOnlyDisclaimer">
          <property name="text">
           <string/>
@@ -229,14 +228,14 @@
          </property>
         </widget>
        </item>
-       <item row="13" column="0">
+       <item row="10" column="0">
         <widget class="QLabel" name="label">
          <property name="text">
           <string>Safe Search:</string>
          </property>
         </widget>
        </item>
-       <item row="13" column="1">
+       <item row="10" column="1">
         <widget class="QComboBox" name="safeSearchEdit">
          <item>
           <property name="text">
@@ -250,7 +249,7 @@
          </item>
         </widget>
        </item>
-       <item row="14" column="1">
+       <item row="11" column="1">
         <widget class="QLabel" name="safeSearchDisclaimer">
          <property name="text">
           <string/>
@@ -260,17 +259,17 @@
          </property>
         </widget>
        </item>
-       <item row="15" column="0">
+       <item row="12" column="0">
         <widget class="QLabel" name="label_2">
          <property name="text">
           <string>Geolocation:</string>
          </property>
         </widget>
        </item>
-       <item row="15" column="1">
+       <item row="12" column="1">
         <widget class="QLineEdit" name="geoLocationEdit"/>
        </item>
-       <item row="16" column="1">
+       <item row="13" column="1">
         <spacer name="verticalSpacer_2">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
