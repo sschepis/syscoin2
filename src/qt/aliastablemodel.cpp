@@ -353,15 +353,15 @@ QVariant AliasTableModel::data(const QModelIndex &index, int role) const
         case SafeSearch:
             return rec->safesearch;
         case RatingAsBuyer:
-            return QVariant::fromValue(StarRating(rec->buyer_rating));
+            return rec->buyer_rating + " " + tr("Stars");
         case RatingCountAsBuyer:
             return rec->buyer_ratingcount;
         case RatingAsSeller:
-            return QVariant::fromValue(StarRating(rec->seller_rating));
+            return rec->seller_rating  + " " + tr("Stars");
         case RatingCountAsSeller:
             return rec->seller_ratingcount;
         case RatingAsArbiter:
-            return QVariant::fromValue(StarRating(rec->arbiter_rating));
+            return rec->arbiter_rating  + " " + tr("Stars");
         case RatingCountAsArbiter:
             return rec->arbiter_ratingcount;
         }
