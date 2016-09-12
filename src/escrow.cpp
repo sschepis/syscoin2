@@ -694,6 +694,23 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 									}
 								}
 							}
+							// go through the linked offers, if any, and update the linked offer qty based on the this qty
+							for(unsigned int i=0;i<dbOffer.offerLinks.size();i++) {
+								vector<COffer> myVtxPos;	
+								if (pofferdb->ExistsOffer(dbOffer.offerLinks[i])) {
+									if (pofferdb->ReadOffer(dbOffer.offerLinks[i], myVtxPos))
+									{
+										COffer offerLink = myVtxPos.back();					
+										offerLink.nQty = nQty;	
+										offerLink.PutToOfferList(myVtxPos);
+										if (!dontaddtodb && !pofferdb->WriteOffer(dbOffer.offerLinks[i], myVtxPos))
+										{
+											errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4043a - " + _("Failed to write to offer link to DB");		
+											return error(errorMessage.c_str());
+										}
+									}
+								}
+							}
 							dbOffer.nQty = nQty;
 							if(dbOffer.nQty < 0)
 								dbOffer.nQty = 0;
@@ -866,6 +883,23 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 									}
 								}
 							}							
+						}
+					}
+					// go through the linked offers, if any, and update the linked offer qty based on the this qty
+					for(unsigned int i=0;i<dbOffer.offerLinks.size();i++) {
+						vector<COffer> myVtxPos;	
+						if (pofferdb->ExistsOffer(dbOffer.offerLinks[i])) {
+							if (pofferdb->ReadOffer(dbOffer.offerLinks[i], myVtxPos))
+							{
+								COffer offerLink = myVtxPos.back();					
+								offerLink.nQty = nQty;	
+								offerLink.PutToOfferList(myVtxPos);
+								if (!dontaddtodb && !pofferdb->WriteOffer(dbOffer.offerLinks[i], myVtxPos))
+								{
+									errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4058a - " + _("Failed to write to offer link to DB");		
+									return error(errorMessage.c_str());
+								}
+							}
 						}
 					}
 					dbOffer.nQty = nQty;
