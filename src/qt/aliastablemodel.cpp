@@ -354,21 +354,21 @@ QVariant AliasTableModel::data(const QModelIndex &index, int role) const
             return rec->safesearch;
         case RatingAsBuyer:
 			
-			if(rec->buyer_ratingcount <= 0)
+			if(rec->buyer_ratingcount != 1)
 				ratingStr = tr("Rating");
 			else
 				ratingStr = tr("Ratings");
 			return QString::number(rec->buyer_rating) + " " + tr("Stars") + "(" + QString::number(rec->buyer_ratingcount) + " " +  ratingStr + ")";
         case RatingAsSeller:
 			
-			if(rec->seller_ratingcount <= 0)
+			if(rec->seller_ratingcount != 1)
 				ratingStr = tr("Rating");
 			else
 				ratingStr = tr("Ratings");
 			return QString::number(rec->seller_rating) + " " + tr("Stars") + "(" + QString::number(rec->seller_ratingcount) + " " + ratingStr + ")";
         case RatingAsArbiter:
 			
-			if(rec->arbiter_ratingcount <= 0)
+			if(rec->arbiter_ratingcount != 1)
 				ratingStr = tr("Rating");
 			else
 				ratingStr = tr("Ratings");
