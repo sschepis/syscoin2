@@ -328,6 +328,7 @@ int AliasTableModel::columnCount(const QModelIndex &parent) const
 
 QVariant AliasTableModel::data(const QModelIndex &index, int role) const
 {
+	QString ratingStr;
     if(!index.isValid())
         return QVariant();
 
@@ -352,21 +353,21 @@ QVariant AliasTableModel::data(const QModelIndex &index, int role) const
         case SafeSearch:
             return rec->safesearch;
         case RatingAsBuyer:
-			QString ratingStr;
+			
 			if(rec->buyer_ratingcount <= 0)
 				ratingStr = tr("Rating");
 			else
 				ratingStr = tr("Ratings");
 			return QString::number(rec->buyer_rating) + " " + tr("Stars") + " (" + QString::number(rec->buyer_ratingcount) + ratingStr + ")";
         case RatingAsSeller:
-			QString ratingStr;
+			
 			if(rec->seller_ratingcount <= 0)
 				ratingStr = tr("Rating");
 			else
 				ratingStr = tr("Ratings");
 			return QString::number(rec->seller_rating) + " " + tr("Stars") + " (" + QString::number(rec->seller_ratingcount) + ratingStr + ")";
         case RatingAsArbiter:
-			QString ratingStr;
+			
 			if(rec->arbiter_ratingcount <= 0)
 				ratingStr = tr("Rating");
 			else
