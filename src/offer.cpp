@@ -1152,10 +1152,15 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						}
 						else if(theOffer.nCommission < -entry.nDiscountPct)
 						{
-							errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 82 - " + _("This commision would put the offer price at a lower price than the discount you received as an affiliate");
+							errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 82 - " + _("This commission would put the offer price at a lower price than the discount you received as an affiliate");
 							theOffer.vchLinkOffer.clear();	
 						}
 					}	
+					else if(theOffer.nCommission < 0)
+					{
+						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 82 - " + _("Commission cannot be negative");
+						theOffer.vchLinkOffer.clear();	
+					}
 					if (!linkOffer.vchLinkOffer.empty())
 					{
 						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 83 - " + _("Cannot link to an offer that is already linked to another offer");
