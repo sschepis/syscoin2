@@ -761,11 +761,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			}
 			if(!theOffer.vchLinkOffer.empty())
 			{
-				if(theOffer.nCommission > 255)
-				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 24 - " + _("Commission must be less than 256");
-					return error(errorMessage.c_str());
-				}
 				if(theOffer.bOnlyAcceptBTC)
 				{
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 26 - " + _("Linked offer cannot accept BTC only");
@@ -1158,7 +1153,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					}	
 					else if(theOffer.nCommission < 0)
 					{
-						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 82 - " + _("Commission cannot be negative");
+						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 82a - " + _("Commission cannot be negative");
 						theOffer.vchLinkOffer.clear();	
 					}
 					if (!linkOffer.vchLinkOffer.empty())
