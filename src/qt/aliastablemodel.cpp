@@ -352,17 +352,26 @@ QVariant AliasTableModel::data(const QModelIndex &index, int role) const
         case SafeSearch:
             return rec->safesearch;
         case RatingAsBuyer:
-			return QString::number(rec->buyer_rating) + " " + tr("Stars");
-        case RatingCountAsBuyer:
-            return rec->buyer_ratingcount;
+			QString ratingStr;
+			if(rec->buyer_ratingcount <= 0)
+				ratingStr = tr("Rating");
+			else
+				ratingStr = tr("Ratings");
+			return QString::number(rec->buyer_rating) + " " + tr("Stars") + " (" + QString::number(rec->buyer_ratingcount) + ratingStr + ")";
         case RatingAsSeller:
-            return QString::number(rec->seller_rating)  + " " + tr("Stars");
-        case RatingCountAsSeller:
-            return rec->seller_ratingcount;
+			QString ratingStr;
+			if(rec->seller_ratingcount <= 0)
+				ratingStr = tr("Rating");
+			else
+				ratingStr = tr("Ratings");
+			return QString::number(rec->seller_rating) + " " + tr("Stars") + " (" + QString::number(rec->seller_ratingcount) + ratingStr + ")";
         case RatingAsArbiter:
-            return QString::number(rec->arbiter_rating)  + " " + tr("Stars");
-        case RatingCountAsArbiter:
-            return rec->arbiter_ratingcount;
+			QString ratingStr;
+			if(rec->arbiter_ratingcount <= 0)
+				ratingStr = tr("Rating");
+			else
+				ratingStr = tr("Ratings");
+			return QString::number(rec->arbiter_rating) + " " + tr("Stars") + " (" + QString::number(rec->arbiter_ratingcount) + ratingStr + ")";
         }
     }
     else if (role == TypeRole)
@@ -408,13 +417,7 @@ bool AliasTableModel::setData(const QModelIndex &index, const QVariant &value, i
                 editStatus = NO_CHANGES;
                 return false;
             }
-         case RatingCountAsBuyer:
-            // Do nothing, if old value == new value
-            if(rec->buyer_ratingcount == value.toInt())
-            {
-                editStatus = NO_CHANGES;
-                return false;
-            }               
+			break;              
          case RatingAsSeller:
             // Do nothing, if old value == new value
             if(rec->seller_rating == value.toInt())
@@ -422,13 +425,7 @@ bool AliasTableModel::setData(const QModelIndex &index, const QVariant &value, i
                 editStatus = NO_CHANGES;
                 return false;
             }
-         case RatingCountAsSeller:
-            // Do nothing, if old value == new value
-            if(rec->seller_ratingcount == value.toInt())
-            {
-                editStatus = NO_CHANGES;
-                return false;
-            } 
+			break;
         case RatingAsArbiter:
             // Do nothing, if old value == new value
             if(rec->arbiter_rating == value.toInt())
@@ -436,13 +433,7 @@ bool AliasTableModel::setData(const QModelIndex &index, const QVariant &value, i
                 editStatus = NO_CHANGES;
                 return false;
             }
-         case RatingCountAsArbiter:
-            // Do nothing, if old value == new value
-            if(rec->arbiter_ratingcount == value.toInt())
-            {
-                editStatus = NO_CHANGES;
-                return false;
-            } 
+			break;
         case ExpiresOn:
             // Do nothing, if old value == new value
             if(rec->expires_on == value.toString())

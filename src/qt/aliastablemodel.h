@@ -27,14 +27,11 @@ public:
 		ExpiresIn = 2,
 		Expired = 3,
 		RatingAsBuyer = 4,
-		RatingCountAsBuyer = 5,
-		RatingAsSeller = 6,
-		RatingCountAsSeller = 7,
-		RatingAsArbiter = 8,
-		RatingCountAsArbiter = 9,
-		SafeSearch = 10,
-		Value = 11,  /**< Alias value */
-		PrivValue = 12
+		RatingAsSeller = 5,
+		RatingAsArbiter = 6,
+		SafeSearch = 7,
+		Value = 8,  /**< Alias value */
+		PrivValue = 9
     };
 
     enum RoleIndex {
