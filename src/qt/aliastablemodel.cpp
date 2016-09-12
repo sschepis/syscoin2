@@ -358,21 +358,21 @@ QVariant AliasTableModel::data(const QModelIndex &index, int role) const
 				ratingStr = tr("Rating");
 			else
 				ratingStr = tr("Ratings");
-			return QString::number(rec->buyer_rating) + " " + tr("Stars") + " (" + QString::number(rec->buyer_ratingcount) + ratingStr + ")";
+			return QString::number(rec->buyer_rating) + " " + tr("Stars") + "(" + QString::number(rec->buyer_ratingcount) + " " +  ratingStr + ")";
         case RatingAsSeller:
 			
 			if(rec->seller_ratingcount <= 0)
 				ratingStr = tr("Rating");
 			else
 				ratingStr = tr("Ratings");
-			return QString::number(rec->seller_rating) + " " + tr("Stars") + " (" + QString::number(rec->seller_ratingcount) + ratingStr + ")";
+			return QString::number(rec->seller_rating) + " " + tr("Stars") + "(" + QString::number(rec->seller_ratingcount) + " " + ratingStr + ")";
         case RatingAsArbiter:
 			
 			if(rec->arbiter_ratingcount <= 0)
 				ratingStr = tr("Rating");
 			else
 				ratingStr = tr("Ratings");
-			return QString::number(rec->arbiter_rating) + " " + tr("Stars") + " (" + QString::number(rec->arbiter_ratingcount) + ratingStr + ")";
+			return QString::number(rec->arbiter_rating) + " " + tr("Stars") + "(" + QString::number(rec->arbiter_ratingcount) + " " + ratingStr + ")";
         }
     }
     else if (role == TypeRole)
