@@ -761,6 +761,11 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			}
 			if(!theOffer.vchLinkOffer.empty())
 			{
+				if(theOffer.nCommission > 100 || theOffer.nCommission < -90)
+				{
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 24 - " + _("Commission must between -90 and 100");
+					return error(errorMessage.c_str());
+				}
 				if(theOffer.bOnlyAcceptBTC)
 				{
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 26 - " + _("Linked offer cannot accept BTC only");
@@ -845,7 +850,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			}
 			if(!theOffer.linkWhitelist.entries.empty() && (theOffer.linkWhitelist.entries[0].nDiscountPct < -99 || theOffer.linkWhitelist.entries[0].nDiscountPct > 99) && theOffer.linkWhitelist.entries[0].nDiscountPct != 127)
 			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 41 - " + _("Invalid discount amount, must be within -99 and 99 or 127 if removing an affiliate");
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 41 - " + _("Discount must be between -99 and 99");
 				return error(errorMessage.c_str());
 			}
 
