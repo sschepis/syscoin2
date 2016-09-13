@@ -30,17 +30,15 @@ public:
 	std::vector<unsigned char> vchOffer;
 	std::vector<unsigned char> vchPaymentMessage;
 	std::vector<unsigned char> rawTx;
-	std::vector<unsigned char> vchOfferAcceptLink;
 	std::vector<unsigned char> vchBuyerAlias;
 	std::vector<unsigned char> vchLinkAlias;
 	std::vector<CFeedback> feedback;
     uint256 txHash;
 	uint256 escrowInputTxHash;
     uint64_t nHeight;
+	uint64_t nAcceptHeight;
 	unsigned int nQty;
 	unsigned int op;
-	bool bWhitelist;
-	int64_t nPricePerUnit;
 	void ClearEscrow()
 	{
 		feedback.clear();
@@ -50,7 +48,6 @@ public:
 		vchLinkAlias.clear();
 		vchOffer.clear();
 		vchPaymentMessage.clear();
-		vchOfferAcceptLink.clear();
 	}
     CEscrow() {
         SetNull();
@@ -69,18 +66,16 @@ public:
         READWRITE(vchOffer);
 		READWRITE(vchPaymentMessage);
 		READWRITE(rawTx);
-		READWRITE(vchOfferAcceptLink);
 		READWRITE(txHash);
 		READWRITE(escrowInputTxHash);
 		READWRITE(VARINT(nHeight));
+		READWRITE(VARINT(nAcceptHeight));
 		READWRITE(VARINT(nQty));
-		READWRITE(VARINT(nPricePerUnit));
 		READWRITE(VARINT(op));
         READWRITE(vchBuyerAlias);	
 		READWRITE(vchEscrow);
 		READWRITE(vchLinkAlias);
 		READWRITE(feedback);
-		READWRITE(bWhitelist);
 	}
 
     friend bool operator==(const CEscrow &a, const CEscrow &b) {
@@ -92,17 +87,15 @@ public:
         && a.vchOffer == b.vchOffer
 		&& a.vchPaymentMessage == b.vchPaymentMessage
 		&& a.rawTx == b.rawTx
-		&& a.vchOfferAcceptLink == b.vchOfferAcceptLink
 		&& a.txHash == b.txHash
 		&& a.escrowInputTxHash == b.escrowInputTxHash
 		&& a.nHeight == b.nHeight
+		&& a.nAcceptHeight == b.nAcceptHeight
 		&& a.nQty == b.nQty
 		&& a.vchLinkAlias == b.vchLinkAlias
-		&& a.nPricePerUnit == b.nPricePerUnit
 		&& a.vchEscrow == b.vchEscrow
 		&& a.op == b.op
 		&& a.feedback == b.feedback
-		&& a.bWhitelist == b.bWhitelist
         );
     }
 
@@ -114,17 +107,15 @@ public:
         vchOffer = b.vchOffer;
 		vchPaymentMessage = b.vchPaymentMessage;
 		rawTx = b.rawTx;
-		vchOfferAcceptLink = b.vchOfferAcceptLink;
 		txHash = b.txHash;
 		vchLinkAlias = b.vchLinkAlias;
 		escrowInputTxHash = b.escrowInputTxHash;
 		nHeight = b.nHeight;
+		nAcceptHeight = b.nAcceptHeight;
 		nQty = b.nQty;
-		nPricePerUnit = b.nPricePerUnit;
 		vchEscrow = b.vchEscrow;
 		op = b.op;
 		feedback = b.feedback;
-		bWhitelist = b.bWhitelist;
         return *this;
     }
 
@@ -132,8 +123,8 @@ public:
         return !(a == b);
     }
 
-    void SetNull() { bWhitelist = false; op = 0; vchLinkAlias.clear(); feedback.clear(); vchEscrow.clear(); nHeight = 0; txHash.SetNull(); escrowInputTxHash.SetNull(); nQty = 0; nPricePerUnit = 0; vchBuyerAlias.clear(); vchArbiterAlias.clear(); vchSellerAlias.clear(); vchRedeemScript.clear(); vchOffer.clear(); rawTx.clear(); vchOfferAcceptLink.clear(); vchPaymentMessage.clear();}
-    bool IsNull() const { return (!bWhitelist && vchLinkAlias.empty() && feedback.empty() && op == 0 && vchEscrow.empty() && txHash.IsNull() && escrowInputTxHash.IsNull() && nHeight == 0 && nQty == 0 && nPricePerUnit == 0 && vchBuyerAlias.empty() && vchArbiterAlias.empty() && vchSellerAlias.empty()); }
+    void SetNull() { op = 0; vchLinkAlias.clear(); feedback.clear(); vchEscrow.clear(); nHeight = 0; txHash.SetNull(); escrowInputTxHash.SetNull(); nQty = 0; vchBuyerAlias.clear(); vchArbiterAlias.clear(); vchSellerAlias.clear(); vchRedeemScript.clear(); vchOffer.clear(); rawTx.clear(); vchPaymentMessage.clear();}
+    bool IsNull() const { return (vchLinkAlias.empty() && feedback.empty() && op == 0 && vchEscrow.empty() && txHash.IsNull() && escrowInputTxHash.IsNull() && nHeight == 0 && nQty == 0 && vchBuyerAlias.empty() && vchArbiterAlias.empty() && vchSellerAlias.empty()); }
     bool UnserializeFromTx(const CTransaction &tx);
 	bool UnserializeFromData(const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash);
 	const std::vector<unsigned char> Serialize();

@@ -26,7 +26,6 @@ extern bool IsSys21Fork(const uint64_t& nHeight);
 class COfferAccept {
 public:
 	std::vector<unsigned char> vchAcceptRand;
-	std::vector<unsigned char> vchEscrow;
 	uint256 txHash;
 	uint64_t nHeight;
 	uint64_t nAcceptHeight;
@@ -34,8 +33,6 @@ public:
 	float nPrice;
 	uint256 txBTCId;
 	std::vector<unsigned char> vchBuyerAlias;	
-	std::vector<unsigned char> vchLinkAccept;	
-	std::vector<unsigned char> vchLinkOffer;
 	std::vector<unsigned char> vchMessage;
 	std::vector<CFeedback> feedback;
 	COfferAccept() {
@@ -53,10 +50,7 @@ public:
     	READWRITE(nPrice);
 		READWRITE(vchBuyerAlias);	
 		READWRITE(txBTCId);	
-		READWRITE(vchEscrow);
-		READWRITE(feedback);
-		READWRITE(vchLinkAccept);
-		READWRITE(vchLinkOffer);	
+		READWRITE(feedback);	
 		READWRITE(vchMessage);
 	}
 
@@ -70,10 +64,7 @@ public:
         && a.nPrice == b.nPrice
 		&& a.vchBuyerAlias == b.vchBuyerAlias
 		&& a.txBTCId == b.txBTCId
-		&& a.vchEscrow == b.vchEscrow
 		&& a.feedback == b.feedback
-		&& a.vchLinkAccept == b.vchLinkAccept
-		&& a.vchLinkOffer == b.vchLinkOffer
 		&& a.vchMessage == b.vchMessage
         );
     }
@@ -87,10 +78,7 @@ public:
         nPrice = b.nPrice;
 		vchBuyerAlias = b.vchBuyerAlias;
 		txBTCId = b.txBTCId;
-		vchEscrow = b.vchEscrow;
 		feedback = b.feedback;
-		vchLinkAccept = b.vchLinkAccept;
-		vchLinkOffer = b.vchLinkOffer;
 		vchMessage = b.vchMessage;
         return *this;
     }
@@ -99,14 +87,14 @@ public:
         return !(a == b);
     }
 
-    void SetNull() { vchMessage.clear(); vchLinkAccept.clear(); vchLinkOffer.clear(); feedback.clear(); vchEscrow.clear(); vchAcceptRand.clear(); nHeight = nAcceptHeight = nPrice = nQty = 0; txHash.SetNull(); txBTCId.SetNull(); vchBuyerAlias.clear();}
-    bool IsNull() const { return (vchMessage.empty() && vchLinkAccept.empty() && vchLinkOffer.empty() && feedback.empty() && vchEscrow.empty() && vchAcceptRand.empty() && txHash.IsNull() && nHeight == 0 && nAcceptHeight == 0 &&nPrice == 0 && nQty == 0 && txBTCId.IsNull() && vchBuyerAlias.empty()); }
+    void SetNull() { vchMessage.clear(); feedback.clear(); vchAcceptRand.clear(); nHeight = nAcceptHeight = nPrice = nQty = 0; txHash.SetNull(); txBTCId.SetNull(); vchBuyerAlias.clear();}
+    bool IsNull() const { return (vchMessage.empty() && feedback.empty() && vchAcceptRand.empty() && txHash.IsNull() && nHeight == 0 && nAcceptHeight == 0 &&nPrice == 0 && nQty == 0 && txBTCId.IsNull() && vchBuyerAlias.empty()); }
 
 };
 class COfferLinkWhitelistEntry {
 public:
 	std::vector<unsigned char> aliasLinkVchRand;
-	char nDiscountPct;
+	unsigned char nDiscountPct;
 	COfferLinkWhitelistEntry() {
 		SetNull();
 	}
@@ -288,7 +276,7 @@ public:
 		if(price==0 && !accept.IsNull())
 			return accept.nPrice;
 		float fDiscount = entry.nDiscountPct;
-		if(entry.nDiscountPct < -99 || entry.nDiscountPct > 99)
+		if(entry.nDiscountPct > 99)
 			fDiscount = 0;
 		// fMarkup is a percentage, commission minus discount
 		float fMarkup = nCommission - fDiscount;

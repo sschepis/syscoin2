@@ -441,12 +441,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4012 - " + _("Cannot leave feedback in escrow activation");
 					return error(errorMessage.c_str());
 				}
-				if(theEscrow.bWhitelist && !IsAliasOp(prevAliasOp))
-				{
-					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4013 - " + _("Alias input missing for whitelist escrow activation");
-					return error(errorMessage.c_str());
-				}
-				if(IsAliasOp(prevAliasOp) && (theEscrow.bWhitelist == false || vvchPrevAliasArgs[0] != theEscrow.vchBuyerAlias))
+				if(IsAliasOp(prevAliasOp) && vvchPrevAliasArgs[0] != theEscrow.vchBuyerAlias)
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4014 - " + _("Whitelist guid mismatch");
 					return error(errorMessage.c_str());
@@ -1064,6 +1059,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 		vector<COffer> offerTmpVtxPos;
 		if (!GetTxAndVtxOfOffer( theOffer.vchLinkOffer, linkedOffer, tmpTx, offerTmpVtxPos, true))
 			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4072 - " + _("Trying to accept a linked offer but could not find parent offer"));
+
 		CAliasIndex theLinkedAlias;
 		CTransaction txLinkedAlias;
 		if (!GetTxOfAlias( linkedOffer.vchAlias, theLinkedAlias, txLinkedAlias, true))
@@ -1086,7 +1082,6 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 			// make sure its in your wallet (you control this alias)
 			if (IsSyscoinTxMine(buyeraliastx, "alias")) 
 			{
-				bWhitelist = true;
 				wtxAliasIn = pwalletMain->GetWalletTx(buyeraliastx.GetHash());		
 				scriptPubKeyAliasOrig = GetScriptForDestination(buyerKey.GetID());
 				scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << buyeralias.vchAlias  << buyeralias.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
@@ -1189,9 +1184,8 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	newEscrow.vchPaymentMessage = vchFromString(strCipherText);
 	newEscrow.nQty = nQty;
 	newEscrow.escrowInputTxHash = escrowWtx.GetHash();
-	newEscrow.nPricePerUnit = nPricePerUnit;
 	newEscrow.nHeight = chainActive.Tip()->nHeight;
-	newEscrow.bWhitelist = bWhitelist;
+	newEscrow.nAcceptHeight = chainActive.Tip()->nHeight;
 
 	const vector<unsigned char> &data = newEscrow.Serialize();
     uint256 hash = Hash(data.begin(), data.end());
@@ -1278,6 +1272,28 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
     CTransaction fundingTx;
 	if (!GetSyscoinTransaction(vtxPos.front().nHeight, escrow.escrowInputTxHash, fundingTx, Params().GetConsensus()))
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4086 - " + _("Failed to find escrow transaction"));
+	bool foundWhitelistAlias = false;
+	const COutPoint *prevOutput = NULL;
+	CCoins prevCoins;
+	// Strict check - bug disallowed
+	for (unsigned int i = 0; i < fundingTx.vin.size(); i++) {
+		vector<vector<unsigned char> > vvch;
+		int pop;
+		prevOutput = &tx.vin[i].prevout;	
+		if(!prevOutput)
+			continue;
+		// ensure inputs are unspent when doing consensus check to add to block
+		if(!inputs.GetCoins(prevOutput->hash, prevCoins))
+			continue;
+		if(prevCoins.vout.size() <= prevOutput->n || !IsSyscoinScript(prevCoins.vout[prevOutput->n].scriptPubKey, pop, vvch))
+			continue;
+	
+		if (IsAliasOp(pop) && escrow.vchBuyerAlias == vvch[0])
+		{
+			foundWhitelistAlias = true; 
+		}
+	}
+
 
 	CAliasIndex arbiterAlias, arbiterAliasLatest, buyerAlias, buyerAliasLatest, sellerAlias, sellerAliasLatest;
 	vector<CAliasIndex> aliasVtxPos;
@@ -1341,18 +1357,51 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	}
 	if(foundSellerKey)
 		return tableRPC.execute("escrowclaimrelease", params);
-    if (op != OP_ESCROW_ACTIVATE)
-        throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4089 - " + _("Release can only happen on an activated escrow"));
 	int nOutMultiSig = 0;
 	CScript redeemScriptPubKey = CScript(escrow.vchRedeemScript.begin(), escrow.vchRedeemScript.end());
+
+	COfferLinkWhitelistEntry foundEntry;
+	COffer theOffer, linkOffer;
+	CTransaction txOffer;
+	vector<COffer> offerVtxPos;
+	if (!GetTxAndVtxOfOffer( vchOffer, theOffer, txOffer, offerVtxPos, true))
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4068 - " + _("Could not find an offer with this identifier"));
+	theOffer.nHeight = vtxPos.front().nAcceptHeight;
+	theOffer.GetOfferFromList(offerVtxPos);
+	float priceAtTimeOfAccept;
+	float commissionAtTimeOfAccept;		
+	if(theOffer.vchLinkOffer.empty())
+	{
+		vector<COffer> offerLinkVtxPos;
+		if (!GetTxAndVtxOfOffer( theOffer.vchLinkOffer, linkOffer, txOffer, offerLinkVtxPos, true))
+			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4068 - " + _("Could not find an offer with this identifier"));
+		linkOffer.nHeight = vtxPos.front().nAcceptHeight;
+		linkOffer.GetOfferFromList(offerLinkVtxPos);
+		// only apply whitelist discount if buyer had used his alias as input into the escrow
+		if(foundWhitelistAlias)
+			theOffer.linkWhitelist.GetLinkEntryByHash(buyerAlias.vchAlias, foundEntry);
+		priceAtTimeOfAccept = theOffer.GetPrice(foundEntry);
+		commissionAtTimeOfAccept = 0;
+	}
+	else 
+	{
+		linkOffer.linkWhitelist.GetLinkEntryByHash(theOffer.vchAlias, foundEntry);
+		priceAtTimeOfAccept = linkOffer.GetPrice(foundEntry);
+		commissionAtTimeOfAccept = theOffer.GetPrice() - priceAtTimeOfAccept;
+	}
+
 	CRecipient recipientFee;
 	CreateRecipient(redeemScriptPubKey, recipientFee);
-	int64_t nExpectedAmount = escrow.nPricePerUnit*escrow.nQty;
+	int64_t nExpectedAmount = priceAtTimeOfAccept*escrow.nQty;
+	int64_t nExpectedCommissionAmount = commissionAtTimeOfAccept*escrow.nQty;
 	int64_t nEscrowFee = GetEscrowArbiterFee(nExpectedAmount);
-	int64_t nExpectedAmountWithFee = nExpectedAmount+nEscrowFee+recipientFee.nAmount;
+	int64_t nEscrowTotal = nExpectedAmount + nEscrowFee + recipientFee.nAmount;
+	if(!theOffer.vchLinkOffer.empty() && !foundEntry.IsNull())
+		nEscrowTotal += nExpectedCommissionAmount;
+
 	for(unsigned int i=0;i<fundingTx.vout.size();i++)
 	{
-		if(fundingTx.vout[i].nValue == nExpectedAmountWithFee)
+		if(fundingTx.vout[i].nValue == nEscrowTotal)
 		{
 			nOutMultiSig = i;
 			break;
@@ -1361,7 +1410,12 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	int64_t nAmount = fundingTx.vout[nOutMultiSig].nValue;
 	string strEscrowScriptPubKey = HexStr(fundingTx.vout[nOutMultiSig].scriptPubKey.begin(), fundingTx.vout[nOutMultiSig].scriptPubKey.end());
 	if(nAmount != nExpectedAmountWithFee)
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4090 - " + _("Expected amount of escrow does not match what is held in escrow"));
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4088 - " + _("Expected amount of escrow does not match what is held in escrow"));
+    if (op != OP_ESCROW_ACTIVATE)
+        throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4089 - " + _("Release can only happen on an activated escrow"));
+
+	string strEscrowScriptPubKey = HexStr(fundingTx.vout[nOutMultiSig].scriptPubKey.begin(), fundingTx.vout[nOutMultiSig].scriptPubKey.end());
+
 
 	string strPrivateKey ;
 	bool arbiterSigning = false;
@@ -1411,18 +1465,7 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 		vchLinkAlias = buyerAliasLatest.vchAlias;
 
 	}
-	// ensure that all is ok before trying to do the offer accept
-	UniValue arrayAcceptParams(UniValue::VARR);
-	arrayAcceptParams.push_back(stringFromVch(vchEscrow));
-	arrayAcceptParams.push_back("1");
-	try
-	{
-		tableRPC.execute("escrowcomplete", arrayAcceptParams);
-	}
-	catch (UniValue& objError)
-	{
-		throw runtime_error(find_value(objError, "message").get_str());
-	}
+
 
 	// create a raw tx that sends escrow amount to seller and collateral to buyer
     // inputs buyer txHash
@@ -1570,30 +1613,69 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 	if (!GetSyscoinTransaction(vtxPos.front().nHeight, escrow.escrowInputTxHash, fundingTx, Params().GetConsensus()))
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4100 - " + _("Failed to find escrow transaction"));
 
-	// make sure you can actually accept it before going through claim
-	UniValue arrayAcceptParamsCheck(UniValue::VARR);
-	arrayAcceptParamsCheck.push_back(stringFromVch(vchEscrow));
-	arrayAcceptParamsCheck.push_back("1");
-	try
-	{
-		tableRPC.execute("escrowcomplete", arrayAcceptParamsCheck);
+	bool foundWhitelistAlias = false;
+	const COutPoint *prevOutput = NULL;
+	CCoins prevCoins;
+	// Strict check - bug disallowed
+	for (unsigned int i = 0; i < fundingTx.vin.size(); i++) {
+		vector<vector<unsigned char> > vvch;
+		int pop;
+		prevOutput = &tx.vin[i].prevout;	
+		if(!prevOutput)
+			continue;
+		if(!inputs.GetCoins(prevOutput->hash, prevCoins))
+			continue;
+		if(prevCoins.vout.size() <= prevOutput->n || !IsSyscoinScript(prevCoins.vout[prevOutput->n].scriptPubKey, pop, vvch))
+			continue;
+	
+		if (IsAliasOp(pop) && escrow.vchBuyerAlias == vvch[0])
+		{
+			foundWhitelistAlias = true; 
+		}
 	}
-	catch (UniValue& objError)
-	{
-		throw runtime_error(find_value(objError, "message").get_str());
-	}
-
-
  	int nOutMultiSig = 0;
-	CScript redeemScriptPubKey = CScript(escrow.vchRedeemScript.begin(), escrow.vchRedeemScript.end());
+	COfferLinkWhitelistEntry foundEntry;
+	COffer theOffer, linkOffer;
+	CTransaction txOffer;
+	vector<COffer> offerVtxPos;
+	if (!GetTxAndVtxOfOffer( vchOffer, theOffer, txOffer, offerVtxPos, true))
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4068 - " + _("Could not find an offer with this identifier"));
+	theOffer.nHeight = vtxPos.front().nAcceptHeight;
+	theOffer.GetOfferFromList(offerVtxPos);
+	float priceAtTimeOfAccept;
+	float commissionAtTimeOfAccept;		
+	if(theOffer.vchLinkOffer.empty())
+	{
+		vector<COffer> offerLinkVtxPos;
+		if (!GetTxAndVtxOfOffer( theOffer.vchLinkOffer, linkOffer, txOffer, offerLinkVtxPos, true))
+			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4068 - " + _("Could not find an offer with this identifier"));
+		linkOffer.nHeight = vtxPos.front().nAcceptHeight;
+		linkOffer.GetOfferFromList(offerLinkVtxPos);
+		// only apply whitelist discount if buyer had used his alias as input into the escrow
+		if(foundWhitelistAlias)
+			theOffer.linkWhitelist.GetLinkEntryByHash(buyerAlias.vchAlias, foundEntry);
+		priceAtTimeOfAccept = theOffer.GetPrice(foundEntry);
+		commissionAtTimeOfAccept = 0;
+	}
+	else 
+	{
+		linkOffer.linkWhitelist.GetLinkEntryByHash(theOffer.vchAlias, foundEntry);
+		priceAtTimeOfAccept = linkOffer.GetPrice(foundEntry);
+		commissionAtTimeOfAccept = theOffer.GetPrice() - priceAtTimeOfAccept;
+	}
+
 	CRecipient recipientFee;
 	CreateRecipient(redeemScriptPubKey, recipientFee);
-	int64_t nExpectedAmount = escrow.nPricePerUnit*escrow.nQty;
+	int64_t nExpectedAmount = priceAtTimeOfAccept*escrow.nQty;
+	int64_t nExpectedCommissionAmount = commissionAtTimeOfAccept*escrow.nQty;
 	int64_t nEscrowFee = GetEscrowArbiterFee(nExpectedAmount);
-	int64_t nExpectedAmountWithFee = nExpectedAmount+nEscrowFee+recipientFee.nAmount;
+	int64_t nEscrowTotal = nExpectedAmount + nEscrowFee + recipientFee.nAmount;
+	if(!theOffer.vchLinkOffer.empty() && !foundEntry.IsNull())
+		nEscrowTotal += nExpectedCommissionAmount;
+
 	for(unsigned int i=0;i<fundingTx.vout.size();i++)
 	{
-		if(fundingTx.vout[i].nValue == nExpectedAmountWithFee)
+		if(fundingTx.vout[i].nValue == nEscrowTotal)
 		{
 			nOutMultiSig = i;
 			break;
@@ -1714,9 +1796,9 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 	
 }
 UniValue escrowcomplete(const UniValue& params, bool fHelp) {
-    if (fHelp || params.size()  < 1 || params.size() > 2)
+    if (fHelp || params.size()  !=  1 )
         throw runtime_error(
-		"escrowcomplete <escrow guid> [justcheck]\n"
+		"escrowcomplete <escrow guid> \n"
                          "Accepts an offer that's in escrow, to complete the escrow process.\n"
                         + HelpRequiringPassphrase());
     // gather & validate inputs
@@ -1746,47 +1828,7 @@ UniValue escrowcomplete(const UniValue& params, bool fHelp) {
 			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4113 - " + _("This escrow is not in your wallet"));
 		
 	}
-	UniValue acceptParams(UniValue::VARR);
-	acceptParams.push_back(stringFromVch(escrow.vchBuyerAlias));
-	acceptParams.push_back(stringFromVch(escrow.vchOffer));
-	acceptParams.push_back(static_cast<ostringstream*>( &(ostringstream() << escrow.nQty) )->str());
-	acceptParams.push_back(stringFromVch(escrow.vchPaymentMessage));
-	acceptParams.push_back("");
-	acceptParams.push_back("");
-	acceptParams.push_back(tx.GetHash().GetHex());
-	acceptParams.push_back(justCheck);
-
-	UniValue res;
-	try
-	{
-		res = tableRPC.execute("offeraccept", acceptParams);
-	}
-	catch (UniValue& objError)
-	{
-		throw runtime_error(find_value(objError, "message").get_str());
-	}	
-	if (!res.isArray())
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4114 - " + _("Could not complete escrow transaction: Invalid response from offeraccept"));
-
-	const UniValue &arr = res.get_array();
-	uint256 acceptTxHash(uint256S(arr[0].get_str()));
-	const string &acceptGUID = arr[1].get_str();
-	const CWalletTx *wtxAcceptIn;
-	wtxAcceptIn = pwalletMain->GetWalletTx(acceptTxHash);
-	if(justCheck != "1")
-	{
-		if (wtxAcceptIn == NULL)
-			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4115 - " + _("Offer accept is not in your wallet"));
-		UniValue ret(UniValue::VARR);
-		ret.push_back(wtxAcceptIn->GetHash().GetHex());
-		return ret;
-	}
-	else
-	{
-		UniValue ret(UniValue::VARR);
-		ret.push_back("1");
-		return ret;
-	}
+	
 	
 }
 UniValue escrowrefund(const UniValue& params, bool fHelp) {
@@ -1826,7 +1868,26 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
     CTransaction fundingTx;
 	if (!GetSyscoinTransaction(vtxPos.front().nHeight, escrow.escrowInputTxHash, fundingTx, Params().GetConsensus()))
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4121 - " + _("Failed to find escrow transaction"));
-
+	bool foundWhitelistAlias = false;
+	const COutPoint *prevOutput = NULL;
+	CCoins prevCoins;
+	// Strict check - bug disallowed
+	for (unsigned int i = 0; i < fundingTx.vin.size(); i++) {
+		vector<vector<unsigned char> > vvch;
+		int pop;
+		prevOutput = &tx.vin[i].prevout;	
+		if(!prevOutput)
+			continue;
+		if(!inputs.GetCoins(prevOutput->hash, prevCoins))
+			continue;
+		if(prevCoins.vout.size() <= prevOutput->n || !IsSyscoinScript(prevCoins.vout[prevOutput->n].scriptPubKey, pop, vvch))
+			continue;
+	
+		if (IsAliasOp(pop) && escrow.vchBuyerAlias == vvch[0])
+		{
+			foundWhitelistAlias = true; 
+		}
+	}
 	CAliasIndex arbiterAlias, buyerAlias, sellerAlias, arbiterAliasLatest, buyerAliasLatest, sellerAliasLatest;
 	vector<CAliasIndex> aliasVtxPos;
 	CTransaction arbiteraliastx, buyeraliastx, selleraliastx;
@@ -1888,14 +1949,48 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 		 throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4124 - " + _("Refund can only happen on an activated escrow"));
 	int nOutMultiSig = 0;
 	CScript redeemScriptPubKey = CScript(escrow.vchRedeemScript.begin(), escrow.vchRedeemScript.end());
+	COfferLinkWhitelistEntry foundEntry;
+	COffer theOffer, linkOffer;
+	CTransaction txOffer;
+	vector<COffer> offerVtxPos;
+	if (!GetTxAndVtxOfOffer( vchOffer, theOffer, txOffer, offerVtxPos, true))
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4068 - " + _("Could not find an offer with this identifier"));
+	theOffer.nHeight = vtxPos.front().nAcceptHeight;
+	theOffer.GetOfferFromList(offerVtxPos);
+	float priceAtTimeOfAccept;
+	float commissionAtTimeOfAccept;		
+	if(theOffer.vchLinkOffer.empty())
+	{
+		vector<COffer> offerLinkVtxPos;
+		if (!GetTxAndVtxOfOffer( theOffer.vchLinkOffer, linkOffer, txOffer, offerLinkVtxPos, true))
+			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4068 - " + _("Could not find an offer with this identifier"));
+		linkOffer.nHeight = vtxPos.front().nAcceptHeight;
+		linkOffer.GetOfferFromList(offerLinkVtxPos);
+		// only apply whitelist discount if buyer had used his alias as input into the escrow
+		if(foundWhitelistAlias)
+			theOffer.linkWhitelist.GetLinkEntryByHash(buyerAlias.vchAlias, foundEntry);
+		priceAtTimeOfAccept = theOffer.GetPrice(foundEntry);
+		commissionAtTimeOfAccept = 0;
+	}
+	else 
+	{
+		linkOffer.linkWhitelist.GetLinkEntryByHash(theOffer.vchAlias, foundEntry);
+		priceAtTimeOfAccept = linkOffer.GetPrice(foundEntry);
+		commissionAtTimeOfAccept = theOffer.GetPrice() - priceAtTimeOfAccept;
+	}
+
 	CRecipient recipientFee;
 	CreateRecipient(redeemScriptPubKey, recipientFee);
-	int64_t nExpectedAmount = escrow.nPricePerUnit*escrow.nQty;
+	int64_t nExpectedAmount = priceAtTimeOfAccept*escrow.nQty;
+	int64_t nExpectedCommissionAmount = commissionAtTimeOfAccept*escrow.nQty;
 	int64_t nEscrowFee = GetEscrowArbiterFee(nExpectedAmount);
-	int64_t nExpectedAmountWithFee = nExpectedAmount+nEscrowFee+recipientFee.nAmount;
+	int64_t nEscrowTotal = nExpectedAmount + nEscrowFee + recipientFee.nAmount;
+	if(!theOffer.vchLinkOffer.empty() && !foundEntry.IsNull())
+		nEscrowTotal += nExpectedCommissionAmount;
+
 	for(unsigned int i=0;i<fundingTx.vout.size();i++)
 	{
-		if(fundingTx.vout[i].nValue == nExpectedAmountWithFee)
+		if(fundingTx.vout[i].nValue == nEscrowTotal)
 		{
 			nOutMultiSig = i;
 			break;
@@ -2110,18 +2205,71 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
     CTransaction fundingTx;
 	if (!GetSyscoinTransaction(vtxPos.front().nHeight, escrow.escrowInputTxHash, fundingTx, Params().GetConsensus()))
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4138 - " + _("Failed to find escrow transaction"));
-
+	bool foundWhitelistAlias = false;
+	const COutPoint *prevOutput = NULL;
+	CCoins prevCoins;
+	// Strict check - bug disallowed
+	for (unsigned int i = 0; i < fundingTx.vin.size(); i++) {
+		vector<vector<unsigned char> > vvch;
+		int pop;
+		prevOutput = &tx.vin[i].prevout;	
+		if(!prevOutput)
+			continue;
+		if(!inputs.GetCoins(prevOutput->hash, prevCoins))
+			continue;
+		if(prevCoins.vout.size() <= prevOutput->n || !IsSyscoinScript(prevCoins.vout[prevOutput->n].scriptPubKey, pop, vvch))
+			continue;
+	
+		if (IsAliasOp(pop) && escrow.vchBuyerAlias == vvch[0])
+		{
+			foundWhitelistAlias = true; 
+		}
+	}
  	int nOutMultiSig = 0;
 	// 0.5% escrow fee
 	CScript redeemScriptPubKey = CScript(escrow.vchRedeemScript.begin(), escrow.vchRedeemScript.end());
+	COfferLinkWhitelistEntry foundEntry;
+	COffer theOffer, linkOffer;
+	CTransaction txOffer;
+	vector<COffer> offerVtxPos;
+	if (!GetTxAndVtxOfOffer( vchOffer, theOffer, txOffer, offerVtxPos, true))
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4068 - " + _("Could not find an offer with this identifier"));
+	theOffer.nHeight = vtxPos.front().nAcceptHeight;
+	theOffer.GetOfferFromList(offerVtxPos);
+	float priceAtTimeOfAccept;
+	float commissionAtTimeOfAccept;	
+	if(theOffer.vchLinkOffer.empty())
+	{
+		vector<COffer> offerLinkVtxPos;
+		if (!GetTxAndVtxOfOffer( theOffer.vchLinkOffer, linkOffer, txOffer, offerLinkVtxPos, true))
+			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4068 - " + _("Could not find an offer with this identifier"));
+		linkOffer.nHeight = vtxPos.front().nAcceptHeight;
+		linkOffer.GetOfferFromList(offerLinkVtxPos);
+		// only apply whitelist discount if buyer had used his alias as input into the escrow
+		if(foundWhitelistAlias)
+			theOffer.linkWhitelist.GetLinkEntryByHash(buyerAlias.vchAlias, foundEntry);
+		priceAtTimeOfAccept = theOffer.GetPrice(foundEntry);
+		commissionAtTimeOfAccept = 0;
+	}
+	else 
+	{
+		linkOffer.linkWhitelist.GetLinkEntryByHash(theOffer.vchAlias, foundEntry);
+		priceAtTimeOfAccept = linkOffer.GetPrice(foundEntry);
+		commissionAtTimeOfAccept = theOffer.GetPrice() - priceAtTimeOfAccept;
+	}
+
 	CRecipient recipientFee;
 	CreateRecipient(redeemScriptPubKey, recipientFee);
-	int64_t nExpectedAmount = escrow.nPricePerUnit*escrow.nQty;
+	int64_t nExpectedAmount = priceAtTimeOfAccept*escrow.nQty;
+	int64_t nExpectedCommissionAmount = commissionAtTimeOfAccept*escrow.nQty;
 	int64_t nEscrowFee = GetEscrowArbiterFee(nExpectedAmount);
-	int64_t nExpectedAmountWithFee = nExpectedAmount+nEscrowFee+recipientFee.nAmount;
+	int64_t nEscrowTotal = nExpectedAmount + nEscrowFee + recipientFee.nAmount;
+	if(!theOffer.vchLinkOffer.empty() && !foundEntry.IsNull())
+		nEscrowTotal += nExpectedCommissionAmount;
+
 	for(unsigned int i=0;i<fundingTx.vout.size();i++)
 	{
-		if(fundingTx.vout[i].nValue == nExpectedAmountWithFee)
+		if(fundingTx.vout[i].nValue == nEscrowTotal)
 		{
 			nOutMultiSig = i;
 			break;
