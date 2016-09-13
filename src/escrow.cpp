@@ -1265,6 +1265,7 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	bool foundWhitelistAlias = false;
 	const COutPoint *prevOutput = NULL;
 	CCoins prevCoins;
+	CCoinsViewCache inputs(pcoinsTip);
 	// Strict check - bug disallowed
 	for (unsigned int i = 0; i < fundingTx.vin.size(); i++) {
 		vector<vector<unsigned char> > vvch;
@@ -1354,7 +1355,7 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	COffer theOffer, linkOffer;
 	CTransaction txOffer;
 	vector<COffer> offerVtxPos;
-	if (!GetTxAndVtxOfOffer( vchOffer, theOffer, txOffer, offerVtxPos, true))
+	if (!GetTxAndVtxOfOffer( escrow.vchOffer, theOffer, txOffer, offerVtxPos, true))
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4068 - " + _("Could not find an offer with this identifier"));
 	theOffer.nHeight = vtxPos.front().nAcceptHeight;
 	theOffer.GetOfferFromList(offerVtxPos);
@@ -1403,8 +1404,6 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4088 - " + _("Expected amount of escrow does not match what is held in escrow"));
     if (op != OP_ESCROW_ACTIVATE)
         throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4089 - " + _("Release can only happen on an activated escrow"));
-
-	string strEscrowScriptPubKey = HexStr(fundingTx.vout[nOutMultiSig].scriptPubKey.begin(), fundingTx.vout[nOutMultiSig].scriptPubKey.end());
 
 
 	string strPrivateKey ;
@@ -1606,6 +1605,7 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 	bool foundWhitelistAlias = false;
 	const COutPoint *prevOutput = NULL;
 	CCoins prevCoins;
+	CCoinsViewCache inputs(pcoinsTip);
 	// Strict check - bug disallowed
 	for (unsigned int i = 0; i < fundingTx.vin.size(); i++) {
 		vector<vector<unsigned char> > vvch;
@@ -1628,7 +1628,7 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 	COffer theOffer, linkOffer;
 	CTransaction txOffer;
 	vector<COffer> offerVtxPos;
-	if (!GetTxAndVtxOfOffer( vchOffer, theOffer, txOffer, offerVtxPos, true))
+	if (!GetTxAndVtxOfOffer( escrow.vchOffer, theOffer, txOffer, offerVtxPos, true))
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4068 - " + _("Could not find an offer with this identifier"));
 	theOffer.nHeight = vtxPos.front().nAcceptHeight;
 	theOffer.GetOfferFromList(offerVtxPos);
@@ -1643,7 +1643,7 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 		linkOffer.GetOfferFromList(offerLinkVtxPos);
 		// only apply whitelist discount if buyer had used his alias as input into the escrow
 		if(foundWhitelistAlias)
-			theOffer.linkWhitelist.GetLinkEntryByHash(buyerAlias.vchAlias, foundEntry);
+			theOffer.linkWhitelist.GetLinkEntryByHash(escrow.vchBuyerAlias, foundEntry);
 		priceAtTimeOfAccept = theOffer.GetPrice(foundEntry);
 		commissionAtTimeOfAccept = 0;
 	}
@@ -1655,6 +1655,7 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 	}
 
 	CRecipient recipientFee;
+	CScript redeemScriptPubKey = CScript(escrow.vchRedeemScript.begin(), escrow.vchRedeemScript.end());
 	CreateRecipient(redeemScriptPubKey, recipientFee);
 	int64_t nExpectedAmount = priceAtTimeOfAccept*escrow.nQty;
 	int64_t nExpectedCommissionAmount = commissionAtTimeOfAccept*escrow.nQty;
@@ -1861,6 +1862,7 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 	bool foundWhitelistAlias = false;
 	const COutPoint *prevOutput = NULL;
 	CCoins prevCoins;
+	CCoinsViewCache inputs(pcoinsTip);
 	// Strict check - bug disallowed
 	for (unsigned int i = 0; i < fundingTx.vin.size(); i++) {
 		vector<vector<unsigned char> > vvch;
@@ -1943,7 +1945,7 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 	COffer theOffer, linkOffer;
 	CTransaction txOffer;
 	vector<COffer> offerVtxPos;
-	if (!GetTxAndVtxOfOffer( vchOffer, theOffer, txOffer, offerVtxPos, true))
+	if (!GetTxAndVtxOfOffer( escrow.vchOffer, theOffer, txOffer, offerVtxPos, true))
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4068 - " + _("Could not find an offer with this identifier"));
 	theOffer.nHeight = vtxPos.front().nAcceptHeight;
 	theOffer.GetOfferFromList(offerVtxPos);
@@ -2198,6 +2200,7 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 	bool foundWhitelistAlias = false;
 	const COutPoint *prevOutput = NULL;
 	CCoins prevCoins;
+	CCoinsViewCache inputs(pcoinsTip);
 	// Strict check - bug disallowed
 	for (unsigned int i = 0; i < fundingTx.vin.size(); i++) {
 		vector<vector<unsigned char> > vvch;
@@ -2222,7 +2225,7 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 	COffer theOffer, linkOffer;
 	CTransaction txOffer;
 	vector<COffer> offerVtxPos;
-	if (!GetTxAndVtxOfOffer( vchOffer, theOffer, txOffer, offerVtxPos, true))
+	if (!GetTxAndVtxOfOffer( escrow.vchOffer, theOffer, txOffer, offerVtxPos, true))
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4068 - " + _("Could not find an offer with this identifier"));
 	theOffer.nHeight = vtxPos.front().nAcceptHeight;
 	theOffer.GetOfferFromList(offerVtxPos);
