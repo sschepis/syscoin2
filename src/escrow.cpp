@@ -2699,10 +2699,10 @@ UniValue escrowinfo(const UniValue& params, bool fHelp) {
 	oEscrow.push_back(Pair("offer", stringFromVch(ca.vchOffer)));
 	oEscrow.push_back(Pair("offertitle", stringFromVch(offer.sTitle)));
 	oEscrow.push_back(Pair("quantity", strprintf("%d", ca.nQty)));
-	oEscrow.push_back(Pair("systotal", ValueFromAmount(ca.nPricePerUnit * ca.nQty)));
-	int64_t nEscrowFee = GetEscrowArbiterFee(ca.nPricePerUnit * ca.nQty);
+	oEscrow.push_back(Pair("systotal", ValueFromAmount(0 * ca.nQty)));
+	int64_t nEscrowFee = GetEscrowArbiterFee(0 * ca.nQty);
 	oEscrow.push_back(Pair("sysfee", ValueFromAmount(nEscrowFee)));
-	oEscrow.push_back(Pair("total",  strprintf("%.*f SYS", 4, ValueFromAmount(nEscrowFee + (ca.nPricePerUnit * ca.nQty)).get_real())));
+	oEscrow.push_back(Pair("total",  strprintf("%.*f SYS", 4, ValueFromAmount(nEscrowFee + (0 * ca.nQty)).get_real())));
     oEscrow.push_back(Pair("txid", ca.txHash.GetHex()));
     oEscrow.push_back(Pair("height", sHeight));
 	string strMessage = string("");
@@ -2878,9 +2878,9 @@ UniValue escrowlist(const UniValue& params, bool fHelp) {
 		oName.push_back(Pair("buyer", stringFromVch(escrow.vchBuyerAlias)));
 		oName.push_back(Pair("offer", stringFromVch(escrow.vchOffer)));
 		oName.push_back(Pair("offertitle", stringFromVch(offer.sTitle)));
-		int64_t nEscrowFee = GetEscrowArbiterFee(escrow.nPricePerUnit * escrow.nQty);
+		int64_t nEscrowFee = GetEscrowArbiterFee(0 * escrow.nQty);
 		oName.push_back(Pair("sysfee", ValueFromAmount(nEscrowFee)));
-		oName.push_back(Pair("total",  strprintf("%.*f SYS", 4, ValueFromAmount(nEscrowFee + (escrow.nPricePerUnit * escrow.nQty)).get_real())));
+		oName.push_back(Pair("total",  strprintf("%.*f SYS", 4, ValueFromAmount(nEscrowFee + (0 * escrow.nQty)).get_real())));
 
 		expired_block = nHeight + GetEscrowExpirationDepth();
         if(expired_block < chainActive.Tip()->nHeight && escrow.op == OP_ESCROW_COMPLETE)
@@ -3033,9 +3033,9 @@ UniValue escrowhistory(const UniValue& params, bool fHelp) {
 			oEscrow.push_back(Pair("offer", stringFromVch(txPos2.vchOffer)));
 			oEscrow.push_back(Pair("offertitle", stringFromVch(offer.sTitle)));
 
-			int64_t nEscrowFee = GetEscrowArbiterFee(txPos2.nPricePerUnit * txPos2.nQty);
+			int64_t nEscrowFee = GetEscrowArbiterFee(0 * txPos2.nQty);
 			oEscrow.push_back(Pair("sysfee", ValueFromAmount(nEscrowFee)));
-			oEscrow.push_back(Pair("total",  strprintf("%.*f SYS", 4, ValueFromAmount(nEscrowFee + (txPos2.nPricePerUnit * txPos2.nQty)).get_real())));
+			oEscrow.push_back(Pair("total",  strprintf("%.*f SYS", 4, ValueFromAmount(nEscrowFee + (0 * txPos2.nQty)).get_real())));
 			if(nHeight + GetEscrowExpirationDepth() - chainActive.Tip()->nHeight <= 0  && txPos2.op == OP_ESCROW_COMPLETE)
 			{
 				expired = 1;
@@ -3150,9 +3150,9 @@ UniValue escrowfilter(const UniValue& params, bool fHelp) {
 		
 
 		oEscrow.push_back(Pair("status", status));
-		int64_t nEscrowFee = GetEscrowArbiterFee(txEscrow.nPricePerUnit * txEscrow.nQty);
+		int64_t nEscrowFee = GetEscrowArbiterFee(0 * txEscrow.nQty);
 		oEscrow.push_back(Pair("sysfee", ValueFromAmount(nEscrowFee)));
-		oEscrow.push_back(Pair("total",  strprintf("%.*f SYS", 4, ValueFromAmount(nEscrowFee + (txEscrow.nPricePerUnit * txEscrow.nQty)).get_real())));
+		oEscrow.push_back(Pair("total",  strprintf("%.*f SYS", 4, ValueFromAmount(nEscrowFee + (0 * txEscrow.nQty)).get_real())));
 		UniValue oBuyerFeedBack(UniValue::VARR);
 		for(unsigned int i =0;i<buyerFeedBacks.size();i++)
 		{
