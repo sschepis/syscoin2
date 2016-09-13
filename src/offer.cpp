@@ -2865,7 +2865,7 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 		oOfferAccept.push_back(Pair("height", sHeight));
 		oOfferAccept.push_back(Pair("time", sTime));
 		oOfferAccept.push_back(Pair("quantity", strprintf("%d", ca.nQty)));
-		oOfferAccept.push_back(Pair("currency", stringFromVch(sCurrencyCode)));
+		oOfferAccept.push_back(Pair("currency", stringFromVch(acceptOffer.sCurrencyCode)));
 		if(!FindOfferAcceptPayment(txA, ca.nPrice) && ca.txBTCId.IsNull())
 			continue;
 		if(acceptOffer.GetPrice() > 0)
