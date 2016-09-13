@@ -1399,7 +1399,7 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	} 
 	int64_t nAmount = fundingTx.vout[nOutMultiSig].nValue;
 	string strEscrowScriptPubKey = HexStr(fundingTx.vout[nOutMultiSig].scriptPubKey.begin(), fundingTx.vout[nOutMultiSig].scriptPubKey.end());
-	if(nAmount != nExpectedAmountWithFee)
+	if(nAmount != nEscrowTotal)
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4088 - " + _("Expected amount of escrow does not match what is held in escrow"));
     if (op != OP_ESCROW_ACTIVATE)
         throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4089 - " + _("Release can only happen on an activated escrow"));
@@ -1673,7 +1673,7 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 	} 
 	int64_t nAmount = fundingTx.vout[nOutMultiSig].nValue;
 	string strEscrowScriptPubKey = HexStr(fundingTx.vout[nOutMultiSig].scriptPubKey.begin(), fundingTx.vout[nOutMultiSig].scriptPubKey.end());
-	if(nAmount != nExpectedAmountWithFee)
+	if(nAmount != nEscrowTotal)
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4101 - " + _("Expected amount of escrow does not match what is held in escrow"));
 	UniValue arrayDecodeParams(UniValue::VARR);
 	arrayDecodeParams.push_back(HexStr(escrow.rawTx));
@@ -1988,7 +1988,7 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 	} 
 	int64_t nAmount = fundingTx.vout[nOutMultiSig].nValue;
 	string strEscrowScriptPubKey = HexStr(fundingTx.vout[nOutMultiSig].scriptPubKey.begin(), fundingTx.vout[nOutMultiSig].scriptPubKey.end());
-	if(nAmount != nExpectedAmountWithFee)
+	if(nAmount != nEscrowTotal)
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4125 - " + _("Expected amount of escrow does not match what is held in escrow"));
 	string strPrivateKey ;
 	bool arbiterSigning = false;
@@ -2267,7 +2267,7 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 	} 
 	int64_t nAmount = fundingTx.vout[nOutMultiSig].nValue;
 	string strEscrowScriptPubKey = HexStr(fundingTx.vout[nOutMultiSig].scriptPubKey.begin(), fundingTx.vout[nOutMultiSig].scriptPubKey.end());
-	if(nAmount != nExpectedAmountWithFee)
+	if(nAmount != nEscrowTotal)
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4139 - " + _("Expected amount of escrow does not match what is held in escrow"));
 	// decode rawTx and check it pays enough and it pays to buyer appropriately
 	// check that right amount is going to be sent to buyer
