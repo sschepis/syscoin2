@@ -354,7 +354,7 @@ void EscrowListPage::on_searchEscrow_clicked(string GUID)
 						QString::fromStdString(arbiter_str),
 						QString::fromStdString(offer_str),
 						QString::fromStdString(offertitle_str),
-						QString::fromStdString(txid_value),
+						QString::fromStdString(txid_str),
 						QString::fromStdString(total_str),
 						rating,
 						QString::fromStdString(status_str), 
