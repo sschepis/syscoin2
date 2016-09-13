@@ -2312,16 +2312,9 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	}
 
 	COffer linkOffer;
-	vector<COffer> offerLinkVtxPos;
 	CTransaction linkedTx;
-	GetTxAndVtxOfOffer( theOffer.vchLinkOffer, linkOffer, linkedTx, offerLinkVtxPos, true);
+	GetTxAndVtxOfOffer( theOffer.vchLinkOffer, linkOffer, linkedTx, true);
 				
-	// get offer price at the time of accept
-	theOffer.nHeight = nHeight;
-	linkOffer.nHeight = nHeight;
-	theOffer.GetOfferFromList(vtxPos);
-	linkOffer.GetOfferFromList(offerLinkVtxPos);
-
 	CTransaction aliastx,buyeraliastx;
 	CAliasIndex theAlias,tmpAlias;
 	bool isExpired = false;
@@ -2426,8 +2419,8 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
     CScript scriptPayment, scriptPaymentCommission;
 	CPubKey currentKey(theAlias.vchPubKey);
 	CPubKey linkedOfferKey(theLinkedAlias.vchPubKey);
-	scriptPayment = GetScriptForDestination(currentKey.GetID());
-	scriptPaymentCommission = GetScriptForDestination(linkedOfferKey.GetID());
+	scriptPayment = GetScriptForDestination(linkedOfferKey.GetID());
+	scriptPaymentCommission = GetScriptForDestination(currentKey.GetID());
 	scriptPubKeyAccept += scriptPayment;
 	scriptPubKeyPayment += scriptPayment;
 	scriptPaymentCommission += scriptPayment;
@@ -2462,7 +2455,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	{
 		vecSend.push_back(paymentRecipient);
 		vecSend.push_back(acceptRecipient);
-		if(!theOffer.vchLinkOffer.empty() && !foundEntry.IsNull())
+		if(!copyOffer.vchLinkOffer.empty() && !foundEntry.IsNull())
 			vecSend.push_back(paymentCommissionRecipient);
 	}
 	else
