@@ -2417,7 +2417,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	// normal accept sig
 	scriptPubKeyAccept << CScript::EncodeOP_N(OP_OFFER_ACCEPT) << vchOffer << vchAccept << vchFromString("0") << vchHashOffer << OP_2DROP << OP_2DROP << OP_DROP;
 
-    CScript scriptPayment, scriptPaymentCommission;
+    CScript scriptPayment, scriptPubKeyCommission, scriptPaymentCommission;
 	CPubKey currentKey(theAlias.vchPubKey);
 	CPubKey linkedOfferKey(theLinkedAlias.vchPubKey);
 	if(!copyOffer.vchLinkOffer.empty())
