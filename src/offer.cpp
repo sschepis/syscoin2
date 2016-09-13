@@ -1132,14 +1132,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 92 - " + _("Cannot purchase certificates with Bitcoins");
 					return true;
 				}
-				else if(!theOfferAccept.vchEscrow.empty())
-				{
-					if(theCert.vchAlias != theOfferAccept.vchBuyerAlias)
-					{
-						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 93 - " + _("Certificate must be transferred to the buyer manually before escrow is released");
-						return true;
-					}
-				}
 				else if(theOffer.vchLinkOffer.empty())
 				{
 					if(theCert.vchAlias != theOffer.vchAlias)
@@ -1187,11 +1179,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 99 - " + _("Unknown feedback user type");
 					return true;
 				}
-				if(!offerAccept.vchEscrow.empty())
-				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 100 - " + _("Cannot leave feedback for an offer used by an escrow, use Manage Escrow to leave feedback instead");
-					return true;
-				}
 				if(!acceptOffer.vchLinkOffer.empty())
 				{
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 101 - " + _("Cannot leave feedback for linked offers");
@@ -1224,9 +1211,9 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			// if its not feedback then we decrease qty accordingly
 			if(theOfferAccept.nQty <= 0)
 				theOfferAccept.nQty = 1;
-			// update qty if not an escrow accept (since that updates qty on escrow creation, and refunds qty on escrow refund)
+			// update qty
 			// also if this offer you are accepting is linked to another offer don't need to update qty (once the root accept is done this offer qty will be updated)
-			if(theOffer.nQty != -1 && theOfferAccept.vchEscrow.empty())
+			if(theOffer.nQty != -1)
 			{
 				if((theOfferAccept.nQty > theOffer.nQty))
 				{
@@ -1260,7 +1247,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 107 - " + _("Could not get linked offer");
 					return true;
 				}
-				else if(theOfferAccept.vchEscrow.empty() && !theOffer.vchCert.empty() && theCert.vchAlias != linkOffer.vchAlias)
+				else if(!theOffer.vchCert.empty() && theCert.vchAlias != linkOffer.vchAlias)
 				{
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 108 - " + _("Cannot purchase this linked offer because the certificate has been transferred or it is linked to another offer");
 					return true;
@@ -3173,17 +3160,6 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 					continue;
 				int nHeight;
 				nHeight = theOfferAccept.nAcceptHeight;
-				if(!theOfferAccept.vchEscrow.empty())
-				{
-					vector<CEscrow> escrowVtxPos;
-					CTransaction escrowTx;
-					CEscrow escrow;
-					GetTxAndVtxOfEscrow( theOfferAccept.vchEscrow, escrow, escrowTx, escrowVtxPos);
-					if(!escrowVtxPos.empty() &&  escrowVtxPos.front().nHeight < theOffer.nHeight)
-					{
-						nHeight = escrowVtxPos.front().nHeight;					
-					}
-				}
 				COffer linkOffer;
 				vector<COffer> offerLinkVtxPos;
 				CTransaction linkedTx;
