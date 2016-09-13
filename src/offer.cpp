@@ -3185,7 +3185,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 				oOfferAccept.push_back(Pair("buyer", stringFromVch(theOfferAccept.vchBuyerAlias)));
 				oOfferAccept.push_back(Pair("height", sHeight));
 				oOfferAccept.push_back(Pair("quantity", strprintf("%d", theOfferAccept.nQty)));
-				oOfferAccept.push_back(Pair("currency", stringFromVch(sCurrencyCode)));
+				oOfferAccept.push_back(Pair("currency", stringFromVch(theOffer.sCurrencyCode)));
 				bool isExpired = false;
 				vector<CAliasIndex> aliasVtxPos;
 				CAliasIndex theAlias;
