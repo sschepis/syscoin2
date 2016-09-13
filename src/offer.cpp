@@ -2313,7 +2313,8 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 
 	COffer linkOffer;
 	CTransaction linkedTx;
-	GetTxAndVtxOfOffer( theOffer.vchLinkOffer, linkOffer, linkedTx, true);
+	vector<COffer> vtxLinkPos;
+	GetTxAndVtxOfOffer( theOffer.vchLinkOffer, linkOffer, linkedTx, vtxLinkPos, true);
 				
 	CTransaction aliastx,buyeraliastx;
 	CAliasIndex theAlias,tmpAlias;
