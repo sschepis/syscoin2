@@ -142,7 +142,7 @@ void MyEscrowListPage::setModel(WalletModel *walletModel, EscrowTableModel *mode
     ui->tableView->setColumnWidth(4, 150); //buyer
     ui->tableView->setColumnWidth(5, 80); //offer
 	ui->tableView->setColumnWidth(6, 250); //offer title
-    ui->tableView->setColumnWidth(7, 80); //offeraccept
+    ui->tableView->setColumnWidth(7, 80); //txid
 	ui->tableView->setColumnWidth(8, 80); //total
 	ui->tableView->setColumnWidth(9, 100); //rating
     ui->tableView->setColumnWidth(10, 50); //status
@@ -258,7 +258,7 @@ void MyEscrowListPage::on_exportButton_clicked()
 	writer.addColumn("Seller", EscrowTableModel::Seller, Qt::EditRole);
 	writer.addColumn("Offer", EscrowTableModel::Offer, Qt::EditRole);
 	writer.addColumn("OfferTitle", EscrowTableModel::OfferTitle, Qt::EditRole);
-	writer.addColumn("Confirmation", EscrowTableModel::OfferAccept, Qt::EditRole);
+	writer.addColumn("TXID", EscrowTableModel::TXID, Qt::EditRole);
 	writer.addColumn("Total", EscrowTableModel::Total, Qt::EditRole);
 	writer.addColumn("Rating", EscrowTableModel::Rating, EscrowTableModel::RatingRole);
 	writer.addColumn("Status", EscrowTableModel::Status, Qt::EditRole);
