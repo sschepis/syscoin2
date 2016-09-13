@@ -1305,10 +1305,10 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 122 - " + _("Offer accept does not pay enough according to the offer price");
 					return true;
 				}
-				if(!myPriceOffer.vchLinkOffer.empty() && !entry.IsNull())
+				if(!myPriceOffer.vchLinkOffer.empty())
 				{
 					CAmount nCommission = convertCurrencyCodeToSyscoin(myPriceOffer.vchAliasPeg, myPriceOffer.sCurrencyCode, commissionAtTimeOfAccept, heightToCheckAgainst, precision)*theOfferAccept.nQty;
-					if(commissionAtTimeOfAccept > 0 && !FindOfferAcceptPayment(tx, nCommission))
+					if(!FindOfferAcceptPayment(tx, nCommission))
 					{
 						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 122 - " + _("Offer accept does not pay enough commission to reseller");
 						return true;
