@@ -1169,22 +1169,16 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			// if its not feedback then we decrease qty accordingly
 			if(theOfferAccept.nQty <= 0)
 				theOfferAccept.nQty = 1;
-			// update qty
-			// also if this offer you are accepting is linked to another offer don't need to update qty (once the root accept is done this offer qty will be updated)
 			if(theOffer.nQty != -1)
 			{
 				if((theOfferAccept.nQty > theOffer.nQty))
 				{
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 104 - " + _("Not enough quantity left in this offer for this purchase");
 					return true;
-				}	
-				if(theOffer.vchLinkOffer.empty())
-				{
-					theOffer.nQty -= theOfferAccept.nQty;
-					if(theOffer.nQty < 0)
-						theOffer.nQty = 0;
-				}
-				
+				}					
+				theOffer.nQty -= theOfferAccept.nQty;
+				if(theOffer.nQty < 0)
+					theOffer.nQty = 0;			
 			}
 		
 			if(theOffer.sCategory.size() > 0 && boost::algorithm::starts_with(stringFromVch(theOffer.sCategory), "wanted"))
