@@ -414,11 +414,6 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 			errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4007 - " + _("Escrow raw transaction too big");
 			return error(errorMessage.c_str());
 		}
-		if(theEscrow.vchOfferAcceptLink.size() > 0)
-		{
-			errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4008 - " + _("Escrow offeraccept guid not allowed");
-			return error(errorMessage.c_str());
-		}
 		if(!theEscrow.vchEscrow.empty() && theEscrow.vchEscrow != vvchArgs[0])
 		{
 			errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4009 - " + _("Escrow guid in data output doesn't match guid in transaction");
@@ -808,11 +803,6 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 						if(!dontaddtodb)
 							HandleEscrowFeedback(serializedEscrow, theEscrow, vtxPos);	
 						return true;
-					}
-					else
-					{
-						theOffer.UnserializeFromTx(tx);
-						theEscrow.vchOfferAcceptLink = theOffer.accept.vchAcceptRand;
 					}
 				}
 				
@@ -2708,7 +2698,6 @@ UniValue escrowinfo(const UniValue& params, bool fHelp) {
 	oEscrow.push_back(Pair("buyer", stringFromVch(ca.vchBuyerAlias)));
 	oEscrow.push_back(Pair("offer", stringFromVch(ca.vchOffer)));
 	oEscrow.push_back(Pair("offertitle", stringFromVch(offer.sTitle)));
-	oEscrow.push_back(Pair("offeracceptlink", stringFromVch(ca.vchOfferAcceptLink)));
 	oEscrow.push_back(Pair("quantity", strprintf("%d", ca.nQty)));
 	oEscrow.push_back(Pair("systotal", ValueFromAmount(ca.nPricePerUnit * ca.nQty)));
 	int64_t nEscrowFee = GetEscrowArbiterFee(ca.nPricePerUnit * ca.nQty);
@@ -2889,7 +2878,6 @@ UniValue escrowlist(const UniValue& params, bool fHelp) {
 		oName.push_back(Pair("buyer", stringFromVch(escrow.vchBuyerAlias)));
 		oName.push_back(Pair("offer", stringFromVch(escrow.vchOffer)));
 		oName.push_back(Pair("offertitle", stringFromVch(offer.sTitle)));
-		oName.push_back(Pair("offeracceptlink", stringFromVch(escrow.vchOfferAcceptLink)));
 		int64_t nEscrowFee = GetEscrowArbiterFee(escrow.nPricePerUnit * escrow.nQty);
 		oName.push_back(Pair("sysfee", ValueFromAmount(nEscrowFee)));
 		oName.push_back(Pair("total",  strprintf("%.*f SYS", 4, ValueFromAmount(nEscrowFee + (escrow.nPricePerUnit * escrow.nQty)).get_real())));
@@ -3044,7 +3032,6 @@ UniValue escrowhistory(const UniValue& params, bool fHelp) {
 			oEscrow.push_back(Pair("buyer", stringFromVch(txPos2.vchBuyerAlias)));
 			oEscrow.push_back(Pair("offer", stringFromVch(txPos2.vchOffer)));
 			oEscrow.push_back(Pair("offertitle", stringFromVch(offer.sTitle)));
-			oEscrow.push_back(Pair("offeracceptlink", stringFromVch(txPos2.vchOfferAcceptLink)));
 
 			int64_t nEscrowFee = GetEscrowArbiterFee(txPos2.nPricePerUnit * txPos2.nQty);
 			oEscrow.push_back(Pair("sysfee", ValueFromAmount(nEscrowFee)));
@@ -3147,7 +3134,6 @@ UniValue escrowfilter(const UniValue& params, bool fHelp) {
 		oEscrow.push_back(Pair("buyer", stringFromVch(txEscrow.vchBuyerAlias)));
 		oEscrow.push_back(Pair("offer", stringFromVch(txEscrow.vchOffer)));
 		oEscrow.push_back(Pair("offertitle", stringFromVch(offer.sTitle)));
-		oEscrow.push_back(Pair("offeracceptlink", stringFromVch(txEscrow.vchOfferAcceptLink)));
 	
 		string status = "unknown";
 

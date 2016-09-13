@@ -26,48 +26,6 @@ bool DisconnectOffer(const CBlockIndex *pindex, const CTransaction &tx, int op, 
 bool DisconnectCertificate(const CBlockIndex *pindex, const CTransaction &tx, int op, vector<vector<unsigned char> > &vvchArgs );
 bool DisconnectMessage(const CBlockIndex *pindex, const CTransaction &tx, int op, vector<vector<unsigned char> > &vvchArgs );
 bool DisconnectEscrow(const CBlockIndex *pindex, const CTransaction &tx, int op, vector<vector<unsigned char> > &vvchArgs );
-bool foundOfferLinkInWallet(const vector<unsigned char> &vchOffer, const vector<unsigned char> &vchAcceptRandLink)
-{
-    TRY_LOCK(pwalletMain->cs_wallet, cs_trylock);
-    BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet)
-    {
-		vector<vector<unsigned char> > vvchArgs;
-		int op, nOut;
-        const CWalletTx& wtx = item.second;
-        if (wtx.IsCoinBase() || !CheckFinalTx(wtx))
-            continue;
-		if(wtx.nVersion != GetSyscoinTxVersion())
-			continue;
-		if (DecodeOfferTx(wtx, op, nOut, vvchArgs))
-		{
-			if(op == OP_OFFER_ACCEPT)
-			{
-				if(vvchArgs[0] == vchOffer)
-				{
-					vector<unsigned char> vchOfferAcceptLink;
-					bool foundOffer = false;
-					for (unsigned int i = 0; i < wtx.vin.size(); i++) {
-						vector<vector<unsigned char> > vvchIn;
-						int opIn;
-						const COutPoint *prevOutput = &wtx.vin[i].prevout;
-						if(!GetPreviousInput(prevOutput, opIn, vvchIn))
-							continue;
-						if(foundOffer)
-							break;
-
-						if (!foundOffer && opIn == OP_OFFER_ACCEPT) {
-							foundOffer = true; 
-							vchOfferAcceptLink = vvchIn[1];
-						}
-					}
-					if(vchOfferAcceptLink == vchAcceptRandLink)
-						return true;				
-				}
-			}
-		}
-	}
-	return false;
-}
 // transfer cert if its linked to offer
 string makeTransferCertTX(const COffer& theOffer, const COfferAccept& theOfferAccept)
 {
@@ -2850,17 +2808,6 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 			continue;
 		int nHeight;
 		nHeight = ca.nAcceptHeight;
-		if(!ca.vchEscrow.empty())
-		{
-			vector<CEscrow> escrowVtxPos;
-			CTransaction escrowTx;
-			CEscrow escrow;
-			GetTxAndVtxOfEscrow( ca.vchEscrow, escrow, escrowTx, escrowVtxPos);
-			if(!escrowVtxPos.empty() &&  escrowVtxPos.front().nHeight < acceptOffer.nHeight)
-			{
-				nHeight = escrowVtxPos.front().nHeight;					
-			}
-		}
 		linkOffer.nHeight = nHeight;
 		acceptOffer.nHeight = nHeight;	
 		acceptOffer.GetOfferFromList(vtxPos);
@@ -2919,30 +2866,6 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 		oOfferAccept.push_back(Pair("time", sTime));
 		oOfferAccept.push_back(Pair("quantity", strprintf("%d", ca.nQty)));
 		oOfferAccept.push_back(Pair("currency", stringFromVch(sCurrencyCode)));
-		vector<unsigned char> vchOfferAcceptLink;
-		bool foundOffer = false;
-		for (unsigned int j = 0; j < txA.vin.size(); j++) {
-			vector<vector<unsigned char> > vvchIn;
-			int opIn;
-			const COutPoint *prevOutput = &txA.vin[j].prevout;
-			if(!GetPreviousInput(prevOutput, opIn, vvchIn))
-				continue;
-			if(foundOffer)
-				break;
-
-			if (!foundOffer && IsOfferOp(opIn)) {
-				if(opIn == OP_OFFER_ACCEPT)
-				{
-					vchOfferAcceptLink = vvchIn[1];
-					foundOffer = true; 
-				}
-			}
-		}
-		
-		string linkAccept = "";
-		if(!vchOfferAcceptLink.empty())
-			linkAccept = stringFromVch(vchOfferAcceptLink);
-		oOfferAccept.push_back(Pair("linkofferaccept", linkAccept));
 		if(!FindOfferAcceptPayment(txA, ca.nPrice) && ca.txBTCId.IsNull())
 			continue;
 		if(acceptOffer.GetPrice() > 0)
@@ -2950,7 +2873,6 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 		else
 			oOfferAccept.push_back(Pair("offer_discount_percentage", "0%"));		
 
-		oOfferAccept.push_back(Pair("escrowlink", stringFromVch(ca.vchEscrow)));
 		int precision = 2;
 		CAmount nPricePerUnit = convertCurrencyCodeToSyscoin(acceptOffer.vchAliasPeg, acceptOffer.sCurrencyCode, ca.nPrice, ca.nAcceptHeight, precision);
 		oOfferAccept.push_back(Pair("systotal", ValueFromAmount(nPricePerUnit * ca.nQty)));

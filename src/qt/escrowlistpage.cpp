@@ -239,7 +239,7 @@ void EscrowListPage::on_searchEscrow_clicked(string GUID)
 		string seller_str;
 		string arbiter_str;
 		string status_str;
-		string offeraccept_str;
+		string txid_str;
 		string offer_str;
 		string offertitle_str;
 		string total_str;	
@@ -290,7 +290,7 @@ void EscrowListPage::on_searchEscrow_clicked(string GUID)
 				seller_str = "";
 				arbiter_str = "";
 				status_str = "";
-				offeraccept_str = "";
+				txid_str = "";
 				offer_str = "";
 				offertitle_str = "";
 				total_str = "";
@@ -322,9 +322,9 @@ void EscrowListPage::on_searchEscrow_clicked(string GUID)
 				if (offertitle_value.type() == UniValue::VSTR)
 					offertitle_str = offertitle_value.get_str();
 
-				const UniValue& offeraccept_value = find_value(o, "offeracceptlink");
-				if (offeraccept_value.type() == UniValue::VSTR)
-					offeraccept_str = offeraccept_value.get_str();
+				const UniValue& txid_value = find_value(o, "txid");
+				if (txid_value.type() == UniValue::VSTR)
+					txid_str = txid_value.get_str();
 				const UniValue& total_value = find_value(o, "total");
 				if (total_value.type() == UniValue::VSTR)
 					total_str = total_value.get_str();
@@ -344,7 +344,7 @@ void EscrowListPage::on_searchEscrow_clicked(string GUID)
 						QString::fromStdString(arbiter_str),
 						QString::fromStdString(offer_str),
 						QString::fromStdString(offertitle_str),
-						QString::fromStdString(offeraccept_str),
+						QString::fromStdString(txid_str),
 						QString::fromStdString(total_str),
 						rating,
 						QString::fromStdString(status_str),
@@ -354,7 +354,7 @@ void EscrowListPage::on_searchEscrow_clicked(string GUID)
 						QString::fromStdString(arbiter_str),
 						QString::fromStdString(offer_str),
 						QString::fromStdString(offertitle_str),
-						QString::fromStdString(offeraccept_str),
+						QString::fromStdString(txid_value),
 						QString::fromStdString(total_str),
 						rating,
 						QString::fromStdString(status_str), 

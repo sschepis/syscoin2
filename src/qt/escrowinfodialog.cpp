@@ -162,7 +162,7 @@ bool EscrowInfoDialog::lookup()
 			QString buyer = QString::fromStdString(find_value(result.get_obj(), "buyer").get_str());
 			ui->guidEdit->setText(QString::fromStdString(find_value(result.get_obj(), "escrow").get_str()));
 			ui->offerEdit->setText(QString::fromStdString(find_value(result.get_obj(), "offer").get_str()));
-			ui->acceptEdit->setText(QString::fromStdString(find_value(result.get_obj(), "offeracceptlink").get_str()));
+			
 			ui->txidEdit->setText(QString::fromStdString(find_value(result.get_obj(), "txid").get_str()));
 			ui->titleEdit->setText(QString::fromStdString(find_value(result.get_obj(), "offertitle").get_str()));
 			ui->heightEdit->setText(QString::fromStdString(find_value(result.get_obj(), "height").get_str()));
