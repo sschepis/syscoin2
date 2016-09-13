@@ -2420,11 +2420,18 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
     CScript scriptPayment, scriptPaymentCommission;
 	CPubKey currentKey(theAlias.vchPubKey);
 	CPubKey linkedOfferKey(theLinkedAlias.vchPubKey);
-	scriptPayment = GetScriptForDestination(linkedOfferKey.GetID());
-	scriptPaymentCommission = GetScriptForDestination(currentKey.GetID());
+	if(!copyOffer.vchLinkOffer.empty())
+	{
+		scriptPayment = GetScriptForDestination(linkedOfferKey.GetID());
+		scriptPaymentCommission = GetScriptForDestination(currentKey.GetID());
+	}
+	else
+	{
+		scriptPayment = GetScriptForDestination(currentKey.GetID());
+	}
 	scriptPubKeyAccept += scriptPayment;
 	scriptPubKeyPayment += scriptPayment;
-	scriptPaymentCommission += scriptPayment;
+	scriptPubKeyCommission += scriptPaymentCommission;
 
 
 
@@ -2435,7 +2442,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	CRecipient acceptRecipient, acceptCommissionRecipient;
 	CreateRecipient(scriptPubKeyAccept, acceptRecipient);
 	CRecipient paymentRecipient = {scriptPubKeyPayment, nTotalValue, false};
-	CRecipient paymentCommissionRecipient = {scriptPaymentCommission, nTotalCommission, false};
+	CRecipient paymentCommissionRecipient = {scriptPubKeyCommission, nTotalCommission, false};
 	CRecipient aliasRecipient;
 	CreateRecipient(scriptPubKeyAlias, aliasRecipient);
 
