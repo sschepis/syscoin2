@@ -2408,19 +2408,21 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
     uint256 hash = Hash(data.begin(), data.end());
  	vector<unsigned char> vchHash = CScriptNum(hash.GetCheapHash()).getvch();
     vector<unsigned char> vchHashOffer = vchFromValue(HexStr(vchHash));
-	// normal accept sig
-	scriptPubKeyAccept << CScript::EncodeOP_N(OP_OFFER_ACCEPT) << vchOffer << vchAccept << vchFromString("0") << vchHashOffer << OP_2DROP << OP_2DROP << OP_DROP;
 
     CScript scriptPayment, scriptPubKeyCommission, scriptPaymentCommission;
 	CPubKey currentKey(theAlias.vchPubKey);
 	CPubKey linkedOfferKey(theLinkedAlias.vchPubKey);
 	if(!copyOffer.vchLinkOffer.empty())
 	{
+		scriptPubKeyAccept << CScript::EncodeOP_N(OP_OFFER_ACCEPT) << linkOffer.vchOffer << vchAccept << vchFromString("0") << vchHashOffer << OP_2DROP << OP_2DROP << OP_DROP;
+		scriptPubKeyCommission << CScript::EncodeOP_N(OP_OFFER_ACCEPT) << vchOffer << vchAccept << vchFromString("0") << vchHashOffer << OP_2DROP << OP_2DROP << OP_DROP;
+
 		scriptPayment = GetScriptForDestination(linkedOfferKey.GetID());
 		scriptPaymentCommission = GetScriptForDestination(currentKey.GetID());
 	}
 	else
 	{
+		scriptPubKeyAccept << CScript::EncodeOP_N(OP_OFFER_ACCEPT) << vchOffer << vchAccept << vchFromString("0") << vchHashOffer << OP_2DROP << OP_2DROP << OP_DROP;
 		scriptPayment = GetScriptForDestination(currentKey.GetID());
 	}
 	scriptPubKeyAccept += scriptPayment;
