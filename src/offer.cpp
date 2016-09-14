@@ -1347,7 +1347,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				}
 				else if(nOut != nOutPayment)
 				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 122 - " + _("Offer not paid to the correct address);
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 122 - " + _("Offer not paid to the correct address");
 					return true;
 				}
 			}	
