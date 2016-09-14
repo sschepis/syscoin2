@@ -1138,28 +1138,13 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				return true;
 			
 			}
-			// if its not feedback then we decrease qty accordingly
-			if(theOfferAccept.nQty <= 0)
-				theOfferAccept.nQty = 1;
-			if(theOffer.nQty != -1)
-			{
-				if((theOfferAccept.nQty > theOffer.nQty))
-				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 104 - " + _("Not enough quantity left in this offer for this purchase");
-					return true;
-				}					
-				theOffer.nQty -= theOfferAccept.nQty;
-				if(theOffer.nQty < 0)
-					theOffer.nQty = 0;			
-			}
 
 
 			
 			myPriceOffer.nHeight = theOfferAccept.nAcceptHeight;
-			linkOffer.nHeight = theOfferAccept.nAcceptHeight;
+			
 			// if linked offer then get offer info from root offer history because the linked offer may not have history of changes (root offer can update linked offer without tx)	
 			myPriceOffer.GetOfferFromList(vtxPos);	
-			linkOffer.GetOfferFromList(offerVtxPos);
 			if(!GetTxOfAlias(myPriceOffer.vchAlias, alias, aliasTx))
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 90 - " + _("Cannot find alias for this offer. It may be expired");
@@ -1178,7 +1163,9 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 107 - " + _("Could not get linked offer");
 					return true;
 				}
-				else if(!GetTxOfAlias(linkOffer.vchAlias, linkAlias, aliasLinkTx))
+				linkOffer.nHeight = theOfferAccept.nAcceptHeight;
+				linkOffer.GetOfferFromList(offerVtxPos);				
+				if(!GetTxOfAlias(linkOffer.vchAlias, linkAlias, aliasLinkTx))
 				{
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 90 - " + _("Cannot find alias for this linked offer. It may be expired");
 					return true;
@@ -1265,6 +1252,78 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 119 - " + _("Cannot pay for offer in bitcoins if its currency is not set to BTC");
 				return true;
+			}
+			// decrease qty
+			if(theOfferAccept.nQty <= 0)
+				theOfferAccept.nQty = 1;
+			if(theOffer.nQty != -1)
+			{
+				if(theOfferAccept.nQty > theOffer.nQty)
+				{
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 104 - " + _("Not enough quantity left in this offer for this purchase");
+					return true;
+				}
+				vector<COffer> myLinkVtxPos;
+				unsigned int nQty = theOffer.nQty - theOfferAccept.nQty;
+				// if this is a linked offer we must update the linked offer qty aswell
+				if (pofferdb->ExistsOffer(theOffer.vchLinkOffer)) {
+					if (pofferdb->ReadOffer(theOffer.vchLinkOffer, myLinkVtxPos) && !myLinkVtxPos.empty())
+					{
+						COffer myLinkOffer = myLinkVtxPos.back();
+						if(theOfferAccept.nQty > myLinkOffer.nQty)
+						{
+							errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 104 - " + _("Not enough quantity left in this offer for this purchase");
+							return true;
+						}
+						myLinkOffer.nQty -= theOfferAccept.nQty;
+						if(myLinkOffer.nQty < 0)
+							myLinkOffer.nQty = 0;
+						nQty = myLinkOffer.nQty;
+						myLinkOffer.PutToOfferList(myLinkVtxPos);
+						if (!dontaddtodb && !pofferdb->WriteOffer(theOffer.vchLinkOffer, myLinkVtxPos))
+						{
+							errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 4059 - " + _("Failed to write to offer link to DB");
+							return true;
+						}
+						// go through the linked offers, if any, and update the linked offer qty based on the this qty
+						for(unsigned int i=0;i<myLinkOffer.offerLinks.size();i++) {
+							vector<COffer> myVtxPos;	
+							if (pofferdb->ExistsOffer(myLinkOffer.offerLinks[i])) {
+								if (pofferdb->ReadOffer(myLinkOffer.offerLinks[i], myVtxPos))
+								{
+									COffer offerLink = myVtxPos.back();					
+									offerLink.nQty = nQty;	
+									offerLink.PutToOfferList(myVtxPos);
+									if (!dontaddtodb && !pofferdb->WriteOffer(myLinkOffer.offerLinks[i], myVtxPos))
+									{
+										errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 4059a - " + _("Failed to write to offer link to DB");		
+										return error(errorMessage.c_str());
+									}
+								}
+							}
+						}							
+					}
+				}
+				// go through the linked offers, if any, and update the linked offer qty based on the this qty
+				for(unsigned int i=0;i<theOffer.offerLinks.size();i++) {
+					vector<COffer> myVtxPos;	
+					if (pofferdb->ExistsOffer(theOffer.offerLinks[i])) {
+						if (pofferdb->ReadOffer(theOffer.offerLinks[i], myVtxPos))
+						{
+							COffer offerLink = myVtxPos.back();					
+							offerLink.nQty = nQty;	
+							offerLink.PutToOfferList(myVtxPos);
+							if (!dontaddtodb && !pofferdb->WriteOffer(theOffer.offerLinks[i], myVtxPos))
+							{
+								errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 4058a - " + _("Failed to write to offer link to DB");		
+								return error(errorMessage.c_str());
+							}
+						}
+					}
+				}
+				theOffer.nQty = nQty;
+				if(theOffer.nQty < 0)
+					theOffer.nQty = 0;
 			}
 			// check that user pays enough in syscoin if the currency of the offer is not directbtc purchase
 			if(theOfferAccept.txBTCId.IsNull())
@@ -1479,38 +1538,18 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		}
 		
 		if(op == OP_OFFER_ACCEPT)
-		{
-			COffer linkOffer;
- 			if(theOffer.vchLinkOffer.empty())
-			{
-				// go through the linked offers, if any, and update the linked offer qty based on the this qty
-				for(unsigned int i=0;i<theOffer.offerLinks.size();i++) {
-					CTransaction txOffer;
-					vector<COffer> myVtxPos;
-					if (GetTxAndVtxOfOffer( theOffer.offerLinks[i], linkOffer, txOffer, myVtxPos))
-					{						
-						linkOffer.nQty = theOffer.nQty;	
-						linkOffer.PutToOfferList(myVtxPos);
-						// write offer
-					
-						if (!dontaddtodb && !pofferdb->WriteOffer(theOffer.offerLinks[i], myVtxPos))
-						{
-							errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 129 - " + _("Failed to write to offer link to DB");		
-							return error(errorMessage.c_str());
-						}						
-					}
-				}
-			}
- 			
-			// only if we are the root offer owner do we even consider xfering a cert					
+		{							
  			// purchased a cert so xfer it
 			// also can't auto xfer offer paid in btc, need to do manually
- 			if(!dontaddtodb && pwalletMain && theOfferAccept.txBTCId.IsNull() && IsSyscoinTxMine(tx, "offer") && !theOffer.vchCert.empty() && theOffer.vchLinkOffer.empty())
+ 			if(!dontaddtodb && pwalletMain && theOfferAccept.txBTCId.IsNull() && !theOffer.vchCert.empty())
  			{
- 				string strError = makeTransferCertTX(theOffer, theOfferAccept);
- 				if(strError != "")
+				if((IsSyscoinTxMine(tx, "offer") && theOffer.vchLinkOffer.empty()) || (IsSyscoinTxMine(linkedTx, "offer") && !theOffer.vchLinkOffer.empty()))
 				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 131 - " + _("Transfer certificate failure:") + " " + strError;	
+ 					string strError = makeTransferCertTX(theOffer, theOfferAccept);
+ 					if(strError != "")
+					{
+						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 131 - " + _("Transfer certificate failure:") + " " + strError;	
+					}
 				}
  			}
 		}
