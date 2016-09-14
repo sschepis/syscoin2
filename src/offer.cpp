@@ -255,7 +255,7 @@ bool GetTxOfOffer(const vector<unsigned char> &vchOffer,
 		return false;
 	int nHeight = vtxPos.back().nHeight;
 	txPos.nHeight = nHeight;
-	if(!txPos.GetOfferFromList(vtxPos, true))
+	if(!txPos.GetOfferFromList(vtxPos))
 	{
 		if(fDebug)
 			LogPrintf("GetTxOfOffer() : cannot find offer from this offer position");

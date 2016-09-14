@@ -301,7 +301,7 @@ public:
         offerList.push_back(*this);
     }
 
-    bool GetOfferFromList(std::vector<COffer> &offerList, bool forceNoAccept=false) {
+    bool GetOfferFromList(std::vector<COffer> &offerList) {
         if(offerList.size() == 0) return false;
 		COffer myOffer = offerList.front();
 		if(nHeight <= 0)
@@ -313,9 +313,7 @@ public:
         for(std::vector<COffer>::reverse_iterator it = offerList.rbegin(); it != offerList.rend(); ++it) {
             const COffer &o = *it;
 			// skip if this is an offeraccept or height is greater than our offer height
-			// for linked offers it doesnt care if its an accept because parent offer updates linked offers without creating a service tx
-			// forceNoAccept skips the previous check for those functions that need the last update as input to next offer tx
-			if(((forceNoAccept || o.vchLinkOffer.empty()) && !o.accept.IsNull()) || o.nHeight > nHeight)
+			if(!o.accept.IsNull()) || o.nHeight > nHeight)
 				continue;
             myOffer = o;
 			break;
