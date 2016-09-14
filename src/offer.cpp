@@ -300,8 +300,7 @@ bool GetTxOfOfferAccept(const vector<unsigned char> &vchOffer, const vector<unsi
 	if (!pofferdb->ReadOffer(vchOffer, vtxPos) || vtxPos.empty()) return false;
 	theOfferAccept.SetNull();
 	theOfferAccept.vchAcceptRand = vchOfferAccept;
-	GetAcceptByHash(vtxPos, theOfferAccept, acceptOffer);
-	if(theOfferAccept.IsNull())
+	if(!GetAcceptByHash(vtxPos, theOfferAccept, acceptOffer))
 		return false;
 
 	if (!skipExpiresCheck && ( vtxPos.back().nHeight + GetOfferExpirationDepth())
@@ -322,8 +321,7 @@ bool GetTxAndVtxOfOfferAccept(const vector<unsigned char> &vchOffer, const vecto
 	if (!pofferdb->ReadOffer(vchOffer, vtxPos) || vtxPos.empty()) return false;
 	theOfferAccept.SetNull();
 	theOfferAccept.vchAcceptRand = vchOfferAccept;
-	GetAcceptByHash(vtxPos, theOfferAccept, acceptOffer);
-	if(theOfferAccept.IsNull())
+	if(!GetAcceptByHash(vtxPos, theOfferAccept, acceptOffer))
 		return false;
 
 	if (!skipExpiresCheck && ( vtxPos.back().nHeight + GetOfferExpirationDepth())
@@ -2861,15 +2859,9 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 	string offer = stringFromVch(vchOffer);
 	COffer theOffer;
 	vector<COffer> vtxPos, vtxLinkPos;
-	if (!pofferdb->ReadOffer(vchOffer, vtxPos))
-		throw runtime_error("failed to read from offer DB");
-	if (vtxPos.size() < 1)
-		throw runtime_error("no result returned");
-
     // get transaction pointed to by offer
 	CTransaction tx;
-	vector<COffer> myVtxPos;
-	if(!GetTxAndVtxOfOffer( vchOffer, theOffer, tx, myVtxPos, true))
+	if(!GetTxAndVtxOfOffer( vchOffer, theOffer, tx, vtxPos, true))
 		throw runtime_error("failed to read offer transaction from disk");
 	if(theOffer.safetyLevel >= SAFETY_LEVEL2)
 		throw runtime_error("offer has been banned");
@@ -2900,8 +2892,7 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 		CTransaction txA;
 		COfferAccept ca;
 		COffer acceptOffer;
-		GetTxOfOfferAccept(vtxPos[i].vchOffer, vtxPos[i].accept.vchAcceptRand, acceptOffer, ca, txA, true);
-		if(ca.IsNull())
+		if(!GetTxOfOfferAccept(vtxPos[i].vchOffer, vtxPos[i].accept.vchAcceptRand, acceptOffer, ca, txA, true))
 			continue;
 		int nHeight;
 		nHeight = ca.nAcceptHeight;
@@ -2938,20 +2929,10 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 		}
 		int avgBuyerRating, avgSellerRating;
 		vector<CFeedback> buyerFeedBacks, sellerFeedBacks;
-		if( !theOffer.vchLinkOffer.empty())
-		{
-			COffer linkOffer;
-			COfferAccept linkOfferAccept;
-			CTransaction linkAcceptTx;
-			GetTxOfOfferAccept(theOffer.vchLinkOffer, ca.vchAcceptRand, linkOffer, linkOfferAccept, linkAcceptTx, true);	
-			GetFeedback(buyerFeedBacks, avgBuyerRating, FEEDBACKBUYER, linkOfferAccept.feedback);
-			GetFeedback(sellerFeedBacks, avgSellerRating, FEEDBACKSELLER, linkOfferAccept.feedback);
-		}
-		else
-		{
-			GetFeedback(buyerFeedBacks, avgBuyerRating, FEEDBACKBUYER, ca.feedback);
-			GetFeedback(sellerFeedBacks, avgSellerRating, FEEDBACKSELLER, ca.feedback);
-		}
+
+		GetFeedback(buyerFeedBacks, avgBuyerRating, FEEDBACKBUYER, ca.feedback);
+		GetFeedback(sellerFeedBacks, avgSellerRating, FEEDBACKSELLER, ca.feedback);
+		
         string sHeight = strprintf("%llu", ca.nHeight);
 		oOfferAccept.push_back(Pair("id", stringFromVch(vchAcceptRand)));
 		oOfferAccept.push_back(Pair("txid", ca.txHash.GetHex()));
@@ -3175,8 +3156,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 				CTransaction offerTx, acceptTx;
 				COffer theOffer;
 				vector<COffer> vtxPos;
-				GetTxAndVtxOfOfferAccept(vchOffer, vchAcceptRand, theOffer, theOfferAccept, acceptTx, vtxPos, true);
-				if(theOfferAccept.IsNull())
+				if(!GetTxAndVtxOfOfferAccept(vchOffer, vchAcceptRand, theOffer, theOfferAccept, acceptTx, vtxPos, true))
 					continue;
 				int nHeight;
 				nHeight = theOfferAccept.nAcceptHeight;
@@ -3607,7 +3587,5 @@ bool GetAcceptByHash(std::vector<COffer> &offerList, COfferAccept &ca, COffer &o
 			return true;
         }
     }
-    ca = offerList.back().accept;
-	offer = offerList.back();
 	return false;
 }
