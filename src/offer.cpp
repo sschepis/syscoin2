@@ -876,6 +876,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			serializedOffer.offerLinks = theOffer.offerLinks;
 			serializedOffer.vchLinkOffer = theOffer.vchLinkOffer;
 			serializedOffer.vchOffer = theOffer.vchOffer;
+			serializedOffer.nSold = theOffer.nSold;
 			// cannot edit safety level
 			serializedOffer.safetyLevel = theOffer.safetyLevel;
 			serializedOffer.accept.SetNull();
@@ -1066,6 +1067,8 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					return true;
 				}
 			}
+			// init sold to 0
+			theOffer.nSold = 0;
 		}
 		else if (op == OP_OFFER_ACCEPT) {
 			theOfferAccept = serializedOffer.accept;
