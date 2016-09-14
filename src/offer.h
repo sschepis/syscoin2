@@ -313,7 +313,7 @@ public:
         for(std::vector<COffer>::reverse_iterator it = offerList.rbegin(); it != offerList.rend(); ++it) {
             const COffer &o = *it;
 			// skip if this is an offeraccept or height is greater than our offer height
-			if(!o.accept.IsNull()) || o.nHeight > nHeight)
+			if(!o.accept.IsNull() || o.nHeight > nHeight)
 				continue;
             myOffer = o;
 			break;
