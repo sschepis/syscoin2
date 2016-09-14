@@ -1322,12 +1322,12 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					CTxDestination payDest, commissionDest;
 					if (!ExtractDestination(tx.vout[nOutPayment].scriptPubKey, payDest)) 
 					{
-						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 122 - " + _("Cannot extract destination from payment output script");
+						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 122 - " + _("Cannot extract destination from output script");
 						return true;
 					}	
 					if (!ExtractDestination(tx.vout[nOutCommission].scriptPubKey, commissionDest)) 
 					{
-						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 122 - " + _("Cannot extract destination from commission output script");
+						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 122 - " + _("Cannot extract destination from output script");
 						return true;
 					}
 					CPubKey aliasLinkPubKey(linkAlias.vchPubKey);
@@ -1345,10 +1345,21 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						return true;
 					}
 				}
-				else if(nOut != nOutPayment)
+				else 
 				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 122 - " + _("Offer not paid to the correct address");
-					return true;
+					CTxDestination payDest;
+					if (!ExtractDestination(tx.vout[nOutPayment].scriptPubKey, payDest)) 
+					{
+						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 122 - " + _("Cannot extract destination from output script");
+						return true;
+					}	
+					CPubKey aliasPubKey(alias.vchPubKey);
+					CSyscoinAddress aliasaddy(aliasPubKey.GetID());
+					if(aliasaddy.Get() != payDest)
+					{
+						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 122 - " + _("Payment destination does not match merchant address");
+						return true;
+					}				
 				}
 			}	
 			CTxDestination dest;
