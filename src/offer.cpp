@@ -3192,9 +3192,13 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 					linkOffer.nHeight = nHeight;
 					linkOffer.GetOfferFromList(offerLinkVtxPos);
 					GetTxOfAlias(linkOffer.vchAlias, alias, linkaliastx, true);
-					ismine = IsSyscoinTxMine(linkedTx, "offer");
-					if(ismine && !IsSyscoinTxMine(linkaliastx, "alias"))
-						continue;
+					// if you don't own this offer check the linked offer
+					if(!ismine)
+					{
+						ismine = IsSyscoinTxMine(linkedTx, "offer");
+						if(ismine && !IsSyscoinTxMine(linkaliastx, "alias"))
+							continue;
+					}
 				}
 
 				string offer = stringFromVch(vchOffer);
