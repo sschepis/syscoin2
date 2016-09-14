@@ -1505,7 +1505,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						// go through the linked offers, if any, and update the linked offer qty based on the this qty
 						for(unsigned int i=0;i<myLinkOffer.offerLinks.size();i++) {
 							vector<COffer> myVtxPos;	
-							if (pofferdb->ExistsOffer(myLinkOffer.offerLinks[i]) && myLinkOffer.offerLinks[i].vchOffer != theOffer.vchOffer) {
+							if (pofferdb->ExistsOffer(myLinkOffer.offerLinks[i]) && myLinkOffer.offerLinks[i] != theOffer.vchOffer) {
 								if (pofferdb->ReadOffer(myLinkOffer.offerLinks[i], myVtxPos))
 								{
 									COffer offerLink = myVtxPos.back();					
