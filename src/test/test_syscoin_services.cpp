@@ -1357,14 +1357,12 @@ void EscrowClaimReleaseLink(const string& node, const string& guid, const string
 
 	CAmount nTotal = AmountFromValue(find_value(acceptValue, "systotal"));
 	BOOST_CHECK_EQUAL(nTotal, escrowtotal);
-	BOOST_CHECK(find_value(acceptValue, "ismine").get_str() == "false");
 	BOOST_CHECK(find_value(acceptValue, "pay_message").get_str() == string("Encrypted for owner of offer"));
 	// now get the accept from the resellernode
 	const UniValue &acceptReSellerValue = FindOfferAccept(resellernode, offerguid, acceptguid);
 	nTotal = AmountFromValue(find_value(acceptReSellerValue, "systotal"));
 	const string &discountstr = find_value(acceptReSellerValue, "offer_discount_percentage").get_str();
 	BOOST_CHECK_EQUAL(nTotal, escrowtotal);
-	BOOST_CHECK(find_value(acceptReSellerValue, "ismine").get_str() == "true");
 	BOOST_CHECK(find_value(acceptReSellerValue, "pay_message").get_str() == string("Encrypted for owner of offer"));
 	// now get the linked accept from the sellernode
 	int discount = atoi(discountstr.c_str());

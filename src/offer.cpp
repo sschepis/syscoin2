@@ -2865,16 +2865,6 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 		throw runtime_error("failed to read offer transaction from disk");
 	if(theOffer.safetyLevel >= SAFETY_LEVEL2)
 		throw runtime_error("offer has been banned");
-	CTransaction linkTx;
-	COffer linkOffer;
-	vector<COffer> myLinkedVtxPos;
-	if( !theOffer.vchLinkOffer.empty())
-	{
-		if(!GetTxAndVtxOfOffer( theOffer.vchLinkOffer, linkOffer, linkTx, myLinkedVtxPos, true))
-			throw runtime_error("failed to read linked offer transaction from disk");
-	}
-
-
 	// check that the seller isn't banned level 2
 	CTransaction aliastx;
 	CAliasIndex alias;
@@ -2882,6 +2872,26 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 		throw runtime_error("Could not find the alias associated with this offer");
 	if(alias.safetyLevel >= SAFETY_LEVEL2)
 		throw runtime_error("offer owner has been banned");
+	ismine = IsSyscoinTxMine(tx, "offer") && IsSyscoinTxMine(aliastx, "alias");
+	CTransaction linkTx;
+	COffer linkOffer;
+	vector<COffer> myLinkedVtxPos;
+	CTransaction linkaliastx;
+	CAliasIndex linkalias;
+	bool ismine = false;
+	bool ismine_reseller = false;
+	if( !theOffer.vchLinkOffer.empty())
+	{
+		if(!GetTxAndVtxOfOffer( theOffer.vchLinkOffer, linkOffer, linkTx, myLinkedVtxPos, true))
+			throw runtime_error("failed to read linked offer transaction from disk");
+
+		if(!GetTxOfAlias(linkOffer.vchAlias, linkalias, linkaliastx, true))
+			throw runtime_error("Could not find the alias associated with this linked offer");
+		ismine_reseller = IsSyscoinTxMine(linkTx, "offer") && IsSyscoinTxMine(linkaliastx, "alias");
+	}
+	
+
+
 	vector<vector<unsigned char> > vvch;
     int op, nOut;
 	UniValue oOffer(UniValue::VOBJ);
@@ -2892,6 +2902,8 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 		CTransaction txA;
 		COfferAccept ca;
 		COffer acceptOffer;
+		if(!ismine && !ismine_reseller)
+			continue;
 		if(!GetTxOfOfferAccept(vtxPos[i].vchOffer, vtxPos[i].accept.vchAcceptRand, acceptOffer, ca, txA, true))
 			continue;
 		int nHeight;
@@ -2958,7 +2970,6 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 		oOfferAccept.push_back(Pair("price", strprintf("%.*f", precision, ca.nPrice ))); 	
 		oOfferAccept.push_back(Pair("total", strprintf("%.*f", precision, ca.nPrice * ca.nQty )));
 		oOfferAccept.push_back(Pair("buyer", stringFromVch(ca.vchBuyerAlias)));
-		oOfferAccept.push_back(Pair("ismine", IsSyscoinTxMine(txA, "offer") && IsSyscoinTxMine(aliastx, "alias") ? "true" : "false"));
 
 		if(!ca.txBTCId.IsNull())
 			oOfferAccept.push_back(Pair("paid","true(BTC)"));
@@ -3064,7 +3075,7 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 	oOffer.push_back(Pair("sysprice", ValueFromAmount(nPricePerUnit)));
 	oOffer.push_back(Pair("price", strprintf("%.*f", precision, theOffer.GetPrice() ))); 
 	
-	oOffer.push_back(Pair("ismine", IsSyscoinTxMine(tx, "offer") && IsSyscoinTxMine(aliastx, "alias")  ? "true" : "false"));
+	oOffer.push_back(Pair("ismine", ismine  ? "true" : "false"));
 	if(!theOffer.vchLinkOffer.empty()) {
 		oOffer.push_back(Pair("commission", strprintf("%d%%", theOffer.nCommission)));
 		oOffer.push_back(Pair("offerlink", "true"));
@@ -3147,29 +3158,45 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 
 				if(vvch[0] != vchOfferToFind && !vchOfferToFind.empty())
 					continue;
+				bool ismine = false;
+
+
 				vchOffer = vvch[0];
 				
 				COfferAccept theOfferAccept;
 
 				// Check hash
 				const vector<unsigned char> &vchAcceptRand = vvch[1];			
-				CTransaction offerTx, acceptTx;
+				CTransaction offerTx, acceptTx, aliastx, linkedTx, linkaliastx;
 				COffer theOffer;
+				CAliasIndex alias;
 				vector<COffer> vtxPos;
+				GetTxAndVtxOfOffer( vchOffer, theOffer, offerTx, vtxPos, true);
+				vtxPos.clear();
 				if(!GetTxAndVtxOfOfferAccept(vchOffer, vchAcceptRand, theOffer, theOfferAccept, acceptTx, vtxPos, true))
+					continue;
+				GetTxOfAlias(theOffer.vchAlias, alias, aliastx, true);
+				ismine = IsSyscoinTxMine(offerTx, "offer");
+				if(ismine && !IsSyscoinTxMine(aliastx, "alias"))
 					continue;
 				int nHeight;
 				nHeight = theOfferAccept.nAcceptHeight;
-				COffer linkOffer;
-				vector<COffer> offerLinkVtxPos;
-				CTransaction linkedTx;
-				GetTxAndVtxOfOffer( theOffer.vchLinkOffer, linkOffer, linkedTx, offerLinkVtxPos, true);
-
+				COffer linkOffer;		
 				theOffer.nHeight = nHeight;
 				theOffer.GetOfferFromList(vtxPos);
-				linkOffer.nHeight = nHeight;
-				linkOffer.GetOfferFromList(offerLinkVtxPos);
 
+
+				if( !theOffer.vchLinkOffer.empty())
+				{	
+					vector<COffer> offerLinkVtxPos;
+					GetTxAndVtxOfOffer( theOffer.vchLinkOffer, linkOffer, linkedTx, offerLinkVtxPos, true);
+					linkOffer.nHeight = nHeight;
+					linkOffer.GetOfferFromList(offerLinkVtxPos);
+					GetTxOfAlias(linkOffer.vchAlias, linkalias, linkaliastx, true);
+					ismine = IsSyscoinTxMine(linkedTx, "offer");
+					if(ismine && !IsSyscoinTxMine(linkaliastx, "alias"))
+						continue;
+				}
 
 				string offer = stringFromVch(vchOffer);
 				string sHeight = strprintf("%llu", theOfferAccept.nHeight);
@@ -3185,15 +3212,6 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 				oOfferAccept.push_back(Pair("height", sHeight));
 				oOfferAccept.push_back(Pair("quantity", strprintf("%d", theOfferAccept.nQty)));
 				oOfferAccept.push_back(Pair("currency", stringFromVch(theOffer.sCurrencyCode)));
-				bool isExpired = false;
-				vector<CAliasIndex> aliasVtxPos;
-				CAliasIndex theAlias;
-				CTransaction aliastx;
-				if(GetTxAndVtxOfAlias(theOffer.vchAlias, theAlias, aliastx, aliasVtxPos, isExpired, true))
-				{
-					theAlias.nHeight = theOffer.nHeight;
-					theAlias.GetAliasFromList(aliasVtxPos);
-				}
 
 				if(FindOfferAcceptPayment(acceptTx, theOfferAccept.nPrice) < 0 && theOfferAccept.txBTCId.IsNull())
 					continue;
@@ -3210,16 +3228,13 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 				oOfferAccept.push_back(Pair("price", strprintf("%.*f", precision, theOffer.nPrice ))); 
 				oOfferAccept.push_back(Pair("total", strprintf("%.*f", precision, theOfferAccept.nPrice * theOfferAccept.nQty ))); 
 				// this accept is for me(something ive sold) if this offer is mine
-				oOfferAccept.push_back(Pair("ismine", IsSyscoinTxMine(acceptTx, "offer") && IsSyscoinTxMine(aliastx, "alias")? "true" : "false"));
+				oOfferAccept.push_back(Pair("ismine", ismine? "true" : "false"));
 
 				if(!theOfferAccept.txBTCId.IsNull())
 					oOfferAccept.push_back(Pair("status","paid(BTC)"));
 				else
 					oOfferAccept.push_back(Pair("status","paid"));
 
-				// if its your offer accept (paid to you) but alias is not yours anymore then skip
-				if(IsSyscoinTxMine(acceptTx, "offer") && !IsSyscoinTxMine(aliastx, "alias"))
-					continue;
 
 				string strMessage = string("");
 				if(!DecryptMessage(theAlias.vchPubKey, theOfferAccept.vchMessage, strMessage))
