@@ -2438,7 +2438,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	{
 		scriptPayment = GetScriptForDestination(currentKey.GetID());
 	}
-	scriptPubKeyAccept += scriptPayment;
+	scriptPubKeyAccept += GetScriptForDestination(currentKey.GetID());
 	scriptPubKeyPayment += scriptPayment;
 	scriptPubKeyCommission += scriptPaymentCommission;
 
