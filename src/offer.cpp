@@ -951,8 +951,8 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		{
 			if(!GetTxOfAlias(theOffer.vchAlias, alias, aliasTx))
 			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 77 - " + _("Alias expiry check for offer");
-				return true;	
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 77 - " + _("Cannot find alias for this offer. It may be expired");
+				return true;
 			}
 			if (pofferdb->ExistsOffer(vvchArgs[0]))
 			{
@@ -1073,8 +1073,13 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			theOfferAccept = serializedOffer.accept;
 			if(!GetTxOfAlias(theOfferAccept.vchBuyerAlias, alias, aliasTx))
 			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 90 - " + _("Alias expiry check for offer");
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 90 - " + _("Cannot find buyer alias. It may be expired");
 				return true;	
+			}
+			if(!GetTxOfAlias(theOffer.vchAlias, alias, aliasTx))
+			{
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 90 - " + _("Cannot find alias for this offer. It may be expired");
+				return true;
 			}
 			// trying to purchase a cert
 			if(!theOffer.vchCert.empty())
@@ -1246,7 +1251,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			{
 				if (!GetTxOfAlias(serializedOffer.vchLinkAlias, theAlias, aliasTx))
 				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 118 - " + _("Cannot find the alias you are trying to use for an offer discount. Perhaps it is expired");
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 118 - " + _("Cannot find the alias you are trying to use for an offer discount. It may be expired");
 					return true;
 				}
 			}
@@ -1309,8 +1314,17 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					}
 				}
 			}	
-			
-
+			CTxDestination dest;
+			if (!ExtractDestination(tx.vout[nOut].scriptPubKey, dest)) 
+			{
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 122 - " + _("Cannot extract destination from output script");
+				return true;
+			}		
+			if(alias.Get() != dest)
+			{
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 122 - " + _("Payment destination does not match merchant address");
+				return true;
+			}
 			theOfferAccept.nHeight = nHeight;
 			theOfferAccept.vchAcceptRand = vvchArgs[1];
 			theOfferAccept.txHash = tx.GetHash();
@@ -1351,7 +1365,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						}
 						else
 						{
-							errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 125 - " + _("Cannot find the alias you are trying to offer affiliate list. Perhaps it is expired");					
+							errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 125 - " + _("Cannot find the alias you are trying to offer affiliate list. It may be expired");					
 						}
 					}
 				}
@@ -3137,13 +3151,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 				// if its your offer accept (paid to you) but alias is not yours anymore then skip
 				if(IsSyscoinTxMine(acceptTx, "offer") && !IsSyscoinTxMine(aliastx, "alias"))
 					continue;
-				CAliasIndex theBuyerAlias;
-				CTransaction buyeraliastx;
-				GetTxOfAlias(theOfferAccept.vchBuyerAlias, theBuyerAlias, buyeraliastx, true);
 
-				// if you paid for this offer but the buyer alias isn't yours skip (linked accepts shouldnt show as purchases by merchant or reseller)
-				if(!IsSyscoinTxMine(acceptTx, "offer") && !IsSyscoinTxMine(buyeraliastx, "alias"))
-					continue;				
 				string strMessage = string("");
 				if(!DecryptMessage(theAlias.vchPubKey, theOfferAccept.vchMessage, strMessage))
 					strMessage = string("Encrypted for owner of offer");
