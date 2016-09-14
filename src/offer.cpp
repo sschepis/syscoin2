@@ -1319,8 +1319,10 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 122 - " + _("Cannot extract destination from output script");
 				return true;
-			}		
-			if(alias.Get() != dest)
+			}	
+			CPubKey aliasPubKey(alias.vchPubKey);
+			CSyscoinAddress aliasaddy(aliasPubKey.GetID());
+			if(aliasaddy.Get() != dest)
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 122 - " + _("Payment destination does not match merchant address");
 				return true;
