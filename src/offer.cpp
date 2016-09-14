@@ -1263,65 +1263,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 104 - " + _("Not enough quantity left in this offer for this purchase");
 					return true;
 				}
-				vector<COffer> myLinkVtxPos;
-				unsigned int nQty = theOffer.nQty - theOfferAccept.nQty;
-				// if this is a linked offer we must update the linked offer qty aswell
-				if (pofferdb->ExistsOffer(theOffer.vchLinkOffer)) {
-					if (pofferdb->ReadOffer(theOffer.vchLinkOffer, myLinkVtxPos) && !myLinkVtxPos.empty())
-					{
-						COffer myLinkOffer = myLinkVtxPos.back();
-						if(theOfferAccept.nQty > myLinkOffer.nQty)
-						{
-							errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 104 - " + _("Not enough quantity left in this offer for this purchase");
-							return true;
-						}
-						myLinkOffer.nQty -= theOfferAccept.nQty;
-						if(myLinkOffer.nQty < 0)
-							myLinkOffer.nQty = 0;
-						nQty = myLinkOffer.nQty;
-						myLinkOffer.PutToOfferList(myLinkVtxPos);
-						if (!dontaddtodb && !pofferdb->WriteOffer(theOffer.vchLinkOffer, myLinkVtxPos))
-						{
-							errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 4059 - " + _("Failed to write to offer link to DB");
-							return true;
-						}
-						// go through the linked offers, if any, and update the linked offer qty based on the this qty
-						for(unsigned int i=0;i<myLinkOffer.offerLinks.size();i++) {
-							vector<COffer> myVtxPos;	
-							if (pofferdb->ExistsOffer(myLinkOffer.offerLinks[i])) {
-								if (pofferdb->ReadOffer(myLinkOffer.offerLinks[i], myVtxPos))
-								{
-									COffer offerLink = myVtxPos.back();					
-									offerLink.nQty = nQty;	
-									offerLink.PutToOfferList(myVtxPos);
-									if (!dontaddtodb && !pofferdb->WriteOffer(myLinkOffer.offerLinks[i], myVtxPos))
-									{
-										errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 4059a - " + _("Failed to write to offer link to DB");		
-										return error(errorMessage.c_str());
-									}
-								}
-							}
-						}							
-					}
-				}
-				// go through the linked offers, if any, and update the linked offer qty based on the this qty
-				for(unsigned int i=0;i<theOffer.offerLinks.size();i++) {
-					vector<COffer> myVtxPos;	
-					if (pofferdb->ExistsOffer(theOffer.offerLinks[i])) {
-						if (pofferdb->ReadOffer(theOffer.offerLinks[i], myVtxPos))
-						{
-							COffer offerLink = myVtxPos.back();					
-							offerLink.nQty = nQty;	
-							offerLink.PutToOfferList(myVtxPos);
-							if (!dontaddtodb && !pofferdb->WriteOffer(theOffer.offerLinks[i], myVtxPos))
-							{
-								errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 4058a - " + _("Failed to write to offer link to DB");		
-								return error(errorMessage.c_str());
-							}
-						}
-					}
-				}
-				theOffer.nQty = nQty;
+				theOffer.nQty -= theOfferAccept.nQty;
 				if(theOffer.nQty < 0)
 					theOffer.nQty = 0;
 			}
@@ -1538,7 +1480,65 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		}
 		
 		if(op == OP_OFFER_ACCEPT)
-		{							
+		{		
+			if(theOffer.nQty != -1)
+			{
+				vector<COffer> myLinkVtxPos;
+				unsigned int nQty = theOffer.nQty;
+				// if this is a linked offer we must update the linked offer qty aswell
+				if (pofferdb->ExistsOffer(theOffer.vchLinkOffer)) {
+					if (pofferdb->ReadOffer(theOffer.vchLinkOffer, myLinkVtxPos) && !myLinkVtxPos.empty())
+					{
+						COffer myLinkOffer = myLinkVtxPos.back();
+						if(theOfferAccept.nQty > myLinkOffer.nQty)
+						{
+							errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 104 - " + _("Not enough quantity left in this offer for this purchase");
+							return true;
+						}
+						myLinkOffer.nQty = nQty;
+						myLinkOffer.PutToOfferList(myLinkVtxPos);
+						if (!dontaddtodb && !pofferdb->WriteOffer(theOffer.vchLinkOffer, myLinkVtxPos))
+						{
+							errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 4059 - " + _("Failed to write to offer link to DB");
+							return true;
+						}
+						// go through the linked offers, if any, and update the linked offer qty based on the this qty
+						for(unsigned int i=0;i<myLinkOffer.offerLinks.size();i++) {
+							vector<COffer> myVtxPos;	
+							if (pofferdb->ExistsOffer(myLinkOffer.offerLinks[i]) && myLinkOffer.offerLinks[i].vchOffer != theOffer.vchOffer) {
+								if (pofferdb->ReadOffer(myLinkOffer.offerLinks[i], myVtxPos))
+								{
+									COffer offerLink = myVtxPos.back();					
+									offerLink.nQty = nQty;	
+									offerLink.PutToOfferList(myVtxPos);
+									if (!dontaddtodb && !pofferdb->WriteOffer(myLinkOffer.offerLinks[i], myVtxPos))
+									{
+										errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 4059a - " + _("Failed to write to offer link to DB");		
+										return error(errorMessage.c_str());
+									}
+								}
+							}
+						}							
+					}
+				}
+				// go through the linked offers, if any, and update the linked offer qty based on the this qty
+				for(unsigned int i=0;i<theOffer.offerLinks.size();i++) {
+					vector<COffer> myVtxPos;	
+					if (pofferdb->ExistsOffer(theOffer.offerLinks[i])) {
+						if (pofferdb->ReadOffer(theOffer.offerLinks[i], myVtxPos))
+						{
+							COffer offerLink = myVtxPos.back();					
+							offerLink.nQty = nQty;	
+							offerLink.PutToOfferList(myVtxPos);
+							if (!dontaddtodb && !pofferdb->WriteOffer(theOffer.offerLinks[i], myVtxPos))
+							{
+								errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 4058a - " + _("Failed to write to offer link to DB");		
+								return error(errorMessage.c_str());
+							}
+						}
+					}
+				}
+			}
  			// purchased a cert so xfer it
 			// also can't auto xfer offer paid in btc, need to do manually
  			if(!dontaddtodb && pwalletMain && theOfferAccept.txBTCId.IsNull() && !theOffer.vchCert.empty())
