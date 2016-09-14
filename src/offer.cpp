@@ -362,12 +362,12 @@ bool DecodeOfferTx(const CTransaction& tx, int& op, int& nOut,
 	if (!found) vvch.clear();
 	return found;
 }
-bool FindOfferAcceptPayment(const CTransaction& tx, const CAmount &nPrice) {
+int FindOfferAcceptPayment(const CTransaction& tx, const CAmount &nPrice) {
 	for (unsigned int i = 0; i < tx.vout.size(); i++) {
 		if((tx.vout[i].nValue - nPrice) <= COIN)
-			return true;
+			return i;
 	}
-	return false;
+	return -1;
 }
 
 bool DecodeOfferScript(const CScript& script, int& op,
@@ -544,8 +544,8 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	uint64_t heightToCheckAgainst;
 	COfferLinkWhitelistEntry entry;
 	CCert theCert;
-	CAliasIndex theAlias, alias;
-	CTransaction aliasTx;
+	CAliasIndex theAlias, alias;, linkAlias;
+	CTransaction aliasTx, aliasLinkTx;
 	vector<COffer> vtxPos;
 	vector<string> rateList;
 	vector<string> categories;
@@ -1076,39 +1076,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 90 - " + _("Cannot find buyer alias. It may be expired");
 				return true;	
 			}
-			if(!GetTxOfAlias(theOffer.vchAlias, alias, aliasTx))
-			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 90 - " + _("Cannot find alias for this offer. It may be expired");
-				return true;
-			}
-			// trying to purchase a cert
-			if(!theOffer.vchCert.empty())
-			{
-				CTransaction txCert;
-				if (!GetTxOfCert( theOffer.vchCert, theCert, txCert))
-				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 91 - " + _("Cannot sell an expired certificate");
-					return true;
-				}
-				else if(!theOfferAccept.txBTCId.IsNull())
-				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 92 - " + _("Cannot purchase certificates with Bitcoins");
-					return true;
-				}
-				else if(theOffer.vchLinkOffer.empty())
-				{
-					if(theCert.vchAlias != theOffer.vchAlias)
-					{
-						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 94 - " + _("Cannot purchase this offer because the certificate has been transferred or it is linked to another offer");
-						return true;
-					}
-				}
-			}
-			else if (theOfferAccept.vchMessage.size() <= 0)
-			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 95 - " + _("Offer payment message cannot be empty");
-				return true;
-			}
 					
 			if(!theOfferAccept.feedback.empty())
 			{
@@ -1185,13 +1152,20 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				if(theOffer.nQty < 0)
 					theOffer.nQty = 0;			
 			}
-		
-			if(theOffer.sCategory.size() > 0 && boost::algorithm::starts_with(stringFromVch(theOffer.sCategory), "wanted"))
+
+
+			
+			myPriceOffer.nHeight = theOfferAccept.nAcceptHeight;
+			linkOffer.nHeight = theOfferAccept.nAcceptHeight;
+			// if linked offer then get offer info from root offer history because the linked offer may not have history of changes (root offer can update linked offer without tx)	
+			myPriceOffer.GetOfferFromList(vtxPos);	
+			linkOffer.GetOfferFromList(offerVtxPos);
+			if(!GetTxOfAlias(myPriceOffer.vchAlias, alias, aliasTx))
 			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 105 - " + _("Cannot purchase a wanted offer");
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 90 - " + _("Cannot find alias for this offer. It may be expired");
 				return true;
 			}
-			if(!theOffer.vchLinkOffer.empty())
+			if(!myPriceOffer.vchLinkOffer.empty())
 			{
 
 				if(!theOfferAccept.txBTCId.IsNull())
@@ -1199,12 +1173,17 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 106 - " + _("Cannot accept a linked offer by paying in Bitcoins");
 					return true;
 				}
-				else if(!GetTxAndVtxOfOffer( theOffer.vchLinkOffer, linkOffer, linkedTx, offerVtxPos))
+				else if(!GetTxAndVtxOfOffer( myPriceOffer.vchLinkOffer, linkOffer, linkedTx, offerVtxPos))
 				{
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 107 - " + _("Could not get linked offer");
 					return true;
 				}
-				else if(!theOffer.vchCert.empty() && theCert.vchAlias != linkOffer.vchAlias)
+				else if(!GetTxOfAlias(linkOffer.vchAlias, linkAlias, aliasLinkTx))
+				{
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 90 - " + _("Cannot find alias for this linked offer. It may be expired");
+					return true;
+				}
+				else if(!myPriceOffer.vchCert.empty() && theCert.vchAlias != linkOffer.vchAlias)
 				{
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 108 - " + _("Cannot purchase this linked offer because the certificate has been transferred or it is linked to another offer");
 					return true;
@@ -1234,17 +1213,43 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				linkOffer.linkWhitelist.GetLinkEntryByHash(theOffer.vchAlias, entry);
 				if(entry.IsNull() && linkOffer.linkWhitelist.bExclusiveResell)
 				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 111a - " + _("Linked offer alias does not exist on the root offer affiliate list and toot offer is set to exclusive mode. You cannot accept this offer. Please contact the reseller and ask him to get the root offer merchant to put the reseller on his affiliate list for this offer");
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 111a - " + _("Linked offer alias does not exist on the root offer affiliate list and toot offer is set to exclusive mode. You cannot accept this offer. Please contact the affiliate and ask him to get the root offer merchant to put the affiliate on his affiliate list for this offer");
 					return true;
 				}
 			}
-			
-			myPriceOffer.nHeight = theOfferAccept.nAcceptHeight;
-			linkOffer.nHeight = theOfferAccept.nAcceptHeight;
-			// if linked offer then get offer info from root offer history because the linked offer may not have history of changes (root offer can update linked offer without tx)	
-			myPriceOffer.GetOfferFromList(vtxPos);	
-			linkOffer.GetOfferFromList(offerVtxPos);
-
+			// trying to purchase a cert
+			if(!myPriceOffer.vchCert.empty())
+			{
+				CTransaction txCert;
+				if (!GetTxOfCert( myPriceOffer.vchCert, theCert, txCert))
+				{
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 91 - " + _("Cannot sell an expired certificate");
+					return true;
+				}
+				else if(!theOfferAccept.txBTCId.IsNull())
+				{
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 92 - " + _("Cannot purchase certificates with Bitcoins");
+					return true;
+				}
+				else if(myPriceOffer.vchLinkOffer.empty())
+				{
+					if(theCert.vchAlias != myPriceOffer.vchAlias)
+					{
+						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 94 - " + _("Cannot purchase this offer because the certificate has been transferred or it is linked to another offer");
+						return true;
+					}
+				}
+			}
+			else if (theOfferAccept.vchMessage.size() <= 0)
+			{
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 95 - " + _("Offer payment message cannot be empty");
+				return true;
+			}		
+			if(myPriceOffer.sCategory.size() > 0 && boost::algorithm::starts_with(stringFromVch(myPriceOffer.sCategory), "wanted"))
+			{
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 105 - " + _("Cannot purchase a wanted offer");
+				return true;
+			}
 
 			// if the buyer uses an alias for a discount or a exclusive whitelist buy, then get the guid
 			if(!serializedOffer.vchLinkAlias.empty())
@@ -1298,8 +1303,8 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				int precision = 2;
 				// lookup the price of the offer in syscoin based on pegged alias at the block # when accept/escrow was made
 				CAmount nPrice = convertCurrencyCodeToSyscoin(myPriceOffer.vchAliasPeg, myPriceOffer.sCurrencyCode, priceAtTimeOfAccept, heightToCheckAgainst, precision)*theOfferAccept.nQty;
-				
-				if(!FindOfferAcceptPayment(tx, nPrice))
+				nOutPayment = FindOfferAcceptPayment(tx, nPrice);
+				if(nOutPayment < 0)
 				{
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 122 - " + _("Offer accept does not pay enough according to the offer price");
 					return true;
@@ -1307,11 +1312,42 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				if(!myPriceOffer.vchLinkOffer.empty())
 				{
 					CAmount nCommission = convertCurrencyCodeToSyscoin(myPriceOffer.vchAliasPeg, myPriceOffer.sCurrencyCode, commissionAtTimeOfAccept, heightToCheckAgainst, precision)*theOfferAccept.nQty;
-					if(!FindOfferAcceptPayment(tx, nCommission))
+					nOutCommission = FindOfferAcceptPayment(tx, nCommission);
+					if(nOutCommission < 0)
 					{
-						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 122 - " + _("Offer accept does not pay enough commission to reseller");
+						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 122 - " + _("Offer accept does not pay enough commission to affiliate");
 						return true;
 					}
+					CTxDestination payDest, commissionDest;
+					if (!ExtractDestination(tx.vout[nOutPayment].scriptPubKey, payDest)) 
+					{
+						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 122 - " + _("Cannot extract destination from payment output script");
+						return true;
+					}	
+					if (!ExtractDestination(tx.vout[nOutCommission].scriptPubKey, commissionDest)) 
+					{
+						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 122 - " + _("Cannot extract destination from commission output script");
+						return true;
+					}
+					CPubKey aliasLinkPubKey(linkAlias.vchPubKey);
+					CSyscoinAddress aliaslinkaddy(aliasLinkPubKey.GetID());
+					if(aliaslinkaddy.Get() != payDest)
+					{
+						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 122 - " + _("Payment destination does not match merchant address");
+						return true;
+					}
+					CPubKey aliasPubKey(alias.vchPubKey);
+					CSyscoinAddress aliasaddy(aliasPubKey.GetID());
+					if(aliasaddy.Get() != commissionDest)
+					{
+						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 122 - " + _("Commission destination does not match affiliate address");
+						return true;
+					}
+				}
+				else if(nOut != nOutPayment)
+				{
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 122 - " + _("Offer not paid to the correct address);
+					return true;
 				}
 			}	
 			CTxDestination dest;
@@ -1788,7 +1824,7 @@ UniValue offeraddwhitelist(const UniValue& params, bool fHelp) {
 		"Add to the affiliate list of your offer(controls who can resell).\n"
 						"<offer guid> offer guid that you are adding to\n"
 						"<alias guid> alias guid representing an alias that you want to add to the affiliate list\n"
-						"<discount percentage> percentage of discount given to reseller for this offer. 0 to 99.\n"						
+						"<discount percentage> percentage of discount given to affiliate for this offer. 0 to 99.\n"						
 						+ HelpRequiringPassphrase());
 
 	// gather & validate inputs
@@ -2876,7 +2912,7 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 		oOfferAccept.push_back(Pair("time", sTime));
 		oOfferAccept.push_back(Pair("quantity", strprintf("%d", ca.nQty)));
 		oOfferAccept.push_back(Pair("currency", stringFromVch(acceptOffer.sCurrencyCode)));
-		if(!FindOfferAcceptPayment(txA, ca.nPrice) && ca.txBTCId.IsNull())
+		if(FindOfferAcceptPayment(txA, ca.nPrice) < 0 && ca.txBTCId.IsNull())
 			continue;
 		if(acceptOffer.GetPrice() > 0)
 			oOfferAccept.push_back(Pair("offer_discount_percentage", strprintf("%.2f%%", 100.0f - 100.0f*(ca.nPrice/acceptOffer.nPrice))));		
@@ -3128,7 +3164,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 					theAlias.GetAliasFromList(aliasVtxPos);
 				}
 
-				if(!FindOfferAcceptPayment(acceptTx, theOfferAccept.nPrice) && theOfferAccept.txBTCId.IsNull())
+				if(FindOfferAcceptPayment(acceptTx, theOfferAccept.nPrice) < 0 && theOfferAccept.txBTCId.IsNull())
 					continue;
 				if(theOffer.GetPrice() > 0)
 					oOfferAccept.push_back(Pair("offer_discount_percentage", strprintf("%.2f%%", 100.0f - 100.0f*(theOfferAccept.nPrice/theOffer.nPrice))));		
