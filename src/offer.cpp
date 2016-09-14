@@ -544,7 +544,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	uint64_t heightToCheckAgainst;
 	COfferLinkWhitelistEntry entry;
 	CCert theCert;
-	CAliasIndex theAlias, alias;, linkAlias;
+	CAliasIndex theAlias, alias, linkAlias;
 	CTransaction aliasTx, aliasLinkTx;
 	vector<COffer> vtxPos;
 	vector<string> rateList;
@@ -1301,6 +1301,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				}
 
 				int precision = 2;
+				int nOutPayment, nOutCommission;
 				// lookup the price of the offer in syscoin based on pegged alias at the block # when accept/escrow was made
 				CAmount nPrice = convertCurrencyCodeToSyscoin(myPriceOffer.vchAliasPeg, myPriceOffer.sCurrencyCode, priceAtTimeOfAccept, heightToCheckAgainst, precision)*theOfferAccept.nQty;
 				nOutPayment = FindOfferAcceptPayment(tx, nPrice);
