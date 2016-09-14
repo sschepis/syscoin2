@@ -2398,8 +2398,6 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	}
 	COffer copyOffer = theOffer;
 	theOffer.ClearOffer();
-	if(!copyOffer.vchLinkOffer.empty())
-		theOffer.vchOffer = copyOffer.vchLinkOffer;
 	theOffer.accept = txAccept;
 	// use the linkalias in offer for our whitelist alias inputs check
 	if(wtxAliasIn != NULL)
@@ -2414,15 +2412,14 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
     CScript scriptPayment, scriptPubKeyCommission, scriptPaymentCommission;
 	CPubKey currentKey(theAlias.vchPubKey);
 	CPubKey linkedOfferKey(theLinkedAlias.vchPubKey);
+	scriptPubKeyAccept << CScript::EncodeOP_N(OP_OFFER_ACCEPT) << vchOffer << vchAccept << vchFromString("0") << vchHashOffer << OP_2DROP << OP_2DROP << OP_DROP;
 	if(!copyOffer.vchLinkOffer.empty())
 	{
-		scriptPubKeyAccept << CScript::EncodeOP_N(OP_OFFER_ACCEPT) << linkOffer.vchOffer << vchAccept << vchFromString("0") << vchHashOffer << OP_2DROP << OP_2DROP << OP_DROP;
 		scriptPayment = GetScriptForDestination(linkedOfferKey.GetID());
 		scriptPaymentCommission = GetScriptForDestination(currentKey.GetID());
 	}
 	else
 	{
-		scriptPubKeyAccept << CScript::EncodeOP_N(OP_OFFER_ACCEPT) << vchOffer << vchAccept << vchFromString("0") << vchHashOffer << OP_2DROP << OP_2DROP << OP_DROP;
 		scriptPayment = GetScriptForDestination(currentKey.GetID());
 	}
 	scriptPubKeyAccept += scriptPayment;
