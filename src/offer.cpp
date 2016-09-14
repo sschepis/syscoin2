@@ -1251,7 +1251,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 119 - " + _("Cannot pay for offer in bitcoins if its currency is not set to BTC");
 				return true;
 			}
-			// decrease qty
+			// decrease qty + increase # sold
 			if(theOfferAccept.nQty <= 0)
 				theOfferAccept.nQty = 1;
 			if(theOffer.nQty != -1)
@@ -1264,6 +1264,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				theOffer.nQty -= theOfferAccept.nQty;
 				if(theOffer.nQty < 0)
 					theOffer.nQty = 0;
+				theOffer.nSold++;
 			}
 			// check that user pays enough in syscoin if the currency of the offer is not directbtc purchase
 			if(theOfferAccept.txBTCId.IsNull())
@@ -1494,6 +1495,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 							return true;
 						}
 						myLinkOffer.nQty = nQty;
+						myLinkOffer.nSold++;
 						myLinkOffer.PutToOfferList(myLinkVtxPos);
 						if (!dontaddtodb && !pofferdb->WriteOffer(theOffer.vchLinkOffer, myLinkVtxPos))
 						{
@@ -2878,7 +2880,6 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 	vector<COffer> myLinkedVtxPos;
 	CTransaction linkaliastx;
 	CAliasIndex linkalias;
-	bool ismine_reseller = false;
 	if( !theOffer.vchLinkOffer.empty())
 	{
 		if(!GetTxAndVtxOfOffer( theOffer.vchLinkOffer, linkOffer, linkTx, myLinkedVtxPos, true))
@@ -2886,7 +2887,6 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 
 		if(!GetTxOfAlias(linkOffer.vchAlias, linkalias, linkaliastx, true))
 			throw runtime_error("Could not find the alias associated with this linked offer");
-		ismine_reseller = IsSyscoinTxMine(linkTx, "offer") && IsSyscoinTxMine(linkaliastx, "alias");
 	}
 	
 
@@ -2901,8 +2901,6 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 		CTransaction txA;
 		COfferAccept ca;
 		COffer acceptOffer;
-		if(!ismine && !ismine_reseller)
-			continue;
 		if(!GetTxOfOfferAccept(vtxPos[i].vchOffer, vtxPos[i].accept.vchAcceptRand, acceptOffer, ca, txA, true))
 			continue;
 		int nHeight;
@@ -3108,7 +3106,7 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 		rating = roundf(alias.nRatingAsSeller/(float)alias.nRatingCountAsSeller);
 	oOffer.push_back(Pair("alias_rating",(int)rating));
 	oOffer.push_back(Pair("geolocation", stringFromVch(theOffer.vchGeoLocation)));
-	oOffer.push_back(Pair("offers_sold", (int)aoOfferAccepts.size()));
+	oOffer.push_back(Pair("offers_sold", (int)theOffer.nSold));
 	oOffer.push_back(Pair("accepts", aoOfferAccepts));
 	oLastOffer = oOffer;
 	
@@ -3376,7 +3374,7 @@ UniValue offerlist(const UniValue& params, bool fHelp) {
 			oName.push_back(Pair("safesearch", theOfferA.safeSearch ? "Yes" : "No"));
 			oName.push_back(Pair("safetylevel", theOfferA.safetyLevel ));
 			oName.push_back(Pair("geolocation", stringFromVch(theOfferA.vchGeoLocation)));
-			oName.push_back(Pair("offers_sold", GetNumberOfAccepts(vtxPos)));
+			oName.push_back(Pair("offers_sold", (int)theOfferA.nSold));
 			expired_block = nHeight + GetOfferExpirationDepth();
             if(expired_block < chainActive.Tip()->nHeight)
 			{
@@ -3565,7 +3563,7 @@ UniValue offerfilter(const UniValue& params, bool fHelp) {
 		oOffer.push_back(Pair("exclusive_resell", txOffer.linkWhitelist.bExclusiveResell ? "ON" : "OFF"));
 		oOffer.push_back(Pair("btconly", txOffer.bOnlyAcceptBTC ? "Yes" : "No"));
 		oOffer.push_back(Pair("alias_peg", stringFromVch(txOffer.vchAliasPeg)));
-		oOffer.push_back(Pair("offers_sold", GetNumberOfAccepts(vtxPos)));
+		oOffer.push_back(Pair("offers_sold", (int)txOffer.nSold));
 		expired_block = nHeight + GetOfferExpirationDepth();  
 		expires_in = expired_block - chainActive.Tip()->nHeight;
 		oOffer.push_back(Pair("private", txOffer.bPrivate ? "Yes" : "No"));
@@ -3583,14 +3581,7 @@ UniValue offerfilter(const UniValue& params, bool fHelp) {
 
 	return oRes;
 }
-int GetNumberOfAccepts(const std::vector<COffer> &offerList) {
-	int count = 0;
-	for(unsigned int i =0;i<offerList.size();i++) {
-		if(!offerList[i].accept.IsNull())
-			count++;
-    }
-    return count;
-}
+
 bool GetAcceptByHash(std::vector<COffer> &offerList, COfferAccept &ca, COffer &offer) {
 	if(offerList.empty())
 		return false;
