@@ -2872,13 +2872,12 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 		throw runtime_error("Could not find the alias associated with this offer");
 	if(alias.safetyLevel >= SAFETY_LEVEL2)
 		throw runtime_error("offer owner has been banned");
-	ismine = IsSyscoinTxMine(tx, "offer") && IsSyscoinTxMine(aliastx, "alias");
+	bool ismine = IsSyscoinTxMine(tx, "offer") && IsSyscoinTxMine(aliastx, "alias");
 	CTransaction linkTx;
 	COffer linkOffer;
 	vector<COffer> myLinkedVtxPos;
 	CTransaction linkaliastx;
 	CAliasIndex linkalias;
-	bool ismine = false;
 	bool ismine_reseller = false;
 	if( !theOffer.vchLinkOffer.empty())
 	{
@@ -3192,7 +3191,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 					GetTxAndVtxOfOffer( theOffer.vchLinkOffer, linkOffer, linkedTx, offerLinkVtxPos, true);
 					linkOffer.nHeight = nHeight;
 					linkOffer.GetOfferFromList(offerLinkVtxPos);
-					GetTxOfAlias(linkOffer.vchAlias, linkalias, linkaliastx, true);
+					GetTxOfAlias(linkOffer.vchAlias, alias, linkaliastx, true);
 					ismine = IsSyscoinTxMine(linkedTx, "offer");
 					if(ismine && !IsSyscoinTxMine(linkaliastx, "alias"))
 						continue;
@@ -3237,7 +3236,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 
 
 				string strMessage = string("");
-				if(!DecryptMessage(theAlias.vchPubKey, theOfferAccept.vchMessage, strMessage))
+				if(!DecryptMessage(alias.vchPubKey, theOfferAccept.vchMessage, strMessage))
 					strMessage = string("Encrypted for owner of offer");
 				oOfferAccept.push_back(Pair("pay_message", strMessage));
 				oRes.push_back(oOfferAccept);
