@@ -147,8 +147,61 @@ void OfferAcceptInfoDialog::SetFeedbackUI(const UniValue &feedbackObj, const QSt
 bool OfferAcceptInfoDialog::lookup()
 {
 	string strError;
-	string strMethod = string("offeracceptlist");
+	string strMethod = string("offerinfo");
 	UniValue params(UniValue::VARR);
+	UniValue result(UniValue::VOBJ);
+	params.push_back(offerGUID.toStdString());
+	QString sellerStr;
+    try {
+        result = tableRPC.execute(strMethod, params);
+
+		if (result.type() == UniValue::VOBJ)
+		{
+			
+			sellerStr = QString::fromStdString(find_value(result.get_obj(), "alias").get_str());
+			ui->sellerEdit->setText(sellerStr);
+			QString linkedStr = QString::fromStdString(find_value(result.get_obj(), "offerlink").get_str());
+			if(linkedStr == QString("true"))
+			{
+
+				ui->linkGUIDEdit->setVisible(true);
+				ui->linkGUIDLabel->setVisible(true);
+				ui->commissionEdit->setVisible(true);
+				ui->commissionLabel->setVisible(true);
+				ui->linkGUIDEdit->setText(QString::fromStdString(find_value(result.get_obj(), "offerlink_guid").get_str()));
+				ui->commissionEdit->setText(QString::fromStdString(find_value(result.get_obj(), "commission").get_str()));
+				sellerStr = QString::fromStdString(find_value(result.get_obj(), "offerlink_seller").get_str());
+			}
+			ui->titleEdit->setText(QString::fromStdString(find_value(result.get_obj(), "title").get_str()));
+			QString certStr = QString::fromStdString(find_value(result.get_obj(), "cert").get_str());
+			if(certStr != "")
+			{
+				ui->certEdit->setVisible(true);
+				ui->certLabel->setVisible(true);
+				ui->certEdit->setText(certStr);
+			}	
+			return true;
+		}
+		 
+
+	}
+	catch (UniValue& objError)
+	{
+		QMessageBox::critical(this, windowTitle(),
+				tr("Could not find this offer, please ensure offer has been confirmed by the blockchain"),
+				QMessageBox::Ok, QMessageBox::Ok);
+
+	}
+	catch(std::exception& e)
+	{
+		QMessageBox::critical(this, windowTitle(),
+			tr("There was an exception trying to locate this offer, please ensure offer has been confirmed by the blockchain: ") + QString::fromStdString(e.what()),
+				QMessageBox::Ok, QMessageBox::Ok);
+	}
+
+	string strError;
+	string strMethod = string("offeracceptlist");
+	params.clear();
 	params.push_back(offerAcceptGUID.toStdString());
 	UniValue offerAcceptsValue;
 
@@ -217,57 +270,7 @@ bool OfferAcceptInfoDialog::lookup()
 			tr("There was an exception trying to locate this offeraccept, please ensure it has been confirmed by the blockchain: ") + QString::fromStdString(e.what()),
 				QMessageBox::Ok, QMessageBox::Ok);
 	}
-	UniValue result(UniValue::VOBJ);
-	strMethod = string("offerinfo");
-	params.clear();
-	params.push_back(offerGUID.toStdString());
 
-    try {
-        result = tableRPC.execute(strMethod, params);
-
-		if (result.type() == UniValue::VOBJ)
-		{
-			
-			QString sellerStr = QString::fromStdString(find_value(result.get_obj(), "alias").get_str());
-			ui->sellerEdit->setText(sellerStr);
-			QString linkedStr = QString::fromStdString(find_value(result.get_obj(), "offerlink").get_str());
-			if(linkedStr == QString("true"))
-			{
-
-				ui->linkGUIDEdit->setVisible(true);
-				ui->linkGUIDLabel->setVisible(true);
-				ui->commissionEdit->setVisible(true);
-				ui->commissionLabel->setVisible(true);
-				ui->linkGUIDEdit->setText(QString::fromStdString(find_value(result.get_obj(), "offerlink_guid").get_str()));
-				ui->commissionEdit->setText(QString::fromStdString(find_value(result.get_obj(), "commission").get_str()));
-				sellerStr = QString::fromStdString(find_value(result.get_obj(), "offerlink_seller").get_str());
-			}
-			ui->titleEdit->setText(QString::fromStdString(find_value(result.get_obj(), "title").get_str()));
-			QString certStr = QString::fromStdString(find_value(result.get_obj(), "cert").get_str());
-			if(certStr != "")
-			{
-				ui->certEdit->setVisible(true);
-				ui->certLabel->setVisible(true);
-				ui->certEdit->setText(certStr);
-			}	
-			return true;
-		}
-		 
-
-	}
-	catch (UniValue& objError)
-	{
-		QMessageBox::critical(this, windowTitle(),
-				tr("Could not find this offer, please ensure offer has been confirmed by the blockchain"),
-				QMessageBox::Ok, QMessageBox::Ok);
-
-	}
-	catch(std::exception& e)
-	{
-		QMessageBox::critical(this, windowTitle(),
-			tr("There was an exception trying to locate this offer, please ensure offer has been confirmed by the blockchain: ") + QString::fromStdString(e.what()),
-				QMessageBox::Ok, QMessageBox::Ok);
-	}
 	return false;
 
 
