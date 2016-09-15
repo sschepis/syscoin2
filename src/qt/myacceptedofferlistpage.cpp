@@ -145,7 +145,7 @@ bool MyAcceptedOfferListPage::lookup(const QString &lookupid, const QString &acc
 
 		if (result.type() == UniValue::VOBJ)
 		{
-			const string &strAddress = find_value(offerObj, "address").get_str();			
+			const string &strAddress = find_value(result, "address").get_str();			
 			address = QString::fromStdString(strAddress);			
 			return true;
 		}
