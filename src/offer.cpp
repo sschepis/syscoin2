@@ -1072,7 +1072,9 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		}
 		else if (op == OP_OFFER_ACCEPT) {
 			theOfferAccept = serializedOffer.accept;
-			if(!GetTxOfAlias(theOfferAccept.vchBuyerAlias, alias, aliasTx))
+			CAliasIndex buyeralias;
+			CTransaction buyeraliasTx;
+			if(!GetTxOfAlias(theOfferAccept.vchBuyerAlias, buyeralias, buyeraliasTx))
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 90 - " + _("Cannot find buyer alias. It may be expired");
 				return true;	
