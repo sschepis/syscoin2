@@ -1676,6 +1676,9 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 	string strEscrowScriptPubKey = HexStr(fundingTx.vout[nOutMultiSig].scriptPubKey.begin(), fundingTx.vout[nOutMultiSig].scriptPubKey.end());
 	if(nAmount != nEscrowTotal)
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4101 - " + _("Expected amount of escrow does not match what is held in escrow"));
+	bool foundSellerPayment = false;
+	bool foundCommissionPayment = false;
+	bool foundFeePayment = false;	
 	UniValue arrayDecodeParams(UniValue::VARR);
 	arrayDecodeParams.push_back(HexStr(escrow.rawTx));
 	UniValue decodeRes;
@@ -1691,8 +1694,88 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 	{
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4102 - " + _("Could not decode escrow transaction: Invalid response from decoderawtransaction"));
 	}
+	const UniValue& decodeo = decodeRes.get_obj();
+	const UniValue& vout_value = find_value(decodeo, "vout");
+	if (!vout_value.isArray())
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4102 - " + _("Could not decode escrow transaction: Cannot find VOUT from transaction"));	
+	const UniValue &vouts = vout_value.get_array();
+    for (unsigned int idx = 0; idx < vouts.size(); idx++) {
+        const UniValue& vout = vouts[idx];					
+		const UniValue &voutObj = vout.get_obj();					
+		const UniValue &voutValue = find_value(voutObj, "value");
+		if(!voutValue.isNum())
+			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4102 - " + _("Could not decode escrow transaction: Invalid VOUT value"));
+		int64_t iVout = AmountFromValue(voutValue);
+		UniValue scriptPubKeyValue = find_value(voutObj, "scriptPubKey");
+		if(!scriptPubKeyValue.isObject())
+			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4102 - " + _("Could not decode escrow transaction: Invalid scriptPubKey value"));
+		const UniValue &scriptPubKeyValueObj = scriptPubKeyValue.get_obj();	
+		const UniValue &addressesValue = find_value(scriptPubKeyValueObj, "addresses");
+		if(!addressesValue.isArray())
+			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4102 - " + _("Could not decode escrow transaction: Invalid addresses"));
 
-
+		const UniValue &addresses = addressesValue.get_array();
+		for (unsigned int idx = 0; idx < addresses.size(); idx++) {
+			const UniValue& address = addresses[idx];
+			if(!address.isStr())
+				throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4102 - " + _("Could not decode escrow transaction: Invalid address"));
+			const string &strAddress = address.get_str();
+			CSyscoinAddress payoutAddress(strAddress);
+			// check arb fee is paid to arbiter or buyer
+			if(!foundFeePayment)
+			{
+				CPubKey arbiterKey(escrow.vchArbiterKey);
+				CSyscoinAddress arbiterAddress(arbiterKey.GetID());
+				if(arbiterAddress == payoutAddress && iVout == nEscrowFee)
+					foundFeePayment = true;
+			}
+			if(!foundFeePayment)
+			{
+				CPubKey buyerKey(escrow.vchBuyerKey);
+				CSyscoinAddress buyerAddress(buyerKey.GetID());
+				if(buyerAddress == payoutAddress && iVout == nEscrowFee)
+					foundFeePayment = true;
+			}	
+			if(!theOffer.vchLinkOffer.empty())
+			{
+				if(!foundCommissionPayment)
+				{
+					CPubKey resellerKey(theOffer.vchAlias);
+					CSyscoinAddress resellerAddress(resellerKey.GetID());
+					if(resellerAddress == payoutAddress && iVout == nExpectedCommissionAmount)
+					{
+						foundCommissionPayment = true;
+					}
+				}
+				if(!foundSellerPayment)
+				{
+					CPubKey sellerKey(escrow.vchSellerAlias);
+					CSyscoinAddress sellerAddress(sellerKey.GetID());
+					if(sellerAddress == payoutAddress && iVout == nExpectedAmount)
+					{
+						foundSellerPayment = true;
+					}
+				}
+			}
+			else if(!foundSellerPayment)
+			{
+				CPubKey sellerKey(escrow.vchSellerAlias);
+				CSyscoinAddress sellerAddress(sellerKey.GetID());
+				if(sellerAddress == payoutAddress && iVout == nExpectedAmount)
+				{
+					foundSellerPayment = true;
+				}
+			}
+			
+		}
+	}
+	if(!foundSellerPayment)
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4102 - " + _("Expected payment amount from escrow does not match what was expected by the seller"));	
+	if(!foundFeePayment)    
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4102 - " + _("Expected fee payment to arbiter or buyer from escrow does not match what was expected"));	
+	if(!theOffer.vchLinkOffer.empty() && !foundCommissionPayment)
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4102 - " + _("Expected commission to affiliate from escrow does not match what was expected"));	
+	
 	CKeyID keyID;
 	if (!sellerAddressOnActivate.GetKeyID(keyID))
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4103 - " + _("Seller address does not refer to a key"));

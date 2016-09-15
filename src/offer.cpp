@@ -1365,19 +1365,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					}				
 				}
 			}	
-			CTxDestination dest;
-			if (!ExtractDestination(tx.vout[nOut].scriptPubKey, dest)) 
-			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 122 - " + _("Cannot extract destination from output script");
-				return true;
-			}	
-			CPubKey aliasPubKey(alias.vchPubKey);
-			CSyscoinAddress aliasaddy(aliasPubKey.GetID());
-			if(aliasaddy.Get() != dest)
-			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 122 - " + _("Payment destination does not match merchant address");
-				return true;
-			}
 			theOfferAccept.nHeight = nHeight;
 			theOfferAccept.vchAcceptRand = vvchArgs[1];
 			theOfferAccept.txHash = tx.GetHash();
