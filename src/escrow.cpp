@@ -1583,9 +1583,9 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 		escrow, tx, vtxPos))
         throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4099 - " + _("Could not find a escrow with this key"));
 
-	CAliasIndex sellerAlias;
-	vector<CAliasIndex> aliasVtxPos;
-	CTransaction aliastx;
+	CAliasIndex sellerAlias, buyerAlias, arbiterAlias, resellerAlias;
+	vector<CAliasIndex> aliasVtxPos, aliasBuyerVtxPos, aliasArbiterVtxPos, aliasResellerVtxPos;
+	CTransaction aliastx, buyeraliastx, arbiteraliastx, reselleraliastx;
 	bool isExpired;
 	CSyscoinAddress sellerAddressOnActivate;
 	CPubKey sellerKey;
@@ -1597,7 +1597,16 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 		CPubKey pubKey(sellerAlias.vchPubKey);
 		sellerAddressOnActivate = CSyscoinAddress(pubKey.GetID());
 	}
-
+	if(GetTxAndVtxOfAlias(escrow.vchBuyerAlias, buyerAlias, buyeraliastx, aliasBuyerVtxPos, isExpired, true))
+	{
+		buyerAlias.nHeight = vtxPos.front().nHeight;
+		buyerAlias.GetAliasFromList(aliasBuyerVtxPos);
+	}
+	if(GetTxAndVtxOfAlias(escrow.vchArbiterAlias, arbiterAlias, arbiteraliastx, aliasArbiterVtxPos, isExpired, true))
+	{
+		arbiterAlias.nHeight = vtxPos.front().nHeight;
+		arbiterAlias.GetAliasFromList(aliasArbiterVtxPos);
+	}
     CTransaction fundingTx;
 	if (!GetSyscoinTransaction(vtxPos.front().nHeight, escrow.escrowInputTxHash, fundingTx, Params().GetConsensus()))
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4100 - " + _("Failed to find escrow transaction"));
@@ -1646,6 +1655,11 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 			theOffer.linkWhitelist.GetLinkEntryByHash(escrow.vchBuyerAlias, foundEntry);
 		priceAtTimeOfAccept = theOffer.GetPrice(foundEntry);
 		commissionAtTimeOfAccept = 0;
+		if(GetTxAndVtxOfAlias(theOffer.vchAlias, resellerAlias, reselleraliastx, aliasResellerVtxPos, isExpired, true))
+		{
+			resellerAlias.nHeight = vtxPos.front().nHeight;
+			resellerAlias.GetAliasFromList(aliasResellerVtxPos);
+		}
 	}
 	else 
 	{
@@ -1724,14 +1738,14 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 			// check arb fee is paid to arbiter or buyer
 			if(!foundFeePayment)
 			{
-				CPubKey arbiterKey(escrow.vchArbiterKey);
+				CPubKey arbiterKey(arbiterAlias.vchPubKey);
 				CSyscoinAddress arbiterAddress(arbiterKey.GetID());
 				if(arbiterAddress == payoutAddress && iVout == nEscrowFee)
 					foundFeePayment = true;
 			}
 			if(!foundFeePayment)
 			{
-				CPubKey buyerKey(escrow.vchBuyerKey);
+				CPubKey buyerKey(buyerAlias.vchPubKey);
 				CSyscoinAddress buyerAddress(buyerKey.GetID());
 				if(buyerAddress == payoutAddress && iVout == nEscrowFee)
 					foundFeePayment = true;
@@ -1740,7 +1754,7 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 			{
 				if(!foundCommissionPayment)
 				{
-					CPubKey resellerKey(theOffer.vchAlias);
+					CPubKey resellerKey(resellerAlias.vchPubKey);
 					CSyscoinAddress resellerAddress(resellerKey.GetID());
 					if(resellerAddress == payoutAddress && iVout == nExpectedCommissionAmount)
 					{
@@ -1749,7 +1763,7 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 				}
 				if(!foundSellerPayment)
 				{
-					CPubKey sellerKey(escrow.vchSellerAlias);
+					CPubKey sellerKey(sellerAlias.vchPubKey);
 					CSyscoinAddress sellerAddress(sellerKey.GetID());
 					if(sellerAddress == payoutAddress && iVout == nExpectedAmount)
 					{
@@ -1759,7 +1773,7 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 			}
 			else if(!foundSellerPayment)
 			{
-				CPubKey sellerKey(escrow.vchSellerAlias);
+				CPubKey sellerKey(sellerAlias.vchPubKey);
 				CSyscoinAddress sellerAddress(sellerKey.GetID());
 				if(sellerAddress == payoutAddress && iVout == nExpectedAmount)
 				{
