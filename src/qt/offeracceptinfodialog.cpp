@@ -266,7 +266,7 @@ bool OfferAcceptInfoDialog::lookup()
 	catch(std::exception& e)
 	{
 		QMessageBox::critical(this, windowTitle(),
-			tr("There was an exception trying to locate this offeraccept, please ensure it has been confirmed by the blockchain: ") + QString::fromStdString(e.what()),
+			tr("There was an exception trying to locate this offer accept, please ensure it has been confirmed by the blockchain: ") + QString::fromStdString(e.what()),
 				QMessageBox::Ok, QMessageBox::Ok);
 	}
 
