@@ -3065,7 +3065,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 			
 	
 			oOfferAccept.push_back(Pair("id", stringFromVch(vchAcceptRand)));
-			oOfferAccept.push_back(Pair("txid", ca.txHash.GetHex()));
+			oOfferAccept.push_back(Pair("txid", theOfferAccept.txHash.GetHex()));
 			string strBTCId = "";
 			if(!ca.txBTCId.IsNull())
 				strBTCId = ca.txBTCId.GetHex();
