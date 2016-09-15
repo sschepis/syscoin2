@@ -2984,10 +2984,9 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 	CAliasIndex alias, linkAlias;
 	vector<COffer> vtxPos, vtxLinkPos, vtxAliasLinkPos;
     vector<unsigned char> vchOffer;
-    UniValue oRes(UniValue::VARR);
     uint256 blockHash;
     uint256 hash;
-	
+	UniValue aoOfferAccepts(UniValue::VARR);
     BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet)
     {
         // get txn hash, read txn index
@@ -3025,7 +3024,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 			vtxPos.clear();
 			if(!GetTxAndVtxOfOfferAccept(vchOffer, vchAcceptRand, theOffer, theOfferAccept, acceptTx, vtxPos, true))
 				continue;
-			GetTxOfAlias(theOffer.vchAlias, alias, aliastx, true);
+			GetTxOfAlias(theOffer.vchAlias, alias, aliasTx, true);
 			ismine = IsSyscoinTxMine(offerTx, "offer");
 			if(ismine && !IsSyscoinTxMine(aliasTx, "alias"))
 				continue;
@@ -3039,7 +3038,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 			{	
 				GetTxAndVtxOfOffer( theOffer.vchLinkOffer, linkOffer, linkTx, vtxLinkPos, true);
 				linkOffer.nHeight = nHeight;
-				linkOffer.GetOfferFromList(offerLinkVtxPos);
+				linkOffer.GetOfferFromList(vtxLinkPos);
 				GetTxOfAlias(linkOffer.vchAlias, alias, linkAliasTx, true);
 				// if you don't own this offer check the linked offer
 				if(!ismine)
@@ -3051,9 +3050,8 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 			}
 
 			string offer = stringFromVch(vchOffer);
-			string sHeight = strprintf("%llu", ca.nHeight);
+			string sHeight = strprintf("%llu", theOfferAccept.nHeight);
 			oOfferAccept.push_back(Pair("offer", offer));
-			const vector<unsigned char> &vchAcceptRand = vvch[1];		
 			string sTime;
 			CBlockIndex *pindex = chainActive[ca.nHeight];
 			if (pindex) {
@@ -3149,7 +3147,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 	
 	
 
-    return oRes;
+    return aoOfferAccepts;
 }
 UniValue offeracceptinfo(const UniValue& params, bool fHelp) {
     if (fHelp || 1 < params.size())
@@ -3230,8 +3228,7 @@ UniValue offeracceptinfo(const UniValue& params, bool fHelp) {
 	
 			string offer = stringFromVch(vchOffer);
 			string sHeight = strprintf("%llu", theOfferAccept.nHeight);
-			oOfferAccept.push_back(Pair("offer", offer));
-			const vector<unsigned char> &vchAcceptRand = vvch[1];		
+			oOfferAccept.push_back(Pair("offer", offer));		
 			string sTime;
 			CBlockIndex *pindex = chainActive[theOfferAccept.nHeight];
 			if (pindex) {
@@ -3243,9 +3240,8 @@ UniValue offeracceptinfo(const UniValue& params, bool fHelp) {
 			GetFeedback(buyerFeedBacks, avgBuyerRating, FEEDBACKBUYER, theOfferAccept.feedback);
 			GetFeedback(sellerFeedBacks, avgSellerRating, FEEDBACKSELLER, theOfferAccept.feedback);
 			
-			string offer = stringFromVch(vchOffer);
 			oOfferAccept.push_back(Pair("offer", offer));
-			oOfferAccept.push_back(Pair("id", stringFromVch(vchAcceptRand)));
+			oOfferAccept.push_back(Pair("id", stringFromVch(theOfferAccept.vchAcceptRand)));
 			oOfferAccept.push_back(Pair("txid", theOfferAccept.txHash.GetHex()));
 			string strBTCId = "";
 			if(!theOfferAccept.txBTCId.IsNull())
