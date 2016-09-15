@@ -2978,7 +2978,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 				"List my offer purchases, option parameter is the offer accept guid that you want information for");
 	vector<unsigned char> vchOfferToFind;
     if (params.size() == 1)
-        vchOfferToFind = vchFromValue(params[0]);	
+        vchAcceptToFind = vchFromValue(params[0]);	
 	CTransaction offerTx, acceptTx, aliasTx, linkTx, linkAliasTx;
 	COffer theOffer, linkOffer;
 	CAliasIndex alias, linkAlias;
@@ -3009,7 +3009,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 			// dont show feedback outputs as accepts
 			if(vvch[2] == vchFromString("1"))
 				continue;
-			if(vvch[0] != vchOfferToFind && !vchOfferToFind.empty())
+			if(vvch[1] != vchAcceptToFind && !vchAcceptToFind.empty())
 				continue;
 			bool ismine = false;
 
