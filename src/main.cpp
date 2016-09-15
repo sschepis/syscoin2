@@ -890,7 +890,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, const CCoinsViewCache& inputs, i
 }
 bool AddSyscoinServicesToDB(const CBlock& block, const CCoinsViewCache& inputs, int nHeight)
 {
-	vector<vector<unsigned char> > vvchArgs;f
+	vector<vector<unsigned char> > vvchArgs;
 	int op;
 	int nOut;	
 	bool fJustCheck = false;
