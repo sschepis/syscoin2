@@ -709,7 +709,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			}
 			if(prevOp == OP_OFFER_ACCEPT)
 			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 36 - " + _("Cannot use offeraccept as input to an update");
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 36 - " + _("Cannot use offer purchase as input to an update");
 				return error(errorMessage.c_str());
 			}
 			if (vvchPrevArgs[0] != vvchArgs[0])
@@ -2721,7 +2721,7 @@ UniValue offeracceptfeedback(const UniValue& params, bool fHelp) {
 	const CWalletTx *wtxAliasIn = NULL;
 
 	if (!GetTxOfOfferAccept(vchOffer, vchAcceptRand, offer, theOfferAccept, tx))
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 189 - " + _("Could not find this offer accept"));
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 189 - " + _("Could not find this offer purchase"));
 
 	vector<vector<unsigned char> > vvch;
     int op, nOut;

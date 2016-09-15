@@ -70,7 +70,7 @@
      <item>
       <widget class="QPushButton" name="feedbackButton">
        <property name="toolTip">
-        <string>Leave feedback on this offer accept</string>
+        <string>Leave feedback on this offer purchase</string>
        </property>
        <property name="text">
         <string>Leave Feedback</string>

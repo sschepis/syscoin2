@@ -259,14 +259,14 @@ bool OfferAcceptInfoDialog::lookup()
 	catch (UniValue& objError)
 	{
 		QMessageBox::critical(this, windowTitle(),
-				tr("Could not find this offer accept, please ensure it has been confirmed by the blockchain"),
+				tr("Could not find this offer purchase, please ensure it has been confirmed by the blockchain"),
 				QMessageBox::Ok, QMessageBox::Ok);
 
 	}
 	catch(std::exception& e)
 	{
 		QMessageBox::critical(this, windowTitle(),
-			tr("There was an exception trying to locate this offer accept, please ensure it has been confirmed by the blockchain: ") + QString::fromStdString(e.what()),
+			tr("There was an exception trying to locate this offer purchase, please ensure it has been confirmed by the blockchain: ") + QString::fromStdString(e.what()),
 				QMessageBox::Ok, QMessageBox::Ok);
 	}
 
