@@ -400,6 +400,7 @@ static const CRPCCommand vRPCCommands[] =
 	{ "wallet", "offerwhitelist",		&offerwhitelist,	   false },
     { "wallet", "offerlist",            &offerlist,            false },
 	{ "wallet", "offeracceptlist",      &offeracceptlist,      false },
+	{ "wallet", "offeracceptinfo",      &offeracceptinfo,      false },
     { "wallet", "offerinfo",            &offerinfo,            false },
     { "wallet", "offerhistory",         &offerhistory,         false },
     { "wallet", "offerfilter",          &offerfilter,          false },

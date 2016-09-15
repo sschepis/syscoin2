@@ -190,14 +190,14 @@ bool EscrowInfoDialog::lookup()
 	catch (UniValue& objError)
 	{
 		QMessageBox::critical(this, windowTitle(),
-				tr("Could not find this escrow, please check the escrow ID and that it has been confirmed by the blockchain"),
+				tr("Could not find this escrow, please ensure the escrow has been confirmed by the blockchain"),
 				QMessageBox::Ok, QMessageBox::Ok);
 
 	}
 	catch(std::exception& e)
 	{
 		QMessageBox::critical(this, windowTitle(),
-			tr("There was an exception trying to locate this escrow, please check the escrow ID and that it has been confirmed by the blockchain: ") + QString::fromStdString(e.what()),
+			tr("There was an exception trying to locate this escrow, please ensure the escrow has been confirmed by the blockchain: ") + QString::fromStdString(e.what()),
 				QMessageBox::Ok, QMessageBox::Ok);
 	}
 	return false;

@@ -95,38 +95,55 @@ MyAcceptedOfferListPage::MyAcceptedOfferListPage(const PlatformStyle *platformSt
 bool MyAcceptedOfferListPage::lookup(const QString &lookupid, const QString &acceptid, QString& address, QString& price, QString& btcTxId)
 {
 	string strError;
-	string strMethod = string("offerinfo");
+	string strMethod = string("offeracceptlist");
 	UniValue params(UniValue::VARR);
-	UniValue result;
+	UniValue offerAcceptsValue;
 	QString offerAcceptHash;
-	params.push_back(lookupid.toStdString());
+	params.push_back(acceptid.toStdString());
 
+    try {
+        offerAcceptsValue = tableRPC.execute(strMethod, params);
+		const UniValue &offerAccepts = offerAcceptsValue.get_array();
+		QDateTime timestamp;
+	    for (unsigned int idx = 0; idx < offerAccepts.size(); idx++) {
+		    const UniValue& accept = offerAccepts[idx];				
+			const UniValue& acceptObj = accept.get_obj();
+			offerAcceptHash = QString::fromStdString(find_value(acceptObj, "id").get_str());
+			btcTxId = QString::fromStdString(find_value(acceptObj, "btctxid").get_str());		
+			const string &strPrice = find_value(acceptObj, "total").get_str();
+			price = QString::fromStdString(strPrice);
+			break;
+		}
+		if(offerAcceptHash != acceptid)
+		{
+			return false;
+		}		
+		return true;
+	}
+	
+	catch (UniValue& objError)
+	{
+		QMessageBox::critical(this, windowTitle(),
+			tr("Could not find this offeraccept, please ensure it has been confirmed by the blockchain: ") + lookupid,
+				QMessageBox::Ok, QMessageBox::Ok);
+		return true;
+
+	}
+	catch(std::exception& e)
+	{
+		QMessageBox::critical(this, windowTitle(),
+			tr("There was an exception trying to locate this offeraccept, please ensure it has been confirmed by the blockchain: ") + QString::fromStdString(e.what()),
+				QMessageBox::Ok, QMessageBox::Ok);
+		return true;
+	}
+	strMethod = string("offerinfo");
+	params.clear();
+	params.push_back(lookupid.toStdString());
     try {
         result = tableRPC.execute(strMethod, params);
 
 		if (result.type() == UniValue::VOBJ)
 		{
-			UniValue offerAcceptsValue = find_value(result.get_obj(), "accepts");
-			if(offerAcceptsValue.type() != UniValue::VARR)
-				return false;
-			const UniValue &offerObj = result.get_obj();
-			const UniValue &offerAccepts = offerAcceptsValue.get_array();
-			QDateTime timestamp;
-		    for (unsigned int idx = 0; idx < offerAccepts.size(); idx++) {
-			    const UniValue& accept = offerAccepts[idx];				
-				const UniValue& acceptObj = accept.get_obj();
-				offerAcceptHash = QString::fromStdString(find_value(acceptObj, "id").get_str());
-				if(offerAcceptHash != acceptid)
-					continue;	
-				btcTxId = QString::fromStdString(find_value(acceptObj, "btctxid").get_str());		
-				const string &strPrice = find_value(acceptObj, "total").get_str();
-				price = QString::fromStdString(strPrice);
-				break;
-			}
-			if(offerAcceptHash != acceptid)
-			{
-				return false;
-			}
 			const string &strAddress = find_value(offerObj, "address").get_str();			
 			address = QString::fromStdString(strAddress);			
 			return true;
@@ -135,7 +152,7 @@ bool MyAcceptedOfferListPage::lookup(const QString &lookupid, const QString &acc
 	catch (UniValue& objError)
 	{
 		QMessageBox::critical(this, windowTitle(),
-			tr("Could not find this offer, please check the offer ID and that it has been confirmed by the blockchain: ") + lookupid,
+			tr("Could not find this offer, please ensure the offer has been confirmed by the blockchain: ") + lookupid,
 				QMessageBox::Ok, QMessageBox::Ok);
 		return true;
 
@@ -143,7 +160,7 @@ bool MyAcceptedOfferListPage::lookup(const QString &lookupid, const QString &acc
 	catch(std::exception& e)
 	{
 		QMessageBox::critical(this, windowTitle(),
-			tr("There was an exception trying to locate this offer, please check the offer ID and that it has been confirmed by the blockchain: ") + QString::fromStdString(e.what()),
+			tr("There was an exception trying to locate this offer, please ensure the has been confirmed by the blockchain: ") + QString::fromStdString(e.what()),
 				QMessageBox::Ok, QMessageBox::Ok);
 		return true;
 	}
@@ -286,7 +303,7 @@ void MyAcceptedOfferListPage::on_btcButton_clicked()
 	if(!lookup(offerid, acceptid, address, price, btcTxId))
 	{
         QMessageBox::critical(this, windowTitle(),
-        tr("Could not find this offer, please check the offer ID and that it has been confirmed by the blockchain: ") + offerid,
+        tr("Could not find this offer, please ensure the offer has been confirmed by the blockchain: ") + offerid,
             QMessageBox::Ok, QMessageBox::Ok);
         return;
 	}
