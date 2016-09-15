@@ -136,6 +136,7 @@ bool MyAcceptedOfferListPage::lookup(const QString &lookupid, const QString &acc
 				QMessageBox::Ok, QMessageBox::Ok);
 		return true;
 	}
+	UniValue result(UniValue::VOBJ);
 	strMethod = string("offerinfo");
 	params.clear();
 	params.push_back(lookupid.toStdString());
