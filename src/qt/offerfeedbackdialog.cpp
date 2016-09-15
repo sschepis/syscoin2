@@ -100,6 +100,7 @@ bool OfferFeedbackDialog::lookup(const QString &offer, const QString &acceptGuid
 	{
 		return false;
 	}
+	UniValue result(UniValue::VOBJ);
 	strMethod = string("offerinfo");
 	params.clear();
 	params.push_back(offer.toStdString());
