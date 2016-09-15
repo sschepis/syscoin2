@@ -3053,7 +3053,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 			string sHeight = strprintf("%llu", theOfferAccept.nHeight);
 			oOfferAccept.push_back(Pair("offer", offer));
 			string sTime;
-			CBlockIndex *pindex = chainActive[ca.nHeight];
+			CBlockIndex *pindex = chainActive[theOfferAccept.nHeight];
 			if (pindex) {
 				sTime = strprintf("%llu", pindex->nTime);
 			}
