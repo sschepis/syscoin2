@@ -2976,7 +2976,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
     if (fHelp || 1 < params.size())
 		throw runtime_error("offeracceptlist [guid]\n"
 				"List my offer purchases, option parameter is the offer accept guid that you want information for");
-	vector<unsigned char> vchOfferToFind;
+	vector<unsigned char> vchAcceptToFind;
     if (params.size() == 1)
         vchAcceptToFind = vchFromValue(params[0]);	
 	CTransaction offerTx, acceptTx, aliasTx, linkTx, linkAliasTx;
