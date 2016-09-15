@@ -362,7 +362,7 @@ bool DecodeOfferTx(const CTransaction& tx, int& op, int& nOut,
 }
 int FindOfferAcceptPayment(const CTransaction& tx, const CAmount &nPrice) {
 	for (unsigned int i = 0; i < tx.vout.size(); i++) {
-		if((tx.vout[i].nValue - nPrice) <= COIN)
+		if((tx.vout[i].nValue == nPrice))
 			return i;
 	}
 	return -1;
@@ -2958,8 +2958,6 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 		oOfferAccept.push_back(Pair("time", sTime));
 		oOfferAccept.push_back(Pair("quantity", strprintf("%d", ca.nQty)));
 		oOfferAccept.push_back(Pair("currency", stringFromVch(acceptOffer.sCurrencyCode)));
-		if(FindOfferAcceptPayment(txA, ca.nPrice) < 0 && ca.txBTCId.IsNull())
-			continue;
 		if(acceptOffer.GetPrice() > 0)
 			oOfferAccept.push_back(Pair("offer_discount_percentage", strprintf("%.2f%%", 100.0f - 100.0f*(ca.nPrice/acceptOffer.nPrice))));		
 		else
@@ -3219,8 +3217,6 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 				oOfferAccept.push_back(Pair("quantity", strprintf("%d", theOfferAccept.nQty)));
 				oOfferAccept.push_back(Pair("currency", stringFromVch(theOffer.sCurrencyCode)));
 
-				if(FindOfferAcceptPayment(acceptTx, theOfferAccept.nPrice) < 0 && theOfferAccept.txBTCId.IsNull())
-					continue;
 				if(theOffer.GetPrice() > 0)
 					oOfferAccept.push_back(Pair("offer_discount_percentage", strprintf("%.2f%%", 100.0f - 100.0f*(theOfferAccept.nPrice/theOffer.nPrice))));		
 				else
