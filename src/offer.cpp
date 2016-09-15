@@ -3060,35 +3060,35 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 			int avgBuyerRating, avgSellerRating;
 			vector<CFeedback> buyerFeedBacks, sellerFeedBacks;
 
-			GetFeedback(buyerFeedBacks, avgBuyerRating, FEEDBACKBUYER, ca.feedback);
-			GetFeedback(sellerFeedBacks, avgSellerRating, FEEDBACKSELLER, ca.feedback);
+			GetFeedback(buyerFeedBacks, avgBuyerRating, FEEDBACKBUYER, theOfferAccept.feedback);
+			GetFeedback(sellerFeedBacks, avgSellerRating, FEEDBACKSELLER, theOfferAccept.feedback);
 			
 	
 			oOfferAccept.push_back(Pair("id", stringFromVch(vchAcceptRand)));
 			oOfferAccept.push_back(Pair("txid", theOfferAccept.txHash.GetHex()));
 			string strBTCId = "";
-			if(!ca.txBTCId.IsNull())
-				strBTCId = ca.txBTCId.GetHex();
+			if(!theOfferAccept.txBTCId.IsNull())
+				strBTCId = theOfferAccept.txBTCId.GetHex();
 			oOfferAccept.push_back(Pair("btctxid", strBTCId));
 			oOfferAccept.push_back(Pair("height", sHeight));
 			oOfferAccept.push_back(Pair("time", sTime));
-			oOfferAccept.push_back(Pair("quantity", strprintf("%d", ca.nQty)));
+			oOfferAccept.push_back(Pair("quantity", strprintf("%d", theOfferAccept.nQty)));
 			oOfferAccept.push_back(Pair("currency", stringFromVch(theOffer.sCurrencyCode)));
 			if(theOffer.GetPrice() > 0)
-				oOfferAccept.push_back(Pair("offer_discount_percentage", strprintf("%.2f%%", 100.0f - 100.0f*(ca.nPrice/theOffer.nPrice))));		
+				oOfferAccept.push_back(Pair("offer_discount_percentage", strprintf("%.2f%%", 100.0f - 100.0f*(theOfferAccept.nPrice/theOffer.nPrice))));		
 			else
 				oOfferAccept.push_back(Pair("offer_discount_percentage", "0%"));		
 
 			int precision = 2;
-			CAmount nPricePerUnit = convertCurrencyCodeToSyscoin(theOffer.vchAliasPeg, theOffer.sCurrencyCode, ca.nPrice, ca.nAcceptHeight, precision);
-			oOfferAccept.push_back(Pair("systotal", ValueFromAmount(nPricePerUnit * ca.nQty)));
+			CAmount nPricePerUnit = convertCurrencyCodeToSyscoin(theOffer.vchAliasPeg, theOffer.sCurrencyCode, theOfferAccept.nPrice, theOfferAccept.nAcceptHeight, precision);
+			oOfferAccept.push_back(Pair("systotal", ValueFromAmount(nPricePerUnit * theOfferAccept.nQty)));
 			oOfferAccept.push_back(Pair("sysprice", ValueFromAmount(nPricePerUnit)));
-			oOfferAccept.push_back(Pair("price", strprintf("%.*f", precision, ca.nPrice ))); 	
-			oOfferAccept.push_back(Pair("total", strprintf("%.*f", precision, ca.nPrice * ca.nQty )));
-			oOfferAccept.push_back(Pair("buyer", stringFromVch(ca.vchBuyerAlias)));
+			oOfferAccept.push_back(Pair("price", strprintf("%.*f", precision, theOfferAccept.nPrice ))); 	
+			oOfferAccept.push_back(Pair("total", strprintf("%.*f", precision, theOfferAccept.nPrice * theOfferAccept.nQty )));
+			oOfferAccept.push_back(Pair("buyer", stringFromVch(theOfferAccept.vchBuyerAlias)));
 			// this accept is for me(something ive sold) if this offer is mine
 			oOfferAccept.push_back(Pair("ismine", ismine? "true" : "false"));
-			if(!ca.txBTCId.IsNull())
+			if(!theOfferAccept.txBTCId.IsNull())
 				oOfferAccept.push_back(Pair("paid","true(BTC)"));
 			else
 				oOfferAccept.push_back(Pair("paid","true"));
