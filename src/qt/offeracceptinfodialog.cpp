@@ -199,8 +199,7 @@ bool OfferAcceptInfoDialog::lookup()
 				QMessageBox::Ok, QMessageBox::Ok);
 	}
 
-	string strError;
-	string strMethod = string("offeracceptlist");
+	strMethod = string("offeracceptlist");
 	params.clear();
 	params.push_back(offerAcceptGUID.toStdString());
 	UniValue offerAcceptsValue;
