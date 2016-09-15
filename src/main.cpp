@@ -890,9 +890,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, const CCoinsViewCache& inputs, i
 }
 bool AddSyscoinServicesToDB(const CBlock& block, const CCoinsViewCache& inputs, int nHeight)
 {
-	vector<vector<unsigned char> > vvchArgs;
-	int offerOp;
-	vector<vector<unsigned char> > offerVvch;
+	vector<vector<unsigned char> > vvchArgs;f
 	int op;
 	int nOut;	
 	bool fJustCheck = false;
@@ -933,25 +931,14 @@ bool AddSyscoinServicesToDB(const CBlock& block, const CCoinsViewCache& inputs, 
     {
         const CTransaction &tx = block.vtx[i];
 		if(tx.nVersion == GetSyscoinTxVersion())
-		{
-			
+		{		
 			bool good = true;
-				
-			offerVvch.clear();
-			// go through each vout and see if we have multiple offers in this transactions... the linked offer accept needs this to group multiple accepts into one 
-			// so we can use one alias input attached which proves to the network that you are on the whitelist of the root merchant offer owner, we can only use 1 input per block, so we need to group all of the accepts in a block into one tx
-			for (unsigned int j = 0; j < tx.vout.size(); j++)
+			if(DecodeOfferTx(tx, op, nOut, vvchArgs))
 			{
-				if (!IsSyscoinScript(tx.vout[j].scriptPubKey, offerOp, offerVvch))
-					continue;
-				if(!IsOfferOp(offerOp))
-					continue;
-				good = CheckOfferInputs(tx, offerOp, j, offerVvch, inputs, fJustCheck, nHeight, errorMessage, &block);	
-				if(fDebug && !errorMessage.empty())
-					LogPrintf("%s\n", errorMessage.c_str());
-				if(!good)
-					break;
+				good = CheckOfferInputs(tx, op, nOut, vvchArgs, inputs, fJustCheck, nHeight, errorMessage, &block);		
 			}	
+			if(fDebug && !errorMessage.empty())
+				LogPrintf("%s\n", errorMessage.c_str());
 			if(!good)
 			{
 				return false;

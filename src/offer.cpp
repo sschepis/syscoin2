@@ -1365,6 +1365,20 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					}				
 				}
 			}	
+			// check that the script for the offer update is sent to the correct destination
+			CTxDestination dest;
+			if (!ExtractDestination(tx.vout[nOut].scriptPubKey, dest)) 
+			{
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 122 - " + _("Cannot extract destination from output script");
+				return true;
+			}	
+			CPubKey aliasPubKey(alias.vchPubKey);
+			CSyscoinAddress aliasaddy(aliasPubKey.GetID());
+			if(aliasaddy.Get() != dest)
+			{
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 122 - " + _("Payment destination does not match merchant address");
+				return true;
+			}
 			theOfferAccept.nHeight = nHeight;
 			theOfferAccept.vchAcceptRand = vvchArgs[1];
 			theOfferAccept.txHash = tx.GetHash();
@@ -2357,7 +2371,6 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	CSyscoinAddress refundAddr;	
 	vector<unsigned char> vchAlias = vchFromValue(params[0]);
 	vector<unsigned char> vchOffer = vchFromValue(params[1]);
-	vector<unsigned char> vchBuyerAlias = vchAlias;
 	vector<unsigned char> vchBTCTxId = vchFromValue(params.size()>=5?params[4]:"");
 
 	vector<unsigned char> vchMessage = vchFromValue(params.size()>=4?params[3]:"");
@@ -2478,7 +2491,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	// if we have a linked offer accept then use height from linked accept (the one buyer makes, not the reseller). We need to do this to make sure we convert price at the time of initial buyer's accept.
 	// in checkescrowinput we override this if its from an escrow release, just like above.
 	txAccept.nAcceptHeight = nHeight;
-	txAccept.vchBuyerAlias = vchBuyerAlias;
+	txAccept.vchBuyerAlias = vchAlias;
 	txAccept.vchMessage = vchPaymentMessage;
     CAmount nTotalValue = ( nPrice * nQty );
 	CAmount nTotalCommission = ( nCommission * nQty );
