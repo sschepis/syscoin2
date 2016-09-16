@@ -137,10 +137,10 @@ bool MyAcceptedOfferListPage::lookup(const QString &lookupid, const QString &acc
 	}
 	UniValue result(UniValue::VOBJ);
 	strMethod = string("offerinfo");
-	params.clear();
-	params.push_back(lookupid.toStdString());
+	UniValue params1(UniValue::VARR);
+	params1.push_back(lookupid.toStdString());
     try {
-        result = tableRPC.execute(strMethod, params);
+        result = tableRPC.execute(strMethod, params1);
 
 		if (result.type() == UniValue::VOBJ)
 		{

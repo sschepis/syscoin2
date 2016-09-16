@@ -96,10 +96,10 @@ bool OfferFeedbackDialog::lookup(const QString &offer, const QString &acceptGuid
 	}
 	UniValue result(UniValue::VOBJ);
 	strMethod = string("offerinfo");
-	params.clear();
-	params.push_back(offer.toStdString());
+	UniValue params1(UniValue::VARR);
+	params1.push_back(offer.toStdString());
     try {
-        result = tableRPC.execute(strMethod, params);
+        result = tableRPC.execute(strMethod, params1);
 
 		if (result.type() == UniValue::VOBJ)
 		{

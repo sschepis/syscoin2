@@ -199,12 +199,12 @@ bool OfferAcceptInfoDialog::lookup()
 	}
 
 	strMethod = string("offeracceptlist");
-	params.clear();
-	params.push_back(offerAcceptGUID.toStdString());
+	UniValue params1(UniValue::VARR);
+	params1.push_back(offerAcceptGUID.toStdString());
 	UniValue offerAcceptsValue;
 
     try {
-        offerAcceptsValue = tableRPC.execute(strMethod, params);
+        offerAcceptsValue = tableRPC.execute(strMethod, params1);
 
 		if (offerAcceptsValue.type() == UniValue::VARR)
 		{
