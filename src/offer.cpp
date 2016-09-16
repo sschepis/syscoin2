@@ -3032,18 +3032,21 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 			nHeight = theOfferAccept.nAcceptHeight;	
 			theOffer.nHeight = nHeight;
 			theOffer.GetOfferFromList(vtxPos);
-
+			float priceAtTimeOfAccept = theOfferAccept.nPrice;
 
 			if( !theOffer.vchLinkOffer.empty())
 			{	
 				GetTxAndVtxOfOffer( theOffer.vchLinkOffer, linkOffer, linkTx, vtxLinkPos, true);
 				linkOffer.nHeight = nHeight;
 				linkOffer.GetOfferFromList(vtxLinkPos);
+				priceAtTimeOfAccept = linkOffer.GetPrice();
 				GetTxOfAlias(linkOffer.vchAlias, alias, linkAliasTx, true);
 				// if you don't own this offer check the linked offer
 				if(!ismine)
 				{
 					ismine = IsSyscoinTxMine(linkTx, "offer");
+					if(ismine)
+						priceAtTimeOfAccept = linkOffer.GetPrice() - priceAtTimeOfAccept;
 					if(ismine && !IsSyscoinTxMine(linkAliasTx, "alias"))
 						continue;
 				}
@@ -3080,11 +3083,11 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 				oOfferAccept.push_back(Pair("offer_discount_percentage", "0%"));		
 
 			int precision = 2;
-			CAmount nPricePerUnit = convertCurrencyCodeToSyscoin(theOffer.vchAliasPeg, theOffer.sCurrencyCode, theOfferAccept.nPrice, theOfferAccept.nAcceptHeight, precision);
+			CAmount nPricePerUnit = convertCurrencyCodeToSyscoin(theOffer.vchAliasPeg, theOffer.sCurrencyCode, priceAtTimeOfAccept, theOfferAccept.nAcceptHeight, precision);
 			oOfferAccept.push_back(Pair("systotal", ValueFromAmount(nPricePerUnit * theOfferAccept.nQty)));
 			oOfferAccept.push_back(Pair("sysprice", ValueFromAmount(nPricePerUnit)));
-			oOfferAccept.push_back(Pair("price", strprintf("%.*f", precision, theOfferAccept.nPrice ))); 	
-			oOfferAccept.push_back(Pair("total", strprintf("%.*f", precision, theOfferAccept.nPrice * theOfferAccept.nQty )));
+			oOfferAccept.push_back(Pair("price", strprintf("%.*f", precision, priceAtTimeOfAccept))); 	
+			oOfferAccept.push_back(Pair("total", strprintf("%.*f", precision, priceAtTimeOfAccept* theOfferAccept.nQty )));
 			oOfferAccept.push_back(Pair("buyer", stringFromVch(theOfferAccept.vchBuyerAlias)));
 			oOfferAccept.push_back(Pair("seller", stringFromVch(theOffer.vchAlias)));
 			// this accept is for me(something ive sold) if this offer is mine
@@ -3202,7 +3205,11 @@ UniValue offeracceptinfo(const UniValue& params, bool fHelp) {
 		theOffer.GetOfferFromList(vtxPos);
 		linkOffer.GetOfferFromList(vtxLinkPos);
 
-
+		float priceAtTimeOfAccept = theOfferAccept.nPrice;
+		if( !theOffer.vchLinkOffer.empty())
+		{
+			priceAtTimeOfAccept = linkOffer.GetPrice();
+		}
 		UniValue oOfferAccept(UniValue::VOBJ);
 		bool foundAcceptInTx = false;
 		for (unsigned int j = 0; j < txA.vout.size(); j++)
@@ -3255,11 +3262,11 @@ UniValue offeracceptinfo(const UniValue& params, bool fHelp) {
 			oOfferAccept.push_back(Pair("offer_discount_percentage", "0%"));		
 
 		int precision = 2;
-		CAmount nPricePerUnit = convertCurrencyCodeToSyscoin(theOffer.vchAliasPeg, theOffer.sCurrencyCode, theOfferAccept.nPrice, theOfferAccept.nAcceptHeight, precision);
+		CAmount nPricePerUnit = convertCurrencyCodeToSyscoin(theOffer.vchAliasPeg, theOffer.sCurrencyCode, priceAtTimeOfAccept, theOfferAccept.nAcceptHeight, precision);
 		oOfferAccept.push_back(Pair("systotal", ValueFromAmount(nPricePerUnit * theOfferAccept.nQty)));
 		oOfferAccept.push_back(Pair("sysprice", ValueFromAmount(nPricePerUnit)));
-		oOfferAccept.push_back(Pair("price", strprintf("%.*f", precision, theOfferAccept.nPrice ))); 	
-		oOfferAccept.push_back(Pair("total", strprintf("%.*f", precision, theOfferAccept.nPrice * theOfferAccept.nQty )));
+		oOfferAccept.push_back(Pair("price", strprintf("%.*f", precision, priceAtTimeOfAccept ))); 	
+		oOfferAccept.push_back(Pair("total", strprintf("%.*f", precision, priceAtTimeOfAccept * theOfferAccept.nQty )));
 		oOfferAccept.push_back(Pair("buyer", stringFromVch(theOfferAccept.vchBuyerAlias)));
 		oOfferAccept.push_back(Pair("seller", stringFromVch(theOffer.vchAlias)));
 		oOfferAccept.push_back(Pair("ismine", ismine? "true" : "false"));
