@@ -80,12 +80,7 @@ bool OfferFeedbackDialog::lookup(const QString &offer, const QString &acceptGuid
 				currency = QString::fromStdString(find_value(acceptObj, "currency").get_str());
 				total = QString::fromStdString(find_value(acceptObj, "total").get_str());
 				systotal = QString::number(find_value(acceptObj.get_obj(), "systotal").get_real());
-				
 				break;
-			}
-			if(offerAcceptHash != acceptGuid)
-			{
-				return false;
 			}
 		}
 		 

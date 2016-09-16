@@ -204,7 +204,7 @@ bool OfferAcceptInfoDialog::lookup()
 	UniValue offerAcceptsValue;
 
     try {
-        result = tableRPC.execute(strMethod, params);
+        offerAcceptsValue = tableRPC.execute(strMethod, params);
 
 		if (result.type() == UniValue::VARR)
 		{
