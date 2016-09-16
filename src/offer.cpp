@@ -3033,20 +3033,23 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 			theOffer.nHeight = nHeight;
 			theOffer.GetOfferFromList(vtxPos);
 			float priceAtTimeOfAccept = theOfferAccept.nPrice;
-
+			bool commissionPaid = false;
 			if( !theOffer.vchLinkOffer.empty())
 			{	
 				GetTxAndVtxOfOffer( theOffer.vchLinkOffer, linkOffer, linkTx, vtxLinkPos, true);
 				linkOffer.nHeight = nHeight;
 				linkOffer.GetOfferFromList(vtxLinkPos);
-				priceAtTimeOfAccept = linkOffer.GetPrice();
+				priceAtTimeOfAccept = theOffer.GetPrice();
 				GetTxOfAlias(linkOffer.vchAlias, alias, linkAliasTx, true);
 				// if you don't own this offer check the linked offer
 				if(!ismine)
 				{
 					ismine = IsSyscoinTxMine(linkTx, "offer");
 					if(ismine)
-						priceAtTimeOfAccept = linkOffer.GetPrice() - priceAtTimeOfAccept;
+					{
+						commissionPaid = true;
+						priceAtTimeOfAccept = theOffer.GetPrice() - linkOffer.GetPrice();
+					}
 					if(ismine && !IsSyscoinTxMine(linkAliasTx, "alias"))
 						continue;
 				}
@@ -3093,9 +3096,11 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 			// this accept is for me(something ive sold) if this offer is mine
 			oOfferAccept.push_back(Pair("ismine", ismine? "true" : "false"));
 			if(!theOfferAccept.txBTCId.IsNull())
-				oOfferAccept.push_back(Pair("status","true(BTC)"));
+				oOfferAccept.push_back(Pair("status","Paid (BTC)"));
+			else if(commissionPaid)
+				oOfferAccept.push_back(Pair("status","Paid (Commission)"));
 			else
-				oOfferAccept.push_back(Pair("status","true"));
+				oOfferAccept.push_back(Pair("status","Paid"));
 			UniValue oBuyerFeedBack(UniValue::VARR);
 			for(unsigned int j =0;j<buyerFeedBacks.size();j++)
 			{
@@ -3271,9 +3276,9 @@ UniValue offeracceptinfo(const UniValue& params, bool fHelp) {
 		oOfferAccept.push_back(Pair("seller", stringFromVch(theOffer.vchAlias)));
 		oOfferAccept.push_back(Pair("ismine", ismine? "true" : "false"));
 		if(!theOfferAccept.txBTCId.IsNull())
-			oOfferAccept.push_back(Pair("status","true(BTC)"));
+			oOfferAccept.push_back(Pair("status","Paid (BTC)"));
 		else
-			oOfferAccept.push_back(Pair("status","true"));
+			oOfferAccept.push_back(Pair("status","Paid"));
 		UniValue oBuyerFeedBack(UniValue::VARR);
 		for(unsigned int j =0;j<buyerFeedBacks.size();j++)
 		{
