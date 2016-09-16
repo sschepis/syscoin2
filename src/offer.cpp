@@ -3086,7 +3086,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 			oOfferAccept.push_back(Pair("price", strprintf("%.*f", precision, theOfferAccept.nPrice ))); 	
 			oOfferAccept.push_back(Pair("total", strprintf("%.*f", precision, theOfferAccept.nPrice * theOfferAccept.nQty )));
 			oOfferAccept.push_back(Pair("buyer", stringFromVch(theOfferAccept.vchBuyerAlias)));
-			oOfferAccept.push_back(Pair("seller", stringFromVch(theOffer.vcAlias)));
+			oOfferAccept.push_back(Pair("seller", stringFromVch(theOffer.vchAlias)));
 			// this accept is for me(something ive sold) if this offer is mine
 			oOfferAccept.push_back(Pair("ismine", ismine? "true" : "false"));
 			if(!theOfferAccept.txBTCId.IsNull())
@@ -3261,7 +3261,7 @@ UniValue offeracceptinfo(const UniValue& params, bool fHelp) {
 		oOfferAccept.push_back(Pair("price", strprintf("%.*f", precision, theOfferAccept.nPrice ))); 	
 		oOfferAccept.push_back(Pair("total", strprintf("%.*f", precision, theOfferAccept.nPrice * theOfferAccept.nQty )));
 		oOfferAccept.push_back(Pair("buyer", stringFromVch(theOfferAccept.vchBuyerAlias)));
-		oOfferAccept.push_back(Pair("seller", stringFromVch(theOffer.vcAlias)));
+		oOfferAccept.push_back(Pair("seller", stringFromVch(theOffer.vchAlias)));
 		oOfferAccept.push_back(Pair("ismine", ismine? "true" : "false"));
 		if(!theOfferAccept.txBTCId.IsNull())
 			oOfferAccept.push_back(Pair("status","true(BTC)"));
