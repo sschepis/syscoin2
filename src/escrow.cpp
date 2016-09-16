@@ -1380,26 +1380,26 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 		priceAtTimeOfAccept = linkOffer.GetPrice(foundEntry);
 		commissionAtTimeOfAccept = theOffer.GetPrice() - priceAtTimeOfAccept;
 	}
-
+	int precision = 2;
 	CRecipient recipientFee;
 	CreateRecipient(redeemScriptPubKey, recipientFee);
-	float nExpectedAmount = priceAtTimeOfAccept*escrow.nQty;
-	float nExpectedCommissionAmount = commissionAtTimeOfAccept*escrow.nQty;
-	float nEscrowFee = GetEscrowArbiterFee(AmountFromValue(nExpectedAmount));
-	float nEscrowTotal = nExpectedAmount + nEscrowFee + recipientFee.nAmount;
+	CAmount nExpectedAmount = convertCurrencyCodeToSyscoin(theOffer.vchAliasPeg, theOffer.sCurrencyCode, priceAtTimeOfAccept*escrow.nQty, theOffer.nHeight, precision); 
+	CAmount nExpectedCommissionAmount = convertCurrencyCodeToSyscoin(theOffer.vchAliasPeg, theOffer.sCurrencyCode, commissionAtTimeOfAccept*escrow.nQty, theOffer.nHeight, precision);
+	CAmount nEscrowFee = GetEscrowArbiterFee(nExpectedAmount);
+	CAmount nEscrowTotal = nExpectedAmount + nEscrowFee + recipientFee.nAmount;
 	if(!theOffer.vchLinkOffer.empty() && !foundEntry.IsNull())
 		nEscrowTotal += nExpectedCommissionAmount;
-	int precision = 2;
-	CAmount nEscrowTotalAmount = convertCurrencyCodeToSyscoin(theOffer.vchAliasPeg, theOffer.sCurrencyCode, nEscrowTotal, theOffer.nHeight, precision);
+	
+
 	for(unsigned int i=0;i<fundingTx.vout.size();i++)
 	{
-		if(fundingTx.vout[i].nValue == nEscrowTotalAmount)
+		if(fundingTx.vout[i].nValue == nEscrowTotal)
 		{
 			nOutMultiSig = i;
 			break;
 		}
 	} 
-	int64_t nAmount = fundingTx.vout[nOutMultiSig].nValue;
+	CAmount nAmount = fundingTx.vout[nOutMultiSig].nValue;
 	string strEscrowScriptPubKey = HexStr(fundingTx.vout[nOutMultiSig].scriptPubKey.begin(), fundingTx.vout[nOutMultiSig].scriptPubKey.end());
 	if(nAmount != nEscrowTotal)
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4088 - " + _("Expected amount of escrow does not match what is held in escrow"));
@@ -1668,28 +1668,27 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 		priceAtTimeOfAccept = linkOffer.GetPrice(foundEntry);
 		commissionAtTimeOfAccept = theOffer.GetPrice() - priceAtTimeOfAccept;
 	}
-
+	int precision = 2;
 	CRecipient recipientFee;
 	CScript redeemScriptPubKey = CScript(escrow.vchRedeemScript.begin(), escrow.vchRedeemScript.end());
 	CreateRecipient(redeemScriptPubKey, recipientFee);
-	float nExpectedAmount = priceAtTimeOfAccept*escrow.nQty;
-	float nExpectedCommissionAmount = commissionAtTimeOfAccept*escrow.nQty;
-	float nEscrowFee = GetEscrowArbiterFee(AmountFromValue(nExpectedAmount));
-	float nEscrowTotal = nExpectedAmount + nEscrowFee + recipientFee.nAmount;
+	CAmount nExpectedAmount = convertCurrencyCodeToSyscoin(theOffer.vchAliasPeg, theOffer.sCurrencyCode, priceAtTimeOfAccept*escrow.nQty, theOffer.nHeight, precision); 
+	CAmount nExpectedCommissionAmount = convertCurrencyCodeToSyscoin(theOffer.vchAliasPeg, theOffer.sCurrencyCode, commissionAtTimeOfAccept*escrow.nQty, theOffer.nHeight, precision);
+	CAmount nEscrowFee = GetEscrowArbiterFee(nExpectedAmount);
+	CAmount nEscrowTotal = nExpectedAmount + nEscrowFee + recipientFee.nAmount;
 	if(!theOffer.vchLinkOffer.empty() && !foundEntry.IsNull())
 		nEscrowTotal += nExpectedCommissionAmount;
-	int precision = 2;
-	CAmount nEscrowTotalAmount = convertCurrencyCodeToSyscoin(theOffer.vchAliasPeg, theOffer.sCurrencyCode, nEscrowTotal, theOffer.nHeight, precision);
+	
 
 	for(unsigned int i=0;i<fundingTx.vout.size();i++)
 	{
-		if(fundingTx.vout[i].nValue == nEscrowTotalAmount)
+		if(fundingTx.vout[i].nValue == nEscrowTotal)
 		{
 			nOutMultiSig = i;
 			break;
 		}
 	} 
-	int64_t nAmount = fundingTx.vout[nOutMultiSig].nValue;
+	CAmount nAmount = fundingTx.vout[nOutMultiSig].nValue;
 	string strEscrowScriptPubKey = HexStr(fundingTx.vout[nOutMultiSig].scriptPubKey.begin(), fundingTx.vout[nOutMultiSig].scriptPubKey.end());
 	if(nAmount != nEscrowTotal)
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4101 - " + _("Expected amount of escrow does not match what is held in escrow"));
@@ -2200,28 +2199,26 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 		priceAtTimeOfAccept = linkOffer.GetPrice(foundEntry);
 		commissionAtTimeOfAccept = theOffer.GetPrice() - priceAtTimeOfAccept;
 	}
-
+	int precision = 2;
 	CRecipient recipientFee;
 	CreateRecipient(redeemScriptPubKey, recipientFee);
-	float nExpectedAmount = priceAtTimeOfAccept*escrow.nQty;
-	float nExpectedCommissionAmount = commissionAtTimeOfAccept*escrow.nQty;
-	float nEscrowFee = GetEscrowArbiterFee(AmountFromValue(nExpectedAmount));
-	float nEscrowTotal = nExpectedAmount + nEscrowFee + recipientFee.nAmount;
+	CAmount nExpectedAmount = convertCurrencyCodeToSyscoin(theOffer.vchAliasPeg, theOffer.sCurrencyCode, priceAtTimeOfAccept*escrow.nQty, theOffer.nHeight, precision); 
+	CAmount nExpectedCommissionAmount = convertCurrencyCodeToSyscoin(theOffer.vchAliasPeg, theOffer.sCurrencyCode, commissionAtTimeOfAccept*escrow.nQty, theOffer.nHeight, precision);
+	CAmount nEscrowFee = GetEscrowArbiterFee(nExpectedAmount);
+	CAmount nEscrowTotal = nExpectedAmount + nEscrowFee + recipientFee.nAmount;
 	if(!theOffer.vchLinkOffer.empty() && !foundEntry.IsNull())
 		nEscrowTotal += nExpectedCommissionAmount;
-	int precision = 2;
-	CAmount nEscrowTotalAmount = convertCurrencyCodeToSyscoin(theOffer.vchAliasPeg, theOffer.sCurrencyCode, nEscrowTotal, theOffer.nHeight, precision);
 
 
 	for(unsigned int i=0;i<fundingTx.vout.size();i++)
 	{
-		if(fundingTx.vout[i].nValue == nEscrowTotalAmount)
+		if(fundingTx.vout[i].nValue == nEscrowTotal)
 		{
 			nOutMultiSig = i;
 			break;
 		}
 	} 
-	int64_t nAmount = fundingTx.vout[nOutMultiSig].nValue;
+	CAmount nAmount = fundingTx.vout[nOutMultiSig].nValue;
 	string strEscrowScriptPubKey = HexStr(fundingTx.vout[nOutMultiSig].scriptPubKey.begin(), fundingTx.vout[nOutMultiSig].scriptPubKey.end());
 	if(nAmount != nEscrowTotal)
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4125 - " + _("Expected amount of escrow does not match what is held in escrow"));
@@ -2483,27 +2480,26 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 		priceAtTimeOfAccept = linkOffer.GetPrice(foundEntry);
 		commissionAtTimeOfAccept = theOffer.GetPrice() - priceAtTimeOfAccept;
 	}
-
+	int precision = 2;
 	CRecipient recipientFee;
 	CreateRecipient(redeemScriptPubKey, recipientFee);
-	float nExpectedAmount = priceAtTimeOfAccept*escrow.nQty;
-	float nExpectedCommissionAmount = commissionAtTimeOfAccept*escrow.nQty;
-	float nEscrowFee = GetEscrowArbiterFee(AmountFromValue(nExpectedAmount));
-	float nEscrowTotal = nExpectedAmount + nEscrowFee + recipientFee.nAmount;
+	CAmount nExpectedAmount = convertCurrencyCodeToSyscoin(theOffer.vchAliasPeg, theOffer.sCurrencyCode, priceAtTimeOfAccept*escrow.nQty, theOffer.nHeight, precision); 
+	CAmount nExpectedCommissionAmount = convertCurrencyCodeToSyscoin(theOffer.vchAliasPeg, theOffer.sCurrencyCode, commissionAtTimeOfAccept*escrow.nQty, theOffer.nHeight, precision);
+	CAmount nEscrowFee = GetEscrowArbiterFee(nExpectedAmount);
+	CAmount nEscrowTotal = nExpectedAmount + nEscrowFee + recipientFee.nAmount;
 	if(!theOffer.vchLinkOffer.empty() && !foundEntry.IsNull())
 		nEscrowTotal += nExpectedCommissionAmount;
-	int precision = 2;
-	CAmount nEscrowTotalAmount = convertCurrencyCodeToSyscoin(theOffer.vchAliasPeg, theOffer.sCurrencyCode, nEscrowTotal, theOffer.nHeight, precision);
+	
 
 	for(unsigned int i=0;i<fundingTx.vout.size();i++)
 	{
-		if(fundingTx.vout[i].nValue == nEscrowTotalAmount)
+		if(fundingTx.vout[i].nValue == nEscrowTotal)
 		{
 			nOutMultiSig = i;
 			break;
 		}
 	} 
-	int64_t nAmount = fundingTx.vout[nOutMultiSig].nValue;
+	CAmount nAmount = fundingTx.vout[nOutMultiSig].nValue;
 	string strEscrowScriptPubKey = HexStr(fundingTx.vout[nOutMultiSig].scriptPubKey.begin(), fundingTx.vout[nOutMultiSig].scriptPubKey.end());
 	if(nAmount != nEscrowTotal)
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4139 - " + _("Expected amount of escrow does not match what is held in escrow"));
