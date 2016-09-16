@@ -238,7 +238,7 @@ bool OfferAcceptInfoDialog::lookup()
 				ui->priceEdit->setText(QString("%1 %2").arg(QString::fromStdString(find_value(acceptObj, "price").get_str())).arg(currencyStr));
 				ui->totalEdit->setText(QString("%1 %2").arg(QString::fromStdString(find_value(acceptObj, "total").get_str())).arg(currencyStr));
 				ui->discountEdit->setText(QString::fromStdString(find_value(acceptObj, "offer_discount_percentage").get_str()));
-				ui->paidEdit->setText(QString::fromStdString(find_value(acceptObj, "paid").get_str()));
+				ui->paidEdit->setText(QString::fromStdString(find_value(acceptObj, "status").get_str()));
 				QString buyerStr = QString::fromStdString(find_value(acceptObj.get_obj(), "buyer").get_str());
 				ui->buyerEdit->setText(buyerStr);
 				ui->paymessageEdit->setText(QString::fromStdString(find_value(acceptObj, "pay_message").get_str()));
