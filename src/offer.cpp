@@ -3046,6 +3046,8 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 
 			// NON-LINKED merchant
 			float priceAtTimeOfAccept = theOfferAccept.nPrice;
+			if(theOfferAccept.nPrice != priceAtTimeOfAccept)
+				discountApplied = true;
 			// NON-LINKED buyer
 			if(!ismine)
 			{
@@ -3067,8 +3069,9 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 					if(ismine)
 					{
 						commissionPaid = false;
-						discountApplied = true;
 						priceAtTimeOfAccept = theOfferAccept.nPrice;
+						if(theOfferAccept.nPrice != priceAtTimeOfAccept)
+							discountApplied = true;
 					}
 					// You are the buyer
 					else
