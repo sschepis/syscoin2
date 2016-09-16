@@ -1402,7 +1402,7 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	CAmount nAmount = fundingTx.vout[nOutMultiSig].nValue;
 	string strEscrowScriptPubKey = HexStr(fundingTx.vout[nOutMultiSig].scriptPubKey.begin(), fundingTx.vout[nOutMultiSig].scriptPubKey.end());
 	if(nAmount != nEscrowTotal)
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4088 - " + _("Expected amount of escrow does not match what is held in escrow"));
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4088 - " + _("Expected amount of escrow does not match what is held in escrow. Expected amount: ") +  boost::lexical_cast<string>(nEscrowTotal)));
     if (op != OP_ESCROW_ACTIVATE)
         throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4089 - " + _("Release can only happen on an activated escrow"));
 
@@ -1691,7 +1691,7 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 	CAmount nAmount = fundingTx.vout[nOutMultiSig].nValue;
 	string strEscrowScriptPubKey = HexStr(fundingTx.vout[nOutMultiSig].scriptPubKey.begin(), fundingTx.vout[nOutMultiSig].scriptPubKey.end());
 	if(nAmount != nEscrowTotal)
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4101 - " + _("Expected amount of escrow does not match what is held in escrow"));
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4101 - " + _("Expected amount of escrow does not match what is held in escrow. Expected amount: ") +  boost::lexical_cast<string>(nEscrowTotal)));
 	bool foundSellerPayment = false;
 	bool foundCommissionPayment = false;
 	bool foundFeePayment = false;	
@@ -2221,7 +2221,7 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 	CAmount nAmount = fundingTx.vout[nOutMultiSig].nValue;
 	string strEscrowScriptPubKey = HexStr(fundingTx.vout[nOutMultiSig].scriptPubKey.begin(), fundingTx.vout[nOutMultiSig].scriptPubKey.end());
 	if(nAmount != nEscrowTotal)
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4125 - " + _("Expected amount of escrow does not match what is held in escrow"));
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4125 - " + _("Expected amount of escrow does not match what is held in escrow. Expected amount: ") +  boost::lexical_cast<string>(nEscrowTotal)));
 	string strPrivateKey ;
 	bool arbiterSigning = false;
 	const CWalletTx *wtxAliasIn = NULL;
@@ -2502,7 +2502,7 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 	CAmount nAmount = fundingTx.vout[nOutMultiSig].nValue;
 	string strEscrowScriptPubKey = HexStr(fundingTx.vout[nOutMultiSig].scriptPubKey.begin(), fundingTx.vout[nOutMultiSig].scriptPubKey.end());
 	if(nAmount != nEscrowTotal)
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4139 - " + _("Expected amount of escrow does not match what is held in escrow"));
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4139 - " + _("Expected amount of escrow does not match what is held in escrow. Expected amount: ") +  boost::lexical_cast<string>(nEscrowTotal)));
 	// decode rawTx and check it pays enough and it pays to buyer appropriately
 	// check that right amount is going to be sent to buyer
 	bool foundBuyerPayment = false;
