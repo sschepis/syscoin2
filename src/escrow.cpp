@@ -1383,16 +1383,17 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 
 	CRecipient recipientFee;
 	CreateRecipient(redeemScriptPubKey, recipientFee);
-	int64_t nExpectedAmount = priceAtTimeOfAccept*escrow.nQty;
-	int64_t nExpectedCommissionAmount = commissionAtTimeOfAccept*escrow.nQty;
-	int64_t nEscrowFee = GetEscrowArbiterFee(nExpectedAmount);
-	int64_t nEscrowTotal = nExpectedAmount + nEscrowFee + recipientFee.nAmount;
+	float nExpectedAmount = priceAtTimeOfAccept*escrow.nQty;
+	float nExpectedCommissionAmount = commissionAtTimeOfAccept*escrow.nQty;
+	float nEscrowFee = GetEscrowArbiterFee(AmountFromValue(nExpectedAmount));
+	float nEscrowTotal = nExpectedAmount + nEscrowFee + recipientFee.nAmount;
 	if(!theOffer.vchLinkOffer.empty() && !foundEntry.IsNull())
 		nEscrowTotal += nExpectedCommissionAmount;
-
+	int precision = 2;
+	CAmount nEscrowTotalAmount = convertCurrencyCodeToSyscoin(theOffer.vchAliasPeg, theOffer.sCurrencyCode, nEscrowTotal, theOffer.nHeight, precision);
 	for(unsigned int i=0;i<fundingTx.vout.size();i++)
 	{
-		if(fundingTx.vout[i].nValue == nEscrowTotal)
+		if(fundingTx.vout[i].nValue == nEscrowTotalAmount)
 		{
 			nOutMultiSig = i;
 			break;
@@ -1671,16 +1672,18 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 	CRecipient recipientFee;
 	CScript redeemScriptPubKey = CScript(escrow.vchRedeemScript.begin(), escrow.vchRedeemScript.end());
 	CreateRecipient(redeemScriptPubKey, recipientFee);
-	int64_t nExpectedAmount = priceAtTimeOfAccept*escrow.nQty;
-	int64_t nExpectedCommissionAmount = commissionAtTimeOfAccept*escrow.nQty;
-	int64_t nEscrowFee = GetEscrowArbiterFee(nExpectedAmount);
-	int64_t nEscrowTotal = nExpectedAmount + nEscrowFee + recipientFee.nAmount;
+	float nExpectedAmount = priceAtTimeOfAccept*escrow.nQty;
+	float nExpectedCommissionAmount = commissionAtTimeOfAccept*escrow.nQty;
+	float nEscrowFee = GetEscrowArbiterFee(AmountFromValue(nExpectedAmount));
+	float nEscrowTotal = nExpectedAmount + nEscrowFee + recipientFee.nAmount;
 	if(!theOffer.vchLinkOffer.empty() && !foundEntry.IsNull())
 		nEscrowTotal += nExpectedCommissionAmount;
+	int precision = 2;
+	CAmount nEscrowTotalAmount = convertCurrencyCodeToSyscoin(theOffer.vchAliasPeg, theOffer.sCurrencyCode, nEscrowTotal, theOffer.nHeight, precision);
 
 	for(unsigned int i=0;i<fundingTx.vout.size();i++)
 	{
-		if(fundingTx.vout[i].nValue == nEscrowTotal)
+		if(fundingTx.vout[i].nValue == nEscrowTotalAmount)
 		{
 			nOutMultiSig = i;
 			break;
@@ -2200,16 +2203,19 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 
 	CRecipient recipientFee;
 	CreateRecipient(redeemScriptPubKey, recipientFee);
-	int64_t nExpectedAmount = priceAtTimeOfAccept*escrow.nQty;
-	int64_t nExpectedCommissionAmount = commissionAtTimeOfAccept*escrow.nQty;
-	int64_t nEscrowFee = GetEscrowArbiterFee(nExpectedAmount);
-	int64_t nEscrowTotal = nExpectedAmount + nEscrowFee + recipientFee.nAmount;
+	float nExpectedAmount = priceAtTimeOfAccept*escrow.nQty;
+	float nExpectedCommissionAmount = commissionAtTimeOfAccept*escrow.nQty;
+	float nEscrowFee = GetEscrowArbiterFee(AmountFromValue(nExpectedAmount));
+	float nEscrowTotal = nExpectedAmount + nEscrowFee + recipientFee.nAmount;
 	if(!theOffer.vchLinkOffer.empty() && !foundEntry.IsNull())
 		nEscrowTotal += nExpectedCommissionAmount;
+	int precision = 2;
+	CAmount nEscrowTotalAmount = convertCurrencyCodeToSyscoin(theOffer.vchAliasPeg, theOffer.sCurrencyCode, nEscrowTotal, theOffer.nHeight, precision);
+
 
 	for(unsigned int i=0;i<fundingTx.vout.size();i++)
 	{
-		if(fundingTx.vout[i].nValue == nEscrowTotal)
+		if(fundingTx.vout[i].nValue == nEscrowTotalAmount)
 		{
 			nOutMultiSig = i;
 			break;
@@ -2480,16 +2486,18 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 
 	CRecipient recipientFee;
 	CreateRecipient(redeemScriptPubKey, recipientFee);
-	int64_t nExpectedAmount = priceAtTimeOfAccept*escrow.nQty;
-	int64_t nExpectedCommissionAmount = commissionAtTimeOfAccept*escrow.nQty;
-	int64_t nEscrowFee = GetEscrowArbiterFee(nExpectedAmount);
-	int64_t nEscrowTotal = nExpectedAmount + nEscrowFee + recipientFee.nAmount;
+	float nExpectedAmount = priceAtTimeOfAccept*escrow.nQty;
+	float nExpectedCommissionAmount = commissionAtTimeOfAccept*escrow.nQty;
+	float nEscrowFee = GetEscrowArbiterFee(AmountFromValue(nExpectedAmount));
+	float nEscrowTotal = nExpectedAmount + nEscrowFee + recipientFee.nAmount;
 	if(!theOffer.vchLinkOffer.empty() && !foundEntry.IsNull())
 		nEscrowTotal += nExpectedCommissionAmount;
+	int precision = 2;
+	CAmount nEscrowTotalAmount = convertCurrencyCodeToSyscoin(theOffer.vchAliasPeg, theOffer.sCurrencyCode, nEscrowTotal, theOffer.nHeight, precision);
 
 	for(unsigned int i=0;i<fundingTx.vout.size();i++)
 	{
-		if(fundingTx.vout[i].nValue == nEscrowTotal)
+		if(fundingTx.vout[i].nValue == nEscrowTotalAmount)
 		{
 			nOutMultiSig = i;
 			break;
