@@ -206,7 +206,7 @@ bool OfferAcceptInfoDialog::lookup()
     try {
         offerAcceptsValue = tableRPC.execute(strMethod, params);
 
-		if (result.type() == UniValue::VARR)
+		if (offerAcceptsValue.type() == UniValue::VARR)
 		{
 			const UniValue &offerAccepts = offerAcceptsValue.get_array();
 			COfferAccept myAccept;
