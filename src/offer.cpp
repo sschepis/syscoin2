@@ -3213,7 +3213,7 @@ UniValue offeracceptinfo(const UniValue& params, bool fHelp) {
 		float priceAtTimeOfAccept = theOfferAccept.nPrice;
 		if( !theOffer.vchLinkOffer.empty())
 		{
-			priceAtTimeOfAccept = linkOffer.GetPrice();
+			priceAtTimeOfAccept = theOffer.GetPrice();
 		}
 		UniValue oOfferAccept(UniValue::VOBJ);
 		bool foundAcceptInTx = false;
