@@ -3032,26 +3032,61 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 			nHeight = theOfferAccept.nAcceptHeight;	
 			theOffer.nHeight = nHeight;
 			theOffer.GetOfferFromList(vtxPos);
-			float priceAtTimeOfAccept = theOfferAccept.nPrice;
+
 			bool commissionPaid = false;
+			bool discountApplied = false;
+			// need to show 3 different possible prices:
+			// LINKED OFFERS:
+			// for buyer (full price) #1
+			// for affiliate (commission + discount) #2
+			// for merchant (discounted) #3
+			// NON-LINKED OFFERS;
+			// for merchant (discounted) #3
+			// for buyer (full price) #1
+
+			// NON-LINKED merchant
+			float priceAtTimeOfAccept = theOfferAccept.nPrice;
+			// NON-LINKED buyer
+			if(!ismine)
+			{
+				priceAtTimeOfAccept = theOffer.GetPrice();
+				commissionPaid = false;
+				discountApplied = false;
+			}
 			if( !theOffer.vchLinkOffer.empty())
 			{	
 				GetTxAndVtxOfOffer( theOffer.vchLinkOffer, linkOffer, linkTx, vtxLinkPos, true);
 				linkOffer.nHeight = nHeight;
 				linkOffer.GetOfferFromList(vtxLinkPos);
-				priceAtTimeOfAccept = theOffer.GetPrice();
 				GetTxOfAlias(linkOffer.vchAlias, alias, linkAliasTx, true);
 				// if you don't own this offer check the linked offer
 				if(!ismine)
 				{
 					ismine = IsSyscoinTxMine(linkTx, "offer");
+					// You are the merchant
 					if(ismine)
 					{
-						commissionPaid = true;
-						priceAtTimeOfAccept = theOffer.GetPrice() - linkOffer.GetPrice();
+						commissionPaid = false;
+						discountApplied = true;
+						priceAtTimeOfAccept = theOfferAccept.nPrice;
+					}
+					// You are the buyer
+					else
+					{
+						commissionPaid = false;
+						discountApplied = false;
+						priceAtTimeOfAccept = theOffer.GetPrice();
 					}
 					if(ismine && !IsSyscoinTxMine(linkAliasTx, "alias"))
 						continue;
+				}
+				// You are the affiliate
+				else
+				{
+					// full price with commission - discounted merchant price = commission + discount
+					priceAtTimeOfAccept = theOffer.GetPrice() -  theOfferAccept.nPrice;
+					commissionPaid = true;
+					discountApplied = false;
 				}
 			}
 
@@ -3099,6 +3134,8 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 				oOfferAccept.push_back(Pair("status","Paid (BTC)"));
 			else if(commissionPaid)
 				oOfferAccept.push_back(Pair("status","Paid (Commission)"));
+			else if(discountApplied)
+				oOfferAccept.push_back(Pair("status","Paid (Discount Applied)"));
 			else
 				oOfferAccept.push_back(Pair("status","Paid"));
 			UniValue oBuyerFeedBack(UniValue::VARR);
