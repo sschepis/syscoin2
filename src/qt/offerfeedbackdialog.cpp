@@ -87,7 +87,6 @@ bool OfferFeedbackDialog::lookup(const QString &offer, const QString &acceptGuid
 			{
 				return false;
 			}
-			return true;
 		}
 		 
 

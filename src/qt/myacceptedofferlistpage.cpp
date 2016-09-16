@@ -118,7 +118,6 @@ bool MyAcceptedOfferListPage::lookup(const QString &lookupid, const QString &acc
 		{
 			return false;
 		}		
-		return true;
 	}
 	
 	catch (UniValue& objError)

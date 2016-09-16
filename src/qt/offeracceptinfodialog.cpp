@@ -180,7 +180,6 @@ bool OfferAcceptInfoDialog::lookup()
 				ui->certLabel->setVisible(true);
 				ui->certEdit->setText(certStr);
 			}	
-			return true;
 		}
 		 
 
