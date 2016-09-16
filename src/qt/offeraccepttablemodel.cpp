@@ -134,7 +134,7 @@ public:
 						const UniValue& buyer_value = find_value(o, "buyer");
 						if (buyer_value.type() == UniValue::VSTR)
 							buyer_str = buyer_value.get_str();
-						const UniValue& alias_value = find_value(o, "alias");
+						const UniValue& alias_value = find_value(o, "seller");
 						if (alias_value.type() == UniValue::VSTR)
 							alias_str = alias_value.get_str();
 

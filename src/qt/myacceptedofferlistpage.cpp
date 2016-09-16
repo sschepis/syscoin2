@@ -516,7 +516,8 @@ void MyAcceptedOfferListPage::on_exportButton_clicked()
 	writer.addColumn("Currency", OfferAcceptTableModel::Currency, Qt::EditRole);
 	writer.addColumn("Qty", OfferAcceptTableModel::Qty, Qt::EditRole);
 	writer.addColumn("Total", OfferAcceptTableModel::Total, Qt::EditRole);
-	writer.addColumn("Alias", OfferAcceptTableModel::Alias, Qt::EditRole);
+	writer.addColumn("Seller", OfferAcceptTableModel::Alias, Qt::EditRole);
+	writer.addColumn("Buyer", OfferAcceptTableModel::Buyer, Qt::EditRole);
 	writer.addColumn("Status", OfferAcceptTableModel::Status, Qt::EditRole);
     if(!writer.write())
     {
