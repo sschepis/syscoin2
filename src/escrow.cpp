@@ -1412,8 +1412,6 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	string strEscrowScriptPubKey = HexStr(fundingTx.vout[nOutMultiSig].scriptPubKey.begin(), fundingTx.vout[nOutMultiSig].scriptPubKey.end());
 	if(nAmount != nEscrowTotal)
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4088 - " + _("Expected amount of escrow does not match what is held in escrow. Expected amount: ") +  boost::lexical_cast<string>(nEscrowTotal));
-	if (op != OP_ESCROW_ACTIVATE)
-        throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4089 - " + _("Release can only happen on an activated escrow"));
 
 
 	string strPrivateKey ;
@@ -2175,8 +2173,7 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 	}
 	if(foundBuyerKey)
 		return tableRPC.execute("escrowclaimrefund", params);
-	if(op != OP_ESCROW_ACTIVATE)
-		 throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4124 - " + _("Refund can only happen on an activated escrow"));
+
 	int nOutMultiSig = 0;
 	CScript redeemScriptPubKey = CScript(escrow.vchRedeemScript.begin(), escrow.vchRedeemScript.end());
 	COfferLinkWhitelistEntry foundEntry;
@@ -2199,7 +2196,7 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 	{
 		vector<COffer> offerLinkVtxPos;
 		if (!GetTxAndVtxOfOffer( theOffer.vchLinkOffer, linkOffer, txOffer, offerLinkVtxPos, true))
-			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4068 - " + _("Could not find an offer with this identifier"));
+			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4068a - " + _("Could not find an offer with this identifier"));
 		linkOffer.nHeight = vtxPos.front().nAcceptHeight;
 		linkOffer.GetOfferFromList(offerLinkVtxPos);
 
@@ -2476,14 +2473,12 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4068 - " + _("Could not find an offer with this identifier"));
 	theOffer.nHeight = vtxPos.front().nAcceptHeight;
 	theOffer.GetOfferFromList(offerVtxPos);
-	float priceAtTimeOfAccept;
 	float commissionAtTimeOfAccept;		
 	if(theOffer.vchLinkOffer.empty())
 	{
 		// only apply whitelist discount if buyer had used his alias as input into the escrow
 		if(foundWhitelistAlias)
 			theOffer.linkWhitelist.GetLinkEntryByHash(buyerAlias.vchAlias, foundEntry);
-		priceAtTimeOfAccept = theOffer.GetPrice(foundEntry);
 		commissionAtTimeOfAccept = 0;
 	}
 	else 
@@ -2495,12 +2490,11 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 		linkOffer.GetOfferFromList(offerLinkVtxPos);
 
 		linkOffer.linkWhitelist.GetLinkEntryByHash(theOffer.vchAlias, foundEntry);
-		priceAtTimeOfAccept = linkOffer.GetPrice(foundEntry);
 		commissionAtTimeOfAccept = theOffer.GetPrice() - priceAtTimeOfAccept;
 	}	
 	
 	int precision = 2;
-	CAmount nExpectedAmount = convertCurrencyCodeToSyscoin(theOffer.vchAliasPeg, theOffer.sCurrencyCode, priceAtTimeOfAccept, theOffer.nHeight, precision)*escrow.nQty; 
+	CAmount nExpectedAmount = convertCurrencyCodeToSyscoin(theOffer.vchAliasPeg, theOffer.sCurrencyCode, theOffer.GetPrice(foundEntry), theOffer.nHeight, precision)*escrow.nQty; 
 	string strEscrowScriptPubKey = HexStr(fundingTx.vout[nOutMultiSig].scriptPubKey.begin(), fundingTx.vout[nOutMultiSig].scriptPubKey.end());
 	// decode rawTx and check it pays enough and it pays to buyer appropriately
 	// check that right amount is going to be sent to buyer
@@ -2551,7 +2545,7 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 			{
 				CPubKey buyerKey(buyerAlias.vchPubKey);
 				CSyscoinAddress buyerAddress(buyerKey.GetID());
-				if(buyerAddress == payoutAddress && iVout == nExpectedAmount)
+				if(buyerAddress == payoutAddress && iVout >= nExpectedAmount)
 					foundRefundPayment = true;
 			}	
 		}
