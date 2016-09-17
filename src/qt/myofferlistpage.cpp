@@ -195,6 +195,7 @@ void MyOfferListPage::on_editButton_clicked()
     QModelIndexList indexes = ui->tableView->selectionModel()->selectedRows();
     if(indexes.isEmpty())
         return;
+	QString offerGUID = indexes.at(0).data(OfferTableModel::NameRole).toString();
 	QString certGUID = indexes.at(0).data(OfferTableModel::CertRole).toString();
 	QString status = indexes.at(0).data(OfferTableModel::ExpiredRole).toString();
 	if(status == QString("pending"))
@@ -211,7 +212,7 @@ void MyOfferListPage::on_editButton_clicked()
                QMessageBox::Ok, QMessageBox::Ok);
 		   return;
 	}
-    EditOfferDialog dlg(EditOfferDialog::EditOffer, certGUID);
+    EditOfferDialog dlg(EditOfferDialog::EditOffer, offerGUID, certGUID);
     dlg.setModel(walletModel, model);
     QModelIndex origIndex = proxyModel->mapToSource(indexes.at(0));
     dlg.loadRow(origIndex.row());
