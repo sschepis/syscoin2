@@ -48,7 +48,7 @@ public Q_SLOTS:
 	void on_okButton_clicked();
 	void on_cancelButton_clicked();
 private:
-	bool isLinkedOffer(const string& offerGUID);
+	bool isLinkedOffer(const QString& offerGUID);
     bool saveCurrentRow();
 	void loadCerts();
 	void loadAliases();

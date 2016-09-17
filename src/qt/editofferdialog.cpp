@@ -84,8 +84,8 @@ EditOfferDialog::EditOfferDialog(Mode mode,  const QString &strOffer,  const QSt
 			ui->acceptBTCOnlyEdit->setEnable(false);
 			ui->priceEdit->setEnable(false);
 			ui->qtyEdit->setEnable(false);
-			ui->currencyEdit->setEnable(false);
-			ui->certEdit->setEnable(false);
+			ui->currencyEdit->setEditable(false);
+			ui->certEdit->setEditable(false);
 			ui->rootOfferLabel->setVisible(true);
 			ui->rootOfferEdit->setVisible(true);
 			ui->commissionLabel->setVisible(true);
@@ -122,7 +122,7 @@ EditOfferDialog::EditOfferDialog(Mode mode,  const QString &strOffer,  const QSt
     mapper = new QDataWidgetMapper(this);
     mapper->setSubmitPolicy(QDataWidgetMapper::ManualSubmit);
 }
-bool EditOfferDialog::isLinkedOffer(const string& offerGUID)
+bool EditOfferDialog::isLinkedOffer(const QString& offerGUID)
 {
 	string strError;
 	string strMethod = string("offerinfo");
