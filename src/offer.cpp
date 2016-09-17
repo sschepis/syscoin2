@@ -1321,11 +1321,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 122 - " + _("Offer payment does not include enough commission to affiliate");
 						return true;
 					}
-					if(nOutPayment == nOutCommission)
-					{
-						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 122 - " + _("Commission payment not found in offer payment transaction");
-						return true;
-					}
 					CTxDestination payDest, commissionDest;
 					if (!ExtractDestination(tx.vout[nOutPayment].scriptPubKey, payDest)) 
 					{
