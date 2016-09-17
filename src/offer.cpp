@@ -956,15 +956,15 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 							theOffer.vchAlias = dbOffer.vchAlias;
 						}
 					}
+					// non linked offers cant edit commission
+					else
+						theOffer.nCommission = 0;
 					if(!GetTxOfAlias(theOffer.vchAlias, alias, aliasTx))
 					{
 						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 75 - " + _("Cannot find alias for this offer. It may be expired");
 						theOffer = dbOffer;
 					}
 				}
-				// non linked offers cant edit commission
-				else
-					theOffer.nCommission = 0;
 			}
 			// check for valid alias peg
 			if(getCurrencyToSYSFromAlias(theOffer.vchAliasPeg, theOffer.sCurrencyCode, nRate, theOffer.nHeight, rateList,precision) != "")
