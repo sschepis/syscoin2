@@ -274,11 +274,12 @@ public:
 				
 	}
 	float GetPrice(const COfferLinkWhitelistEntry& entry=COfferLinkWhitelistEntry()){
+		COfferLinkWhitelistEntry  myentry;
 		float price = nPrice;
-		if(!GetLinkEntryByHash(entry.aliasLinkVchRand, entry))
-			entry.SetNull();
-		float fDiscount = entry.nDiscountPct;
-		if(entry.nDiscountPct > 99)
+		linkWhitelist.GetLinkEntryByHash(entry.aliasLinkVchRand, myentry);
+		
+		float fDiscount = myentry.nDiscountPct;
+		if(myentry.nDiscountPct > 99)
 			fDiscount = 0;
 		// fMarkup is a percentage, commission minus discount
 		float fMarkup = nCommission - fDiscount;
