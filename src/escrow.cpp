@@ -1366,11 +1366,6 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	float commissionAtTimeOfAccept;		
 	if(theOffer.vchLinkOffer.empty())
 	{
-		vector<COffer> offerLinkVtxPos;
-		if (!GetTxAndVtxOfOffer( theOffer.vchLinkOffer, linkOffer, txOffer, offerLinkVtxPos, true))
-			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4068 - " + _("Could not find an offer with this identifier"));
-		linkOffer.nHeight = vtxPos.front().nAcceptHeight;
-		linkOffer.GetOfferFromList(offerLinkVtxPos);
 		// only apply whitelist discount if buyer had used his alias as input into the escrow
 		if(foundWhitelistAlias)
 			theOffer.linkWhitelist.GetLinkEntryByHash(buyerAlias.vchAlias, foundEntry);
@@ -1379,6 +1374,12 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	}
 	else 
 	{
+		vector<COffer> offerLinkVtxPos;
+		if (!GetTxAndVtxOfOffer( theOffer.vchLinkOffer, linkOffer, txOffer, offerLinkVtxPos, true))
+			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4068 - " + _("Could not find an offer with this identifier"));
+		linkOffer.nHeight = vtxPos.front().nAcceptHeight;
+		linkOffer.GetOfferFromList(offerLinkVtxPos);
+
 		if(GetTxAndVtxOfAlias(theOffer.vchAlias, resellerAlias, reselleraliastx, aliasResellerVtxPos, isExpired, true))
 		{		
 			resellerAlias.nHeight = vtxPos.front().nHeight;
@@ -1386,6 +1387,7 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 			CPubKey resellerKey = CPubKey(resellerAlias.vchPubKey);
 			resellerAddress = CSyscoinAddress(resellerKey.GetID());
 		}
+
 		linkOffer.linkWhitelist.GetLinkEntryByHash(theOffer.vchAlias, foundEntry);
 		priceAtTimeOfAccept = linkOffer.GetPrice(foundEntry);
 		commissionAtTimeOfAccept = theOffer.GetPrice() - priceAtTimeOfAccept;
@@ -1665,11 +1667,6 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 	float commissionAtTimeOfAccept;		
 	if(theOffer.vchLinkOffer.empty())
 	{
-		vector<COffer> offerLinkVtxPos;
-		if (!GetTxAndVtxOfOffer( theOffer.vchLinkOffer, linkOffer, txOffer, offerLinkVtxPos, true))
-			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4068 - " + _("Could not find an offer with this identifier"));
-		linkOffer.nHeight = vtxPos.front().nAcceptHeight;
-		linkOffer.GetOfferFromList(offerLinkVtxPos);
 		// only apply whitelist discount if buyer had used his alias as input into the escrow
 		if(foundWhitelistAlias)
 			theOffer.linkWhitelist.GetLinkEntryByHash(buyerAlias.vchAlias, foundEntry);
@@ -1678,6 +1675,12 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 	}
 	else 
 	{
+		vector<COffer> offerLinkVtxPos;
+		if (!GetTxAndVtxOfOffer( theOffer.vchLinkOffer, linkOffer, txOffer, offerLinkVtxPos, true))
+			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4068 - " + _("Could not find an offer with this identifier"));
+		linkOffer.nHeight = vtxPos.front().nAcceptHeight;
+		linkOffer.GetOfferFromList(offerLinkVtxPos);
+
 		if(GetTxAndVtxOfAlias(theOffer.vchAlias, resellerAlias, reselleraliastx, aliasResellerVtxPos, isExpired, true))
 		{		
 			resellerAlias.nHeight = vtxPos.front().nHeight;
@@ -2186,11 +2189,6 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 	float commissionAtTimeOfAccept;		
 	if(theOffer.vchLinkOffer.empty())
 	{
-		vector<COffer> offerLinkVtxPos;
-		if (!GetTxAndVtxOfOffer( theOffer.vchLinkOffer, linkOffer, txOffer, offerLinkVtxPos, true))
-			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4068 - " + _("Could not find an offer with this identifier"));
-		linkOffer.nHeight = vtxPos.front().nAcceptHeight;
-		linkOffer.GetOfferFromList(offerLinkVtxPos);
 		// only apply whitelist discount if buyer had used his alias as input into the escrow
 		if(foundWhitelistAlias)
 			theOffer.linkWhitelist.GetLinkEntryByHash(buyerAlias.vchAlias, foundEntry);
@@ -2199,10 +2197,16 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 	}
 	else 
 	{
+		vector<COffer> offerLinkVtxPos;
+		if (!GetTxAndVtxOfOffer( theOffer.vchLinkOffer, linkOffer, txOffer, offerLinkVtxPos, true))
+			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4068 - " + _("Could not find an offer with this identifier"));
+		linkOffer.nHeight = vtxPos.front().nAcceptHeight;
+		linkOffer.GetOfferFromList(offerLinkVtxPos);
+
 		linkOffer.linkWhitelist.GetLinkEntryByHash(theOffer.vchAlias, foundEntry);
 		priceAtTimeOfAccept = linkOffer.GetPrice(foundEntry);
 		commissionAtTimeOfAccept = theOffer.GetPrice() - priceAtTimeOfAccept;
-	}
+	}	
 	int precision = 2;
 	CRecipient recipientFee;
 	CreateRecipient(redeemScriptPubKey, recipientFee);
@@ -2476,11 +2480,6 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 	float commissionAtTimeOfAccept;		
 	if(theOffer.vchLinkOffer.empty())
 	{
-		vector<COffer> offerLinkVtxPos;
-		if (!GetTxAndVtxOfOffer( theOffer.vchLinkOffer, linkOffer, txOffer, offerLinkVtxPos, true))
-			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4068 - " + _("Could not find an offer with this identifier"));
-		linkOffer.nHeight = vtxPos.front().nAcceptHeight;
-		linkOffer.GetOfferFromList(offerLinkVtxPos);
 		// only apply whitelist discount if buyer had used his alias as input into the escrow
 		if(foundWhitelistAlias)
 			theOffer.linkWhitelist.GetLinkEntryByHash(buyerAlias.vchAlias, foundEntry);
@@ -2489,11 +2488,16 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 	}
 	else 
 	{
+		vector<COffer> offerLinkVtxPos;
+		if (!GetTxAndVtxOfOffer( theOffer.vchLinkOffer, linkOffer, txOffer, offerLinkVtxPos, true))
+			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4068 - " + _("Could not find an offer with this identifier"));
+		linkOffer.nHeight = vtxPos.front().nAcceptHeight;
+		linkOffer.GetOfferFromList(offerLinkVtxPos);
+
 		linkOffer.linkWhitelist.GetLinkEntryByHash(theOffer.vchAlias, foundEntry);
 		priceAtTimeOfAccept = linkOffer.GetPrice(foundEntry);
 		commissionAtTimeOfAccept = theOffer.GetPrice() - priceAtTimeOfAccept;
-	}
-	int precision = 2;
+	}	int precision = 2;
 	CAmount nExpectedAmount = convertCurrencyCodeToSyscoin(theOffer.vchAliasPeg, theOffer.sCurrencyCode, priceAtTimeOfAccept, theOffer.nHeight, precision)*escrow.nQty; 
 	string strEscrowScriptPubKey = HexStr(fundingTx.vout[nOutMultiSig].scriptPubKey.begin(), fundingTx.vout[nOutMultiSig].scriptPubKey.end());
 	// decode rawTx and check it pays enough and it pays to buyer appropriately
