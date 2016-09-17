@@ -1302,7 +1302,7 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	vector<CAliasIndex> aliasVtxPos, aliasBuyerVtxPos, aliasArbiterVtxPos, aliasResellerVtxPos;
 	CTransaction selleraliastx, buyeraliastx, arbiteraliastx, reselleraliastx;
 	bool isExpired;
-	CSyscoinAddress arbiterAddress, sellerAddress, buyerAddress;
+	CSyscoinAddress arbiterAddress, sellerAddress, buyerAddress, resellerAddress;
 	CPubKey arbiterKey;
 	if(GetTxAndVtxOfAlias(escrow.vchArbiterAlias, arbiterAlias, arbiteraliastx, aliasVtxPos, isExpired, true))
 	{
@@ -1383,6 +1383,8 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 		{		
 			resellerAlias.nHeight = vtxPos.front().nHeight;
 			resellerAlias.GetAliasFromList(aliasVtxPos);
+			CPubKey resellerKey = CPubKey(resellerAlias.vchPubKey);
+			resellerAddress = CSyscoinAddress(resellerKey.GetID());
 		}
 		linkOffer.linkWhitelist.GetLinkEntryByHash(theOffer.vchAlias, foundEntry);
 		priceAtTimeOfAccept = linkOffer.GetPrice(foundEntry);
@@ -1707,7 +1709,7 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 	CAmount nAmount = fundingTx.vout[nOutMultiSig].nValue;
 	string strEscrowScriptPubKey = HexStr(fundingTx.vout[nOutMultiSig].scriptPubKey.begin(), fundingTx.vout[nOutMultiSig].scriptPubKey.end());
 	if(nAmount != nEscrowTotal)
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4101 - " + _("Expected amount of escrow does not match what is held in escrow. Expected amount: ") +  boost::lexical_cast<string>(nEscrowTotal)));
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4101 - " + _("Expected amount of escrow does not match what is held in escrow. Expected amount: ") +  boost::lexical_cast<string>(nEscrowTotal));
 	bool foundSellerPayment = false;
 	bool foundCommissionPayment = false;
 	bool foundFeePayment = false;	
