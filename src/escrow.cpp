@@ -1404,17 +1404,20 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 
 	for(unsigned int i=0;i<fundingTx.vout.size();i++)
 	{
-		if(fundingTx.vout[i].nValue == nEscrowTotal)
+		if(fundingTx.vout[i].nValue > 0)
 		{
 			nOutMultiSig = i;
 			break;
 		}
 	} 
 	CAmount nAmount = fundingTx.vout[nOutMultiSig].nValue;
+	nAmount -=  (nExpectedCommissionAmount + nEscrowFee + recipientFee.nAmount);
+	
 	string strEscrowScriptPubKey = HexStr(fundingTx.vout[nOutMultiSig].scriptPubKey.begin(), fundingTx.vout[nOutMultiSig].scriptPubKey.end());
-	if(nAmount != nEscrowTotal)
+	if((nAmount - nExpectedAmount)  < -COIN)
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4088 - " + _("Expected amount of escrow does not match what is held in escrow. Expected amount: ") +  boost::lexical_cast<string>(nEscrowTotal));
-    if (op != OP_ESCROW_ACTIVATE)
+    nExpectedAmount = nAmount;
+	if (op != OP_ESCROW_ACTIVATE)
         throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4089 - " + _("Release can only happen on an activated escrow"));
 
 
@@ -1701,18 +1704,21 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 	CAmount nEscrowTotal = nExpectedCommissionAmount + nExpectedAmount + nEscrowFee + recipientFee.nAmount;
 
 
-	for(unsigned int i=0;i<fundingTx.vout.size();i++)
+		for(unsigned int i=0;i<fundingTx.vout.size();i++)
 	{
-		if(fundingTx.vout[i].nValue == nEscrowTotal)
+		if(fundingTx.vout[i].nValue > 0)
 		{
 			nOutMultiSig = i;
 			break;
 		}
 	} 
 	CAmount nAmount = fundingTx.vout[nOutMultiSig].nValue;
+	nAmount -=  (nExpectedCommissionAmount + nEscrowFee + recipientFee.nAmount);
+	
 	string strEscrowScriptPubKey = HexStr(fundingTx.vout[nOutMultiSig].scriptPubKey.begin(), fundingTx.vout[nOutMultiSig].scriptPubKey.end());
-	if(nAmount != nEscrowTotal)
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4101 - " + _("Expected amount of escrow does not match what is held in escrow. Expected amount: ") +  boost::lexical_cast<string>(nEscrowTotal));
+	if((nAmount - nExpectedAmount) < -COIN)
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4088 - " + _("Expected amount of escrow does not match what is held in escrow. Expected amount: ") +  boost::lexical_cast<string>(nEscrowTotal));
+    nExpectedAmount = nAmount;
 	bool foundSellerPayment = false;
 	bool foundCommissionPayment = false;
 	bool foundFeePayment = false;	
@@ -1763,14 +1769,14 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 			{
 				CPubKey arbiterKey(arbiterAlias.vchPubKey);
 				CSyscoinAddress arbiterAddress(arbiterKey.GetID());
-				if(arbiterAddress == payoutAddress && iVout == nEscrowFee)
+				if(arbiterAddress == payoutAddress && (iVout - nEscrowFee) > -COIN)
 					foundFeePayment = true;
 			}
 			if(!foundFeePayment)
 			{
 				CPubKey buyerKey(buyerAlias.vchPubKey);
 				CSyscoinAddress buyerAddress(buyerKey.GetID());
-				if(buyerAddress == payoutAddress && iVout == nEscrowFee)
+				if(buyerAddress == payoutAddress && (iVout - nEscrowFee) > -COIN)
 					foundFeePayment = true;
 			}	
 			if(!theOffer.vchLinkOffer.empty())
@@ -1779,7 +1785,7 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 				{
 					CPubKey resellerKey(resellerAlias.vchPubKey);
 					CSyscoinAddress resellerAddress(resellerKey.GetID());
-					if(resellerAddress == payoutAddress && iVout == nExpectedCommissionAmount)
+					if(resellerAddress == payoutAddress && (iVout - nExpectedCommissionAmount) > -COIN)
 					{
 						foundCommissionPayment = true;
 					}
@@ -1788,7 +1794,7 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 				{
 					CPubKey sellerKey(sellerAlias.vchPubKey);
 					CSyscoinAddress sellerAddress(sellerKey.GetID());
-					if(sellerAddress == payoutAddress && iVout == nExpectedAmount)
+					if(sellerAddress == payoutAddress && (iVout - nExpectedAmount) > -COIN)
 					{
 						foundSellerPayment = true;
 					}
@@ -2218,16 +2224,19 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 
 	for(unsigned int i=0;i<fundingTx.vout.size();i++)
 	{
-		if(fundingTx.vout[i].nValue == nEscrowTotal)
+		if(fundingTx.vout[i].nValue > 0)
 		{
 			nOutMultiSig = i;
 			break;
 		}
 	} 
 	CAmount nAmount = fundingTx.vout[nOutMultiSig].nValue;
+	nAmount -=  (nExpectedCommissionAmount + nEscrowFee + recipientFee.nAmount);
+	
 	string strEscrowScriptPubKey = HexStr(fundingTx.vout[nOutMultiSig].scriptPubKey.begin(), fundingTx.vout[nOutMultiSig].scriptPubKey.end());
-	if(nAmount != nEscrowTotal)
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4125 - " + _("Expected amount of escrow does not match what is held in escrow. Expected amount: ") +  boost::lexical_cast<string>(nEscrowTotal));
+	if((nAmount - nExpectedAmount) < -COIN)
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4088 - " + _("Expected amount of escrow does not match what is held in escrow. Expected amount: ") +  boost::lexical_cast<string>(nEscrowTotal));
+    nExpectedAmount = nAmount;
 	string strPrivateKey ;
 	bool arbiterSigning = false;
 	const CWalletTx *wtxAliasIn = NULL;
@@ -2497,7 +2506,9 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 		linkOffer.linkWhitelist.GetLinkEntryByHash(theOffer.vchAlias, foundEntry);
 		priceAtTimeOfAccept = linkOffer.GetPrice(foundEntry);
 		commissionAtTimeOfAccept = theOffer.GetPrice() - priceAtTimeOfAccept;
-	}	int precision = 2;
+	}	
+	
+	int precision = 2;
 	CAmount nExpectedAmount = convertCurrencyCodeToSyscoin(theOffer.vchAliasPeg, theOffer.sCurrencyCode, priceAtTimeOfAccept, theOffer.nHeight, precision)*escrow.nQty; 
 	string strEscrowScriptPubKey = HexStr(fundingTx.vout[nOutMultiSig].scriptPubKey.begin(), fundingTx.vout[nOutMultiSig].scriptPubKey.end());
 	// decode rawTx and check it pays enough and it pays to buyer appropriately
@@ -2549,7 +2560,7 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 			{
 				CPubKey buyerKey(buyerAlias.vchPubKey);
 				CSyscoinAddress buyerAddress(buyerKey.GetID());
-				if(buyerAddress == payoutAddress && iVout >= nExpectedAmount)
+				if(buyerAddress == payoutAddress && (iVout - nExpectedAmount) > -COIN)
 					foundRefundPayment = true;
 			}	
 		}
