@@ -1382,7 +1382,7 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 		if(GetTxAndVtxOfAlias(theOffer.vchAlias, resellerAlias, reselleraliastx, aliasResellerVtxPos, isExpired, true))
 		{		
 			resellerAlias.nHeight = vtxPos.front().nHeight;
-			resellerAlias.GetAliasFromList(aliasVtxPos);
+			resellerAlias.GetAliasFromList(aliasResellerVtxPos);
 			CPubKey resellerKey = CPubKey(resellerAlias.vchPubKey);
 			resellerAddress = CSyscoinAddress(resellerKey.GetID());
 		}
@@ -1681,7 +1681,7 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 		if(GetTxAndVtxOfAlias(theOffer.vchAlias, resellerAlias, reselleraliastx, aliasResellerVtxPos, isExpired, true))
 		{		
 			resellerAlias.nHeight = vtxPos.front().nHeight;
-			resellerAlias.GetAliasFromList(aliasVtxPos);
+			resellerAlias.GetAliasFromList(aliasResellerVtxPos);
 		}
 
 		linkOffer.linkWhitelist.GetLinkEntryByHash(theOffer.vchAlias, foundEntry);
