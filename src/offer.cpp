@@ -1315,7 +1315,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	
 				if(priceAtTimeOfAccept != theOfferAccept.nPrice)
 				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 121 - " + _("Offer accept does not specify the correct payment amount");
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 121 - " + _("Offer payment does not specify the correct payment amount");
 					return true;
 				}
 
@@ -1326,7 +1326,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				nOutPayment = FindOfferAcceptPayment(tx, nPrice, COIN);
 				if(nOutPayment < 0)
 				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 122 - " + _("Offer accept does not pay enough according to the offer price");
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 122 - " + _("Offer payment does not pay enough according to the offer price");
 					return true;
 				}
 				if(!myPriceOffer.vchLinkOffer.empty())
@@ -1335,7 +1335,12 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					nOutCommission = FindOfferAcceptPayment(tx, nCommission, COIN/1000);
 					if(nOutCommission < 0)
 					{
-						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 122 - " + _("Offer accept does not pay enough commission to affiliate");
+						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 122 - " + _("Offer payment does not include enough commission to affiliate");
+						return true;
+					}
+					if(nOutPayment == nOutCommission)
+					{
+						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 122 - " + _("Commission payment not found in offer payment transaction");
 						return true;
 					}
 					CTxDestination payDest, commissionDest;
