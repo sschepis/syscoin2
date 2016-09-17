@@ -21,7 +21,7 @@
      </property>
      <widget class="QWidget" name="tab_general">
       <attribute name="title">
-       <string>&amp;General</string>
+       <string>General</string>
       </attribute>
       <layout class="QGridLayout" name="gridLayout" columnstretch="0,0">
        <property name="horizontalSpacing">
@@ -34,31 +34,31 @@
          </property>
         </widget>
        </item>
-       <item row="1" column="1">
+       <item row="2" column="1">
         <widget class="QLineEdit" name="nameEdit"/>
        </item>
-       <item row="1" column="0">
+       <item row="2" column="0">
         <widget class="QLabel" name="label_6">
          <property name="text">
           <string>Title:</string>
          </property>
         </widget>
        </item>
-       <item row="2" column="0">
+       <item row="3" column="0">
         <widget class="QLabel" name="categoryLabel">
          <property name="text">
           <string>Category:</string>
          </property>
         </widget>
        </item>
-       <item row="2" column="1">
+       <item row="3" column="1">
         <widget class="QComboBox" name="categoryEdit">
          <property name="editable">
           <bool>true</bool>
          </property>
         </widget>
        </item>
-       <item row="3" column="0">
+       <item row="4" column="0">
         <widget class="QLabel" name="priceLabel">
          <property name="text">
           <string>Price:</string>
@@ -68,23 +68,23 @@
        <item row="0" column="1">
         <widget class="QLineEdit" name="offerEdit"/>
        </item>
-       <item row="3" column="1">
+       <item row="4" column="1">
         <widget class="QLineEdit" name="priceEdit"/>
        </item>
-       <item row="4" column="0">
+       <item row="5" column="0">
         <widget class="QLabel" name="qtyLabel">
          <property name="text">
           <string>Quantity:</string>
          </property>
         </widget>
        </item>
-       <item row="4" column="1">
+       <item row="5" column="1">
         <widget class="QLineEdit" name="qtyEdit"/>
        </item>
-       <item row="8" column="1">
+       <item row="9" column="1">
         <widget class="QPlainTextEdit" name="descriptionEdit"/>
        </item>
-       <item row="9" column="1">
+       <item row="10" column="1">
         <spacer name="verticalSpacer">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
@@ -97,21 +97,21 @@
          </property>
         </spacer>
        </item>
-       <item row="8" column="0">
+       <item row="9" column="0">
         <widget class="QLabel" name="label_7">
          <property name="text">
           <string>Description:</string>
          </property>
         </widget>
        </item>
-       <item row="5" column="0">
+       <item row="6" column="0">
         <widget class="QLabel" name="currencyLabel">
          <property name="text">
           <string>Currency:</string>
          </property>
         </widget>
        </item>
-       <item row="6" column="1">
+       <item row="7" column="1">
         <widget class="QLabel" name="currencyDisclaimer">
          <property name="text">
           <string/>
@@ -121,24 +121,34 @@
          </property>
         </widget>
        </item>
-       <item row="5" column="1">
-        <widget class="QComboBox" name="currencyEdit"/>
-       </item>
-       <item row="7" column="1">
+       <item row="8" column="1">
         <widget class="QComboBox" name="certEdit"/>
        </item>
-       <item row="7" column="0">
+       <item row="8" column="0">
         <widget class="QLabel" name="certLabel">
          <property name="text">
           <string>Certificate:</string>
          </property>
         </widget>
        </item>
+       <item row="6" column="1">
+        <widget class="QComboBox" name="currencyEdit"/>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="rootOfferLabel">
+         <property name="text">
+          <string>Root Offer:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QLineEdit" name="rootOfferEdit"/>
+       </item>
       </layout>
      </widget>
      <widget class="QWidget" name="tab_advanced">
       <attribute name="title">
-       <string>&amp;Advanced</string>
+       <string>Advanced</string>
       </attribute>
       <layout class="QFormLayout" name="formLayout_2">
        <property name="fieldGrowthPolicy">
@@ -269,7 +279,7 @@
        <item row="12" column="1">
         <widget class="QLineEdit" name="geoLocationEdit"/>
        </item>
-       <item row="13" column="1">
+       <item row="14" column="1">
         <spacer name="verticalSpacer_2">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
@@ -281,6 +291,16 @@
           </size>
          </property>
         </spacer>
+       </item>
+       <item row="13" column="1">
+        <widget class="QLineEdit" name="commissionEdit"/>
+       </item>
+       <item row="13" column="0">
+        <widget class="QLabel" name="commissionLabel">
+         <property name="text">
+          <string>Commission:</string>
+         </property>
+        </widget>
        </item>
       </layout>
      </widget>

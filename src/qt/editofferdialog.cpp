@@ -21,7 +21,7 @@ extern const CRPCTable tableRPC;
 string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchAliasPeg, const vector<unsigned char> &vchCurrency, CAmount &nFee, const unsigned int &nHeightToFind, vector<string>& rateList, int &precision);
 extern bool getCategoryList(vector<string>& categoryList);
 extern vector<unsigned char> vchFromString(const std::string &str);
-EditOfferDialog::EditOfferDialog(Mode mode, const QString &strCert,  const QString &strCategory, QWidget *parent) :
+EditOfferDialog::EditOfferDialog(Mode mode,  const QString &strOffer,  const QString &strCert,  const QString &strCategory, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::EditOfferDialog), mapper(0), mode(mode), model(0)
 {
@@ -32,7 +32,13 @@ EditOfferDialog::EditOfferDialog(Mode mode, const QString &strCert,  const QStri
 	ui->offerLabel->setVisible(true);
 	ui->offerEdit->setVisible(true);
 	ui->offerEdit->setEnabled(false);
+	ui->rootOfferEdit->setEnabled(false);
 	ui->aliasEdit->setEnabled(true);
+	ui->commissionLabel->setVisible(false);
+	ui->commissionEdit->setVisible(false);
+	ui->offerEdit->setEnabled(false);
+	ui->rootOfferLabel->setVisible(false);
+	ui->rootOfferEdit->setVisible(false);
 	ui->privateEdit->setEnabled(true);
 	ui->privateEdit->clear();
 	ui->privateEdit->addItem(QString("No"));
@@ -71,6 +77,20 @@ EditOfferDialog::EditOfferDialog(Mode mode, const QString &strCert,  const QStri
         break;
     case EditOffer:
         setWindowTitle(tr("Edit Offer"));
+		 if(isLinkedOffer(strOffer))
+		 {
+			setWindowTitle(tr("Edit Linked Offer"));
+			ui->aliasPegEdit->setEnable(false);
+			ui->acceptBTCOnlyEdit->setEnable(false);
+			ui->priceEdit->setEnable(false);
+			ui->qtyEdit->setEnable(false);
+			ui->currencyEdit->setEnable(false);
+			ui->certEdit->setEnable(false);
+			ui->rootOfferLabel->setVisible(true);
+			ui->rootOfferEdit->setVisible(true);
+			ui->commissionLabel->setVisible(true);
+			ui->commissionEdit->setVisible(true);
+		 }
         break;
     case NewCertOffer:
 		ui->aliasEdit->setEnabled(false);
@@ -101,6 +121,47 @@ EditOfferDialog::EditOfferDialog(Mode mode, const QString &strCert,  const QStri
 	aliasChanged(ui->aliasEdit->currentText());
     mapper = new QDataWidgetMapper(this);
     mapper->setSubmitPolicy(QDataWidgetMapper::ManualSubmit);
+}
+bool EditOfferDialog::isLinkedOffer(const string& offerGUID)
+{
+	string strError;
+	string strMethod = string("offerinfo");
+	UniValue params(UniValue::VARR);
+	UniValue result(UniValue::VOBJ);
+	params.push_back(offerGUID.toStdString());
+	QString sellerStr;
+    try {
+        result = tableRPC.execute(strMethod, params);
+
+		if (result.type() == UniValue::VOBJ)
+		{
+			
+			QString linkedStr = QString::fromStdString(find_value(result.get_obj(), "offerlink").get_str());
+			if(linkedStr == QString("true"))
+			{
+				return true;
+			}
+		}
+	}
+	catch (UniValue& objError)
+	{
+		QMessageBox::critical(this, windowTitle(),
+				tr("Could not find this offer, please ensure offer has been confirmed by the blockchain"),
+				QMessageBox::Ok, QMessageBox::Ok);
+
+	}
+	catch(std::exception& e)
+	{
+		QMessageBox::critical(this, windowTitle(),
+			tr("There was an exception trying to locate this offer, please ensure offer has been confirmed by the blockchain: ") + QString::fromStdString(e.what()),
+				QMessageBox::Ok, QMessageBox::Ok);
+	}
+
+	
+
+	return false;
+
+
 }
 void EditOfferDialog::on_aliasPegEdit_editingFinished()
 {

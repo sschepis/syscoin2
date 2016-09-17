@@ -24,10 +24,11 @@ public:
     enum Mode {
         NewOffer,
         EditOffer,
+		EditLinkedOffer,
 		NewCertOffer
     };
 
-    explicit EditOfferDialog(Mode mode, const QString &cert="", const QString &cat="", QWidget *parent = 0);
+    explicit EditOfferDialog(Mode mode, const QString &offer="", const QString &cert="", const QString &cat="", QWidget *parent = 0);
     ~EditOfferDialog();
 
     void setModel(WalletModel*,OfferTableModel *model);
@@ -47,6 +48,7 @@ public Q_SLOTS:
 	void on_okButton_clicked();
 	void on_cancelButton_clicked();
 private:
+	bool isLinkedOffer(const string& offerGUID);
     bool saveCurrentRow();
 	void loadCerts();
 	void loadAliases();

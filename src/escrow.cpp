@@ -1404,17 +1404,16 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 
 	for(unsigned int i=0;i<fundingTx.vout.size();i++)
 	{
-		if(fundingTx.vout[i].nValue > 0)
+		if(fundingTx.vout[i].nValue == nEscrowTotal)
 		{
 			nOutMultiSig = i;
 			break;
 		}
 	} 
 	CAmount nAmount = fundingTx.vout[nOutMultiSig].nValue;
-	nAmount -=  (nExpectedCommissionAmount + nEscrowFee + recipientFee.nAmount);
-	
+
 	string strEscrowScriptPubKey = HexStr(fundingTx.vout[nOutMultiSig].scriptPubKey.begin(), fundingTx.vout[nOutMultiSig].scriptPubKey.end());
-	if((nAmount - nExpectedAmount)  < -COIN)
+	if(nAmount != nEscrowTotal)
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4088 - " + _("Expected amount of escrow does not match what is held in escrow. Expected amount: ") +  boost::lexical_cast<string>(nEscrowTotal));
     nExpectedAmount = nAmount;
 	if (op != OP_ESCROW_ACTIVATE)
@@ -1706,17 +1705,17 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 
 		for(unsigned int i=0;i<fundingTx.vout.size();i++)
 	{
-		if(fundingTx.vout[i].nValue > 0)
+		if(fundingTx.vout[i].nValue == nEscrowTotal)
 		{
 			nOutMultiSig = i;
 			break;
 		}
 	} 
 	CAmount nAmount = fundingTx.vout[nOutMultiSig].nValue;
-	nAmount -=  (nExpectedCommissionAmount + nEscrowFee + recipientFee.nAmount);
+	
 	
 	string strEscrowScriptPubKey = HexStr(fundingTx.vout[nOutMultiSig].scriptPubKey.begin(), fundingTx.vout[nOutMultiSig].scriptPubKey.end());
-	if((nAmount - nExpectedAmount) < -COIN)
+	if(nAmount != nEscrowTotal)
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4088 - " + _("Expected amount of escrow does not match what is held in escrow. Expected amount: ") +  boost::lexical_cast<string>(nEscrowTotal));
     nExpectedAmount = nAmount;
 	bool foundSellerPayment = false;
@@ -1769,14 +1768,14 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 			{
 				CPubKey arbiterKey(arbiterAlias.vchPubKey);
 				CSyscoinAddress arbiterAddress(arbiterKey.GetID());
-				if(arbiterAddress == payoutAddress && (iVout - nEscrowFee) > -COIN)
+				if(arbiterAddress == payoutAddress && iVout == nEscrowFee)
 					foundFeePayment = true;
 			}
 			if(!foundFeePayment)
 			{
 				CPubKey buyerKey(buyerAlias.vchPubKey);
 				CSyscoinAddress buyerAddress(buyerKey.GetID());
-				if(buyerAddress == payoutAddress && (iVout - nEscrowFee) > -COIN)
+				if(buyerAddress == payoutAddress && iVout == nEscrowFee)
 					foundFeePayment = true;
 			}	
 			if(!theOffer.vchLinkOffer.empty())
@@ -1785,7 +1784,7 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 				{
 					CPubKey resellerKey(resellerAlias.vchPubKey);
 					CSyscoinAddress resellerAddress(resellerKey.GetID());
-					if(resellerAddress == payoutAddress && (iVout - nExpectedCommissionAmount) > -COIN)
+					if(resellerAddress == payoutAddress && iVout == nExpectedCommissionAmount)
 					{
 						foundCommissionPayment = true;
 					}
@@ -1794,7 +1793,7 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 				{
 					CPubKey sellerKey(sellerAlias.vchPubKey);
 					CSyscoinAddress sellerAddress(sellerKey.GetID());
-					if(sellerAddress == payoutAddress && (iVout - nExpectedAmount) > -COIN)
+					if(sellerAddress == payoutAddress && iVout == nExpectedAmount)
 					{
 						foundSellerPayment = true;
 					}
@@ -2224,17 +2223,16 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 
 	for(unsigned int i=0;i<fundingTx.vout.size();i++)
 	{
-		if(fundingTx.vout[i].nValue > 0)
+		if(fundingTx.vout[i].nValue == nEscrowTotal)
 		{
 			nOutMultiSig = i;
 			break;
 		}
 	} 
 	CAmount nAmount = fundingTx.vout[nOutMultiSig].nValue;
-	nAmount -=  (nExpectedCommissionAmount + nEscrowFee + recipientFee.nAmount);
-	
+
 	string strEscrowScriptPubKey = HexStr(fundingTx.vout[nOutMultiSig].scriptPubKey.begin(), fundingTx.vout[nOutMultiSig].scriptPubKey.end());
-	if((nAmount - nExpectedAmount) < -COIN)
+	if(nAmount != nEscrowTotal)
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4088 - " + _("Expected amount of escrow does not match what is held in escrow. Expected amount: ") +  boost::lexical_cast<string>(nEscrowTotal));
     nExpectedAmount = nAmount;
 	string strPrivateKey ;
@@ -2560,7 +2558,7 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 			{
 				CPubKey buyerKey(buyerAlias.vchPubKey);
 				CSyscoinAddress buyerAddress(buyerKey.GetID());
-				if(buyerAddress == payoutAddress && (iVout - nExpectedAmount) > -COIN)
+				if(buyerAddress == payoutAddress && iVout == nExpectedAmount)
 					foundRefundPayment = true;
 			}	
 		}

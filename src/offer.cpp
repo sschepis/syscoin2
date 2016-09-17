@@ -360,9 +360,9 @@ bool DecodeOfferTx(const CTransaction& tx, int& op, int& nOut,
 	if (!found) vvch.clear();
 	return found;
 }
-int FindOfferAcceptPayment(const CTransaction& tx, const CAmount &nPrice, const CAmount &nDescrepency) {
+int FindOfferAcceptPayment(const CTransaction& tx, const CAmount &nPrice) {
 	for (unsigned int i = 0; i < tx.vout.size(); i++) {
-		if((tx.vout[i].nValue >= 2*nDescrepency && (tx.vout[i].nValue - nPrice) > -nDescrepency))
+		if((tx.vout[i].nValue == nPrice)
 			return i;
 	}
 	return -1;
@@ -753,6 +753,11 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 44 - " + _("Offer price must be greater than 0");
 				return error(errorMessage.c_str());
 			}
+			if(theOffer.nCommission > 100 || theOffer.nCommission < -90)
+			{
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 24 - " + _("Commission must between -90 and 100");
+				return error(errorMessage.c_str());
+			}
 			if(!IsAliasOp(prevAliasOp) || theOffer.vchAlias != vvchPrevAliasArgs[0])
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 45 - " + _("Alias input mismatch");
@@ -926,6 +931,25 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 							errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 73 - " + _("Linked offer not found. It may be expired");
 							theOffer.vchLinkOffer.clear();
 						}
+						// make sure alias exists in the root offer affiliate list if root offer is in exclusive mode
+						else if (linkOffer.linkWhitelist.bExclusiveResell)
+						{
+							if(!linkOffer.linkWhitelist.GetLinkEntryByHash(theOffer.vchAlias, entry))
+							{
+								errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 81 - " + _("Cannot find this alias in the parent offer affiliate list");
+								theOffer.vchLinkOffer.clear();	
+							}
+							else if(theOffer.nCommission <= -entry.nDiscountPct)
+							{
+								errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 82 - " + _("This resold offer must be of higher price than the original offer including any discount");
+								theOffer.vchLinkOffer.clear();	
+							}
+						}	
+						else if(theOffer.nCommission < 0)
+						{
+							errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 82a - " + _("Commission cannot be negative");
+							theOffer.vchLinkOffer.clear();	
+						}
 						else if(!theOffer.vchCert.empty() && theCert.vchAlias != linkOffer.vchAlias)
 						{
 							errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 74 - " + _("Cannot update this offer because the certificate alias does not match the linked offer alias");
@@ -938,20 +962,16 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						theOffer = dbOffer;
 					}
 				}
+				// non linked offers cant edit commission
+				else
+					theOffer.nCommission = 0;
 			}
 			// check for valid alias peg
 			if(getCurrencyToSYSFromAlias(theOffer.vchAliasPeg, theOffer.sCurrencyCode, nRate, theOffer.nHeight, rateList,precision) != "")
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 76 - " + _("Could not find currency in the peg alias");
 				return true;
-			}	
-			float price = serializedOffer.nPrice*(float)nRate;
-			CAmount sysPrice = CAmount(price);
-			if(sysPrice < 2*COIN)
-			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 76 - " + _("Price of offer must be atleast 2 SYS");
-				return true;
-			}	
+			}		
 		}
 		else if(op == OP_OFFER_ACTIVATE)
 		{
@@ -983,86 +1003,56 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			}
 			// if this is a linked offer activate, then add it to the parent offerLinks list
 			if(!theOffer.vchLinkOffer.empty())
-			{
-
-				CTransaction txOffer;
-				vector<COffer> myVtxPos;
-				if (GetTxAndVtxOfOffer( theOffer.vchLinkOffer, linkOffer, txOffer, myVtxPos))
-				{					
-					// make sure alias exists in the root offer affiliate list if root offer is in exclusive mode
-					if (linkOffer.linkWhitelist.bExclusiveResell)
-					{
-						if(!linkOffer.linkWhitelist.GetLinkEntryByHash(theOffer.vchAlias, entry))
-						{
-							errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 81 - " + _("Cannot find this alias in the parent offer affiliate list");
-							theOffer.vchLinkOffer.clear();	
-						}
-						else if(theOffer.nCommission <= -entry.nDiscountPct)
-						{
-							errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 82 - " + _("This resold offer must be of higher price than the original offer including any discount");
-							theOffer.vchLinkOffer.clear();	
-						}
-					}	
-					else if(theOffer.nCommission < 0)
-					{
-						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 82a - " + _("Commission cannot be negative");
-						theOffer.vchLinkOffer.clear();	
-					}
-					if (!linkOffer.vchLinkOffer.empty())
-					{
-						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 83 - " + _("Cannot link to an offer that is already linked to another offer");
-						theOffer.vchLinkOffer.clear();	
-					}
-					if(linkOffer.sCategory.size() > 0 && boost::algorithm::starts_with(stringFromVch(linkOffer.sCategory), "wanted"))
-					{
-						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 83a - " + _("Cannot link to a wanted offer");
-						theOffer.vchLinkOffer.clear();
-					}
-					if(!theOffer.vchCert.empty() && theCert.vchAlias != linkOffer.vchAlias)
-					{
-						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 84 -" + _(" Cannot create this offer because the certificate alias does not match the offer alias");
-						theOffer.vchLinkOffer.clear();	
-					}
-					if(linkOffer.bOnlyAcceptBTC)
-					{
-						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 85 - " + _("Cannot link to an offer that only accepts Bitcoins as payment");
-						theOffer.vchLinkOffer.clear();	
-					}
-					if(!theOffer.vchLinkOffer.empty())
-					{
-						// max links are 100 per offer
-						if(linkOffer.offerLinks.size() < 100)
-						{
-							// if creating a linked offer we set some mandatory fields to the parent
-							theOffer.nQty = linkOffer.nQty;
-							theOffer.linkWhitelist.bExclusiveResell = true;
-							theOffer.sCurrencyCode = linkOffer.sCurrencyCode;
-							theOffer.vchCert = linkOffer.vchCert;
-							theOffer.vchAliasPeg = linkOffer.vchAliasPeg;
-							theOffer.sCategory = linkOffer.sCategory;
-							theOffer.sTitle = linkOffer.sTitle;
-							theOffer.safeSearch = linkOffer.safeSearch;
-							linkOffer.offerLinks.push_back(vvchArgs[0]);
-							linkOffer.PutToOfferList(myVtxPos);
-							// write parent offer
-					
-							if (!dontaddtodb && !pofferdb->WriteOffer(theOffer.vchLinkOffer, myVtxPos))
-							{
-								errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 86 - " + _("Failed to write to offer link to DB");
-								return error(errorMessage.c_str());
-							}
-						}
-						else
-						{
-							errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 87 - " + _("Parent offer affiliate table exceeded 100 entries");
-							theOffer.vchLinkOffer.clear();
-						}					
-					}
-				}
-				else
+			{				
+				if (!linkOffer.vchLinkOffer.empty())
 				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 88 - " + _("Linked offer is expired");
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 83 - " + _("Cannot link to an offer that is already linked to another offer");
 					theOffer.vchLinkOffer.clear();	
+				}
+				if(linkOffer.sCategory.size() > 0 && boost::algorithm::starts_with(stringFromVch(linkOffer.sCategory), "wanted"))
+				{
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 83a - " + _("Cannot link to a wanted offer");
+					theOffer.vchLinkOffer.clear();
+				}
+				if(!theOffer.vchCert.empty() && theCert.vchAlias != linkOffer.vchAlias)
+				{
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 84 -" + _(" Cannot create this offer because the certificate alias does not match the offer alias");
+					theOffer.vchLinkOffer.clear();	
+				}
+				if(linkOffer.bOnlyAcceptBTC)
+				{
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 85 - " + _("Cannot link to an offer that only accepts Bitcoins as payment");
+					theOffer.vchLinkOffer.clear();	
+				}
+				if(!theOffer.vchLinkOffer.empty())
+				{
+					// max links are 100 per offer
+					if(linkOffer.offerLinks.size() < 100)
+					{
+						// if creating a linked offer we set some mandatory fields to the parent
+						theOffer.nQty = linkOffer.nQty;
+						theOffer.linkWhitelist.bExclusiveResell = true;
+						theOffer.sCurrencyCode = linkOffer.sCurrencyCode;
+						theOffer.vchCert = linkOffer.vchCert;
+						theOffer.vchAliasPeg = linkOffer.vchAliasPeg;
+						theOffer.sCategory = linkOffer.sCategory;
+						theOffer.sTitle = linkOffer.sTitle;
+						theOffer.safeSearch = linkOffer.safeSearch;
+						linkOffer.offerLinks.push_back(vvchArgs[0]);
+						linkOffer.PutToOfferList(myVtxPos);
+						// write parent offer
+				
+						if (!dontaddtodb && !pofferdb->WriteOffer(theOffer.vchLinkOffer, offerVtxPos))
+						{
+							errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 86 - " + _("Failed to write to offer link to DB");
+							return error(errorMessage.c_str());
+						}
+					}
+					else
+					{
+						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 87 - " + _("Parent offer affiliate table exceeded 100 entries");
+						theOffer.vchLinkOffer.clear();
+					}					
 				}
 			}
 			else
@@ -1073,13 +1063,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 89 - " + _("Could not find currency in the peg alias");
 					return true;
 				}
-				float price = serializedOffer.nPrice*(float)nRate;
-				CAmount sysPrice = CAmount(price);
-				if(sysPrice < 2*COIN)
-				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 76 - " + _("Price of offer must be atleast 2 SYS");
-					return true;
-				}	
 			}
 			// init sold to 0
 			theOffer.nSold = 0;
@@ -1323,7 +1306,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				int nOutPayment, nOutCommission;
 				// lookup the price of the offer in syscoin based on pegged alias at the block # when accept/escrow was made
 				CAmount nPrice = convertCurrencyCodeToSyscoin(myPriceOffer.vchAliasPeg, myPriceOffer.sCurrencyCode, priceAtTimeOfAccept, heightToCheckAgainst, precision)*theOfferAccept.nQty;
-				nOutPayment = FindOfferAcceptPayment(tx, nPrice, COIN);
+				nOutPayment = FindOfferAcceptPayment(tx, nPrice);
 				if(nOutPayment < 0)
 				{
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 122 - " + _("Offer payment does not pay enough according to the offer price");
@@ -1332,7 +1315,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				if(!myPriceOffer.vchLinkOffer.empty())
 				{
 					CAmount nCommission = convertCurrencyCodeToSyscoin(myPriceOffer.vchAliasPeg, myPriceOffer.sCurrencyCode, commissionAtTimeOfAccept, heightToCheckAgainst, precision)*theOfferAccept.nQty;
-					nOutCommission = FindOfferAcceptPayment(tx, nCommission, COIN/1000);
+					nOutCommission = FindOfferAcceptPayment(tx, nCommission);
 					if(nOutCommission < 0)
 					{
 						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 122 - " + _("Offer payment does not include enough commission to affiliate");
@@ -1449,21 +1432,11 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			// if this offer is linked to a parent update it with parent information
 			if(!theOffer.vchLinkOffer.empty())
 			{
-				CTransaction txOffer;
-				vector<COffer> myVtxPos;
-				if (GetTxAndVtxOfOffer( theOffer.vchLinkOffer, linkOffer, txOffer, myVtxPos))
-				{
-					theOffer.nQty = linkOffer.nQty;	
-					theOffer.vchAliasPeg = linkOffer.vchAliasPeg;	
-					theOffer.sCurrencyCode = linkOffer.sCurrencyCode;
-					theOffer.vchCert = linkOffer.vchCert;
-					theOffer.SetPrice(linkOffer.nPrice);				
-				}
-				else
-				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 126 - " + _("Linked offer is expired");		
-					theOffer.vchLinkOffer.clear();
-				}
+				theOffer.nQty = linkOffer.nQty;	
+				theOffer.vchAliasPeg = linkOffer.vchAliasPeg;	
+				theOffer.sCurrencyCode = linkOffer.sCurrencyCode;
+				theOffer.vchCert = linkOffer.vchCert;
+				theOffer.SetPrice(linkOffer.nPrice);					
 			}
 			else
 			{
