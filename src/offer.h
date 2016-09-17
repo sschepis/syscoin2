@@ -275,6 +275,8 @@ public:
 	}
 	float GetPrice(const COfferLinkWhitelistEntry& entry=COfferLinkWhitelistEntry()){
 		float price = nPrice;
+		if(!GetLinkEntryByHash(entry.aliasLinkVchRand, entry))
+			entry.SetNull();
 		if(price==0 && !accept.IsNull())
 			return accept.nPrice;
 		float fDiscount = entry.nDiscountPct;

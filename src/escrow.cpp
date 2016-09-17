@@ -1412,7 +1412,6 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	string strEscrowScriptPubKey = HexStr(fundingTx.vout[nOutMultiSig].scriptPubKey.begin(), fundingTx.vout[nOutMultiSig].scriptPubKey.end());
 	if(nAmount != nEscrowTotal)
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4088 - " + _("Expected amount of escrow does not match what is held in escrow. Expected amount: ") +  boost::lexical_cast<string>(nEscrowTotal));
-    nExpectedAmount = nAmount;
 	if (op != OP_ESCROW_ACTIVATE)
         throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4089 - " + _("Release can only happen on an activated escrow"));
 
@@ -1715,7 +1714,7 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 	string strEscrowScriptPubKey = HexStr(fundingTx.vout[nOutMultiSig].scriptPubKey.begin(), fundingTx.vout[nOutMultiSig].scriptPubKey.end());
 	if(nAmount != nEscrowTotal)
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4088 - " + _("Expected amount of escrow does not match what is held in escrow. Expected amount: ") +  boost::lexical_cast<string>(nEscrowTotal));
-    nExpectedAmount = nAmount;
+
 	bool foundSellerPayment = false;
 	bool foundCommissionPayment = false;
 	bool foundFeePayment = false;	
@@ -2229,7 +2228,6 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 	string strEscrowScriptPubKey = HexStr(fundingTx.vout[nOutMultiSig].scriptPubKey.begin(), fundingTx.vout[nOutMultiSig].scriptPubKey.end());
 	if(nAmount != nEscrowTotal)
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4088 - " + _("Expected amount of escrow does not match what is held in escrow. Expected amount: ") +  boost::lexical_cast<string>(nEscrowTotal));
-    nExpectedAmount = nAmount;
 	string strPrivateKey ;
 	bool arbiterSigning = false;
 	const CWalletTx *wtxAliasIn = NULL;
