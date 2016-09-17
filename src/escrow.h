@@ -44,9 +44,11 @@ public:
 		feedback.clear();
 		vchSellerAlias.clear();
 		vchArbiterAlias.clear();
+		vchLinkAlias.clear();
 		vchRedeemScript.clear();
 		vchLinkAlias.clear();
 		vchOffer.clear();
+		rawTx.clear();
 		vchPaymentMessage.clear();
 	}
     CEscrow() {
