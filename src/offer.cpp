@@ -362,7 +362,7 @@ bool DecodeOfferTx(const CTransaction& tx, int& op, int& nOut,
 }
 int FindOfferAcceptPayment(const CTransaction& tx, const CAmount &nPrice) {
 	for (unsigned int i = 0; i < tx.vout.size(); i++) {
-		if((tx.vout[i].nValue == nPrice)
+		if(tx.vout[i].nValue == nPrice)
 			return i;
 	}
 	return -1;
@@ -1039,7 +1039,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						theOffer.sTitle = linkOffer.sTitle;
 						theOffer.safeSearch = linkOffer.safeSearch;
 						linkOffer.offerLinks.push_back(vvchArgs[0]);
-						linkOffer.PutToOfferList(myVtxPos);
+						linkOffer.PutToOfferList(offerVtxPos);
 						// write parent offer
 				
 						if (!dontaddtodb && !pofferdb->WriteOffer(theOffer.vchLinkOffer, offerVtxPos))
