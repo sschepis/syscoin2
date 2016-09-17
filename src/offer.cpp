@@ -360,9 +360,9 @@ bool DecodeOfferTx(const CTransaction& tx, int& op, int& nOut,
 	if (!found) vvch.clear();
 	return found;
 }
-int FindOfferAcceptPayment(const CTransaction& tx, const CAmount &nPrice) {
+int FindOfferAcceptPayment(const CTransaction& tx, const CAmount &nPrice, const CAmount &nDescrepency) {
 	for (unsigned int i = 0; i < tx.vout.size(); i++) {
-		if((tx.vout[i].nValue == nPrice))
+		if((tx.vout[i].nValue >= 2*nDescrepency && (tx.vout[i].nValue - nPrice) > -nDescrepency))
 			return i;
 	}
 	return -1;
@@ -944,7 +944,14 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 76 - " + _("Could not find currency in the peg alias");
 				return true;
-			}			
+			}	
+			float price = serializedOffer.nPrice*(float)nRate;
+			CAmount sysPrice = CAmount(price);
+			if(sysPrice < 2*COIN)
+			{
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 76 - " + _("Price of offer must be atleast 2 SYS");
+				return true;
+			}	
 		}
 		else if(op == OP_OFFER_ACTIVATE)
 		{
@@ -1066,6 +1073,13 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 89 - " + _("Could not find currency in the peg alias");
 					return true;
 				}
+				float price = serializedOffer.nPrice*(float)nRate;
+				CAmount sysPrice = CAmount(price);
+				if(sysPrice < 2*COIN)
+				{
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 76 - " + _("Price of offer must be atleast 2 SYS");
+					return true;
+				}	
 			}
 			// init sold to 0
 			theOffer.nSold = 0;
@@ -1309,7 +1323,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				int nOutPayment, nOutCommission;
 				// lookup the price of the offer in syscoin based on pegged alias at the block # when accept/escrow was made
 				CAmount nPrice = convertCurrencyCodeToSyscoin(myPriceOffer.vchAliasPeg, myPriceOffer.sCurrencyCode, priceAtTimeOfAccept, heightToCheckAgainst, precision)*theOfferAccept.nQty;
-				nOutPayment = FindOfferAcceptPayment(tx, nPrice);
+				nOutPayment = FindOfferAcceptPayment(tx, nPrice, COIN);
 				if(nOutPayment < 0)
 				{
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 122 - " + _("Offer accept does not pay enough according to the offer price");
@@ -1318,7 +1332,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				if(!myPriceOffer.vchLinkOffer.empty())
 				{
 					CAmount nCommission = convertCurrencyCodeToSyscoin(myPriceOffer.vchAliasPeg, myPriceOffer.sCurrencyCode, commissionAtTimeOfAccept, heightToCheckAgainst, precision)*theOfferAccept.nQty;
-					nOutCommission = FindOfferAcceptPayment(tx, nCommission);
+					nOutCommission = FindOfferAcceptPayment(tx, nCommission, COIN/1000);
 					if(nOutCommission < 0)
 					{
 						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 122 - " + _("Offer accept does not pay enough commission to affiliate");
