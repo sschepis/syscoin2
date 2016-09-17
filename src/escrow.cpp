@@ -2472,14 +2472,12 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 	if (!GetTxAndVtxOfOffer( escrow.vchOffer, theOffer, txOffer, offerVtxPos, true))
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4068 - " + _("Could not find an offer with this identifier"));
 	theOffer.nHeight = vtxPos.front().nAcceptHeight;
-	theOffer.GetOfferFromList(offerVtxPos);
-	float commissionAtTimeOfAccept;		
+	theOffer.GetOfferFromList(offerVtxPos);		
 	if(theOffer.vchLinkOffer.empty())
 	{
 		// only apply whitelist discount if buyer had used his alias as input into the escrow
 		if(foundWhitelistAlias)
 			theOffer.linkWhitelist.GetLinkEntryByHash(buyerAlias.vchAlias, foundEntry);
-		commissionAtTimeOfAccept = 0;
 	}
 	else 
 	{
@@ -2490,7 +2488,6 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 		linkOffer.GetOfferFromList(offerLinkVtxPos);
 
 		linkOffer.linkWhitelist.GetLinkEntryByHash(theOffer.vchAlias, foundEntry);
-		commissionAtTimeOfAccept = theOffer.GetPrice() - priceAtTimeOfAccept;
 	}	
 	
 	int precision = 2;
