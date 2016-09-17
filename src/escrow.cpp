@@ -1362,14 +1362,12 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4068 - " + _("Could not find an offer with this identifier"));
 	theOffer.nHeight = vtxPos.front().nAcceptHeight;
 	theOffer.GetOfferFromList(offerVtxPos);
-	float priceAtTimeOfAccept;
 	float commissionAtTimeOfAccept;		
 	if(theOffer.vchLinkOffer.empty())
 	{
 		// only apply whitelist discount if buyer had used his alias as input into the escrow
 		if(foundWhitelistAlias)
 			theOffer.linkWhitelist.GetLinkEntryByHash(buyerAlias.vchAlias, foundEntry);
-		priceAtTimeOfAccept = theOffer.GetPrice(foundEntry);
 		commissionAtTimeOfAccept = 0;
 	}
 	else 
@@ -1389,17 +1387,16 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 		}
 
 		linkOffer.linkWhitelist.GetLinkEntryByHash(theOffer.vchAlias, foundEntry);
-		priceAtTimeOfAccept = linkOffer.GetPrice(foundEntry);
-		commissionAtTimeOfAccept = theOffer.GetPrice() - priceAtTimeOfAccept;
+		commissionAtTimeOfAccept = theOffer.GetPrice() - linkOffer.GetPrice(foundEntry);
 	}
 	int precision = 2;
 	CRecipient recipientFee;
 	CreateRecipient(redeemScriptPubKey, recipientFee);
 	
 	CAmount nExpectedCommissionAmount = convertCurrencyCodeToSyscoin(theOffer.vchAliasPeg, theOffer.sCurrencyCode, commissionAtTimeOfAccept, theOffer.nHeight, precision)*escrow.nQty;
-	CAmount nExpectedAmount = convertCurrencyCodeToSyscoin(theOffer.vchAliasPeg, theOffer.sCurrencyCode, priceAtTimeOfAccept, theOffer.nHeight, precision)*escrow.nQty; 
-	CAmount nEscrowFee = GetEscrowArbiterFee(nExpectedCommissionAmount+nExpectedAmount);
-	CAmount nEscrowTotal = nExpectedCommissionAmount + nExpectedAmount + nEscrowFee + recipientFee.nAmount;
+	CAmount nExpectedAmount = convertCurrencyCodeToSyscoin(theOffer.vchAliasPeg, theOffer.sCurrencyCode, theOffer.GetPrice(foundEntry), theOffer.nHeight, precision)*escrow.nQty; 
+	CAmount nEscrowFee = GetEscrowArbiterFee(nExpectedAmount);
+	CAmount nEscrowTotal =  nExpectedAmount + nEscrowFee + recipientFee.nAmount;
 
 
 	for(unsigned int i=0;i<fundingTx.vout.size();i++)
@@ -1485,8 +1482,10 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 		if(!theOffer.vchLinkOffer.empty())
 		{
 			createAddressUniValue.push_back(Pair(resellerAddress.ToString(), ValueFromAmount(nExpectedCommissionAmount)));
+			createAddressUniValue.push_back(Pair(sellerAddress.ToString(), ValueFromAmount(nExpectedAmount-nExpectedCommissionAmount)));
 		}
-		createAddressUniValue.push_back(Pair(sellerAddress.ToString(), ValueFromAmount(nExpectedAmount)));
+		else
+			createAddressUniValue.push_back(Pair(sellerAddress.ToString(), ValueFromAmount(nExpectedAmount)));
 		createAddressUniValue.push_back(Pair(arbiterAddress.ToString(), ValueFromAmount(nEscrowFee)));
 	}
 	else
@@ -1495,8 +1494,10 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 		if(!theOffer.vchLinkOffer.empty())
 		{
 			createAddressUniValue.push_back(Pair(resellerAddress.ToString(), ValueFromAmount(nExpectedCommissionAmount)));
+			createAddressUniValue.push_back(Pair(sellerAddress.ToString(), ValueFromAmount(nExpectedAmount-nExpectedCommissionAmount)));
 		}
-		createAddressUniValue.push_back(Pair(sellerAddress.ToString(), ValueFromAmount(nExpectedAmount)));
+		else
+			createAddressUniValue.push_back(Pair(sellerAddress.ToString(), ValueFromAmount(nExpectedAmount)));
 		createAddressUniValue.push_back(Pair(buyerAddress.ToString(), ValueFromAmount(nEscrowFee)));
 	}
 
@@ -1665,14 +1666,12 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4068 - " + _("Could not find an offer with this identifier"));
 	theOffer.nHeight = vtxPos.front().nAcceptHeight;
 	theOffer.GetOfferFromList(offerVtxPos);
-	float priceAtTimeOfAccept;
 	float commissionAtTimeOfAccept;		
 	if(theOffer.vchLinkOffer.empty())
 	{
 		// only apply whitelist discount if buyer had used his alias as input into the escrow
 		if(foundWhitelistAlias)
 			theOffer.linkWhitelist.GetLinkEntryByHash(buyerAlias.vchAlias, foundEntry);
-		priceAtTimeOfAccept = theOffer.GetPrice(foundEntry);
 		commissionAtTimeOfAccept = 0;
 	}
 	else 
@@ -1690,17 +1689,16 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 		}
 
 		linkOffer.linkWhitelist.GetLinkEntryByHash(theOffer.vchAlias, foundEntry);
-		priceAtTimeOfAccept = linkOffer.GetPrice(foundEntry);
-		commissionAtTimeOfAccept = theOffer.GetPrice() - priceAtTimeOfAccept;
+		commissionAtTimeOfAccept = theOffer.GetPrice() - linkOffer.GetPrice(foundEntry);
 	}
 	int precision = 2;
 	CRecipient recipientFee;
 	CreateRecipient(redeemScriptPubKey, recipientFee);
 	
 	CAmount nExpectedCommissionAmount = convertCurrencyCodeToSyscoin(theOffer.vchAliasPeg, theOffer.sCurrencyCode, commissionAtTimeOfAccept, theOffer.nHeight, precision)*escrow.nQty;
-	CAmount nExpectedAmount = convertCurrencyCodeToSyscoin(theOffer.vchAliasPeg, theOffer.sCurrencyCode, priceAtTimeOfAccept, theOffer.nHeight, precision)*escrow.nQty;
-	CAmount nEscrowFee = GetEscrowArbiterFee(nExpectedCommissionAmount+nExpectedAmount);
-	CAmount nEscrowTotal = nExpectedCommissionAmount + nExpectedAmount + nEscrowFee + recipientFee.nAmount;
+	CAmount nExpectedAmount = convertCurrencyCodeToSyscoin(theOffer.vchAliasPeg, theOffer.sCurrencyCode, theOffer.GetPrice(foundEntry), theOffer.nHeight, precision)*escrow.nQty; 
+	CAmount nEscrowFee = GetEscrowArbiterFee(nExpectedAmount);
+	CAmount nEscrowTotal =  nExpectedAmount + nEscrowFee + recipientFee.nAmount;
 
 
 		for(unsigned int i=0;i<fundingTx.vout.size();i++)
@@ -1793,7 +1791,7 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 				{
 					CPubKey sellerKey(sellerAlias.vchPubKey);
 					CSyscoinAddress sellerAddress(sellerKey.GetID());
-					if(sellerAddress == payoutAddress && iVout == nExpectedAmount)
+					if(sellerAddress == payoutAddress && iVout == (nExpectedAmount-nExpectedCommissionAmount))
 					{
 						foundSellerPayment = true;
 					}
@@ -2190,14 +2188,12 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4068 - " + _("Could not find an offer with this identifier"));
 	theOffer.nHeight = vtxPos.front().nAcceptHeight;
 	theOffer.GetOfferFromList(offerVtxPos);
-	float priceAtTimeOfAccept;
 	float commissionAtTimeOfAccept;		
 	if(theOffer.vchLinkOffer.empty())
 	{
 		// only apply whitelist discount if buyer had used his alias as input into the escrow
 		if(foundWhitelistAlias)
 			theOffer.linkWhitelist.GetLinkEntryByHash(buyerAlias.vchAlias, foundEntry);
-		priceAtTimeOfAccept = theOffer.GetPrice(foundEntry);
 		commissionAtTimeOfAccept = 0;
 	}
 	else 
@@ -2209,17 +2205,16 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 		linkOffer.GetOfferFromList(offerLinkVtxPos);
 
 		linkOffer.linkWhitelist.GetLinkEntryByHash(theOffer.vchAlias, foundEntry);
-		priceAtTimeOfAccept = linkOffer.GetPrice(foundEntry);
-		commissionAtTimeOfAccept = theOffer.GetPrice() - priceAtTimeOfAccept;
+		commissionAtTimeOfAccept = theOffer.GetPrice() - linkOffer.GetPrice(foundEntry);
 	}	
 	int precision = 2;
 	CRecipient recipientFee;
 	CreateRecipient(redeemScriptPubKey, recipientFee);
 	
 	CAmount nExpectedCommissionAmount = convertCurrencyCodeToSyscoin(theOffer.vchAliasPeg, theOffer.sCurrencyCode, commissionAtTimeOfAccept, theOffer.nHeight, precision)*escrow.nQty;
-	CAmount nExpectedAmount = convertCurrencyCodeToSyscoin(theOffer.vchAliasPeg, theOffer.sCurrencyCode, priceAtTimeOfAccept, theOffer.nHeight, precision)*escrow.nQty; 
-	CAmount nEscrowFee = GetEscrowArbiterFee(nExpectedCommissionAmount+nExpectedAmount);
-	CAmount nEscrowTotal = nExpectedCommissionAmount + nExpectedAmount + nEscrowFee + recipientFee.nAmount;
+	CAmount nExpectedAmount = convertCurrencyCodeToSyscoin(theOffer.vchAliasPeg, theOffer.sCurrencyCode, theOffer.GetPrice(foundEntry), theOffer.nHeight, precision)*escrow.nQty; 
+	CAmount nEscrowFee = GetEscrowArbiterFee(nExpectedAmount);
+	CAmount nEscrowTotal =  nExpectedAmount + nEscrowFee + recipientFee.nAmount;
 
 	for(unsigned int i=0;i<fundingTx.vout.size();i++)
 	{
