@@ -1396,7 +1396,7 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	
 	CAmount nExpectedCommissionAmount = convertCurrencyCodeToSyscoin(theOffer.vchAliasPeg, theOffer.sCurrencyCode, commissionAtTimeOfAccept, theOffer.nHeight, precision)*escrow.nQty;
 	CAmount nExpectedAmount = convertCurrencyCodeToSyscoin(theOffer.vchAliasPeg, theOffer.sCurrencyCode, priceAtTimeOfAccept, theOffer.nHeight, precision)*escrow.nQty; 
-	CAmount nEscrowFee = GetEscrowArbiterFee(nExpectedAmount);
+	CAmount nEscrowFee = GetEscrowArbiterFee(nExpectedCommissionAmount+nExpectedAmount);
 	CAmount nEscrowTotal = nExpectedCommissionAmount + nExpectedAmount + nEscrowFee + recipientFee.nAmount;
 
 
@@ -1694,7 +1694,7 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 	
 	CAmount nExpectedCommissionAmount = convertCurrencyCodeToSyscoin(theOffer.vchAliasPeg, theOffer.sCurrencyCode, commissionAtTimeOfAccept, theOffer.nHeight, precision)*escrow.nQty;
 	CAmount nExpectedAmount = convertCurrencyCodeToSyscoin(theOffer.vchAliasPeg, theOffer.sCurrencyCode, priceAtTimeOfAccept, theOffer.nHeight, precision)*escrow.nQty;
-	CAmount nEscrowFee = GetEscrowArbiterFee(nExpectedAmount);
+	CAmount nEscrowFee = GetEscrowArbiterFee(nExpectedCommissionAmount+nExpectedAmount);
 	CAmount nEscrowTotal = nExpectedCommissionAmount + nExpectedAmount + nEscrowFee + recipientFee.nAmount;
 
 
@@ -2209,7 +2209,7 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 	
 	CAmount nExpectedCommissionAmount = convertCurrencyCodeToSyscoin(theOffer.vchAliasPeg, theOffer.sCurrencyCode, commissionAtTimeOfAccept, theOffer.nHeight, precision)*escrow.nQty;
 	CAmount nExpectedAmount = convertCurrencyCodeToSyscoin(theOffer.vchAliasPeg, theOffer.sCurrencyCode, priceAtTimeOfAccept, theOffer.nHeight, precision)*escrow.nQty; 
-	CAmount nEscrowFee = GetEscrowArbiterFee(nExpectedAmount);
+	CAmount nEscrowFee = GetEscrowArbiterFee(nExpectedCommissionAmount+nExpectedAmount);
 	CAmount nEscrowTotal = nExpectedCommissionAmount + nExpectedAmount + nEscrowFee + recipientFee.nAmount;
 
 	for(unsigned int i=0;i<fundingTx.vout.size();i++)
