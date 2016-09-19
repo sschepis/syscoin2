@@ -231,7 +231,7 @@ void MyAcceptedOfferListPage::slotConfirmedFinished(QNetworkReply * reply){
 				UniValue paymentValue = find_value(output, "value");
 				if(addressesValue.isArray() &&  addressesValue.get_array().size() == 1)
 				{
-					UniValue addressesValue = addressesValue.get_array()[0];
+					UniValue addressValue = addressesValue.get_array()[0];
 					if(addressValue.get_str() == m_strAddress.toStdString())
 					{
 						
