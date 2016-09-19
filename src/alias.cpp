@@ -764,7 +764,18 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	}
 	if(fJustCheck)
 	{
-		
+		if(!vchData.empty())
+		{
+			CRecipient fee;
+			CScript scriptData;
+			scriptData << vchData;
+			CreateFeeRecipient(scriptData, vchData, fee);
+			if (fee.nAmount > tx.vout[nOut].nValue) 
+			{
+				errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 2 - " + _("Transaction does not pay enough fees");
+				return error(errorMessage.c_str());
+			}
+		}		
 		if(vvchArgs.size() != 3)
 		{
 			errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1001 - " + _("Alias arguments incorrect size");

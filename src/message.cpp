@@ -275,7 +275,18 @@ bool CheckMessageInputs(const CTransaction &tx, int op, int nOut, const vector<v
     vector<vector<unsigned char> > vvchPrevAliasArgs;
 	if(fJustCheck)
 	{
-		
+		if(!vchData.empty())
+		{
+			CRecipient fee;
+			CScript scriptData;
+			scriptData << vchData;
+			CreateFeeRecipient(scriptData, vchData, fee);
+			if (fee.nAmount > tx.vout[nOut].nValue) 
+			{
+				errorMessage = "SYSCOIN_MESSAGE_CONSENSUS_ERROR: ERRCODE: 2 - " + _("Transaction does not pay enough fees");
+				return error(errorMessage.c_str());
+			}
+		}		
 		if(vvchArgs.size() != 2)
 		{
 			errorMessage = "SYSCOIN_MESSAGE_CONSENSUS_ERROR: ERRCODE: 3001 - " + _("Message arguments incorrect size");

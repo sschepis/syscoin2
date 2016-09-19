@@ -329,7 +329,18 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 	vector<vector<unsigned char> > vvchPrevArgs, vvchPrevAliasArgs;
 	if(fJustCheck)
 	{
-		
+		if(!vchData.empty())
+		{
+			CRecipient fee;
+			CScript scriptData;
+			scriptData << vchData;
+			CreateFeeRecipient(scriptData, vchData, fee);
+			if (fee.nAmount > tx.vout[nOut].nValue) 
+			{
+				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 2 - " + _("Transaction does not pay enough fees");
+				return error(errorMessage.c_str());
+			}
+		}			
 		if(vvchArgs.size() != 3)
 		{
 			errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4001 - " + _("Escrow arguments incorrect size");
