@@ -360,7 +360,7 @@ void OfferAcceptDialogBTC::acceptOffer(){
 			return;
 		}
 }
-void OfferAcceptDialog::acceptEscrow()
+void OfferAcceptDialogBTC::acceptEscrow()
 {
 		if(!walletModel) return;
 		WalletModel::UnlockContext ctx(walletModel->requestUnlock());
@@ -406,7 +406,7 @@ void OfferAcceptDialog::acceptEscrow()
 					OfferEscrowDialog dlg(platformStyle, this->title, this->quantity, this->price, this);
 					dlg.exec();
 					this->offerPaid = true;
-					OfferAcceptDialog::accept();
+					OfferAcceptDialogBTC::accept();
 					return;
 
 				}
