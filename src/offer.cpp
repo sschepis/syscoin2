@@ -3116,7 +3116,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 			oOfferAccept.push_back(Pair("quantity", strprintf("%d", theOfferAccept.nQty)));
 			oOfferAccept.push_back(Pair("currency", stringFromVch(theOffer.sCurrencyCode)));
 			if(theOffer.GetPrice() > 0)
-				oOfferAccept.push_back(Pair("offer_discount_percentage", strprintf("%.2f%%", 100.0f - 100.0f*(theOfferAccept.nPrice/theOffer.nPrice))));		
+				oOfferAccept.push_back(Pair("offer_discount_percentage", strprintf("%.2f%%", 100.0f - 100.0f*((float)theOfferAccept.nPrice/(float)theOffer.nPrice))));		
 			else
 				oOfferAccept.push_back(Pair("offer_discount_percentage", "0%"));		
 
@@ -3299,7 +3299,7 @@ UniValue offeracceptinfo(const UniValue& params, bool fHelp) {
 		oOfferAccept.push_back(Pair("quantity", strprintf("%d", theOfferAccept.nQty)));
 		oOfferAccept.push_back(Pair("currency", stringFromVch(theOffer.sCurrencyCode)));
 		if(theOffer.GetPrice() > 0)
-			oOfferAccept.push_back(Pair("offer_discount_percentage", strprintf("%.2f%%", 100.0f - 100.0f*(theOfferAccept.nPrice/theOffer.nPrice))));		
+			oOfferAccept.push_back(Pair("offer_discount_percentage", strprintf("%.2f%%", 100.0f - 100.0f*((float)theOfferAccept.nPrice/(float)theOffer.nPrice))));		
 		else
 			oOfferAccept.push_back(Pair("offer_discount_percentage", "0%"));		
 
