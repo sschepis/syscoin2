@@ -1815,10 +1815,6 @@ UniValue offerlink(const UniValue& params, bool fHelp) {
 	vector<unsigned char> vchRand = CScriptNum(rand).getvch();
 	vector<unsigned char> vchOffer = vchFromString(HexStr(vchRand));
 
-	int precision = 2;
-	CAmount nPricePerUnit = convertCurrencyCodeToSyscoin(linkOffer.vchAliasPeg, linkOffer.sCurrencyCode, linkOffer.GetPrice(), chainActive.Tip()->nHeight, precision);
-
-
 	EnsureWalletIsUnlocked();
 	
 	// unserialize offer from txn, serialize back
@@ -1827,7 +1823,7 @@ UniValue offerlink(const UniValue& params, bool fHelp) {
 	newOffer.vchOffer = vchOffer;
 	newOffer.vchAlias = alias.vchAlias;
 	newOffer.sDescription = vchDesc;
-	newOffer.SetPrice(nPricePerUnit);
+	newOffer.SetPrice(linkOffer.GetPrice());
 	newOffer.nCommission = commissionInteger;
 	newOffer.vchLinkOffer = vchLinkOffer;
 	newOffer.linkWhitelist.bExclusiveResell = true;
