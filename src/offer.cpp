@@ -1017,6 +1017,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			// if this is a linked offer activate, then add it to the parent offerLinks list
 			if(!theOffer.vchLinkOffer.empty())
 			{	
+				CTransaction txLinkedOffer;
 				if (!GetTxAndVtxOfOffer( theOffer.vchLinkOffer, linkOffer, txLinkedOffer, offerVtxPos))
 				{
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 73 - " + _("Linked offer not found. It may be expired");
