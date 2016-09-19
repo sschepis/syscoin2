@@ -59,7 +59,7 @@ OfferAcceptDialog::OfferAcceptDialog(WalletModel* model, const PlatformStyle *pl
 		ui->acceptMessage->setText(tr("Are you sure you want to purchase <b>%1</b> of <b>%2</b> from merchant <b>%3</b>? You will be charged <b>%4 SYS (%5 BTC)</b>").arg(quantity).arg(title).arg(sellerAlias).arg(price).arg(fprice));
 	}
 	else
-	{`
+	{
 		ui->acceptMessage->setText(tr("Are you sure you want to purchase <b>%1</b> of <b>%2</b> from merchant <b>%3</b>? You will be charged <b>%4 SYS</b>").arg(quantity).arg(title).arg(sellerAlias).arg(price));
 	}
 		
