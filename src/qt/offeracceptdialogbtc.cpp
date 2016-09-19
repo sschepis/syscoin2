@@ -3,6 +3,7 @@
 #include "init.h"
 #include "util.h"
 #include "offerpaydialog.h"
+#include "offerescrowdialog.h"
 #include "guiconstants.h"
 #include "guiutil.h"
 #include "platformstyle.h"
