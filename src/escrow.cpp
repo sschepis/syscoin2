@@ -4,6 +4,7 @@
 #include "cert.h"
 #include "init.h"
 #include "main.h"
+#include "core_io.h"
 #include "util.h"
 #include "base58.h"
 #include "rpcserver.h"
@@ -1005,6 +1006,7 @@ UniValue generateescrowmultisig(const UniValue& params, bool fHelp) {
 	
 	CTransaction txOffer, txAlias;
 	vector<COffer> offerVtxPos;
+	COffer theOffer, linkedOffer;
 	if (!GetTxAndVtxOfOffer( vchOffer, theOffer, txOffer, offerVtxPos, true))
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4068 - " + _("Could not find an offer with this identifier"));
 
@@ -1030,9 +1032,9 @@ UniValue generateescrowmultisig(const UniValue& params, bool fHelp) {
 	CPubKey ArbiterPubKey(arbiteralias.vchPubKey);
 	CPubKey SellerPubKey(selleralias.vchPubKey);
 	CPubKey BuyerPubKey(buyeralias.vchPubKey);
-	scriptArbiter= GetScriptForDestination(ArbiterPubKey.GetID());
-	scriptSeller= GetScriptForDestination(SellerPubKey.GetID());
-	scriptBuyer= GetScriptForDestination(BuyerPubKey.GetID());
+	CScript scriptArbiter = GetScriptForDestination(ArbiterPubKey.GetID());
+	CScript scriptSeller = GetScriptForDestination(SellerPubKey.GetID());
+	CScript scriptBuyer = GetScriptForDestination(BuyerPubKey.GetID());
 	UniValue arrayParams(UniValue::VARR);
 	UniValue arrayOfKeys(UniValue::VARR);
 
@@ -1081,9 +1083,9 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	
 
 	vector<unsigned char> vchMessage = vchFromValue(params[3]);
-	vector<unsigned char> vchBTCTx = params.size() >= 6? vchFromValue(params[5]);
-	vector<unsigned char> vchRedeemScript = params.size() >= 7? vchFromValue(params[6]);
-	CTransactions rawTx;
+	vector<unsigned char> vchBTCTx = params.size() >= 6? vchFromValue(params[5]): vchFromString("");
+	vector<unsigned char> vchRedeemScript = params.size() >= 7? vchFromValue(params[6]): vchFromString("");
+	CTransaction rawTx;
 	if (!vchBTCTx.empty() && !DecodeHexTx(rawTx,stringFromVch(vchBTCTx)))
 			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4064 - " + _("Could not find decode raw BTC transaction"));
 
@@ -1199,12 +1201,13 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	scriptArbiter= GetScriptForDestination(ArbiterPubKey.GetID());
 	scriptSeller= GetScriptForDestination(SellerPubKey.GetID());
 	scriptBuyer= GetScriptForDestination(BuyerPubKey.GetID());
+	vector<unsigned char> redeemScript;
 	if(vchRedeemScript.empty())
 		{
 		UniValue arrayParams(UniValue::VARR);
-		arrayParams.push_back(buyeralias.vchName);
-		arrayParams.push_back(vchOffer);
-		arrayParams.push_back(arbiteralias.vchName);
+		arrayParams.push_back(stringFromVch(buyeralias.vchAlias));
+		arrayParams.push_back(stringFromVch(vchOffer));
+		arrayParams.push_back(stringFromVch(arbiteralias.vchAlias));
 		UniValue resCreate;
 		try
 		{
@@ -1232,6 +1235,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 			redeemScript = ParseHex(stringFromVch(vchRedeemScript));
 			scriptPubKey = CScript(redeemScript.begin(), redeemScript.end());
 	}
+	int precision = 2;
 	// send to escrow address
 	CAmount nTotal = theOffer.GetPrice(foundEntry)*nQty;
 	if(!vchBTCTx.empty())
@@ -1262,7 +1266,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	newEscrow.vchSellerAlias = selleralias.vchAlias;
 	newEscrow.vchPaymentMessage = vchFromString(strCipherText);
 	newEscrow.nQty = nQty;
-	newEscrow.escrowInput = vchBTCTx.empty()? escrowWtx.GetHash().ToString(): vchBTCTx;
+	newEscrow.escrowInputTx = vchBTCTx.empty()? escrowWtx.GetHash().ToString(): stringFromVch(vchBTCTx);
 	newEscrow.nHeight = chainActive.Tip()->nHeight;
 	newEscrow.nAcceptHeight = chainActive.Tip()->nHeight;
 
@@ -1498,7 +1502,6 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	if(nAmount != nEscrowTotal)
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4088 - " + _("Expected amount of escrow does not match what is held in escrow. Expected amount: ") +  boost::lexical_cast<string>(nEscrowTotal));
 
-	CAmount nAmount = fundingTx.vout[nOutMultiSig].nValue;
 	string strEscrowScriptPubKey = HexStr(fundingTx.vout[nOutMultiSig].scriptPubKey.begin(), fundingTx.vout[nOutMultiSig].scriptPubKey.end());
 
 	string strPrivateKey ;
