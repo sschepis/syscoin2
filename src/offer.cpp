@@ -684,7 +684,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			}
 			if(theOffer.nQty < -1)
 			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 29 - " + _("Quantity must be greator than or equal to -1");
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 29 - " + _("Quantity must be greater than or equal to -1");
 				return error(errorMessage.c_str());
 			}
 			if(!theOffer.vchCert.empty() && theOffer.nQty != 1)
@@ -753,7 +753,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 
 			if(theOffer.nQty < -1)
 			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 42 - " + _("Quantity must be greator than or equal to -1");
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 42 - " + _("Quantity must be greater than or equal to -1");
 				return error(errorMessage.c_str());
 			}
 			if(!theOffer.vchCert.empty() && theOffer.nQty != 1)
@@ -2380,7 +2380,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	unsigned int nQty = 1;
 	if (params.size() >= 3) {
 		if(atof(params[2].get_str().c_str()) <= 0)
-			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 166 - " + _("Invalid quantity value, must be greator than 0"));
+			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 166 - " + _("Invalid quantity value, must be greater than 0"));
 	
 		try {
 			nQty = boost::lexical_cast<unsigned int>(params[2].get_str());
@@ -3668,7 +3668,7 @@ UniValue offerfilter(const UniValue& params, bool fHelp) {
 		oOffer.push_back(Pair("description", stringFromVch(txOffer.sDescription)));
         oOffer.push_back(Pair("category", stringFromVch(txOffer.sCategory)));
 		int precision = 2;
-		CAmount nPricePerUnit = convertSyscoinToCurrencyCode(txOffer.vchAliasPeg, txOffer.sCurrencyCode, 0, txOffer.nHeight, precision);
+		CAmount nPricePerUnit = convertSyscoinToCurrencyCode(txOffer.vchAliasPeg, txOffer.sCurrencyCode, txOffer.GetPrice(), nHeight, precision);
 		oOffer.push_back(Pair("price", strprintf("%.*f", precision, ValueFromAmount(nPricePerUnit).get_real() ))); 
 		oOffer.push_back(Pair("currency", stringFromVch(txOffer.sCurrencyCode)));
 		oOffer.push_back(Pair("commission", strprintf("%d%%", txOffer.nCommission)));

@@ -1104,7 +1104,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 
 	unsigned int nQty = 1;
 	if(atof(params[2].get_str().c_str()) < 0)
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4063 - " + _("Invalid quantity value, must be greator than 0"));
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4063 - " + _("Invalid quantity value, must be greater than 0"));
 
 	try {
 		nQty = boost::lexical_cast<unsigned int>(params[2].get_str());
