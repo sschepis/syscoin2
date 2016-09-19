@@ -1038,6 +1038,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						theOffer.sCategory = linkOffer.sCategory;
 						theOffer.sTitle = linkOffer.sTitle;
 						theOffer.safeSearch = linkOffer.safeSearch;
+						theOffer.bOnlyAcceptBTC = linkOffer.bOnlyAcceptBTC;
 						linkOffer.offerLinks.push_back(vvchArgs[0]);
 						linkOffer.PutToOfferList(offerVtxPos);
 						// write parent offer
@@ -1426,6 +1427,12 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			{
 				theOffer.nQty = linkOffer.nQty;	
 				theOffer.vchCert = linkOffer.vchCert;
+				theOffer.vchAliasPeg = linkOffer.vchAliasPeg;
+				if(linkOffer.bOnlyAcceptBTC)
+				{
+					theOffer.bOnlyAcceptBTC = linkOffer.bOnlyAcceptBTC;
+					theOffer.sCurrencyCode = linkOffer.sCurrencyCode;
+				}
 				theOffer.SetPrice(linkOffer.nPrice);					
 			}
 			else
@@ -1440,6 +1447,12 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						linkOffer.nQty = theOffer.nQty;	
 						linkOffer.SetPrice(theOffer.nPrice);
 						linkOffer.vchCert = theOffer.vchCert;
+						linkOffer.vchAliasPeg = theOffer.vchAliasPeg;
+						if(theOffer.bOnlyAcceptBTC)
+						{
+							linkOffer.bOnlyAcceptBTC = theOffer.bOnlyAcceptBTC;
+							linkOffer.sCurrencyCode = theOffer.sCurrencyCode;
+						}
 						linkOffer.PutToOfferList(myVtxPos);
 						// write offer
 					
@@ -2258,23 +2271,24 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	{
 		if(wtxCertIn != NULL)
 			theOffer.vchCert = vchCert;
+		if(vchAliasPeg.empty())
+			vchAliasPeg = offerCopy.vchAliasPeg;
 	}
-	if(vchAliasPeg.empty())
-		vchAliasPeg = offerCopy.vchAliasPeg;
 	if(sCurrencyCode.empty() || sCurrencyCode == vchFromString("NONE"))
 		sCurrencyCode = offerCopy.sCurrencyCode;
-	int precision = 2;
-	CAmount nPricePerUnit = convertCurrencyCodeToSyscoin(vchAliasPeg, sCurrencyCode, price, chainActive.Tip()->nHeight, precision);
-	if(nPricePerUnit == 0)
-	{
-		string err = "SYSCOIN_OFFER_RPC_ERROR ERRCODE: 136 - " + _("Could not find currency in the peg alias");
-		throw runtime_error(err.c_str());
-	}
 
 	if(offerCopy.vchAliasPeg != vchAliasPeg)
 		theOffer.vchAliasPeg = vchAliasPeg;
 	if(offerCopy.sCurrencyCode != sCurrencyCode)
 		theOffer.sCurrencyCode = sCurrencyCode;
+
+	int precision = 2;
+	CAmount nPricePerUnit = convertCurrencyCodeToSyscoin(theOffer.vchAliasPeg, sCurrencyCode, price, chainActive.Tip()->nHeight, precision);
+	if(nPricePerUnit == 0)
+	{
+		string err = "SYSCOIN_OFFER_RPC_ERROR ERRCODE: 136 - " + _("Could not find currency in the peg alias");
+		throw runtime_error(err.c_str());
+	}
 
 	theOffer.vchAlias = alias.vchAlias;
 	theOffer.safeSearch = strSafeSearch == "Yes"? true: false;

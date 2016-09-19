@@ -1479,7 +1479,7 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	// if we can't get it in this blockchain, try full raw tx decode (bitcoin input raw tx)
 	if (!GetTransaction(txHash, fundingTx, Params().GetConsensus(), hashBlock))
 	{
-		nExpectedCommissionAmount = convertSyscoinToCurrencyCode(linkOffer.vchAliasPeg, vchFromString("BTC"), nCommission, linkOffer.nHeight, precision)*escrow.nQty;
+		nExpectedCommissionAmount = convertSyscoinToCurrencyCode(theOffer.vchAliasPeg, vchFromString("BTC"), nCommission, theOffer.nHeight, precision)*escrow.nQty;
 		nExpectedAmount = convertSyscoinToCurrencyCode(theOffer.vchAliasPeg, vchFromString("BTC"), theOffer.GetPrice(foundEntry), theOffer.nHeight, precision)*escrow.nQty; 
 		nEscrowFee = GetEscrowArbiterFee(nExpectedAmount);
 		nEscrowTotal =  nExpectedAmount + nEscrowFee + recipientFee.nAmount;
@@ -1788,7 +1788,7 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 	// if we can't get it in this blockchain, try full raw tx decode (bitcoin input raw tx)
 	if (!GetTransaction(txHash, fundingTx, Params().GetConsensus(), hashBlock))
 	{
-		nExpectedCommissionAmount = convertSyscoinToCurrencyCode(linkOffer.vchAliasPeg, vchFromString("BTC"), nCommission, linkOffer.nHeight, precision)*escrow.nQty;
+		nExpectedCommissionAmount = convertSyscoinToCurrencyCode(theOffer.vchAliasPeg, vchFromString("BTC"), nCommission, theOffer.nHeight, precision)*escrow.nQty;
 		nExpectedAmount = convertSyscoinToCurrencyCode(theOffer.vchAliasPeg, vchFromString("BTC"), theOffer.GetPrice(foundEntry), theOffer.nHeight, precision)*escrow.nQty; 
 		nEscrowFee = GetEscrowArbiterFee(nExpectedAmount);
 		nEscrowTotal =  nExpectedAmount + nEscrowFee + recipientFee.nAmount;
@@ -2309,7 +2309,7 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 	// if we can't get it in this blockchain, try full raw tx decode (bitcoin input raw tx)
 	if (!GetTransaction(txHash, fundingTx, Params().GetConsensus(), hashBlock))
 	{
-		nExpectedCommissionAmount = convertSyscoinToCurrencyCode(linkOffer.vchAliasPeg, vchFromString("BTC"), nCommission, linkOffer.nHeight, precision)*escrow.nQty;
+		nExpectedCommissionAmount = convertSyscoinToCurrencyCode(theOffer.vchAliasPeg, vchFromString("BTC"), nCommission, theOffer.nHeight, precision)*escrow.nQty;
 		nExpectedAmount = convertSyscoinToCurrencyCode(theOffer.vchAliasPeg, vchFromString("BTC"), theOffer.GetPrice(foundEntry), theOffer.nHeight, precision)*escrow.nQty; 
 		nEscrowFee = GetEscrowArbiterFee(nExpectedAmount);
 		nEscrowTotal =  nExpectedAmount + nEscrowFee + recipientFee.nAmount;

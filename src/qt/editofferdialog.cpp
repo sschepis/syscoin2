@@ -84,7 +84,6 @@ EditOfferDialog::EditOfferDialog(Mode mode,  const QString &strOffer,  const QSt
 			ui->acceptBTCOnlyEdit->setEnabled(false);
 			ui->priceEdit->setEnabled(false);
 			ui->qtyEdit->setEnabled(false);
-			ui->currencyEdit->setEnabled(false);
 			ui->certEdit->setEnabled(false);
 			ui->rootOfferLabel->setVisible(true);
 			ui->rootOfferEdit->setVisible(true);

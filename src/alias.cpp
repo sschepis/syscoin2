@@ -331,7 +331,7 @@ CAmount convertSyscoinToCurrencyCode(const vector<unsigned char> &vchAliasPeg, c
 			LogPrintf("convertSyscoinToCurrencyCode() Exception caught getting rate alias information\n");
 	}
 	if(precision > 8)
-		sysPrice = 0;
+		currencyPrice = 0;
 	return currencyPrice;
 }
 string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchAliasPeg, const vector<unsigned char> &vchCurrency, CAmount &nFee, const unsigned int &nHeightToFind, vector<string>& rateList, int &precision)
