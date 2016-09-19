@@ -108,6 +108,7 @@ if (!platformStyle->getImagesOnButtons())
         }
     }
 #endif
+	setupEscrowCheckboxState();
 }
 void OfferAcceptDialogBTC::on_cancelButton_clicked()
 {

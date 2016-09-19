@@ -24,6 +24,7 @@ public:
     bool getPaymentStatus();
 
 private:
+	void setupEscrowCheckboxState();
 	WalletModel* walletModel;
 	const PlatformStyle *platformStyle;
     Ui::OfferAcceptDialogBTC *ui;
