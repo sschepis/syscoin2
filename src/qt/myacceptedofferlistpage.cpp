@@ -234,11 +234,9 @@ void MyAcceptedOfferListPage::slotConfirmedFinished(QNetworkReply * reply){
 					UniValue addressValue = addressesValue.get_array()[0];
 					if(addressValue.get_str() == m_strAddress.toStdString())
 					{
-						
-						if(paymentValue.isStr())
+						if(paymentValue.isNum())
 						{
-							valueAmount += QString::fromStdString(paymentValue.get_str()).toDouble();
-	
+							valueAmount += paymentValue.get_real();
 							if(valueAmount >= dblPrice)
 							{
 								ui->btcButton->setText(m_buttonText);
