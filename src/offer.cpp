@@ -3642,7 +3642,7 @@ UniValue offerfilter(const UniValue& params, bool fHelp) {
 	
 	pair<vector<unsigned char>, COffer> pairScan;
 	BOOST_FOREACH(pairScan, offerScan) {
-		const COffer &txOffer = pairScan.second;
+		COffer txOffer = pairScan.second;
 		const string &offer = stringFromVch(pairScan.first);
 		vector<COffer> vtxPos;
 		vector<CAliasIndex> vtxAliasPos;
