@@ -1016,7 +1016,12 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			}
 			// if this is a linked offer activate, then add it to the parent offerLinks list
 			if(!theOffer.vchLinkOffer.empty())
-			{				
+			{	
+				if (!GetTxAndVtxOfOffer( theOffer.vchLinkOffer, linkOffer, txLinkedOffer, offerVtxPos))
+				{
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 73 - " + _("Linked offer not found. It may be expired");
+					theOffer.vchLinkOffer.clear();
+				}
 				if (!linkOffer.vchLinkOffer.empty())
 				{
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 83 - " + _("Cannot link to an offer that is already linked to another offer");
@@ -1047,6 +1052,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						theOffer.linkWhitelist.bExclusiveResell = true;
 						theOffer.sCurrencyCode = linkOffer.sCurrencyCode;
 						theOffer.vchCert = linkOffer.vchCert;
+						theOffer.SetPrice(linkOffer.nPrice);
 						theOffer.vchAliasPeg = linkOffer.vchAliasPeg;
 						theOffer.sCategory = linkOffer.sCategory;
 						theOffer.sTitle = linkOffer.sTitle;
