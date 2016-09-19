@@ -1302,8 +1302,8 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 121 - " + _("Offer payment does not specify the correct payment amount");
 					return true;
 				}
-				CAmount nTotalValue = ( nPrice * nQty );
-				CAmount nTotalCommission = ( nCommission * nQty );
+				CAmount nTotalValue = ( nPrice * theOfferAccept.nQty );
+				CAmount nTotalCommission = ( nCommission * theOfferAccept.nQty );
 				int nOutPayment, nOutCommission;
 				nOutPayment = FindOfferAcceptPayment(tx, nTotalValue);
 				if(nOutPayment < 0)
@@ -2470,7 +2470,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	COfferAccept txAccept;
 	txAccept.vchAcceptRand = vchAccept;
 	txAccept.nQty = nQty;
-	txAccept.nPrice = priceAtTimeOfAccept;
+	txAccept.nPrice = nPrice;
 	// if we have a linked offer accept then use height from linked accept (the one buyer makes, not the reseller). We need to do this to make sure we convert price at the time of initial buyer's accept.
 	// in checkescrowinput we override this if its from an escrow release, just like above.
 	txAccept.nAcceptHeight = nHeight;
@@ -3456,7 +3456,7 @@ UniValue offerlist(const UniValue& params, bool fHelp) {
             oName.push_back(Pair("category", stringFromVch(theOfferA.sCategory)));
             oName.push_back(Pair("description", stringFromVch(theOfferA.sDescription)));
 			int precision = 2;
-			CAmount nPricePerUnit = convertSyscoinToCurrencyCode(theOffer.vchAliasPeg, theOffer.sCurrencyCode, theOfferA.GetPrice(), theOfferA.nHeight, precision);
+			CAmount nPricePerUnit = convertSyscoinToCurrencyCode(theOfferA.vchAliasPeg, theOfferA.sCurrencyCode, theOfferA.GetPrice(), theOfferA.nHeight, precision);
 			oName.push_back(Pair("price", strprintf("%.*f", precision, ValueFromAmount(nPricePerUnit).get_real() ))); 	
 
 			oName.push_back(Pair("currency", stringFromVch(theOfferA.sCurrencyCode) ) );
@@ -3559,7 +3559,7 @@ UniValue offerhistory(const UniValue& params, bool fHelp) {
             oOffer.push_back(Pair("category", stringFromVch(theOfferA.sCategory)));
             oOffer.push_back(Pair("description", stringFromVch(theOfferA.sDescription)));
 			int precision = 2;
-			CAmount nPricePerUnit = convertSyscoinToCurrencyCode(theOffer.vchAliasPeg, theOffer.sCurrencyCode, theOfferA.GetPrice(), theOfferA.nHeight, precision);
+			CAmount nPricePerUnit = convertSyscoinToCurrencyCode(theOfferA.vchAliasPeg, theOfferA.sCurrencyCode, theOfferA.GetPrice(), theOfferA.nHeight, precision);
 			oOffer.push_back(Pair("price", strprintf("%.*f", precision, ValueFromAmount(nPricePerUnit).get_real() ))); 	
 
 			oOffer.push_back(Pair("currency", stringFromVch(theOfferA.sCurrencyCode) ) );
