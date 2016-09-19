@@ -30,7 +30,7 @@ public:
 	uint64_t nHeight;
 	uint64_t nAcceptHeight;
 	unsigned int nQty;
-	float nPrice;
+	CAmount nPrice;
 	uint256 txBTCId;
 	std::vector<unsigned char> vchBuyerAlias;	
 	std::vector<unsigned char> vchMessage;
@@ -202,7 +202,7 @@ public:
 	std::vector<unsigned char> sCategory;
 	std::vector<unsigned char> sTitle;
 	std::vector<unsigned char> sDescription;
-	float nPrice;
+	CAmount nPrice;
 	char nCommission;
 	int nQty;
 	COfferAccept accept;
@@ -273,9 +273,9 @@ public:
 	
 				
 	}
-	float GetPrice(const COfferLinkWhitelistEntry& entry=COfferLinkWhitelistEntry()){
+	CAmount GetPrice(const COfferLinkWhitelistEntry& entry=COfferLinkWhitelistEntry()){
 		COfferLinkWhitelistEntry  myentry;
-		float price = nPrice;
+		CAmount price = nPrice;
 		linkWhitelist.GetLinkEntryByHash(entry.aliasLinkVchRand, myentry);
 		
 		float fDiscount = myentry.nDiscountPct;
@@ -290,7 +290,7 @@ public:
 		return price;
 	}
 
-	void SetPrice(float price){
+	void SetPrice(CAmount price){
 		nPrice = price;
 	}
     void PutToOfferList(std::vector<COffer> &offerList) {

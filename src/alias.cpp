@@ -290,6 +290,7 @@ unsigned int QtyOfPendingAcceptsInMempool(const vector<unsigned char>& vchToFind
 	return nQty;
 
 }
+// how much is 1.1 BTC in syscoin? 1 BTC = 110000 SYS for example, nPrice would be 1.1, sysPrice would be 110000
 CAmount convertCurrencyCodeToSyscoin(const vector<unsigned char> &vchAliasPeg, const vector<unsigned char> &vchCurrencyCode, const float &nPrice, const unsigned int &nHeight, int &precision)
 {
 	CAmount sysPrice = 0;
@@ -299,8 +300,7 @@ CAmount convertCurrencyCodeToSyscoin(const vector<unsigned char> &vchAliasPeg, c
 	{
 		if(getCurrencyToSYSFromAlias(vchAliasPeg, vchCurrencyCode, nRate, nHeight, rateList, precision) == "")
 		{
-			float price = nPrice*(float)nRate;
-			sysPrice = CAmount(price);
+			sysPrice = AmountFromValue(nPrice*(float)nRate);
 		}
 	}
 	catch(...)
@@ -311,6 +311,28 @@ CAmount convertCurrencyCodeToSyscoin(const vector<unsigned char> &vchAliasPeg, c
 	if(precision > 8)
 		sysPrice = 0;
 	return sysPrice;
+}
+// convert 110000*COIN SYS into 1.1*COIN BTC
+CAmount convertSyscoinToCurrencyCode(const vector<unsigned char> &vchAliasPeg, const vector<unsigned char> &vchCurrencyCode, const CAmount &nPrice, const unsigned int &nHeight, int &precision)
+{
+	CAmount currencyPrice = 0;
+	CAmount nRate;
+	vector<string> rateList;
+	try
+	{
+		if(getCurrencyToSYSFromAlias(vchAliasPeg, vchCurrencyCode, nRate, nHeight, rateList, precision) == "")
+		{
+			currencyPrice = nPrice/nRate;
+		}
+	}
+	catch(...)
+	{
+		if(fDebug)
+			LogPrintf("convertSyscoinToCurrencyCode() Exception caught getting rate alias information\n");
+	}
+	if(precision > 8)
+		sysPrice = 0;
+	return currencyPrice;
 }
 string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchAliasPeg, const vector<unsigned char> &vchCurrency, CAmount &nFee, const unsigned int &nHeightToFind, vector<string>& rateList, int &precision)
 {

@@ -1233,12 +1233,10 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 			scriptPubKey = CScript(redeemScript.begin(), redeemScript.end());
 	}
 	// send to escrow address
-
-	int precision = 2;
-	CAmount nPricePerUnit = convertCurrencyCodeToSyscoin(theOffer.vchAliasPeg, theOffer.sCurrencyCode, theOffer.GetPrice(foundEntry), chainActive.Tip()->nHeight, precision);
-	CAmount nTotal = nPricePerUnit*nQty;
+	CAmount nTotal = theOffer.GetPrice(foundEntry)*nQty;
 	if(!vchBTCTx.empty())
-		nTotal =  AmountFromValue(theOffer.GetPrice(foundEntry))*nQty;
+		nTotal = convertSyscoinToCurrencyCode(theOffer.vchAliasPeg, vchFromString("BTC"), theOffer.GetPrice(foundEntry), chainActive.Tip()->nHeight, precision)*nQty; 
+	
 	CAmount nEscrowFee = GetEscrowArbiterFee(nTotal);
 	CRecipient recipientFee;
 	CreateRecipient(scriptPubKey, recipientFee);
@@ -1441,13 +1439,13 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4068 - " + _("Could not find an offer with this identifier"));
 	theOffer.nHeight = vtxPos.front().nAcceptHeight;
 	theOffer.GetOfferFromList(offerVtxPos);
-	float commissionAtTimeOfAccept;		
+	CAmount nCommission;		
 	if(theOffer.vchLinkOffer.empty())
 	{
 		// only apply whitelist discount if buyer had used his alias as input into the escrow
 		if(foundWhitelistAlias)
 			theOffer.linkWhitelist.GetLinkEntryByHash(buyerAlias.vchAlias, foundEntry);
-		commissionAtTimeOfAccept = 0;
+		nCommission = 0;
 	}
 	else 
 	{
@@ -1466,23 +1464,23 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 		}
 
 		linkOffer.linkWhitelist.GetLinkEntryByHash(theOffer.vchAlias, foundEntry);
-		commissionAtTimeOfAccept = theOffer.GetPrice() - linkOffer.GetPrice(foundEntry);
+		nCommission = theOffer.GetPrice() - linkOffer.GetPrice(foundEntry);
 	}
 	int precision = 2;
 	CRecipient recipientFee;
 	CreateRecipient(redeemScriptPubKey, recipientFee);
 	
-	CAmount nExpectedCommissionAmount = convertCurrencyCodeToSyscoin(theOffer.vchAliasPeg, theOffer.sCurrencyCode, commissionAtTimeOfAccept, theOffer.nHeight, precision)*escrow.nQty;
-	CAmount nExpectedAmount = convertCurrencyCodeToSyscoin(theOffer.vchAliasPeg, theOffer.sCurrencyCode, theOffer.GetPrice(foundEntry), theOffer.nHeight, precision)*escrow.nQty; 
+	CAmount nExpectedCommissionAmount = nCommission*escrow.nQty;
+	CAmount nExpectedAmount = theOffer.GetPrice(foundEntry)*escrow.nQty; 
 	CAmount nEscrowFee = GetEscrowArbiterFee(nExpectedAmount);
 	CAmount nEscrowTotal =  nExpectedAmount + nEscrowFee + recipientFee.nAmount;
 	uint256 hashBlock;
-	uint256 txHash = uint256(escrow.escrowInputTx);
+	uint256 txHash(uint256S(escrow.escrowInputTx));
 	// if we can't get it in this blockchain, try full raw tx decode (bitcoin input raw tx)
 	if (!GetTransaction(txHash, fundingTx, Params().GetConsensus(), hashBlock))
 	{
-		nExpectedCommissionAmount = AmountFromValue(commissionAtTimeOfAccept)*escrow.nQty;
-		nExpectedAmount = AmountFromValue(theOffer.GetPrice(foundEntry))*escrow.nQty; 
+		nExpectedCommissionAmount = convertSyscoinToCurrencyCode(linkOffer.vchAliasPeg, vchFromString("BTC"), nCommission, linkOffer.nHeight, precision)*escrow.nQty;
+		nExpectedAmount = convertSyscoinToCurrencyCode(theOffer.vchAliasPeg, vchFromString("BTC"), theOffer.GetPrice(foundEntry), theOffer.nHeight, precision)*escrow.nQty; 
 		nEscrowFee = GetEscrowArbiterFee(nExpectedAmount);
 		nEscrowTotal =  nExpectedAmount + nEscrowFee + recipientFee.nAmount;
 		if (!DecodeHexTx(fundingTx,escrowInputTx))
@@ -1752,13 +1750,13 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4068 - " + _("Could not find an offer with this identifier"));
 	theOffer.nHeight = vtxPos.front().nAcceptHeight;
 	theOffer.GetOfferFromList(offerVtxPos);
-	float commissionAtTimeOfAccept;		
+	CAmount nCommission;		
 	if(theOffer.vchLinkOffer.empty())
 	{
 		// only apply whitelist discount if buyer had used his alias as input into the escrow
 		if(foundWhitelistAlias)
 			theOffer.linkWhitelist.GetLinkEntryByHash(buyerAlias.vchAlias, foundEntry);
-		commissionAtTimeOfAccept = 0;
+		nCommission = 0;
 	}
 	else 
 	{
@@ -1775,28 +1773,28 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 		}
 
 		linkOffer.linkWhitelist.GetLinkEntryByHash(theOffer.vchAlias, foundEntry);
-		commissionAtTimeOfAccept = theOffer.GetPrice() - linkOffer.GetPrice(foundEntry);
+		nCommission = theOffer.GetPrice() - linkOffer.GetPrice(foundEntry);
 	}
 	int precision = 2;
 	CRecipient recipientFee;
 	CreateRecipient(redeemScriptPubKey, recipientFee);
 	
-	CAmount nExpectedCommissionAmount = convertCurrencyCodeToSyscoin(theOffer.vchAliasPeg, theOffer.sCurrencyCode, commissionAtTimeOfAccept, theOffer.nHeight, precision)*escrow.nQty;
-	CAmount nExpectedAmount = convertCurrencyCodeToSyscoin(theOffer.vchAliasPeg, theOffer.sCurrencyCode, theOffer.GetPrice(foundEntry), theOffer.nHeight, precision)*escrow.nQty; 
+	CAmount nExpectedCommissionAmount = nCommission*escrow.nQty;
+	CAmount nExpectedAmount = theOffer.GetPrice(foundEntry)*escrow.nQty; 
 	CAmount nEscrowFee = GetEscrowArbiterFee(nExpectedAmount);
 	CAmount nEscrowTotal =  nExpectedAmount + nEscrowFee + recipientFee.nAmount;
 	uint256 hashBlock;
-	uint256 txHash = uint256(escrow.escrowInputTx);
+	uint256 txHash(uint256S(escrow.escrowInputTx));
 	// if we can't get it in this blockchain, try full raw tx decode (bitcoin input raw tx)
 	if (!GetTransaction(txHash, fundingTx, Params().GetConsensus(), hashBlock))
 	{
-		nExpectedCommissionAmount = AmountFromValue(commissionAtTimeOfAccept)*escrow.nQty;
-		nExpectedAmount = AmountFromValue(theOffer.GetPrice(foundEntry))*escrow.nQty; 
+		nExpectedCommissionAmount = convertSyscoinToCurrencyCode(linkOffer.vchAliasPeg, vchFromString("BTC"), nCommission, linkOffer.nHeight, precision)*escrow.nQty;
+		nExpectedAmount = convertSyscoinToCurrencyCode(theOffer.vchAliasPeg, vchFromString("BTC"), theOffer.GetPrice(foundEntry), theOffer.nHeight, precision)*escrow.nQty; 
 		nEscrowFee = GetEscrowArbiterFee(nExpectedAmount);
 		nEscrowTotal =  nExpectedAmount + nEscrowFee + recipientFee.nAmount;
 		if (!DecodeHexTx(fundingTx,escrowInputTx))
 			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4064 - " + _("Could not find the escrow funding transaction in the blockchain database."));
-	}
+	}	
 	for(unsigned int i=0;i<fundingTx.vout.size();i++)
 	{
 		if(fundingTx.vout[i].nValue == nEscrowTotal)
@@ -2279,13 +2277,13 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4068 - " + _("Could not find an offer with this identifier"));
 	theOffer.nHeight = vtxPos.front().nAcceptHeight;
 	theOffer.GetOfferFromList(offerVtxPos);
-	float commissionAtTimeOfAccept;		
+	CAmount nCommission;		
 	if(theOffer.vchLinkOffer.empty())
 	{
 		// only apply whitelist discount if buyer had used his alias as input into the escrow
 		if(foundWhitelistAlias)
 			theOffer.linkWhitelist.GetLinkEntryByHash(buyerAlias.vchAlias, foundEntry);
-		commissionAtTimeOfAccept = 0;
+		nCommission = 0;
 	}
 	else 
 	{
@@ -2296,23 +2294,23 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 		linkOffer.GetOfferFromList(offerLinkVtxPos);
 
 		linkOffer.linkWhitelist.GetLinkEntryByHash(theOffer.vchAlias, foundEntry);
-		commissionAtTimeOfAccept = theOffer.GetPrice() - linkOffer.GetPrice(foundEntry);
+		nCommission = theOffer.GetPrice() - linkOffer.GetPrice(foundEntry);
 	}	
 	int precision = 2;
 	CRecipient recipientFee;
 	CreateRecipient(redeemScriptPubKey, recipientFee);
 	
-	CAmount nExpectedCommissionAmount = convertCurrencyCodeToSyscoin(theOffer.vchAliasPeg, theOffer.sCurrencyCode, commissionAtTimeOfAccept, theOffer.nHeight, precision)*escrow.nQty;
-	CAmount nExpectedAmount = convertCurrencyCodeToSyscoin(theOffer.vchAliasPeg, theOffer.sCurrencyCode, theOffer.GetPrice(foundEntry), theOffer.nHeight, precision)*escrow.nQty; 
+	CAmount nExpectedCommissionAmount = nCommission*escrow.nQty;
+	CAmount nExpectedAmount = theOffer.GetPrice(foundEntry)*escrow.nQty; 
 	CAmount nEscrowFee = GetEscrowArbiterFee(nExpectedAmount);
 	CAmount nEscrowTotal =  nExpectedAmount + nEscrowFee + recipientFee.nAmount;
 	uint256 hashBlock;
-	uint256 txHash = uint256(escrow.escrowInputTx);
+	uint256 txHash(uint256S(escrow.escrowInputTx));
 	// if we can't get it in this blockchain, try full raw tx decode (bitcoin input raw tx)
 	if (!GetTransaction(txHash, fundingTx, Params().GetConsensus(), hashBlock))
 	{
-		nExpectedCommissionAmount = AmountFromValue(commissionAtTimeOfAccept)*escrow.nQty;
-		nExpectedAmount = AmountFromValue(theOffer.GetPrice(foundEntry))*escrow.nQty; 
+		nExpectedCommissionAmount = convertSyscoinToCurrencyCode(linkOffer.vchAliasPeg, vchFromString("BTC"), nCommission, linkOffer.nHeight, precision)*escrow.nQty;
+		nExpectedAmount = convertSyscoinToCurrencyCode(theOffer.vchAliasPeg, vchFromString("BTC"), theOffer.GetPrice(foundEntry), theOffer.nHeight, precision)*escrow.nQty; 
 		nEscrowFee = GetEscrowArbiterFee(nExpectedAmount);
 		nEscrowTotal =  nExpectedAmount + nEscrowFee + recipientFee.nAmount;
 		if (!DecodeHexTx(fundingTx,escrowInputTx))
@@ -2593,9 +2591,19 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 
 		linkOffer.linkWhitelist.GetLinkEntryByHash(theOffer.vchAlias, foundEntry);
 	}	
-	
-	int precision = 2;
-	CAmount nExpectedAmount = convertCurrencyCodeToSyscoin(theOffer.vchAliasPeg, theOffer.sCurrencyCode, theOffer.GetPrice(foundEntry), theOffer.nHeight, precision)*escrow.nQty; 
+
+	CAmount nExpectedAmount = theOffer.GetPrice(foundEntry)*escrow.nQty; 
+	uint256 hashBlock;
+	uint256 txHash(uint256S(escrow.escrowInputTx));
+	// if we can't get it in this blockchain, try full raw tx decode (bitcoin input raw tx)
+	if (!GetTransaction(txHash, fundingTx, Params().GetConsensus(), hashBlock))
+	{
+		int precision = 2;
+		nExpectedAmount = convertSyscoinToCurrencyCode(theOffer.vchAliasPeg, vchFromString("BTC"), theOffer.GetPrice(foundEntry), theOffer.nHeight, precision)*escrow.nQty; 
+		if (!DecodeHexTx(fundingTx,escrowInputTx))
+			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4064 - " + _("Could not find the escrow funding transaction in the blockchain database."));
+	}	
+
 	string strEscrowScriptPubKey = HexStr(fundingTx.vout[nOutMultiSig].scriptPubKey.begin(), fundingTx.vout[nOutMultiSig].scriptPubKey.end());
 	// decode rawTx and check it pays enough and it pays to buyer appropriately
 	// check that right amount is going to be sent to buyer
