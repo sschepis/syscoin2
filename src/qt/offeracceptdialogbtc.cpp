@@ -42,15 +42,15 @@ OfferAcceptDialogBTC::OfferAcceptDialogBTC(WalletModel* model, const PlatformSty
 	ui->aboutShadeBTC->setPixmap(QPixmap(":/images/" + theme + "/about_btc"));
 	dblPrice = qstrPrice.toDouble()*quantity.toUInt();
 	string strfPrice = strprintf("%f", dblPrice);
-	QString fprice = QString::fromStdString(strfPrice);
+	fprice = QString::fromStdString(strfPrice);
 	string strCurrencyCode = currencyCode.toStdString();
-	ui->escrowDisclaimer->setText(tr("<font color='blue'>Please note escrow is not available since you are paying in BTC, only SYS payments can be escrowed.</font>"));
 	ui->bitcoinInstructionLabel->setText(tr("After paying for this item, please enter the Bitcoin Transaction ID and click on the confirm button below. You may use the QR Code to the left to scan the payment request into your wallet or click on the Open BTC Wallet if you are on the desktop and have Bitcoin Core installed."));
-	ui->acceptMessage->setText(tr("Are you sure you want to purchase <b>%1</b> of <b>%2</b> from merchant <b>%3</b>? To complete your purchase please pay <b>%4 BTC</b> to <b>%5</b> using your Bitcoin wallet.").arg(quantity).arg(title).arg(sellerAlias).arg(fprice).arg(address));
+	ui->acceptMessage->setText(tr("Are you sure you want to purchase <b>%1</b> of <b>%2</b> from merchant <b>%3</b>? Before proceeding, please enter your escrow arbiter if you wish to use escrow below and check the Use Escrow checkbox. Leave the escrow checkbox unchecked if you do not wish to use escrow. To complete your purchase please pay <b>%4 BTC</b> to <b>%5</b> using your Bitcoin wallet. Note that the address you pay to will change if you select to use the escrow service.").arg(quantity).arg(title).arg(sellerAlias).arg(fprice).arg(address));
 	string strPrice = strprintf("%f", dblPrice);
 	price = QString::fromStdString(strPrice);
-
-	if (!platformStyle->getImagesOnButtons())
+	ui->escrowDisclaimer->setText(tr("<font color='blue'>Select an arbiter that is mutally trusted between yourself and the merchant.</font>"));
+	ui->escrowDisclaimer->setVisible(false);
+if (!platformStyle->getImagesOnButtons())
 	{
 		ui->confirmButton->setIcon(QIcon());
 		ui->openBtcWalletButton->setIcon(QIcon());
@@ -64,6 +64,7 @@ OfferAcceptDialogBTC::OfferAcceptDialogBTC(WalletModel* model, const PlatformSty
 		ui->cancelButton->setIcon(platformStyle->SingleColorIcon(":/icons/" + theme + "/quit"));
 	}	
 	this->offerPaid = false;
+	connect(ui->checkBox,SIGNAL(clicked(bool)),SLOT(onEscrowCheckBoxChanged(bool)));
 	connect(ui->confirmButton, SIGNAL(clicked()), this, SLOT(tryAcceptOffer()));
 	connect(ui->openBtcWalletButton, SIGNAL(clicked()), this, SLOT(openBTCWallet()));
 
@@ -115,7 +116,63 @@ OfferAcceptDialogBTC::~OfferAcceptDialogBTC()
 {
     delete ui;
 }
+void OfferAcceptDialogBTC::setupEscrowCheckboxState()
+{
+	if(ui->checkBox->isChecked())
+	{
+		ui->escrowDisclaimer->setVisible(true);
+		ui->escrowEdit->setEnabled(false);
+		// get new multisig address from escrow service
+		UniValue params(UniValue::VARR);
+		params.push_back(this->alias.toStdString());
+		params.push_back(this->offer.toStdString());
+		params.push_back(ui->escrowEdit->text().trimmed().toStdString());
+		UniValue resCreate;
+		try
+		{
+			resCreate = tableRPC.execute("generateescrowmultisig", params);
+		}
+		catch (UniValue& objError)
+		{
+			throw runtime_error(find_value(objError, "message").get_str());
+		}
+		if (!resCreate.isObject())
+			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4079 - " + _("Could not generate escrow multisig address: Invalid response from generateescrowmultisig"));
+		const UniValue &o = resCreate.get_obj();
+		QString multisigaddress;
+		const UniValue& redeemScript_value = find_value(o, "redeemScript");
+		const UniValue& address_value = find_value(o, "address");
+		if (redeemScript_value.isStr())
+		{
+			redeemScript = QString::fromStdString(redeemScript_value.get_str());
+		}
+		else
+			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4080 - " + _("Could not create escrow transaction: could not find redeem script in response"));
+		if (address_value.isStr())
+		{
+			multisigaddress = QString::fromStdString(address_value.get_str());
+		}
+		else
+			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4080 - " + _("Could not create escrow transaction: could not find redeem script in response"));
 
+		
+		ui->acceptMessage->setText(tr("Are you sure you want to purchase <b>%1</b> of <b>%2</b> from merchant <b>%3</b>? Before proceeding, please enter your escrow arbiter if you wish to use escrow below. Leave the escrow checkbox unchecked if you do not wish to use escrow. To complete your purchase please pay <b>%4 BTC</b> to <b>%5</b> using your Bitcoin wallet. Note that the address you pay to will change if you select to use the escrow service.").arg(quantity).arg(title).arg(sellerAlias).arg(fprice).arg(multisigaddress));
+
+	}
+	else
+	{
+		ui->escrowDisclaimer->setVisible(false);
+		ui->escrowEdit->setEnabled(true);
+		ui->acceptMessage->setText(tr("Are you sure you want to purchase <b>%1</b> of <b>%2</b> from merchant <b>%3</b>? Before proceeding, please enter your escrow arbiter if you wish to use escrow below and check the Use Escrow checkbox. Leave the escrow checkbox unchecked if you do not wish to use escrow. To complete your purchase please pay <b>%4 BTC</b> to <b>%5</b> using your Bitcoin wallet. Note that the address you pay to will change if you select to use the escrow service.").arg(quantity).arg(title).arg(sellerAlias).arg(fprice).arg(address));
+	}
+}
+void OfferAcceptDialogBTC::onEscrowCheckBoxChanged(bool toggled)
+{
+	setupEscrowCheckboxState();
+	ui->cancelButton->setDefault(false);
+	ui->acceptButton->setDefault(true);
+	ui->acceptBtcButton->setDefault(true);
+}
 void OfferAcceptDialogBTC::slotConfirmedFinished(QNetworkReply * reply){
 	if(reply->error() != QNetworkReply::NoError) {
 		ui->confirmButton->setText(m_buttonText);
@@ -123,6 +180,7 @@ void OfferAcceptDialogBTC::slotConfirmedFinished(QNetworkReply * reply){
         QMessageBox::critical(this, windowTitle(),
             tr("Error making request: ") + reply->errorString(),
                 QMessageBox::Ok, QMessageBox::Ok);
+		reply->deleteLater();
 		return;
 	}
 	double valueAmount = 0;
@@ -145,25 +203,33 @@ void OfferAcceptDialogBTC::slotConfirmedFinished(QNetworkReply * reply){
 				QMessageBox::critical(this, windowTitle(),
 					tr("Transaction status not successful: ") + QString::fromStdString(statusValue.get_str()),
 						QMessageBox::Ok, QMessageBox::Ok);
+				reply->deleteLater();	
 				return;
 			}
 		}
-		UniValue dataObj = find_value(outerObj, "data");
-		UniValue timeValue = find_value(dataObj, "time_utc");
+		UniValue dataObj1 = find_value(outerObj, "data");
+		UniValue dataObj = find_value(dataObj1, "tx");
+		UniValue timeValue = find_value(dataObj, "time");
 		if (timeValue.isStr())
 			time = QString::fromStdString(timeValue.get_str());
-		UniValue outputsValue = find_value(dataObj, "vouts");
+		UniValue hexValue = find_value(dataObj, "hex");
+		if (hexValue.isStr())
+			this->rawBTCTx = QString::fromStdString(hexValue.get_str());
+		
+		UniValue outputsValue = find_value(dataObj, "vout");
 		if (outputsValue.isArray())
 		{
 			UniValue outputs = outputsValue.get_array();
 			for (unsigned int idx = 0; idx < outputs.size(); idx++) {
 				const UniValue& output = outputs[idx];	
-				UniValue addressValue = find_value(output, "address");
-				if(addressValue.isStr())
+				UniValue addressesValue = find_value(output, "addresses");
+				UniValue paymentValue = find_value(output, "value");
+				if(addressesValue.isArray() &&  addressesValue.get_array().size() == 1)
 				{
+					UniValue addressesValue = addressesValue.get_array()[0];
 					if(addressValue.get_str() == address.toStdString())
 					{
-						UniValue paymentValue = find_value(output, "amount");
+						
 						if(paymentValue.isStr())
 						{
 							valueAmount += QString::fromStdString(paymentValue.get_str()).toDouble();
@@ -175,7 +241,11 @@ void OfferAcceptDialogBTC::slotConfirmedFinished(QNetworkReply * reply){
 								QMessageBox::information(this, windowTitle(),
 									tr("Transaction ID %1 was found in the Bitcoin blockchain! Full payment has been detected at %2.").arg(ui->btctxidEdit->text().trimmed()).arg(time),
 									QMessageBox::Ok, QMessageBox::Ok);
-								acceptOffer();
+								reply->deleteLater();
+								if(ui->checkBox->isChecked())
+									acceptEscrow();
+								else
+									acceptOffer();
 								return;
 							}
 						}
@@ -192,6 +262,7 @@ void OfferAcceptDialogBTC::slotConfirmedFinished(QNetworkReply * reply){
 		QMessageBox::critical(this, windowTitle(),
 			tr("Cannot parse JSON response: ") + str,
 				QMessageBox::Ok, QMessageBox::Ok);
+		reply->deleteLater();
 		return;
 	}
 	
@@ -209,7 +280,7 @@ void OfferAcceptDialogBTC::CheckPaymentInBTC()
 	ui->confirmButton->setEnabled(false);
 	QNetworkAccessManager *nam = new QNetworkAccessManager(this); 
 	connect(nam, SIGNAL(finished(QNetworkReply *)), this, SLOT(slotConfirmedFinished(QNetworkReply *)));
-	QUrl url("http://btc.blockr.io/api/v1/tx/info/" + ui->btctxidEdit->text().trimmed());
+	QUrl url("http://btc.blockr.io/api/v1/tx/raw/" + ui->btctxidEdit->text().trimmed());
 	QNetworkRequest request(url);
 	nam->get(request);
 }
@@ -288,6 +359,77 @@ void OfferAcceptDialogBTC::acceptOffer(){
 				QMessageBox::Ok, QMessageBox::Ok);
 			return;
 		}
+}
+void OfferAcceptDialog::acceptEscrow()
+{
+		if(!walletModel) return;
+		WalletModel::UnlockContext ctx(walletModel->requestUnlock());
+		if(!ctx.isValid())
+		{
+			return;
+		}
+		UniValue params(UniValue::VARR);
+		UniValue valError;
+		UniValue valResult;
+		UniValue valId;
+		UniValue result ;
+		string strReply;
+		string strError;
+
+		string strMethod = string("escrownew");
+		if(this->quantity.toLong() <= 0)
+		{
+			QMessageBox::critical(this, windowTitle(),
+				tr("Invalid quantity when trying to create escrow!"),
+				QMessageBox::Ok, QMessageBox::Ok);
+			return;
+		}
+		this->offerPaid = false;
+		params.push_back(this->alias.toStdString());
+		params.push_back(this->offer.toStdString());
+		params.push_back(this->quantity.toStdString());
+		params.push_back(this->notes.toStdString());
+		params.push_back(ui->escrowEdit->text().toStdString());
+		params.push_back(this->rawBTCTx.trimmed().toStdString());
+		params.push_back(redeemScript.toStdString());
+
+
+	    try {
+            result = tableRPC.execute(strMethod, params);
+			if (result.type() != UniValue::VNULL)
+			{
+				const UniValue &arr = result.get_array();
+				string strResult = arr[0].get_str();
+				QString escrowTXID = QString::fromStdString(strResult);
+				if(escrowTXID != QString(""))
+				{
+					OfferEscrowDialog dlg(platformStyle, this->title, this->quantity, this->price, this);
+					dlg.exec();
+					this->offerPaid = true;
+					OfferAcceptDialog::accept();
+					return;
+
+				}
+			}
+		}
+		catch (UniValue& objError)
+		{
+			strError = find_value(objError, "message").get_str();
+			QMessageBox::critical(this, windowTitle(),
+			tr("Error creating escrow: \"%1\"").arg(QString::fromStdString(strError)),
+				QMessageBox::Ok, QMessageBox::Ok);
+			return;
+		}
+		catch(std::exception& e)
+		{
+			QMessageBox::critical(this, windowTitle(),
+				tr("General exception when creating escrow"),
+				QMessageBox::Ok, QMessageBox::Ok);
+			return;
+		}
+	
+   
+
 }
 void OfferAcceptDialogBTC::openBTCWallet()
 {
