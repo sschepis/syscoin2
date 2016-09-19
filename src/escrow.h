@@ -34,7 +34,7 @@ public:
 	std::vector<unsigned char> vchLinkAlias;
 	std::vector<CFeedback> feedback;
     uint256 txHash;
-	string escrowInputTx;
+	std::string escrowInputTx;
     uint64_t nHeight;
 	uint64_t nAcceptHeight;
 	unsigned int nQty;
@@ -50,6 +50,7 @@ public:
 		vchOffer.clear();
 		rawTx.clear();
 		vchPaymentMessage.clear();
+		escrowInputTx.clear();
 	}
     CEscrow() {
         SetNull();
