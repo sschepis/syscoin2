@@ -171,9 +171,6 @@ void OfferAcceptDialogBTC::setupEscrowCheckboxState()
 void OfferAcceptDialogBTC::onEscrowCheckBoxChanged(bool toggled)
 {
 	setupEscrowCheckboxState();
-	ui->cancelButton->setDefault(false);
-	ui->acceptButton->setDefault(true);
-	ui->acceptBtcButton->setDefault(true);
 }
 void OfferAcceptDialogBTC::slotConfirmedFinished(QNetworkReply * reply){
 	if(reply->error() != QNetworkReply::NoError) {
