@@ -110,7 +110,8 @@ bool CCert::UnserializeFromData(const vector<unsigned char> &vchData, const vect
 bool CCert::UnserializeFromTx(const CTransaction &tx) {
 	vector<unsigned char> vchData;
 	vector<unsigned char> vchHash;
-	if(!GetSyscoinData(tx, vchData, vchHash))
+	int nOut;
+	if(!GetSyscoinData(tx, vchData, vchHash, nOut))
 	{
 		SetNull();
 		return false;
@@ -372,7 +373,8 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 	vector<unsigned char> vchData;
 	bool found = false;
 	vector<unsigned char> vchHash;
-	if(GetSyscoinData(tx, vchData, vchHash) && !theCert.UnserializeFromData(vchData, vchHash))
+	int nDataOut;
+	if(GetSyscoinData(tx, vchData, vchHash, nDataOut) && !theCert.UnserializeFromData(vchData, vchHash))
 	{
 		theCert.SetNull();
 	}
@@ -391,7 +393,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 			CScript scriptData;
 			scriptData << vchData;
 			CreateFeeRecipient(scriptData, vchData, fee);
-			if (fee.nAmount > tx.vout[nOut].nValue) 
+			if (fee.nAmount > tx.vout[nDataOut].nValue) 
 			{
 				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2 - " + _("Transaction does not pay enough fees");
 				return error(errorMessage.c_str());

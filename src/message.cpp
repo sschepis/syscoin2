@@ -76,7 +76,8 @@ bool CMessage::UnserializeFromData(const vector<unsigned char> &vchData, const v
 bool CMessage::UnserializeFromTx(const CTransaction &tx) {
 	vector<unsigned char> vchData;
 	vector<unsigned char> vchHash;
-	if(!GetSyscoinData(tx, vchData, vchHash))
+	int nOut;
+	if(!GetSyscoinData(tx, vchData, vchHash, nOut))
 	{
 		SetNull();
 		return false;
@@ -265,7 +266,8 @@ bool CheckMessageInputs(const CTransaction &tx, int op, int nOut, const vector<v
 	CTransaction aliasTx;
 	vector<unsigned char> vchData;
 	vector<unsigned char> vchHash;
-	if(!GetSyscoinData(tx, vchData, vchHash) || !theMessage.UnserializeFromData(vchData, vchHash))
+	int nDataOut;
+	if(!GetSyscoinData(tx, vchData, vchHash, nDataOut) || !theMessage.UnserializeFromData(vchData, vchHash))
 	{
 		if(fDebug)
 			LogPrintf("SYSCOIN_MESSAGE_CONSENSUS_ERROR: Null message, skipping...\n");	
@@ -281,7 +283,7 @@ bool CheckMessageInputs(const CTransaction &tx, int op, int nOut, const vector<v
 			CScript scriptData;
 			scriptData << vchData;
 			CreateFeeRecipient(scriptData, vchData, fee);
-			if (fee.nAmount > tx.vout[nOut].nValue) 
+			if (fee.nAmount > tx.vout[nDataOut].nValue) 
 			{
 				errorMessage = "SYSCOIN_MESSAGE_CONSENSUS_ERROR: ERRCODE: 2 - " + _("Transaction does not pay enough fees");
 				return error(errorMessage.c_str());

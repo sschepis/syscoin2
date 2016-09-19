@@ -751,7 +751,8 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	vector<unsigned char> vchData;
 	vector<unsigned char> vchAlias;
 	vector<unsigned char> vchHash;
-	if(GetSyscoinData(tx, vchData, vchHash) && !theAlias.UnserializeFromData(vchData, vchHash))
+	int nDataOut;
+	if(GetSyscoinData(tx, vchData, vchHash, nDataOut) && !theAlias.UnserializeFromData(vchData, vchHash))
 	{
 		theAlias.SetNull();
 	}
@@ -770,7 +771,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			CScript scriptData;
 			scriptData << vchData;
 			CreateFeeRecipient(scriptData, vchData, fee);
-			if (fee.nAmount > tx.vout[nOut].nValue) 
+			if (fee.nAmount > tx.vout[nDataOut].nValue) 
 			{
 				errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 2 - " + _("Transaction does not pay enough fees");
 				return error(errorMessage.c_str());
@@ -1054,9 +1055,9 @@ string stringFromVch(const vector<unsigned char> &vch) {
 	}
 	return res;
 }
-bool GetSyscoinData(const CTransaction &tx, vector<unsigned char> &vchData, vector<unsigned char> &vchHash)
+bool GetSyscoinData(const CTransaction &tx, vector<unsigned char> &vchData, vector<unsigned char> &vchHash, int& nOut)
 {
-	int nOut = GetSyscoinDataOutput(tx);
+	nOut = GetSyscoinDataOutput(tx);
     if(nOut == -1)
 	   return false;
 
@@ -1104,7 +1105,8 @@ bool CAliasIndex::UnserializeFromData(const vector<unsigned char> &vchData, cons
 bool CAliasIndex::UnserializeFromTx(const CTransaction &tx) {
 	vector<unsigned char> vchData;
 	vector<unsigned char> vchHash;
-	if(!GetSyscoinData(tx, vchData, vchHash))
+	int nOut;
+	if(!GetSyscoinData(tx, vchData, vchHash, nOut))
 	{
 		SetNull();
 		return false;
