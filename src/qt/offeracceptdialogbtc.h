@@ -37,6 +37,8 @@ private:
 	QString sellerAlias;
 	QString address;
 	QString alias;
+	QString fprice;
+	QString rawBTCTx;
 	QString m_buttonText;
 	double dblPrice;
 	bool offerPaid; 
@@ -45,7 +47,9 @@ private:
 private Q_SLOTS:
 	void on_cancelButton_clicked();
     void tryAcceptOffer();
-	void acceptOffer();
+	void onEscrowCheckBoxChanged(bool);
+    void acceptOffer();
+	void acceptEscrow();
 	void openBTCWallet();
 	void slotConfirmedFinished(QNetworkReply *);
 	

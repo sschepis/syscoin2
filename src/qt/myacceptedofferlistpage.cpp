@@ -201,11 +201,9 @@ void MyAcceptedOfferListPage::slotConfirmedFinished(QNetworkReply * reply){
 				return;
 			}
 		}
-		UniValue dataObj = find_value(outerObj, "data");
-		UniValue heightValue = find_value(dataObj, "block");
-		if (heightValue.isNum())
-			height = heightValue.get_int();
-		UniValue timeValue = find_value(dataObj, "time_utc");
+		UniValue dataObj1 = find_value(outerObj, "data");
+		UniValue dataObj = find_value(dataObj1, "tx");
+		UniValue timeValue = find_value(dataObj, "time");
 		if (timeValue.isStr())
 			time = QString::fromStdString(timeValue.get_str());
 		
@@ -223,27 +221,30 @@ void MyAcceptedOfferListPage::slotConfirmedFinished(QNetworkReply * reply){
 				return;
 			}
 		}
-		UniValue outputsValue = find_value(dataObj, "vouts");
+		UniValue outputsValue = find_value(dataObj, "vout");
 		if (outputsValue.isArray())
 		{
 			UniValue outputs = outputsValue.get_array();
 			for (unsigned int idx = 0; idx < outputs.size(); idx++) {
 				const UniValue& output = outputs[idx];	
-				UniValue addressValue = find_value(output, "address");
-				if(addressValue.isStr())
+				UniValue addressesValue = find_value(output, "addresses");
+				UniValue paymentValue = find_value(output, "value");
+				if(addressesValue.isArray() &&  addressesValue.get_array().size() == 1)
 				{
+					UniValue addressesValue = addressesValue.get_array()[0];
 					if(addressValue.get_str() == m_strAddress.toStdString())
 					{
-						UniValue paymentValue = find_value(output, "amount");
+						
 						if(paymentValue.isStr())
 						{
 							valueAmount += QString::fromStdString(paymentValue.get_str()).toDouble();
+	
 							if(valueAmount >= dblPrice)
 							{
 								ui->btcButton->setText(m_buttonText);
 								ui->btcButton->setEnabled(true);
 								QMessageBox::information(this, windowTitle(),
-									tr("Transaction ID %1 was found in the Bitcoin blockchain! Full payment has been detected in block %2 at %3. It is recommended that you confirm payment by opening your Bitcoin wallet and seeing the funds in your account.").arg(m_strBTCTxId).arg(height).arg(time),
+									tr("Transaction ID %1 was found in the Bitcoin blockchain! Full payment has been detected at %3. It is recommended that you confirm payment by opening your Bitcoin wallet and seeing the funds in your account.").arg(m_strBTCTxId).arg(time),
 									QMessageBox::Ok, QMessageBox::Ok);
 								return;
 							}
@@ -281,7 +282,7 @@ void MyAcceptedOfferListPage::CheckPaymentInBTC(const QString &strBTCTxId, const
 	m_strBTCTxId = strBTCTxId;
 	QNetworkAccessManager *nam = new QNetworkAccessManager(this);  
 	connect(nam, SIGNAL(finished(QNetworkReply *)), this, SLOT(slotConfirmedFinished(QNetworkReply *)));
-	QUrl url("http://btc.blockr.io/api/v1/tx/info/" + strBTCTxId);
+	QUrl url("http://btc.blockr.io/api/v1/tx/raw/" + strBTCTxId);
 	QNetworkRequest request(url);
 	nam->get(request);
 }

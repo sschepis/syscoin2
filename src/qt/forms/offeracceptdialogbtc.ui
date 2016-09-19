@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>658</width>
-    <height>404</height>
+    <height>447</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -41,7 +41,17 @@
      </item>
     </layout>
    </item>
-   <item row="7" column="0">
+   <item row="0" column="0">
+    <widget class="QLabel" name="aboutShadeBTC">
+     <property name="text">
+      <string/>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+    </widget>
+   </item>
+   <item row="9" column="0">
     <layout class="QHBoxLayout" name="horizontalLayout_3">
      <item>
       <widget class="QPushButton" name="cancelButton">
@@ -71,23 +81,6 @@
       </widget>
      </item>
     </layout>
-   </item>
-   <item row="0" column="0">
-    <widget class="QLabel" name="aboutShadeBTC">
-     <property name="text">
-      <string/>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignCenter</set>
-     </property>
-    </widget>
-   </item>
-   <item row="6" column="0">
-    <widget class="QLabel" name="escrowDisclaimer">
-     <property name="text">
-      <string/>
-     </property>
-    </widget>
    </item>
    <item row="5" column="0">
     <layout class="QHBoxLayout" name="horizontalLayout_8">
@@ -141,6 +134,26 @@
       </layout>
      </item>
     </layout>
+   </item>
+   <item row="2" column="0">
+    <widget class="QCheckBox" name="checkBox">
+     <property name="text">
+      <string>Use Escrow</string>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="0">
+    <widget class="QLineEdit" name="lineEdit"/>
+   </item>
+   <item row="4" column="0">
+    <widget class="QLabel" name="escrowDisclaimer">
+     <property name="text">
+      <string/>
+     </property>
+     <property name="wordWrap">
+      <bool>true</bool>
+     </property>
+    </widget>
    </item>
   </layout>
  </widget>

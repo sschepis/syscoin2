@@ -34,7 +34,7 @@ public:
 	std::vector<unsigned char> vchLinkAlias;
 	std::vector<CFeedback> feedback;
     uint256 txHash;
-	uint256 escrowInputTxHash;
+	string escrowInputTx;
     uint64_t nHeight;
 	uint64_t nAcceptHeight;
 	unsigned int nQty;
@@ -69,7 +69,7 @@ public:
 		READWRITE(vchPaymentMessage);
 		READWRITE(rawTx);
 		READWRITE(txHash);
-		READWRITE(escrowInputTxHash);
+		READWRITE(escrowInputTx);
 		READWRITE(VARINT(nHeight));
 		READWRITE(VARINT(nAcceptHeight));
 		READWRITE(VARINT(nQty));
@@ -90,7 +90,7 @@ public:
 		&& a.vchPaymentMessage == b.vchPaymentMessage
 		&& a.rawTx == b.rawTx
 		&& a.txHash == b.txHash
-		&& a.escrowInputTxHash == b.escrowInputTxHash
+		&& a.escrowInputTx == b.escrowInputTx
 		&& a.nHeight == b.nHeight
 		&& a.nAcceptHeight == b.nAcceptHeight
 		&& a.nQty == b.nQty
@@ -111,7 +111,7 @@ public:
 		rawTx = b.rawTx;
 		txHash = b.txHash;
 		vchLinkAlias = b.vchLinkAlias;
-		escrowInputTxHash = b.escrowInputTxHash;
+		escrowInputTx = b.escrowInputTx;
 		nHeight = b.nHeight;
 		nAcceptHeight = b.nAcceptHeight;
 		nQty = b.nQty;
@@ -125,8 +125,8 @@ public:
         return !(a == b);
     }
 
-    void SetNull() { op = 0; vchLinkAlias.clear(); feedback.clear(); vchEscrow.clear(); nHeight = nAcceptHeight = 0; txHash.SetNull(); escrowInputTxHash.SetNull(); nQty = 0; vchBuyerAlias.clear(); vchArbiterAlias.clear(); vchSellerAlias.clear(); vchRedeemScript.clear(); vchOffer.clear(); rawTx.clear(); vchPaymentMessage.clear();}
-    bool IsNull() const { return (vchLinkAlias.empty() && feedback.empty() && op == 0 && vchEscrow.empty() && txHash.IsNull() && escrowInputTxHash.IsNull() && nHeight == 0 && nAcceptHeight == 0 && nQty == 0 && vchBuyerAlias.empty() && vchArbiterAlias.empty() && vchSellerAlias.empty()); }
+    void SetNull() { op = 0; vchLinkAlias.clear(); feedback.clear(); vchEscrow.clear(); nHeight = nAcceptHeight = 0; txHash.SetNull(); escrowInputTx.clear; nQty = 0; vchBuyerAlias.clear(); vchArbiterAlias.clear(); vchSellerAlias.clear(); vchRedeemScript.clear(); vchOffer.clear(); rawTx.clear(); vchPaymentMessage.clear();}
+    bool IsNull() const { return (vchLinkAlias.empty() && feedback.empty() && op == 0 && vchEscrow.empty() && txHash.IsNull() && escrowInputTx.empty() && nHeight == 0 && nAcceptHeight == 0 && nQty == 0 && vchBuyerAlias.empty() && vchArbiterAlias.empty() && vchSellerAlias.empty()); }
     bool UnserializeFromTx(const CTransaction &tx);
 	bool UnserializeFromData(const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash);
 	const std::vector<unsigned char> Serialize();

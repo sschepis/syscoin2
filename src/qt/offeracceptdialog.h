@@ -34,6 +34,7 @@ private:
 	QString address;
 	QString aliaspeg;
 	bool offerPaid; 
+	QString redeemScript;
 	
 
 private Q_SLOTS:
