@@ -18,7 +18,7 @@
 using namespace std;
 
 extern const CRPCTable tableRPC;
-string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchAliasPeg, const vector<unsigned char> &vchCurrency, CAmount &nFee, const unsigned int &nHeightToFind, vector<string>& rateList, int &precision);
+string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchAliasPeg, const vector<unsigned char> &vchCurrency, float &nFee, const unsigned int &nHeightToFind, vector<string>& rateList, int &precision);
 extern bool getCategoryList(vector<string>& categoryList);
 extern vector<unsigned char> vchFromString(const std::string &str);
 EditOfferDialog::EditOfferDialog(Mode mode,  const QString &strOffer,  const QString &strCert,  const QString &strCategory, QWidget *parent) :
@@ -164,7 +164,7 @@ bool EditOfferDialog::isLinkedOffer(const QString& offerGUID)
 }
 void EditOfferDialog::on_aliasPegEdit_editingFinished()
 {
-	CAmount nFee;
+	float nFee;
 	vector<string> rateList;
 	int precision;
 	if(getCurrencyToSYSFromAlias(vchFromString(ui->aliasPegEdit->text().toStdString()), vchFromString(ui->currencyEdit->currentText().toStdString()), nFee, chainActive.Tip()->nHeight, rateList, precision) == "1")

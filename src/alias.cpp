@@ -294,14 +294,13 @@ unsigned int QtyOfPendingAcceptsInMempool(const vector<unsigned char>& vchToFind
 CAmount convertCurrencyCodeToSyscoin(const vector<unsigned char> &vchAliasPeg, const vector<unsigned char> &vchCurrencyCode, const float &nPrice, const unsigned int &nHeight, int &precision)
 {
 	CAmount sysPrice = 0;
-	CAmount nRate;
+	float nRate;
 	vector<string> rateList;
 	try
 	{
 		if(getCurrencyToSYSFromAlias(vchAliasPeg, vchCurrencyCode, nRate, nHeight, rateList, precision) == "")
 		{
-			float price = nPrice*(float)nRate;
-			sysPrice = CAmount(price);
+			sysPrice = AmountFromValue(price*nRate);
 		}
 	}
 	catch(...)
@@ -317,14 +316,13 @@ CAmount convertCurrencyCodeToSyscoin(const vector<unsigned char> &vchAliasPeg, c
 CAmount convertSyscoinToCurrencyCode(const vector<unsigned char> &vchAliasPeg, const vector<unsigned char> &vchCurrencyCode, const CAmount &nPrice, const unsigned int &nHeight, int &precision)
 {
 	CAmount currencyPrice = 0;
-	CAmount nRate;
+	float nRate;
 	vector<string> rateList;
 	try
 	{
 		if(getCurrencyToSYSFromAlias(vchAliasPeg, vchCurrencyCode, nRate, nHeight, rateList, precision) == "")
 		{
-			float price = (float)nPrice/(float)nRate;
-			currencyPrice = CAmount(price);
+			currencyPrice = CAmount(nPrice/nRate);
 		}
 	}
 	catch(...)
@@ -336,7 +334,7 @@ CAmount convertSyscoinToCurrencyCode(const vector<unsigned char> &vchAliasPeg, c
 		currencyPrice = 0;
 	return currencyPrice;
 }
-string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchAliasPeg, const vector<unsigned char> &vchCurrency, CAmount &nFee, const unsigned int &nHeightToFind, vector<string>& rateList, int &precision)
+string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchAliasPeg, const vector<unsigned char> &vchCurrency, float &nFee, const unsigned int &nHeightToFind, vector<string>& rateList, int &precision)
 {
 	string currencyCodeToFind = stringFromVch(vchCurrency);
 	// check for alias existence in DB
@@ -396,14 +394,13 @@ string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchAliasPeg, const
 							found = true;
 							try{
 							
-								float val = currencyAmountValue.get_real();
-								nFee = AmountFromValue(strprintf("%.8f", val));
+								nFee = currencyAmountValue.get_real();
 							}
 							catch(std::runtime_error& err)
 							{
 								try
 								{
-									nFee = currencyAmountValue.get_int()*COIN;
+									nFee = currencyAmountValue.get_int();
 								}
 								catch(std::runtime_error& err)
 								{
