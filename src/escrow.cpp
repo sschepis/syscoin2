@@ -983,7 +983,7 @@ void HandleEscrowFeedback(const CEscrow& serializedEscrow, CEscrow& dbEscrow, ve
 	PutToEscrowList(vtxPos, dbEscrow);
 	pescrowdb->WriteEscrow(dbEscrow.vchEscrow, vtxPos);
 }
-UniValue generateescrowmultisig((const UniValue& params, bool fHelp) {
+UniValue generateescrowmultisig(const UniValue& params, bool fHelp) {
     if (fHelp || params.size() != 3 )
         throw runtime_error(
 		"generateescrowmultisig <buyer> <offer guid> <arbiter>\n"

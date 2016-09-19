@@ -416,6 +416,7 @@ static const CRPCCommand vRPCCommands[] =
   { "wallet", "certfilter",      &certfilter,  false },
 
   // use the blockchain for escrow linked to offers
+  { "wallet", "generateescrowmultisig",         &generateescrowmultisig,     false },
   { "wallet", "escrownew",         &escrownew,     false },
   { "wallet", "escrowrelease",      &escrowrelease,  false },
   { "wallet", "escrowclaimrelease",      &escrowclaimrelease,  false },

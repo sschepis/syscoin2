@@ -273,6 +273,7 @@ extern UniValue certinfo(const UniValue& params, bool fHelp);
 extern UniValue certlist(const UniValue& params, bool fHelp);
 extern UniValue certhistory(const UniValue& params, bool fHelp);
 extern UniValue certfilter(const UniValue& params, bool fHelp);
+extern UniValue generateescrowmultisig(const UniValue& params, bool fHelp);
 extern UniValue escrownew(const UniValue& params, bool fHelp);
 extern UniValue escrowrelease(const UniValue& params, bool fHelp);
 extern UniValue escrowcomplete(const UniValue& params, bool fHelp);
