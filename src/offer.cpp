@@ -2266,6 +2266,7 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 		theOffer.sDescription = vchDesc;
 	if(offerCopy.vchGeoLocation != vchGeoLocation)
 		theOffer.vchGeoLocation = vchGeoLocation;
+	CAmount nPricePerUnit = offerCopy.GetPrice();
 	// linked offers can't change these settings, they are overrided by parent info
 	if(offerCopy.vchLinkOffer.empty())
 	{
@@ -2273,22 +2274,23 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 			theOffer.vchCert = vchCert;
 		if(vchAliasPeg.empty())
 			vchAliasPeg = offerCopy.vchAliasPeg;
+		if(offerCopy.vchAliasPeg != vchAliasPeg)
+			theOffer.vchAliasPeg = vchAliasPeg;
+		int precision = 2;
+		nPricePerUnit = convertCurrencyCodeToSyscoin(theOffer.vchAliasPeg, sCurrencyCode, price, chainActive.Tip()->nHeight, precision);
+		if(nPricePerUnit == 0)
+		{
+			string err = "SYSCOIN_OFFER_RPC_ERROR ERRCODE: 136 - " + _("Could not find currency in the peg alias");
+			throw runtime_error(err.c_str());
+		}
 	}
 	if(sCurrencyCode.empty() || sCurrencyCode == vchFromString("NONE"))
 		sCurrencyCode = offerCopy.sCurrencyCode;
 
-	if(offerCopy.vchAliasPeg != vchAliasPeg)
-		theOffer.vchAliasPeg = vchAliasPeg;
+
 	if(offerCopy.sCurrencyCode != sCurrencyCode)
 		theOffer.sCurrencyCode = sCurrencyCode;
 
-	int precision = 2;
-	CAmount nPricePerUnit = convertCurrencyCodeToSyscoin(theOffer.vchAliasPeg, sCurrencyCode, price, chainActive.Tip()->nHeight, precision);
-	if(nPricePerUnit == 0)
-	{
-		string err = "SYSCOIN_OFFER_RPC_ERROR ERRCODE: 136 - " + _("Could not find currency in the peg alias");
-		throw runtime_error(err.c_str());
-	}
 
 	theOffer.vchAlias = alias.vchAlias;
 	theOffer.safeSearch = strSafeSearch == "Yes"? true: false;
@@ -2910,7 +2912,7 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 	int precision = 2;
 	CAmount nPricePerUnit = convertSyscoinToCurrencyCode(theOffer.vchAliasPeg, theOffer.sCurrencyCode, theOffer.GetPrice(), nHeight, precision);
 	oOffer.push_back(Pair("sysprice", theOffer.GetPrice()));
-	oOffer.push_back(Pair("price", strprintf("%.*f", precision, ValueFromAmount(nPricePerUnit)))); 
+	oOffer.push_back(Pair("price", strprintf("%.*f", precision, ValueFromAmount(nPricePerUnit).get_real()))); 
 	
 	oOffer.push_back(Pair("ismine", ismine  ? "true" : "false"));
 	if(!theOffer.vchLinkOffer.empty()) {
@@ -3106,8 +3108,8 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 			CAmount nPricePerUnit = convertSyscoinToCurrencyCode(theOffer.vchAliasPeg, theOffer.sCurrencyCode, priceAtTimeOfAccept, theOfferAccept.nAcceptHeight, precision);
 			oOfferAccept.push_back(Pair("systotal", priceAtTimeOfAccept * theOfferAccept.nQty));
 			oOfferAccept.push_back(Pair("sysprice", priceAtTimeOfAccept));
-			oOfferAccept.push_back(Pair("price", strprintf("%.*f", precision, ValueFromAmount(nPricePerUnit)))); 	
-			oOfferAccept.push_back(Pair("total", strprintf("%.*f", precision, ValueFromAmount(nPricePerUnit) * theOfferAccept.nQty )));
+			oOfferAccept.push_back(Pair("price", strprintf("%.*f", precision, ValueFromAmount(nPricePerUnit).get_real()))); 	
+			oOfferAccept.push_back(Pair("total", strprintf("%.*f", precision, ValueFromAmount(nPricePerUnit).get_real() * theOfferAccept.nQty )));
 			oOfferAccept.push_back(Pair("buyer", stringFromVch(theOfferAccept.vchBuyerAlias)));
 			oOfferAccept.push_back(Pair("seller", stringFromVch(theOffer.vchAlias)));
 			// this accept is for me(something ive sold) if this offer is mine
@@ -3289,8 +3291,8 @@ UniValue offeracceptinfo(const UniValue& params, bool fHelp) {
 		CAmount nPricePerUnit = convertSyscoinToCurrencyCode(theOffer.vchAliasPeg, theOffer.sCurrencyCode, priceAtTimeOfAccept, theOfferAccept.nAcceptHeight, precision);
 		oOfferAccept.push_back(Pair("systotal", priceAtTimeOfAccept * theOfferAccept.nQty));
 		oOfferAccept.push_back(Pair("sysprice", priceAtTimeOfAccept));
-		oOfferAccept.push_back(Pair("price", strprintf("%.*f", precision, ValueFromAmount(nPricePerUnit)))); 	
-		oOfferAccept.push_back(Pair("total", strprintf("%.*f", precision, ValueFromAmount(nPricePerUnit) * theOfferAccept.nQty )));
+		oOfferAccept.push_back(Pair("price", strprintf("%.*f", precision, ValueFromAmount(nPricePerUnit).get_real()))); 	
+		oOfferAccept.push_back(Pair("total", strprintf("%.*f", precision, ValueFromAmount(nPricePerUnit).get_real() * theOfferAccept.nQty )));
 		oOfferAccept.push_back(Pair("buyer", stringFromVch(theOfferAccept.vchBuyerAlias)));
 		oOfferAccept.push_back(Pair("seller", stringFromVch(theOffer.vchAlias)));
 		oOfferAccept.push_back(Pair("ismine", ismine? "true" : "false"));
@@ -3454,8 +3456,8 @@ UniValue offerlist(const UniValue& params, bool fHelp) {
             oName.push_back(Pair("category", stringFromVch(theOfferA.sCategory)));
             oName.push_back(Pair("description", stringFromVch(theOfferA.sDescription)));
 			int precision = 2;
-			CAmount nPricePerUnit = convertSyscoinToCurrencyCode(theOffer.vchAliasPeg, theOffer.sCurrencyCode, theOfferA.GetPrice(), theOfferAccept.nAcceptHeight, precision);
-			oName.push_back(Pair("price", strprintf("%.*f", precision, ValueFromAmount(nPricePerUnit) ))); 	
+			CAmount nPricePerUnit = convertSyscoinToCurrencyCode(theOffer.vchAliasPeg, theOffer.sCurrencyCode, theOfferA.GetPrice(), theOfferA.nHeight, precision);
+			oName.push_back(Pair("price", strprintf("%.*f", precision, ValueFromAmount(nPricePerUnit).get_real() ))); 	
 
 			oName.push_back(Pair("currency", stringFromVch(theOfferA.sCurrencyCode) ) );
 			oName.push_back(Pair("commission", strprintf("%d%%", theOfferA.nCommission)));
@@ -3557,8 +3559,8 @@ UniValue offerhistory(const UniValue& params, bool fHelp) {
             oOffer.push_back(Pair("category", stringFromVch(theOfferA.sCategory)));
             oOffer.push_back(Pair("description", stringFromVch(theOfferA.sDescription)));
 			int precision = 2;
-			CAmount nPricePerUnit = convertSyscoinToCurrencyCode(theOffer.vchAliasPeg, theOffer.sCurrencyCode, theOfferA.GetPrice(), theOfferAccept.nAcceptHeight, precision);
-			oName.push_back(Pair("price", strprintf("%.*f", precision, ValueFromAmount(nPricePerUnit) ))); 	
+			CAmount nPricePerUnit = convertSyscoinToCurrencyCode(theOffer.vchAliasPeg, theOffer.sCurrencyCode, theOfferA.GetPrice(), theOfferA.nHeight, precision);
+			oOffer.push_back(Pair("price", strprintf("%.*f", precision, ValueFromAmount(nPricePerUnit).get_real() ))); 	
 
 			oOffer.push_back(Pair("currency", stringFromVch(theOfferA.sCurrencyCode) ) );
 			oOffer.push_back(Pair("commission", strprintf("%d%%", theOfferA.nCommission)));
@@ -3653,8 +3655,8 @@ UniValue offerfilter(const UniValue& params, bool fHelp) {
 		oOffer.push_back(Pair("description", stringFromVch(txOffer.sDescription)));
         oOffer.push_back(Pair("category", stringFromVch(txOffer.sCategory)));
 		int precision = 2;
-		CAmount nPricePerUnit = convertSyscoinToCurrencyCode(txOffer.vchAliasPeg, txOffer.sCurrencyCode, 0, foundOffer.nHeight, precision);
-		oOffer.push_back(Pair("price", strprintf("%.*f", precision, ValueFromAmount(nPricePerUnit) ))); 
+		CAmount nPricePerUnit = convertSyscoinToCurrencyCode(txOffer.vchAliasPeg, txOffer.sCurrencyCode, 0, txOffer.nHeight, precision);
+		oOffer.push_back(Pair("price", strprintf("%.*f", precision, ValueFromAmount(nPricePerUnit).get_real() ))); 
 		oOffer.push_back(Pair("currency", stringFromVch(txOffer.sCurrencyCode)));
 		oOffer.push_back(Pair("commission", strprintf("%d%%", txOffer.nCommission)));
 		if(txOffer.nQty == -1)
