@@ -624,11 +624,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			return error(errorMessage.c_str());
 		}
 
-		if(stringFromVch(theOffer.sCurrencyCode) != "BTC" && theOffer.bOnlyAcceptBTC)
-		{
-			errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 18 - " + _("Offer that only accepts BTC must have BTC specified as its currency");
-			return error(errorMessage.c_str());
-		}
 		switch (op) {
 		case OP_OFFER_ACTIVATE:
 			if(!theOffer.accept.IsNull())
@@ -663,11 +658,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 24 - " + _("Commission must between -90 and 100");
 					return error(errorMessage.c_str());
 				}
-				if(theOffer.bOnlyAcceptBTC)
-				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 26 - " + _("Linked offer cannot accept BTC only");
-					return error(errorMessage.c_str());
-				}
 			}
 			else
 			{
@@ -697,16 +687,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 31 - " + _("Offer price must be greater than 0");
 				return error(errorMessage.c_str());
 			}
-			if(theOffer.bOnlyAcceptBTC && !theOffer.vchCert.empty())
-			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 32 - " + _("Cannot sell a digital offer accepting only Bitcoins");
-				return error(errorMessage.c_str());
-			}
-			if(theOffer.bOnlyAcceptBTC && stringFromVch(theOffer.sCurrencyCode) != "BTC")
-			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 33 - " + _("Can only accept Bitcoins for offers that set their currency to BTC");
-				return error(errorMessage.c_str());
-			}
+
 
 			break;
 		case OP_OFFER_UPDATE:
@@ -776,16 +757,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 45 - " + _("Alias input mismatch");
 				return error(errorMessage.c_str());
 			}	
-			if(theOffer.bOnlyAcceptBTC && !theOffer.vchCert.empty())
-			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 46 - " + _("Cannot sell a certificate accepting only Bitcoins");
-				return error(errorMessage.c_str());
-			}
-			if(theOffer.bOnlyAcceptBTC && stringFromVch(theOffer.sCurrencyCode) != "BTC")
-			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 47 - " + _("Can only accept Bitcoins for offer's that set their currency to BTC");
-				return error(errorMessage.c_str());
-			}
 			break;
 		case OP_OFFER_ACCEPT:
 			theOfferAccept = theOffer.accept;
@@ -882,15 +853,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		// but first we assign fields from the DB since
 		// they are not shipped in an update txn to keep size down
 		if(op == OP_OFFER_UPDATE) {
-			if(!theOffer.vchLinkOffer.empty())
-			{
-				if(serializedOffer.bOnlyAcceptBTC)
-				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 70 - " + _("Linked offer cannot accept BTC only");
-					serializedOffer.bOnlyAcceptBTC = false;
-				}
-				
-			}
 			serializedOffer.offerLinks = theOffer.offerLinks;
 			serializedOffer.vchLinkOffer = theOffer.vchLinkOffer;
 			serializedOffer.vchOffer = theOffer.vchOffer;
@@ -922,7 +884,9 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						theOffer.vchAliasPeg = dbOffer.vchAliasPeg;
 					if(serializedOffer.sCurrencyCode.empty())
 						theOffer.sCurrencyCode = dbOffer.sCurrencyCode;
-
+					if(serializedOffer.paymentOptions <= 0)
+						theOffer.paymentOptions = dbOffer.paymentOptions;
+									
 					// user can't update safety level after creation
 					theOffer.safetyLevel = dbOffer.safetyLevel;
 					if(!theOffer.vchCert.empty())
@@ -1041,11 +1005,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 84 -" + _(" Cannot create this offer because the certificate alias does not match the offer alias");
 					theOffer.vchLinkOffer.clear();	
 				}
-				if(linkOffer.bOnlyAcceptBTC)
-				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 85 - " + _("Cannot link to an offer that only accepts Bitcoins as payment");
-					theOffer.vchLinkOffer.clear();	
-				}
 				if(!theOffer.vchLinkOffer.empty())
 				{
 					// max links are 100 per offer
@@ -1061,7 +1020,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						theOffer.sCategory = linkOffer.sCategory;
 						theOffer.sTitle = linkOffer.sTitle;
 						theOffer.safeSearch = linkOffer.safeSearch;
-						theOffer.bOnlyAcceptBTC = linkOffer.bOnlyAcceptBTC;
+						theOffer.paymentOptions = linkOffer.paymentOptions;
 						linkOffer.offerLinks.push_back(vvchArgs[0]);
 						linkOffer.PutToOfferList(offerVtxPos);
 						// write parent offer
@@ -1169,6 +1128,16 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			
 			// if linked offer then get offer info from root offer history because the linked offer may not have history of changes (root offer can update linked offer without tx)	
 			myPriceOffer.GetOfferFromList(vtxPos);	
+			if(theOfferAccept.txBTCId.IsNull() && (myPriceOffer.paymentOptions & PAYMENTOPTION_BTC) == PAYMENTOPTION_BTC)
+			{
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 106 - " + _("This offer must be paid with Bitcoins");
+				return true;
+			}
+			else if(!theOfferAccept.txBTCId.IsNull() && (myPriceOffer.paymentOptions & PAYMENTOPTION_SYS) == PAYMENTOPTION_SYS)
+			{
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 106 - " + _("This offer must be paid with Syscoins");
+				return true;
+			}
 			if(!GetTxOfAlias(myPriceOffer.vchAlias, alias, aliasTx))
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 90 - " + _("Cannot find alias for this offer. It may be expired");
@@ -1176,13 +1145,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			}
 			if(!myPriceOffer.vchLinkOffer.empty())
 			{
-
-				if(!theOfferAccept.txBTCId.IsNull())
-				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 106 - " + _("Cannot accept a linked offer by paying in Bitcoins");
-					return true;
-				}
-				else if(!GetTxAndVtxOfOffer( myPriceOffer.vchLinkOffer, linkOffer, linkedTx, offerVtxPos))
+				if(!GetTxAndVtxOfOffer( myPriceOffer.vchLinkOffer, linkOffer, linkedTx, offerVtxPos))
 				{
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 107 - " + _("Could not get linked offer");
 					return true;
@@ -1197,11 +1160,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				else if(!myPriceOffer.vchCert.empty() && theCert.vchAlias != linkOffer.vchAlias)
 				{
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 108 - " + _("Cannot purchase this linked offer because the certificate has been transferred or it is linked to another offer");
-					return true;
-				}
-				else if (linkOffer.bOnlyAcceptBTC)
-				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 109 - " + _("Linked offer only accepts Bitcoins, linked offers currently only work with Syscoin payments");
 					return true;
 				}
 				else if(linkOffer.sCategory.size() > 0 && boost::algorithm::starts_with(stringFromVch(linkOffer.sCategory), "wanted"))
@@ -1451,9 +1409,9 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				theOffer.nQty = linkOffer.nQty;	
 				theOffer.vchCert = linkOffer.vchCert;
 				theOffer.vchAliasPeg = linkOffer.vchAliasPeg;
-				if(linkOffer.bOnlyAcceptBTC)
+				if((linkOffer.paymentOptions & PAYMENTOPTION_BTC) == PAYMENTOPTION_BTC)
 				{
-					theOffer.bOnlyAcceptBTC = linkOffer.bOnlyAcceptBTC;
+					theOffer.paymentOptions = linkOffer.paymentOptions;
 					theOffer.sCurrencyCode = linkOffer.sCurrencyCode;
 				}
 				theOffer.SetPrice(linkOffer.nPrice);					
@@ -1470,9 +1428,9 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						linkOffer.nQty = theOffer.nQty;	
 						linkOffer.vchCert = theOffer.vchCert;
 						linkOffer.vchAliasPeg = theOffer.vchAliasPeg;
-						if(theOffer.bOnlyAcceptBTC)
+						if((theOffer.paymentOptions & PAYMENTOPTION_BTC) == PAYMENTOPTION_BTC)
 						{
-							linkOffer.bOnlyAcceptBTC = theOffer.bOnlyAcceptBTC;
+							linkOffer.paymentOptions = theOffer.paymentOptions;
 							linkOffer.sCurrencyCode = theOffer.sCurrencyCode;
 						}
 						linkOffer.SetPrice(theOffer.nPrice);			
@@ -1631,7 +1589,7 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 	vector<unsigned char> vchCurrency = vchFromValue(params[7]);
 	vector<unsigned char> vchDesc;
 	vector<unsigned char> vchCert;
-	bool bOnlyAcceptBTC = false;
+	unsigned char paymentOptions = PAYMENTOPTION_SYS;
 	int nQty;
 
 	try {
@@ -1666,7 +1624,7 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 	}
 	if(params.size() >= 11)
 	{
-		bOnlyAcceptBTC = atoi(params[10].get_str().c_str()) == 1? true: false;
+		paymentOptions = atoi(params[10].get_str().c_str();
 
 	}	
 	string strGeoLocation = "";
@@ -1716,7 +1674,7 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 	newOffer.linkWhitelist.bExclusiveResell = bExclusiveResell;
 	newOffer.sCurrencyCode = vchCurrency;
 	newOffer.bPrivate = bPrivate;
-	newOffer.bOnlyAcceptBTC = bOnlyAcceptBTC;
+	newOffer.paymentOptions = paymentOptions;
 	newOffer.vchAliasPeg = vchAliasPeg;
 	newOffer.safetyLevel = 0;
 	newOffer.safeSearch = strSafeSearch == "Yes"? true: false;
@@ -2221,10 +2179,10 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	{
 		nCommission = atoi(params[14].get_str());
 	}
-	bool bOnlyAcceptBTC = false;
+	unsigned char paymentOptions = 0;
 	if(params.size() >= 16 && !params[15].get_str().empty())
 	{
-		bOnlyAcceptBTC = atoi(params[15].get_str().c_str()) == 1? true: false;
+		paymentOptions = atoi(params[15].get_str().c_str();
 
 	}
 	try {
@@ -2301,6 +2259,7 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 		sCurrencyCode = offerCopy.sCurrencyCode;
 	if(offerCopy.sCurrencyCode != sCurrencyCode)
 		theOffer.sCurrencyCode = sCurrencyCode;
+	
 	// linked offers can't change these settings, they are overrided by parent info
 	if(offerCopy.vchLinkOffer.empty())
 	{
@@ -2319,8 +2278,8 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 		}
 	}
 
-
-	theOffer.bOnlyAcceptBTC = bOnlyAcceptBTC;
+	if(paymentOptions > 0)
+		theOffer.paymentOptions = paymentOptions;
 	theOffer.nCommission = nCommission;
 	theOffer.vchAlias = alias.vchAlias;
 	theOffer.safeSearch = strSafeSearch == "Yes"? true: false;
@@ -2508,8 +2467,6 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	txAccept.vchMessage = vchPaymentMessage;
     CAmount nTotalValue = ( nPrice * nQty );
 	CAmount nTotalCommission = ( nCommission * nQty );
-    
-	// send one to ourselves to we can leave feedback (notice the last opcode is 1 to denote its a special feedback output for the buyer to be able to leave feedback first and not a normal accept output)
 	if(!vchBTCTxId.empty())
 	{
 		uint256 txBTCId(uint256S(stringFromVch(vchBTCTxId)));
@@ -2566,21 +2523,12 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 		vecSend.push_back(aliasRecipient);
 	}
 
-	// check for Bitcoin payment on the bitcoin network, otherwise pay in syscoin
-	if(!vchBTCTxId.empty() && stringFromVch(copyOffer.sCurrencyCode) == "BTC")
-	{
-
-	}
-	else if(!copyOffer.bOnlyAcceptBTC)
+	if(vchBTCTxId.empty())
 	{
 		vecSend.push_back(paymentRecipient);
 		vecSend.push_back(acceptRecipient);
 		if(!copyOffer.vchLinkOffer.empty() && !foundEntry.IsNull())
 			vecSend.push_back(paymentCommissionRecipient);
-	}
-	else
-	{
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 186 - " + _("This offer must be paid with Bitcoins as per requirements of the seller"));
 	}
 
 	CScript scriptData;
@@ -2963,7 +2911,8 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 	oOffer.push_back(Pair("private", theOffer.bPrivate ? "Yes" : "No"));
 	oOffer.push_back(Pair("safesearch", theOffer.safeSearch ? "Yes" : "No"));
 	oOffer.push_back(Pair("safetylevel", theOffer.safetyLevel ));
-	oOffer.push_back(Pair("btconly", theOffer.bOnlyAcceptBTC ? "Yes" : "No"));
+	oOffer.push_back(Pair("paymentoptions", theOffer.paymentOptions));
+	oOffer.push_back(Pair("paymentoptions_display", theOffer.GetPaymentOptionsString()));
 	oOffer.push_back(Pair("alias_peg", stringFromVch(theOffer.vchAliasPeg)));
 	oOffer.push_back(Pair("description", stringFromVch(theOffer.sDescription)));
 	oOffer.push_back(Pair("alias", stringFromVch(theOffer.vchAlias)));
@@ -3502,7 +3451,8 @@ UniValue offerlist(const UniValue& params, bool fHelp) {
 				continue;
 				
 			oName.push_back(Pair("exclusive_resell", theOfferA.linkWhitelist.bExclusiveResell ? "ON" : "OFF"));
-			oName.push_back(Pair("btconly", theOfferA.bOnlyAcceptBTC ? "Yes" : "No"));
+			oName.push_back(Pair("paymentoptions", theOfferA.paymentOptions));
+			oName.push_back(Pair("paymentoptions_display", theOfferA.GetPaymentOptionsString()));
 			oName.push_back(Pair("alias_peg", stringFromVch(theOfferA.vchAliasPeg)));
 			oName.push_back(Pair("private", theOfferA.bPrivate ? "Yes" : "No"));
 			oName.push_back(Pair("safesearch", theOfferA.safeSearch ? "Yes" : "No"));
@@ -3694,7 +3644,8 @@ UniValue offerfilter(const UniValue& params, bool fHelp) {
 		else
 			oOffer.push_back(Pair("quantity", strprintf("%d", txOffer.nQty)));
 		oOffer.push_back(Pair("exclusive_resell", txOffer.linkWhitelist.bExclusiveResell ? "ON" : "OFF"));
-		oOffer.push_back(Pair("btconly", txOffer.bOnlyAcceptBTC ? "Yes" : "No"));
+		oOffer.push_back(Pair("paymentoptions", txOffer.paymentOptions));
+		oOffer.push_back(Pair("paymentoptions_display", txOffer.GetPaymentOptionsString()));
 		oOffer.push_back(Pair("alias_peg", stringFromVch(txOffer.vchAliasPeg)));
 		oOffer.push_back(Pair("offers_sold", (int)txOffer.nSold));
 		expired_block = nHeight + GetOfferExpirationDepth();  

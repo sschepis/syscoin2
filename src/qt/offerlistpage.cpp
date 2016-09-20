@@ -24,6 +24,7 @@
 #include <QStandardItemModel>
 #include <boost/algorithm/string.hpp>
 #include "stardelegate.h"
+#include "offer.h"
 using namespace std;
 
 
@@ -412,7 +413,7 @@ void OfferListPage::on_searchOffer_clicked(string GUID)
 	string expired_str;
 	string exclusive_resell_str;
 	string private_str;
-	string acceptBTCOnly_str;
+	string paymentoptions_str;
 	string alias_peg_str;
 	string alias_str;
 	string safesearch_str;
@@ -477,7 +478,7 @@ void OfferListPage::on_searchOffer_clicked(string GUID)
 			private_str = "";
 			exclusive_resell_str = "";
 			alias_str = "";
-			acceptBTCOnly_str = "";
+			paymentoptions_str = "";
 			alias_peg_str = "";
 			safesearch_str = "";
 			aliasRating = 0;
@@ -528,9 +529,9 @@ void OfferListPage::on_searchOffer_clicked(string GUID)
 			const UniValue& aliasRating_value = find_value(o, "alias_rating");
 			if (aliasRating_value.type() == UniValue::VNUM)
 				aliasRating = aliasRating_value.get_int();
-			const UniValue& btconly_value = find_value(o, "btconly");
-			if (btconly_value.type() == UniValue::VSTR)
-				acceptBTCOnly_str = btconly_value.get_str();
+			const UniValue& paymentoptions_value = find_value(o, "paymentoptions_display");
+			if (paymentoptions_value.type() == UniValue::VSTR)
+				paymentoptions_str = paymentoptions_value.get_str();
 			const UniValue& alias_peg_value = find_value(o, "alias_peg");
 			if (alias_peg_value.type() == UniValue::VSTR)
 				alias_peg_str = alias_peg_value.get_str();
@@ -569,7 +570,7 @@ void OfferListPage::on_searchOffer_clicked(string GUID)
 					QString::fromStdString(private_str),
 					QString::fromStdString(alias_str),
 					aliasRating,
-					QString::fromStdString(acceptBTCOnly_str),
+					QString::fromStdString(paymentoptions_str),
 					QString::fromStdString(alias_peg_str),
 					QString::fromStdString(safesearch_str),
 					QString::fromStdString(geolocation_str));
@@ -587,7 +588,7 @@ void OfferListPage::on_searchOffer_clicked(string GUID)
 					QString::fromStdString(private_str), 
 					QString::fromStdString(alias_str), 
 					aliasRating,
-					QString::fromStdString(acceptBTCOnly_str),
+					QString::fromStdString(paymentoptions_str),
 					QString::fromStdString(alias_peg_str), 
 					QString::fromStdString(safesearch_str),
 					QString::fromStdString(geolocation_str), AllOffer, CT_NEW);	

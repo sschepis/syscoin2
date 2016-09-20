@@ -287,7 +287,7 @@ void AcceptandPayOfferListPage::OpenPayDialog()
 {
 	if(!walletModel)
 		return;
-	OfferAcceptDialog dlg(walletModel, platformStyle, ui->aliasPegEdit->text(), ui->aliasEdit->currentText(), ui->offeridEdit->text(), ui->qtyEdit->text(), ui->notesEdit->toPlainText(), ui->infoTitle->text(), ui->infoCurrency->text(), ui->infoPrice->text(), ui->sellerEdit->text(), sAddress, this);
+	OfferAcceptDialog dlg(walletModel, platformStyle, ui->aliasPegEdit->text(), ui->aliasEdit->currentText(), ui->offeridEdit->text(), ui->qtyEdit->text(), ui->notesEdit->toPlainText(), ui->infoTitle->text(), ui->infoCurrency->text(), ui->infoPrice->text(), ui->sellerEdit->text(), sAddress, paymentOptions, this);
 	if(dlg.exec())
 	{
 		this->offerPaid = dlg.getPaymentStatus();
@@ -332,7 +332,7 @@ void AcceptandPayOfferListPage::acceptOffer()
 	
 	this->offerPaid = false;
 	ui->labelExplanation->setText(tr("Waiting for confirmation on the purchase of this offer"));
-	if(bOnlyAcceptBTC)
+	if((paymentOptions & PAYMENTOPTIONS_BTC) == PAYMENTOPTIONS_BTC)
 		OpenBTCPayDialog();
 	else
 		OpenPayDialog();
@@ -372,7 +372,7 @@ bool AcceptandPayOfferListPage::lookup(const QString &lookupid)
 				offerOut.nQty = -1;
 			else
 				offerOut.nQty = QString::fromStdString(find_value(offerObj, "quantity").get_str()).toUInt();	
-			offerOut.bOnlyAcceptBTC = find_value(offerObj, "btconly").get_str() == "Yes"? true: false;	
+			offerOut.paymentOptions = find_value(offerObj, "paymentoptions").get_int();	
 			string descString = find_value(offerObj, "description").get_str();
 
 			offerOut.sDescription = vchFromString(descString);
@@ -463,7 +463,7 @@ void AcceptandPayOfferListPage::setValue(const QString& strAlias, const QString&
 	ui->infoDescription->setPlainText(QString::fromStdString(stringFromVch(offer.sDescription)));
 	ui->qtyEdit->setText(QString("1"));
 	ui->notesEdit->setPlainText(QString(""));
-	bOnlyAcceptBTC = offer.bOnlyAcceptBTC;
+	paymentOptions = offer.paymentOptions;
 	sAddress = address;
 	QRegExp rx("(?:https?|ftp)://\\S+");
 

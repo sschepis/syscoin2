@@ -51,7 +51,7 @@ OfferAcceptDialogBTC::OfferAcceptDialogBTC(WalletModel* model, const PlatformSty
 	price = QString::fromStdString(strPrice);
 	ui->escrowDisclaimer->setText(tr("<font color='blue'>Select an arbiter that is mutally trusted between yourself and the merchant.</font>"));
 	ui->escrowDisclaimer->setVisible(false);
-if (!platformStyle->getImagesOnButtons())
+	if (!platformStyle->getImagesOnButtons())
 	{
 		ui->confirmButton->setIcon(QIcon());
 		ui->openBtcWalletButton->setIcon(QIcon());
@@ -139,7 +139,13 @@ void OfferAcceptDialogBTC::setupEscrowCheckboxState()
 			throw runtime_error(find_value(objError, "message").get_str());
 		}
 		if (!resCreate.isObject())
-			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4079 - " + _("Could not generate escrow multisig address: Invalid response from generateescrowmultisig"));
+		{
+			QMessageBox::information(this, windowTitle(),
+				tr("Could not generate escrow multisig address: Invalid response from generateescrowmultisig"),
+				QMessageBox::Ok, QMessageBox::Ok);
+			return;
+		}
+			
 		const UniValue &o = resCreate.get_obj();
 		QString multisigaddress;
 		const UniValue& redeemScript_value = find_value(o, "redeemScript");
@@ -149,14 +155,24 @@ void OfferAcceptDialogBTC::setupEscrowCheckboxState()
 			redeemScript = QString::fromStdString(redeemScript_value.get_str());
 		}
 		else
-			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4080 - " + _("Could not create escrow transaction: could not find redeem script in response"));
+		{
+			QMessageBox::information(this, windowTitle(),
+				tr("Could not create escrow transaction: could not find redeem script in response"),
+				QMessageBox::Ok, QMessageBox::Ok);
+			return;
+		}
+			
 		if (address_value.isStr())
 		{
 			multisigaddress = QString::fromStdString(address_value.get_str());
 		}
 		else
-			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4080 - " + _("Could not create escrow transaction: could not find redeem script in response"));
-
+		{
+			QMessageBox::information(this, windowTitle(),
+				tr("Could not create escrow transaction: could not find redeem script in response"),
+				QMessageBox::Ok, QMessageBox::Ok);
+			return;
+		}
 		
 		ui->acceptMessage->setText(tr("Are you sure you want to purchase <b>%1</b> of <b>%2</b> from merchant <b>%3</b>? Before proceeding, please enter your escrow arbiter if you wish to use escrow below. Leave the escrow checkbox unchecked if you do not wish to use escrow. To complete your purchase please pay <b>%4 BTC</b> to <b>%5</b> using your Bitcoin wallet. Note that the address you pay to will change if you select to use the escrow service.").arg(quantity).arg(title).arg(sellerAlias).arg(fprice).arg(multisigaddress));
 

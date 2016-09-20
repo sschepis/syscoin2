@@ -12,7 +12,7 @@ class OfferAcceptDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit OfferAcceptDialog(WalletModel* model, const PlatformStyle *platformStyle, QString aliaspeg, QString alias, QString offer, QString quantity, QString notes, QString title, QString currencyCode, QString strPrice, QString sellerAlias, QString address, QWidget *parent=0);
+    explicit OfferAcceptDialog(WalletModel* model, const PlatformStyle *platformStyle, QString aliaspeg, QString alias, QString offer, QString quantity, QString notes, QString title, QString currencyCode, QString strPrice, QString sellerAlias, QString address, unsigned char paymentOptions, QWidget *parent=0);
     ~OfferAcceptDialog();
     bool getPaymentStatus();
 

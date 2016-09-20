@@ -4,6 +4,7 @@
 #include "rpcserver.h"
 #include "dbwrapper.h"
 #include "feedback.h"
+
 class CWalletTx;
 class CTransaction;
 class CReserveKey;
@@ -22,6 +23,8 @@ int IndexOfOfferOutput(const CTransaction& tx);
 int GetOfferExpirationDepth();
 std::string offerFromOp(int op);
 CScript RemoveOfferScriptPrefix(const CScript& scriptIn);
+#define PAYMENTOPTION_SYS 0x01
+#define PAYMENTOPTION_BTC 0x02
 extern bool IsSys21Fork(const uint64_t& nHeight);
 class COfferAccept {
 public:
@@ -214,7 +217,7 @@ public:
 	COfferLinkWhitelist linkWhitelist;
 	std::vector<std::vector<unsigned char> > offerLinks;
 	bool bPrivate;
-	bool bOnlyAcceptBTC;
+	unsigned char paymentOptions;
 	unsigned char safetyLevel;
 	unsigned int nSold;
 	std::vector<unsigned char> vchGeoLocation;
@@ -265,7 +268,7 @@ public:
 			READWRITE(vchCert);
 			READWRITE(bPrivate);
 			READWRITE(vchAliasPeg);
-			READWRITE(bOnlyAcceptBTC);
+			READWRITE(paymentOptions);
 			READWRITE(vchOffer);
 			READWRITE(safetyLevel);
 			READWRITE(safeSearch);
@@ -325,7 +328,21 @@ public:
         *this = myOffer;
         return true;
     }
-
+	std::string GetPaymentOptionsString()
+	{
+		if((paymentOptions & PAYMENTOPTION_SYS) == PAYMENTOPTION_SYS)
+		{
+			return std::string("SYS");
+		}
+		else if((paymentOptions & PAYMENTOPTION_BTC) == PAYMENTOPTION_BTC)
+		{
+			return std::string("BTC");
+		}
+		else if((paymentOptions & PAYMENTOPTION_BTC) && (paymentOptions & PAYMENTOPTION_SYS))
+		{
+			return std::string("SYS+BTC");
+		}
+	}
     friend bool operator==(const COffer &a, const COffer &b) {
         return (
          a.sCategory==b.sCategory
@@ -345,7 +362,7 @@ public:
 		&& a.vchAlias == b.vchAlias
 		&& a.vchCert == b.vchCert
 		&& a.bPrivate == b.bPrivate
-		&& a.bOnlyAcceptBTC == b.bOnlyAcceptBTC
+		&& a.paymentOptions == b.paymentOptions
 		&& a.vchAliasPeg == b.vchAliasPeg
 		&& a.safetyLevel == b.safetyLevel
 		&& a.safeSearch == b.safeSearch
@@ -373,7 +390,7 @@ public:
 		vchAlias = b.vchAlias;
 		vchCert = b.vchCert;
 		bPrivate = b.bPrivate;
-		bOnlyAcceptBTC = b.bOnlyAcceptBTC;
+		paymentOptions = b.paymentOptions;
 		vchAliasPeg = b.vchAliasPeg;
 		safetyLevel = b.safetyLevel;
 		safeSearch = b.safeSearch;
@@ -386,8 +403,8 @@ public:
         return !(a == b);
     }
     
-    void SetNull() { vchOffer.clear(); safetyLevel = nHeight = nPrice = nQty = nSold = 0; safeSearch = true; txHash.SetNull(); bPrivate = false; bOnlyAcceptBTC = false; accept.SetNull(); vchAliasPeg.clear(); sTitle.clear(); sDescription.clear();vchLinkOffer.clear();vchLinkAlias.clear();linkWhitelist.SetNull();sCurrencyCode.clear();offerLinks.clear();nCommission=0;vchAlias.clear();vchCert.clear();vchGeoLocation.clear();}
-    bool IsNull() const { return (vchOffer.empty() && safetyLevel == 0 && safeSearch && vchAlias.empty() && txHash.IsNull() && nHeight == 0 && nPrice == 0 && nQty == 0 && nSold ==0 && linkWhitelist.IsNull() && sTitle.empty() && sDescription.empty() && vchAliasPeg.empty() && offerLinks.empty() && vchGeoLocation.empty() && nCommission == 0 && bPrivate == false && bOnlyAcceptBTC == false && sCurrencyCode.empty() && vchLinkOffer.empty() && vchLinkAlias.empty() && vchCert.empty() ); }
+    void SetNull() { vchOffer.clear(); safetyLevel = nHeight = nPrice = nQty = nSold = paymentOptions = 0; safeSearch = true; txHash.SetNull(); bPrivate = false; accept.SetNull(); vchAliasPeg.clear(); sTitle.clear(); sDescription.clear();vchLinkOffer.clear();vchLinkAlias.clear();linkWhitelist.SetNull();sCurrencyCode.clear();offerLinks.clear();nCommission=0;vchAlias.clear();vchCert.clear();vchGeoLocation.clear();}
+    bool IsNull() const { return (vchOffer.empty() && safetyLevel == 0 && safeSearch && vchAlias.empty() && txHash.IsNull() && nHeight == 0 && nPrice == 0 && nQty == 0 && nSold ==0 && linkWhitelist.IsNull() && sTitle.empty() && sDescription.empty() && vchAliasPeg.empty() && offerLinks.empty() && vchGeoLocation.empty() && nCommission == 0 && bPrivate == false && paymentOptions == 0 && sCurrencyCode.empty() && vchLinkOffer.empty() && vchLinkAlias.empty() && vchCert.empty() ); }
 
     bool UnserializeFromTx(const CTransaction &tx);
 	bool UnserializeFromData(const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash);

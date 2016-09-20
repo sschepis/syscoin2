@@ -333,7 +333,7 @@ void MyOfferListPage::on_exportButton_clicked()
 	writer.addColumn("Expired", OfferTableModel::Expired, Qt::EditRole);
 	writer.addColumn("Seller Alias", OfferTableModel::Alias, Qt::EditRole);
 	writer.addColumn("Seller Rating", OfferTableModel::AliasRating, Qt::EditRole);
-	writer.addColumn("BTC Only", OfferTableModel::AcceptBTCOnly, Qt::EditRole);
+	writer.addColumn("Payment Options", OfferTableModel::PaymentOptions, Qt::EditRole);
     if(!writer.write())
     {
         QMessageBox::critical(this, tr("Error exporting"), tr("Could not write to file %1.").arg(filename),

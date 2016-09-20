@@ -42,15 +42,16 @@ EditOfferDialog::EditOfferDialog(Mode mode,  const QString &strOffer,  const QSt
 	ui->rootOfferEdit->setVisible(false);
 	ui->privateEdit->setEnabled(true);
 	ui->privateEdit->clear();
-	ui->privateEdit->addItem(QString("No"));
-	ui->privateEdit->addItem(QString("Yes"));
+	ui->privateEdit->addItem(tr("No"));
+	ui->privateEdit->addItem(tr("Yes"));
 	ui->currencyEdit->addItem(QString("USD"));
-	ui->acceptBTCOnlyEdit->clear();
-	ui->acceptBTCOnlyEdit->addItem(QString("No"));
-	ui->acceptBTCOnlyEdit->addItem(QString("Yes"));
+	ui->paymentOptionsEdit->clear();
+	ui->paymentOptionsEdit->addItem(QString("SYS"), QString("1"));
+	ui->paymentOptionsEdit->addItem(QString("BTC"), QString("2"));
+	ui->paymentOptionsEdit->addItem(QString("SYS+BTC"), QString("3"));
 	ui->geolocationDisclaimer->setText(tr("<font color='blue'>If you wish you may enter your merchant geolocation (lattitude and longitude coordinates) to help track shipping rates and other logistics information.</font>)"));
 	ui->currencyDisclaimer->setText(tr("<font color='blue'>You will receive payment in Syscoin equivalent to the Market-value of the currency you have selected.</font>"));
-	ui->btcOnlyDisclaimer->setText(tr("<font color='blue'>You will receive payment in Bitcoin if you have selected <b>Yes</b> to this option and <b>BTC</b> as the currency for the offer.</font>"));
+	ui->paymentOptionsDisclaimer->setText(tr("<font color='blue'>Choose which crypto-currency you want to allow as a payment method for this offer. Your choices are SYS, BTC and SYS or BTC.</font>"));
 	cert = strCert;
 	ui->certEdit->clear();
 	ui->certEdit->addItem(tr("Select Certificate (optional)"));
@@ -548,7 +549,7 @@ void EditOfferDialog::loadRow(int row)
 		QModelIndex indexPrivate = model->index(row, OfferTableModel::Private, tmpIndex);	
 		QModelIndex indexAlias = model->index(row, OfferTableModel::Alias, tmpIndex);
 		QModelIndex indexQty = model->index(row, OfferTableModel::Qty, tmpIndex);
-		QModelIndex indexBTCOnly = model->index(row, OfferTableModel::AcceptBTCOnly, tmpIndex);
+		QModelIndex indexPaymentOptions = model->index(row, OfferTableModel::PaymentOptions, tmpIndex);
 		QModelIndex indexSafeSearch = model->index(row, OfferTableModel::SafeSearch, tmpIndex);
 		QModelIndex indexCategory = model->index(row, OfferTableModel::Category, tmpIndex);
 		if(indexPrivate.isValid())
@@ -562,10 +563,14 @@ void EditOfferDialog::loadRow(int row)
 			QString currencyStr = indexCurrency.data(OfferTableModel::CurrencyRole).toString();
 			ui->currencyEdit->setCurrentIndex(ui->currencyEdit->findText(currencyStr));
 		}
-		if(indexBTCOnly.isValid())
+		if(indexPaymentOptions.isValid())
 		{
-			QString btcOnlyStr = indexBTCOnly.data(OfferTableModel::BTCOnlyRole).toString();
-			ui->acceptBTCOnlyEdit->setCurrentIndex(ui->acceptBTCOnlyEdit->findText(btcOnlyStr));
+			QString paymentOptionsStr = indexPaymentOptions.data(OfferTableModel::PaymentOptions).toString();
+			int index = ui->paymentOptionsEdit->findData(QVariant(paymentOptionsStr));
+			if ( index != -1 ) 
+			{ 
+				ui->paymentOptionsEdit->setCurrentIndex(index);
+			}
 		}
 		if(indexSafeSearch.isValid() && ui->safeSearchEdit->isEnabled())
 		{
@@ -588,7 +593,7 @@ void EditOfferDialog::loadRow(int row)
 		}
 		if(indexQty.isValid())
 		{
-			QString qtyStr = indexBTCOnly.data(OfferTableModel::QtyRole).toString();
+			QString qtyStr = indexQty.data(OfferTableModel::QtyRole).toString();
 			if(qtyStr == tr("unlimited"))
 				ui->qtyEdit->setText("-1");
 			else
@@ -667,7 +672,7 @@ bool EditOfferDialog::saveCurrentRow()
 			params.push_back("nocert");
 		}
 		params.push_back("1");
-		params.push_back(ui->acceptBTCOnlyEdit->currentText() == QString("Yes")? "1": "0");
+		params.push_back(ui->paymentOptionsEdit->itemData(ui->paymentOptionsEdit->currentIndex(), Qt::UserRole).toString().toStdString());
 		params.push_back(ui->geoLocationEdit->text().toStdString());
 		params.push_back(ui->safeSearchEdit->currentText().toStdString());
 		params.push_back(ui->privateEdit->currentText() == QString("Yes")? "1": "0");
@@ -748,7 +753,7 @@ bool EditOfferDialog::saveCurrentRow()
 			params.push_back(ui->geoLocationEdit->text().toStdString());
 			params.push_back(ui->safeSearchEdit->currentText().toStdString());
 			params.push_back(ui->commissionEdit->text().toStdString());
-			params.push_back(ui->acceptBTCOnlyEdit->currentText() == QString("Yes")? "1": "0");
+			params.push_back(ui->paymentOptionsEdit->itemData(ui->paymentOptionsEdit->currentIndex(), Qt::UserRole).toString().toStdString());
 
 
 			try {

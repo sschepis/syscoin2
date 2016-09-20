@@ -1162,8 +1162,6 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 		CTransaction txLinkedAlias;
 		if (!GetTxOfAlias( linkedOffer.vchAlias, theLinkedAlias, txLinkedAlias, true))
 			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4073 - " + _("Could not find an alias with this identifier"));
-		if (linkedOffer.bOnlyAcceptBTC)
-			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4074 - " + _("Linked offer only accepts Bitcoins, linked offers currently only work with Syscoin payments"));
 		if(linkedOffer.sCategory.size() > 0 && boost::algorithm::starts_with(stringFromVch(linkedOffer.sCategory), "wanted"))
 			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4074a - " + _("Cannot purchase a wanted offer"));
 	

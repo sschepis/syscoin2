@@ -18,7 +18,7 @@
 using namespace std;
 
 extern const CRPCTable tableRPC;
-OfferAcceptDialog::OfferAcceptDialog(WalletModel* model, const PlatformStyle *platformStyle, QString aliaspeg, QString alias, QString offer, QString quantity, QString notes, QString title, QString currencyCode, QString qstrPrice, QString sellerAlias, QString address, QWidget *parent) :
+OfferAcceptDialog::OfferAcceptDialog(WalletModel* model, const PlatformStyle *platformStyle, QString aliaspeg, QString alias, QString offer, QString quantity, QString notes, QString title, QString currencyCode, QString qstrPrice, QString sellerAlias, QString address, unsigned char paymentOptions, QWidget *parent) :
     QDialog(parent),
 	walletModel(model),
     ui(new Ui::OfferAcceptDialog), platformStyle(platformStyle), aliaspeg(aliaspeg), alias(alias), offer(offer), notes(notes), quantity(quantity), title(title), currency(currencyCode), seller(sellerAlias), address(address)
@@ -50,7 +50,7 @@ OfferAcceptDialog::OfferAcceptDialog(WalletModel* model, const PlatformStyle *pl
 	string strPrice = strprintf("%.*f", sysprecision, ValueFromAmount(iPrice).get_real()*quantity.toUInt() );
 	price = QString::fromStdString(strPrice);
 	ui->escrowDisclaimer->setText(tr("<font color='blue'>Select an arbiter that is mutally trusted between yourself and the merchant.</font>"));
-	if(strCurrencyCode == "BTC")
+	if(paymentOptions & PAYMENTOPTION_BTC)
 	{
 		string strfPrice = strprintf("%f", dblPrice*quantity.toUInt());
 		fprice = QString::fromStdString(strfPrice);

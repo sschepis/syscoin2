@@ -75,7 +75,7 @@ private:
 	QUrl m_url;
 	QStringList m_imageList;
 	QString sAddress;
-	bool bOnlyAcceptBTC;
+	unsigned char paymentOptions;
 	bool usedProfileInfo;
 	bool isOfferCert;
 };
