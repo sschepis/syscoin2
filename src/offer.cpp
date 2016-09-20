@@ -2216,7 +2216,7 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	}
 	if(params.size() >= 15)
 	{
-		nCommission = atoi(params[15].get_str());
+		nCommission = atoi(params[14].get_str());
 	}
 	try {
 		nQty = atoi(params[5].get_str());
