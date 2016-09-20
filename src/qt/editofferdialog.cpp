@@ -93,7 +93,7 @@ EditOfferDialog::EditOfferDialog(Mode mode,  const QString &strOffer,  const QSt
 			ui->commissionEdit->setVisible(true);
 			ui->commissionDisclaimer->setVisible(true);
 			ui->commissionEdit->setText(commission);
-			ui->commissionDisclaimer->setText(tr("<font color='blue'>Enter the <b>percentage</b> amount(without the % sign) that you would like to mark-up the price to.</font>");
+			ui->commissionDisclaimer->setText(tr("<font color='blue'>Enter the <b>percentage</b> amount(without the % sign) that you would like to mark-up the price to.</font>"));
 		 }
         break;
     case NewCertOffer:
