@@ -2200,7 +2200,7 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	int bPrivate = false;
 	int nQty;
 	double price;
-	int nCommission;
+	int nCommission = 0;
 	if (params.size() >= 8) vchDesc = vchFromValue(params[7]);
 	if (params.size() >= 9) sCurrencyCode = vchFromValue(params[8]);
 	if (params.size() >= 10) bPrivate = atoi(params[9].get_str().c_str()) == 1? true: false;
@@ -2214,7 +2214,7 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	{
 		strSafeSearch = params[13].get_str();
 	}
-	if(params.size() >= 15)
+	if(params.size() >= 15 && params[14].get_str() != "")
 	{
 		nCommission = atoi(params[14].get_str());
 	}
