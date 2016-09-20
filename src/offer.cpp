@@ -1619,7 +1619,7 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 	}
 	if(params.size() >= 11)
 	{
-		paymentOptions = atoi(params[10].get_str().c_str();
+		paymentOptions = atoi(params[10].get_str().c_str());
 
 	}	
 	string strGeoLocation = "";
@@ -2177,7 +2177,7 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	unsigned char paymentOptions = 0;
 	if(params.size() >= 16 && !params[15].get_str().empty())
 	{
-		paymentOptions = atoi(params[15].get_str().c_str();
+		paymentOptions = atoi(params[15].get_str().c_str());
 
 	}
 	try {
