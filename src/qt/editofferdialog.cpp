@@ -748,6 +748,7 @@ bool EditOfferDialog::saveCurrentRow()
 			params.push_back(ui->geoLocationEdit->text().toStdString());
 			params.push_back(ui->safeSearchEdit->currentText().toStdString());
 			params.push_back(ui->commissionEdit->text().toStdString());
+			params.push_back(ui->acceptBTCOnlyEdit->currentText() == QString("Yes")? "1": "0");
 
 
 			try {

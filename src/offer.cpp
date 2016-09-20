@@ -2184,9 +2184,9 @@ UniValue offerwhitelist(const UniValue& params, bool fHelp) {
 }
 
 UniValue offerupdate(const UniValue& params, bool fHelp) {
-	if (fHelp || params.size() < 7 || params.size() > 15)
+	if (fHelp || params.size() < 7 || params.size() > 16)
 		throw runtime_error(
-		"offerupdate <aliaspeg> <alias> <guid> <category> <title> <quantity> <price> [description] [currency] [private='0'] [cert. guid=''] [exclusive resell='1'] [geolocation=''] [safesearch=Yes] [commission=0]\n"
+		"offerupdate <aliaspeg> <alias> <guid> <category> <title> <quantity> <price> [description] [currency] [private='0'] [cert. guid=''] [exclusive resell='1'] [geolocation=''] [safesearch=Yes] [commission=0] [accept btc only=0]\n"
 						"Perform an update on an offer you control.\n"
 						+ HelpRequiringPassphrase());
 	// gather & validate inputs
@@ -2217,9 +2217,15 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	{
 		strSafeSearch = params[13].get_str();
 	}
-	if(params.size() >= 15 && params[14].get_str() != "")
+	if(params.size() >= 15 && !params[14].get_str().empty())
 	{
 		nCommission = atoi(params[14].get_str());
+	}
+	bool bOnlyAcceptBTC = false;
+	if(params.size() >= 16 && !params[15].get_str().empty())
+	{
+		bOnlyAcceptBTC = atoi(params[15].get_str().c_str()) == 1? true: false;
+
 	}
 	try {
 		nQty = atoi(params[5].get_str());
@@ -2314,7 +2320,7 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	}
 
 
-
+	theOffer.bOnlyAcceptBTC = bOnlyAcceptBTC;
 	theOffer.nCommission = nCommission;
 	theOffer.vchAlias = alias.vchAlias;
 	theOffer.safeSearch = strSafeSearch == "Yes"? true: false;
