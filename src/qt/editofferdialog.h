@@ -60,6 +60,7 @@ private:
 	WalletModel* walletModel;
     QString offer;
 	QString cert;
+	QString commission;
 };
 
 #endif // EDITOFFERDIALOG_H

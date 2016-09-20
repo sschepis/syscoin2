@@ -48,7 +48,7 @@ EditOfferDialog::EditOfferDialog(Mode mode,  const QString &strOffer,  const QSt
 	ui->acceptBTCOnlyEdit->clear();
 	ui->acceptBTCOnlyEdit->addItem(QString("No"));
 	ui->acceptBTCOnlyEdit->addItem(QString("Yes"));
-	ui->geolocationDisclaimer->setText(tr("<font color='blue'>If you wish you may enter your merchant geolocation (lattitude and longitude coordinates) to help track shipping rates and other logistics information.</font>)");
+	ui->geolocationDisclaimer->setText(tr("<font color='blue'>If you wish you may enter your merchant geolocation (lattitude and longitude coordinates) to help track shipping rates and other logistics information.</font>)"));
 	ui->currencyDisclaimer->setText(tr("<font color='blue'>You will receive payment in Syscoin equivalent to the Market-value of the currency you have selected.</font>"));
 	ui->btcOnlyDisclaimer->setText(tr("<font color='blue'>You will receive payment in Bitcoin if you have selected <b>Yes</b> to this option and <b>BTC</b> as the currency for the offer.</font>"));
 	cert = strCert;
@@ -92,7 +92,7 @@ EditOfferDialog::EditOfferDialog(Mode mode,  const QString &strOffer,  const QSt
 			ui->commissionLabel->setVisible(true);
 			ui->commissionEdit->setVisible(true);
 			ui->commissionDisclaimer->setVisible(true);
-			ui->commissionEdit->setText(commissionStr);
+			ui->commissionEdit->setText(commission);
 			ui->commissionDisclaimer->setText(tr("<font color='blue'>Enter the <b>percentage</b> amount(without the % sign) that you would like to mark-up the price to.</font>");
 		 }
         break;
@@ -143,7 +143,7 @@ bool EditOfferDialog::isLinkedOffer(const QString& offerGUID)
 			QString linkedStr = QString::fromStdString(find_value(result.get_obj(), "offerlink").get_str());
 			if(linkedStr == QString("true"))
 			{
-				commissionStr = QString::fromStdString(find_value(result.get_obj(), "commission").get_str());
+				commission = QString::fromStdString(find_value(result.get_obj(), "commission").get_str());
 				return true;
 			}
 		}
