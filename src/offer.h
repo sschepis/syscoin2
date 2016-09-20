@@ -342,6 +342,7 @@ public:
 		{
 			return std::string("SYS+BTC");
 		}
+		return "";
 	}
     friend bool operator==(const COffer &a, const COffer &b) {
         return (

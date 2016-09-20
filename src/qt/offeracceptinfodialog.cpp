@@ -225,16 +225,15 @@ bool OfferAcceptInfoDialog::lookup()
 
 				ui->quantityEdit->setText(QString::fromStdString(find_value(acceptObj, "quantity").get_str()));
 				currencyStr = QString::fromStdString(find_value(acceptObj, "currency").get_str());
-				if(currencyStr == "BTC")
+		
+				QString btctxidStr = QString::fromStdString(find_value(acceptObj, "btctxid").get_str());
+				if(btctxidStr != "")
 				{
-					QString btctxidStr = QString::fromStdString(find_value(acceptObj, "btctxid").get_str());
-					if(btctxidStr != "")
-					{
-						ui->btctxidEdit->setVisible(true);
-						ui->btctxidLabel->setVisible(true);
-						ui->btctxidEdit->setText(btctxidStr);
-					}
+					ui->btctxidEdit->setVisible(true);
+					ui->btctxidLabel->setVisible(true);
+					ui->btctxidEdit->setText(btctxidStr);
 				}
+				
 				ui->priceEdit->setText(QString("%1 %2").arg(QString::fromStdString(find_value(acceptObj, "price").get_str())).arg(currencyStr));
 				ui->totalEdit->setText(QString("%1 %2").arg(QString::fromStdString(find_value(acceptObj, "total").get_str())).arg(currencyStr));
 				ui->discountEdit->setText(QString::fromStdString(find_value(acceptObj, "offer_discount_percentage").get_str()));

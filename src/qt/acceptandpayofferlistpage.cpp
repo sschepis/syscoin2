@@ -37,7 +37,7 @@ AcceptandPayOfferListPage::AcceptandPayOfferListPage(const PlatformStyle *platfo
 {	
 	sAddress = "";
 	isOfferCert = false;
-	bOnlyAcceptBTC = false;
+	paymentOptions = 0;
     ui->setupUi(this);
 	QString theme = GUIUtil::getThemeName();  
 	if (!platformStyle->getImagesOnButtons())
@@ -55,7 +55,7 @@ AcceptandPayOfferListPage::AcceptandPayOfferListPage(const PlatformStyle *platfo
 	this->offerPaid = false;
 	this->usedProfileInfo = false;
 	this->URIHandled = false;	
-    ui->labelExplanation->setText(tr("Purchase an offer, Syscoin will be used from your balance to complete the transaction"));
+    ui->labelExplanation->setText(tr("Purchase an offer, coins will be used from your balance to complete the transaction"));
     connect(ui->acceptButton, SIGNAL(clicked()), this, SLOT(acceptOffer()));
 	connect(ui->lookupButton, SIGNAL(clicked()), this, SLOT(lookup()));
 	connect(ui->offeridEdit, SIGNAL(textChanged(QString)), this, SLOT(resetState()));
@@ -94,7 +94,7 @@ void AcceptandPayOfferListPage::on_pubProfile()
 	if(this->usedProfileInfo)
 	{
         QMessageBox::StandardButton retval = QMessageBox::question(this, tr("Confirm Public Profile Inclusion"),
-                 tr("Warning:You have already appended profile information to the notes for this purchase!") + "<br><br>" + tr("Are you sure you wish to continue?"),
+                 tr("Warning: You have already appended profile information to the notes for this purchase!") + "<br><br>" + tr("Are you sure you wish to continue?"),
                  QMessageBox::Yes|QMessageBox::Cancel,
                  QMessageBox::Cancel);
         if(retval == QMessageBox::Cancel)
@@ -112,7 +112,7 @@ void AcceptandPayOfferListPage::on_privProfile()
 	if(this->usedProfileInfo)
 	{
         QMessageBox::StandardButton retval = QMessageBox::question(this, tr("Confirm Private Profile Inclusion"),
-                 tr("Warning:You have already appended profile information to the notes for this purchase!") + "<br><br>" + tr("Are you sure you wish to continue?"),
+                 tr("Warning: You have already appended profile information to the notes for this purchase!") + "<br><br>" + tr("Are you sure you wish to continue?"),
                  QMessageBox::Yes|QMessageBox::Cancel,
                  QMessageBox::Cancel);
         if(retval == QMessageBox::Cancel)
@@ -279,7 +279,7 @@ void AcceptandPayOfferListPage::updateCaption()
 		}
 		else
 		{
-			ui->labelExplanation->setText(tr("Purchase this offer, Syscoin will be used from your balance to complete the transaction"));
+			ui->labelExplanation->setText(tr("Purchase this offer, coins will be used from your balance to complete the transaction"));
 		}
 		
 }
@@ -332,7 +332,7 @@ void AcceptandPayOfferListPage::acceptOffer()
 	
 	this->offerPaid = false;
 	ui->labelExplanation->setText(tr("Waiting for confirmation on the purchase of this offer"));
-	if((paymentOptions & PAYMENTOPTIONS_BTC) == PAYMENTOPTIONS_BTC)
+	if((paymentOptions & PAYMENTOPTION_BTC) == PAYMENTOPTION_BTC)
 		OpenBTCPayDialog();
 	else
 		OpenPayDialog();

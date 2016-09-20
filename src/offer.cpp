@@ -1133,9 +1133,9 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 106 - " + _("This offer must be paid with Bitcoins");
 				return true;
 			}
-			else if(!theOfferAccept.txBTCId.IsNull() && (myPriceOffer.paymentOptions & PAYMENTOPTION_SYS) == PAYMENTOPTION_SYS)
+			else if(!theOfferAccept.txBTCId.IsNull() && (myPriceOffer.paymentOptions & PAYMENTOPTION_BTC) == 0)
 			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 106 - " + _("This offer must be paid with Syscoins");
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 106 - " + _("This offer cannot be paid with Bitcoins");
 				return true;
 			}
 			if(!GetTxOfAlias(myPriceOffer.vchAlias, alias, aliasTx))
@@ -1230,11 +1230,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				}
 			}
 
-			if(!theOfferAccept.txBTCId.IsNull() && stringFromVch(myPriceOffer.sCurrencyCode) != "BTC")
-			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 119 - " + _("Cannot pay for offer in bitcoins if its currency is not set to BTC");
-				return true;
-			}
 			// decrease qty + increase # sold
 			if(theOfferAccept.nQty <= 0)
 				theOfferAccept.nQty = 1;
