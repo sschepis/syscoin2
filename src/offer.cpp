@@ -671,6 +671,11 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 28 - " + _("Offer title cannot be empty");
 					return error(errorMessage.c_str());
 				}
+				if(theOffer.paymentOptions <= 0)
+				{
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 29 - " + _("Invalid payment option specified");
+					return error(errorMessage.c_str());
+				}
 			}
 			if(theOffer.nQty < -1)
 			{
@@ -1544,7 +1549,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 UniValue offernew(const UniValue& params, bool fHelp) {
 	if (fHelp || params.size() < 7 || params.size() > 14)
 		throw runtime_error(
-		"offernew <aliaspeg> <alias> <category> <title> <quantity> <price> <description> <currency> [cert. guid] [exclusive resell=1] [accept btc only=0] [geolocation=''] [safe search=Yes] [private='0']\n"
+		"offernew <aliaspeg> <alias> <category> <title> <quantity> <price> <description> <currency> [cert. guid] [exclusive resell=1] [paymentOptions=1] [geolocation=''] [safe search=Yes] [private='0']\n"
 						"<aliaspeg> Alias peg you wish to use, leave blank to use sysrates.peg.\n"	
 						"<alias> An alias you own.\n"
 						"<category> category, 255 chars max.\n"
@@ -1555,7 +1560,7 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 						"<currency> The currency code that you want your offer to be in ie: USD.\n"
 						"<cert. guid> Set this to the guid of a certificate you wish to sell\n"
 						"<exclusive resell> set to 1 if you only want those who control the affiliate's who are able to resell this offer via offerlink. Defaults to 1.\n"
-						"<accept btc only> set to 1 if you only want accept Bitcoins for payment and your currency is set to BTC, note you cannot resell or sell a cert in this mode. Defaults to 0.\n"
+						"<paymentOptions> 1 to accept SYS only, 2 for BTC only and 3 to accept BTC or SYS. Defaults to 1.\n"
 						"<geolocation> set to your geolocation. Defaults to empty. \n"
 						"<safe search> set to No if this offer should only show in the search when safe search is not selected. Defaults to Yes (offer shows with or without safe search selected in search lists).\n"
 						"<private> set to 1 if this offer should be private not be searchable. Defaults to 0.\n"						
@@ -2139,7 +2144,7 @@ UniValue offerwhitelist(const UniValue& params, bool fHelp) {
 UniValue offerupdate(const UniValue& params, bool fHelp) {
 	if (fHelp || params.size() < 7 || params.size() > 16)
 		throw runtime_error(
-		"offerupdate <aliaspeg> <alias> <guid> <category> <title> <quantity> <price> [description] [currency] [private='0'] [cert. guid=''] [exclusive resell='1'] [geolocation=''] [safesearch=Yes] [commission=0] [accept btc only=0]\n"
+		"offerupdate <aliaspeg> <alias> <guid> <category> <title> <quantity> <price> [description] [currency] [private='0'] [cert. guid=''] [exclusive resell='1'] [geolocation=''] [safesearch=Yes] [commission=0] [paymentOptions=0]\n"
 						"Perform an update on an offer you control.\n"
 						+ HelpRequiringPassphrase());
 	// gather & validate inputs
@@ -2174,7 +2179,7 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	{
 		nCommission = atoi(params[14].get_str());
 	}
-	unsigned char paymentOptions = 0;
+	unsigned char paymentOptions = PAYMENTOPTION_SYS;
 	if(params.size() >= 16 && !params[15].get_str().empty())
 	{
 		paymentOptions = atoi(params[15].get_str().c_str());
