@@ -920,6 +920,9 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						theOffer.vchGeoLocation = dbOffer.vchGeoLocation;
 					if(serializedOffer.vchAliasPeg.empty())
 						theOffer.vchAliasPeg = dbOffer.vchAliasPeg;
+					if(serializedOffer.sCurrencyCode.empty())
+						theOffer.sCurrencyCode = dbOffer.sCurrencyCode;
+
 					// user can't update safety level after creation
 					theOffer.safetyLevel = dbOffer.safetyLevel;
 					if(!theOffer.vchCert.empty())
@@ -1465,7 +1468,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					{
 
 						linkOffer.nQty = theOffer.nQty;	
-						linkOffer.SetPrice(theOffer.nPrice);
 						linkOffer.vchCert = theOffer.vchCert;
 						linkOffer.vchAliasPeg = theOffer.vchAliasPeg;
 						if(theOffer.bOnlyAcceptBTC)
@@ -1473,6 +1475,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 							linkOffer.bOnlyAcceptBTC = theOffer.bOnlyAcceptBTC;
 							linkOffer.sCurrencyCode = theOffer.sCurrencyCode;
 						}
+						linkOffer.SetPrice(theOffer.nPrice);			
 						linkOffer.PutToOfferList(myVtxPos);
 						// write offer
 					

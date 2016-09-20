@@ -241,6 +241,7 @@ public:
 		vchCert.clear();
 		vchAliasPeg.clear();
 		vchGeoLocation.clear();
+		sCurrencyCode.clear();
 	}
 
  	ADD_SERIALIZE_METHODS;
