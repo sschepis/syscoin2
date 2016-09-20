@@ -21,7 +21,7 @@ ResellOfferDialog::ResellOfferDialog(QModelIndex *idx, WalletModel* model, QWidg
 	QString offerGUID = idx->data(OfferTableModel::NameRole).toString();
 	ui->descriptionEdit->setPlainText(idx->data(OfferTableModel::DescriptionRole).toString());
 	ui->offerGUIDLabel->setText(offerGUID);
-	ui->commissionDisclaimer->setText(tr("<font color='blue'>Enter the <b>percentage</b>  amount(without the % sign) that you would like to mark-up the price to.</font>"));
+	ui->commissionDisclaimer->setText(tr("<font color='blue'>Enter the <b>percentage</b> amount(without the % sign) that you would like to mark-up the price to.</font>"));
 	loadAliases();
 }
 

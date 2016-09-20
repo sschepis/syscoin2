@@ -2181,9 +2181,9 @@ UniValue offerwhitelist(const UniValue& params, bool fHelp) {
 }
 
 UniValue offerupdate(const UniValue& params, bool fHelp) {
-	if (fHelp || params.size() < 7 || params.size() > 14)
+	if (fHelp || params.size() < 7 || params.size() > 15)
 		throw runtime_error(
-		"offerupdate <aliaspeg> <alias> <guid> <category> <title> <quantity> <price> [description] [currency] [private='0'] [cert. guid=''] [exclusive resell='1'] [geolocation=''] [safesearch=Yes]\n"
+		"offerupdate <aliaspeg> <alias> <guid> <category> <title> <quantity> <price> [description] [currency] [private='0'] [cert. guid=''] [exclusive resell='1'] [geolocation=''] [safesearch=Yes] [commission=0]\n"
 						"Perform an update on an offer you control.\n"
 						+ HelpRequiringPassphrase());
 	// gather & validate inputs
@@ -2200,6 +2200,7 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	int bPrivate = false;
 	int nQty;
 	double price;
+	int nCommission;
 	if (params.size() >= 8) vchDesc = vchFromValue(params[7]);
 	if (params.size() >= 9) sCurrencyCode = vchFromValue(params[8]);
 	if (params.size() >= 10) bPrivate = atoi(params[9].get_str().c_str()) == 1? true: false;
@@ -2212,6 +2213,10 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	if(params.size() >= 14)
 	{
 		strSafeSearch = params[13].get_str();
+	}
+	if(params.size() >= 15)
+	{
+		nCommission = atoi(params[15].get_str());
 	}
 	try {
 		nQty = atoi(params[5].get_str());
@@ -2283,6 +2288,9 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	if(offerCopy.vchGeoLocation != vchGeoLocation)
 		theOffer.vchGeoLocation = vchGeoLocation;
 	CAmount nPricePerUnit = offerCopy.GetPrice();
+	if(sCurrencyCode.empty() || sCurrencyCode == vchFromString("NONE"))
+		sCurrencyCode = offerCopy.sCurrencyCode;
+
 	// linked offers can't change these settings, they are overrided by parent info
 	if(offerCopy.vchLinkOffer.empty())
 	{
@@ -2300,14 +2308,12 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 			throw runtime_error(err.c_str());
 		}
 	}
-	if(sCurrencyCode.empty() || sCurrencyCode == vchFromString("NONE"))
-		sCurrencyCode = offerCopy.sCurrencyCode;
 
 
 	if(offerCopy.sCurrencyCode != sCurrencyCode)
 		theOffer.sCurrencyCode = sCurrencyCode;
 
-
+	theOffer.nCommission = nCommission;
 	theOffer.vchAlias = alias.vchAlias;
 	theOffer.safeSearch = strSafeSearch == "Yes"? true: false;
 	theOffer.nQty = nQty;
@@ -2932,7 +2938,7 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 	
 	oOffer.push_back(Pair("ismine", ismine  ? "true" : "false"));
 	if(!theOffer.vchLinkOffer.empty()) {
-		oOffer.push_back(Pair("commission", strprintf("%d%%", theOffer.nCommission)));
+		oOffer.push_back(Pair("commission", strprintf("%d", theOffer.nCommission)));
 		oOffer.push_back(Pair("offerlink", "true"));
 		oOffer.push_back(Pair("offerlink_guid", stringFromVch(theOffer.vchLinkOffer)));
 		oOffer.push_back(Pair("offerlink_seller", stringFromVch(linkOffer.vchAlias)));
@@ -3476,7 +3482,7 @@ UniValue offerlist(const UniValue& params, bool fHelp) {
 			oName.push_back(Pair("price", strprintf("%.*f", precision, ValueFromAmount(nPricePerUnit).get_real() ))); 	
 
 			oName.push_back(Pair("currency", stringFromVch(theOfferA.sCurrencyCode) ) );
-			oName.push_back(Pair("commission", strprintf("%d%%", theOfferA.nCommission)));
+			oName.push_back(Pair("commission", strprintf("%d", theOfferA.nCommission)));
 			if(nQty == -1)
 				oName.push_back(Pair("quantity", "unlimited"));
 			else
@@ -3579,7 +3585,7 @@ UniValue offerhistory(const UniValue& params, bool fHelp) {
 			oOffer.push_back(Pair("price", strprintf("%.*f", precision, ValueFromAmount(nPricePerUnit).get_real() ))); 	
 
 			oOffer.push_back(Pair("currency", stringFromVch(theOfferA.sCurrencyCode) ) );
-			oOffer.push_back(Pair("commission", strprintf("%d%%", theOfferA.nCommission)));
+			oOffer.push_back(Pair("commission", strprintf("%d", theOfferA.nCommission)));
 			if(theOfferA.nQty == -1)
 				oOffer.push_back(Pair("quantity", "unlimited"));
 			else
@@ -3674,7 +3680,7 @@ UniValue offerfilter(const UniValue& params, bool fHelp) {
 		CAmount nPricePerUnit = convertSyscoinToCurrencyCode(txOffer.vchAliasPeg, txOffer.sCurrencyCode, txOffer.GetPrice(), nHeight, precision);
 		oOffer.push_back(Pair("price", strprintf("%.*f", precision, ValueFromAmount(nPricePerUnit).get_real() ))); 
 		oOffer.push_back(Pair("currency", stringFromVch(txOffer.sCurrencyCode)));
-		oOffer.push_back(Pair("commission", strprintf("%d%%", txOffer.nCommission)));
+		oOffer.push_back(Pair("commission", strprintf("%d", txOffer.nCommission)));
 		if(txOffer.nQty == -1)
 			oOffer.push_back(Pair("quantity", "unlimited"));
 		else

@@ -36,6 +36,7 @@ EditOfferDialog::EditOfferDialog(Mode mode,  const QString &strOffer,  const QSt
 	ui->aliasEdit->setEnabled(true);
 	ui->commissionLabel->setVisible(false);
 	ui->commissionEdit->setVisible(false);
+	ui->commissionDisclaimer->setVisible(false);
 	ui->offerEdit->setEnabled(false);
 	ui->rootOfferLabel->setVisible(false);
 	ui->rootOfferEdit->setVisible(false);
@@ -47,6 +48,7 @@ EditOfferDialog::EditOfferDialog(Mode mode,  const QString &strOffer,  const QSt
 	ui->acceptBTCOnlyEdit->clear();
 	ui->acceptBTCOnlyEdit->addItem(QString("No"));
 	ui->acceptBTCOnlyEdit->addItem(QString("Yes"));
+	ui->geolocationDisclaimer->setText(tr("<font color='blue'>If you wish you may enter your merchant geolocation (lattitude and longitude coordinates) to help track shipping rates and other logistics information.</font>)");
 	ui->currencyDisclaimer->setText(tr("<font color='blue'>You will receive payment in Syscoin equivalent to the Market-value of the currency you have selected.</font>"));
 	ui->btcOnlyDisclaimer->setText(tr("<font color='blue'>You will receive payment in Bitcoin if you have selected <b>Yes</b> to this option and <b>BTC</b> as the currency for the offer.</font>"));
 	cert = strCert;
@@ -81,14 +83,17 @@ EditOfferDialog::EditOfferDialog(Mode mode,  const QString &strOffer,  const QSt
 		 {
 			setWindowTitle(tr("Edit Linked Offer"));
 			ui->aliasPegEdit->setEnabled(false);
-			ui->acceptBTCOnlyEdit->setEnabled(false);
 			ui->priceEdit->setEnabled(false);
 			ui->qtyEdit->setEnabled(false);
 			ui->certEdit->setEnabled(false);
 			ui->rootOfferLabel->setVisible(true);
 			ui->rootOfferEdit->setVisible(true);
+			ui->rootOfferEdit->setText(strOffer);
 			ui->commissionLabel->setVisible(true);
 			ui->commissionEdit->setVisible(true);
+			ui->commissionDisclaimer->setVisible(true);
+			ui->commissionEdit->setText(commissionStr);
+			ui->commissionDisclaimer->setText(tr("<font color='blue'>Enter the <b>percentage</b> amount(without the % sign) that you would like to mark-up the price to.</font>");
 		 }
         break;
     case NewCertOffer:
@@ -138,6 +143,7 @@ bool EditOfferDialog::isLinkedOffer(const QString& offerGUID)
 			QString linkedStr = QString::fromStdString(find_value(result.get_obj(), "offerlink").get_str());
 			if(linkedStr == QString("true"))
 			{
+				commissionStr = QString::fromStdString(find_value(result.get_obj(), "commission").get_str());
 				return true;
 			}
 		}
@@ -741,6 +747,7 @@ bool EditOfferDialog::saveCurrentRow()
 			params.push_back("");
 			params.push_back(ui->geoLocationEdit->text().toStdString());
 			params.push_back(ui->safeSearchEdit->currentText().toStdString());
+			params.push_back(ui->commissionEdit->text().toStdString());
 
 
 			try {

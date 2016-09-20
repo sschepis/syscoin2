@@ -169,7 +169,7 @@ bool OfferAcceptInfoDialog::lookup()
 				ui->commissionEdit->setVisible(true);
 				ui->commissionLabel->setVisible(true);
 				ui->linkGUIDEdit->setText(QString::fromStdString(find_value(result.get_obj(), "offerlink_guid").get_str()));
-				ui->commissionEdit->setText(QString::fromStdString(find_value(result.get_obj(), "commission").get_str()));
+				ui->commissionEdit->setText(QString::fromStdString(find_value(result.get_obj(), "commission").get_str()) + "%");
 				sellerStr = QString::fromStdString(find_value(result.get_obj(), "offerlink_seller").get_str());
 			}
 			ui->titleEdit->setText(QString::fromStdString(find_value(result.get_obj(), "title").get_str()));
