@@ -1718,7 +1718,7 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 	SendMoneySyscoin(vecSend, recipient.nAmount+fee.nAmount+aliasRecipient.nAmount, false, wtx, wtxInOffer, wtxCertIn, wtxAliasIn, wtxInEscrow);
 	UniValue res(UniValue::VARR);
 	res.push_back(wtx.GetHash().GetHex());
-	res.push_back(HexStr(vchRand));
+	res.push_back(stringFromVch(vchOffer));
 	return res;
 }
 
@@ -1832,7 +1832,7 @@ UniValue offerlink(const UniValue& params, bool fHelp) {
 
 	UniValue res(UniValue::VARR);
 	res.push_back(wtx.GetHash().GetHex());
-	res.push_back(HexStr(vchRand));
+	res.push_back(stringFromVch(vchOffer));
 	return res;
 }
 

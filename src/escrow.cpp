@@ -1330,7 +1330,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	SendMoneySyscoin(vecSend,recipientBuyer.nAmount+ recipientArbiter.nAmount+recipientSeller.nAmount+aliasRecipient.nAmount+fee.nAmount, false, wtx, wtxInOffer, wtxInCert, wtxAliasIn, wtxInEscrow);
 	UniValue res(UniValue::VARR);
 	res.push_back(wtx.GetHash().GetHex());
-	res.push_back(HexStr(vchRand));
+	res.push_back(stringFromVch(vchEscrow));
 	return res;
 }
 UniValue escrowrelease(const UniValue& params, bool fHelp) {

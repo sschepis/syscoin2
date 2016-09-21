@@ -521,7 +521,7 @@ UniValue messagenew(const UniValue& params, bool fHelp) {
 	SendMoneySyscoin(vecSend, recipient.nAmount+fee.nAmount, false, wtx, wtxInOffer, wtxInCert, wtxAliasIn, wtxInEscrow);
 	UniValue res(UniValue::VARR);
 	res.push_back(wtx.GetHash().GetHex());
-	res.push_back(HexStr(vchRand));
+	res.push_back(stringFromVch(vchMessage));
 	return res;
 }
 
