@@ -325,9 +325,13 @@ void EscrowListPage::on_searchEscrow_clicked(string GUID)
 				const UniValue& txid_value = find_value(o, "txid");
 				if (txid_value.type() == UniValue::VSTR)
 					txid_str = txid_value.get_str();
+				string currency_str = "";
+				const UniValue& currency_value = find_value(o, "currency");
+				if (currency_value.type() == UniValue::VSTR)
+					currency_str = currency_value.get_str();
 				const UniValue& total_value = find_value(o, "total");
 				if (total_value.type() == UniValue::VSTR)
-					total_str = total_value.get_str();
+					total_str = total_value.get_str() + " " + currency_str;
 				const UniValue& status_value = find_value(o, "status");
 				if (status_value.type() == UniValue::VSTR)
 					status_str = status_value.get_str();

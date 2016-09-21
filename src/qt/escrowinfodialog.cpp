@@ -160,6 +160,7 @@ bool EscrowInfoDialog::lookup()
 			QString seller = QString::fromStdString(find_value(result.get_obj(), "seller").get_str());
 			QString arbiter = QString::fromStdString(find_value(result.get_obj(), "arbiter").get_str());
 			QString buyer = QString::fromStdString(find_value(result.get_obj(), "buyer").get_str());
+			QString currency = QString::fromStdString(find_value(result.get_obj(), "currency").get_str());
 			ui->guidEdit->setText(QString::fromStdString(find_value(result.get_obj(), "escrow").get_str()));
 			ui->offerEdit->setText(QString::fromStdString(find_value(result.get_obj(), "offer").get_str()));
 			
@@ -169,10 +170,10 @@ bool EscrowInfoDialog::lookup()
 			unixTime = atoi(find_value(result.get_obj(), "time").get_str().c_str());
 			dateTime.setTime_t(unixTime);	
 			ui->timeEdit->setText(dateTime.toString());
-			ui->priceEdit->setText(QString("%1 SYS").arg(QString::number(ValueFromAmount(find_value(result.get_obj(), "systotal").get_int64()).get_real())));
-			ui->feeEdit->setText(QString("%1 SYS").arg(QString::number(ValueFromAmount(find_value(result.get_obj(), "sysfee").get_int64()).get_real())));
+			ui->priceEdit->setText(QString("%1 %2").arg(QString::fromStdString(ValueFromAmount(find_value(result.get_obj(), "price").get_str()))).arg(currency))
+			ui->feeEdit->setText(QString("%1 %2").arg(QString::fromStdString(ValueFromAmount(find_value(result.get_obj(), "fee").get_str()))).arg(currency));
 
-			ui->totalEdit->setText(QString::fromStdString(find_value(result.get_obj(), "total").get_str()) + " " + QString::fromStdString(find_value(result.get_obj(), "currency").get_str()));
+			ui->totalEdit->setText(QString::fromStdString(find_value(result.get_obj(), "total").get_str()) + " " + currency));
 			ui->paymessageEdit->setText(QString::fromStdString(find_value(result.get_obj(), "pay_message").get_str()));
 			int avgRating = find_value(result.get_obj(), "avg_rating").get_int();
 			ui->ratingEdit->setText(tr("%1 Stars").arg(QString::number(avgRating)));
