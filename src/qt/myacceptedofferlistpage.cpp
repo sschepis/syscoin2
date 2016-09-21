@@ -188,6 +188,31 @@ void MyAcceptedOfferListPage::slotConfirmedFinished(QNetworkReply * reply){
 	if (read)
 	{
 		UniValue outerObj = outerValue.get_obj();
+		UniValue messageValue = find_value(outerObj, "message");
+		if (messageValue.isStr())
+		{
+			QString messageStr = QString::fromStdString(messageValue.get_str());
+			if(!messageStr.contains(m_paymentID))
+			{
+				ui->btcButton->setText(m_buttonText);
+				ui->btcButton->setEnabled(true);
+				QMessageBox::critical(this, windowTitle(),
+				tr("Could not find payment ID <b>%1</b> in payment message: <b>%2</b>").arg(m_paymentID).arg(messageStr),
+					QMessageBox::Ok, QMessageBox::Ok);
+				reply->deleteLater();	
+				return;
+			}
+		}
+		else
+		{
+			ui->btcButton->setText(m_buttonText);
+			ui->btcButton->setEnabled(true);
+			QMessageBox::critical(this, windowTitle(),
+				tr("Could not find payment ID <b>%1</b> in payment message: <b>%2</b>").arg(m_paymentID).arg(messageStr),
+					QMessageBox::Ok, QMessageBox::Ok);
+			reply->deleteLater();	
+			return;
+		}
 		UniValue statusValue = find_value(outerObj, "status");
 		if (statusValue.isStr())
 		{
@@ -200,6 +225,16 @@ void MyAcceptedOfferListPage::slotConfirmedFinished(QNetworkReply * reply){
 						QMessageBox::Ok, QMessageBox::Ok);
 				return;
 			}
+		}
+		else
+		{
+			ui->btcButton->setText(m_buttonText);
+			ui->btcButton->setEnabled(true);
+			QMessageBox::critical(this, windowTitle(),
+				tr("Transaction status not successful: ") + QString::fromStdString(statusValue.get_str()),
+					QMessageBox::Ok, QMessageBox::Ok);
+			reply->deleteLater();	
+			return;
 		}
 		UniValue dataObj1 = find_value(outerObj, "data");
 		UniValue dataObj = find_value(dataObj1, "tx");
@@ -270,13 +305,14 @@ void MyAcceptedOfferListPage::slotConfirmedFinished(QNetworkReply * reply){
 		tr("Payment not found in the Bitcoin blockchain! Please try again later."),
 			QMessageBox::Ok, QMessageBox::Ok);	
 }
-void MyAcceptedOfferListPage::CheckPaymentInBTC(const QString &strBTCTxId, const QString& address, const QString& price)
+void MyAcceptedOfferListPage::CheckPaymentInBTC(const QString &strBTCTxId, const QString &strAcceptID, const QString& address, const QString& price)
 {
 	dblPrice = price.toDouble();
 	m_buttonText = ui->btcButton->text();
 	ui->btcButton->setText(tr("Please Wait..."));
 	ui->btcButton->setEnabled(false);
 	m_strAddress = address;
+	m_paymentID = strAcceptID;
 	m_strBTCTxId = strBTCTxId;
 	QNetworkAccessManager *nam = new QNetworkAccessManager(this);  
 	connect(nam, SIGNAL(finished(QNetworkReply *)), this, SLOT(slotConfirmedFinished(QNetworkReply *)));
@@ -314,7 +350,7 @@ void MyAcceptedOfferListPage::on_btcButton_clicked()
         return;
 	}
 
-	CheckPaymentInBTC(btcTxId, address, price);
+	CheckPaymentInBTC(btcTxId, acceptid, address, price);
 
 
 }

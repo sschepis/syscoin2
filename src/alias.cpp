@@ -33,7 +33,7 @@ COfferDB *pofferdb = NULL;
 CCertDB *pcertdb = NULL;
 CEscrowDB *pescrowdb = NULL;
 CMessageDB *pmessagedb = NULL;
-extern void SendMoneySyscoin(const vector<CRecipient> &vecSend, CAmount nValue, bool fSubtractFeeFromAmount, CWalletTx& wtxNew, const CWalletTx* wtxInOffer=NULL, const CWalletTx* wtxInCert=NULL, const CWalletTx* wtxInAlias=NULL, const CWalletTx* wtxInEscrow=NULL, bool syscoinTx=true, string justcheck="0");
+extern void SendMoneySyscoin(const vector<CRecipient> &vecSend, CAmount nValue, bool fSubtractFeeFromAmount, CWalletTx& wtxNew, const CWalletTx* wtxInOffer=NULL, const CWalletTx* wtxInCert=NULL, const CWalletTx* wtxInAlias=NULL, const CWalletTx* wtxInEscrow=NULL, bool syscoinTx=true);
 bool IsSysCompressedOrUncompressedPubKey(const vector<unsigned char> &vchPubKey) {
     if (vchPubKey.size() < 33) {
         //  Non-canonical public key: too short
@@ -1543,9 +1543,7 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 		}
 		vchPrivateValue = vchFromString(strCipherText);
 	}
-	int64_t rand = GetRand(std::numeric_limits<int64_t>::max());
- 	vector<unsigned char> vchRand = CScriptNum(rand).getvch();
-    vector<unsigned char> vchRandAlias = vchFromValue(HexStr(vchRand));
+	vector<unsigned char> vchRandAlias = vchFromString(GenerateSyscoinGuid());
     // build alias
     CAliasIndex newAlias;
 	newAlias.vchGUID = vchRandAlias;
@@ -1952,6 +1950,21 @@ UniValue aliasaffiliates(const UniValue& params, bool fHelp) {
 		oRes.push_back(item.second);
 
 	return oRes;
+}
+string GenerateSyscoinGuid()
+{
+	int64_t rand = GetRand(std::numeric_limits<int64_t>::max());
+	vector<unsigned char> vchGuidRand = CScriptNum(rand).getvch();
+	return HexStr(vchGuidRand);
+}
+UniValue generateguid(const UniValue& params, bool fHelp) {
+	if (fHelp || 0 != params.size()
+		throw runtime_error("generateguid\n"
+				"Generate a new GUID to use for new Syscoin services.\n");
+		
+	UniValue res(UniValue::VOBJ);
+	res.push_back(GenerateSyscoinGuid());
+	return res;
 }
 /**
  * [aliasinfo description]

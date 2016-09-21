@@ -20,7 +20,7 @@
 #include <boost/algorithm/string/predicate.hpp>
 using namespace std;
 extern void SendMoney(const CTxDestination &address, CAmount nValue, bool fSubtractFeeFromAmount, CWalletTx& wtxNew);
-extern void SendMoneySyscoin(const vector<CRecipient> &vecSend, CAmount nValue, bool fSubtractFeeFromAmount, CWalletTx& wtxNew, const CWalletTx* wtxInOffer=NULL, const CWalletTx* wtxInCert=NULL, const CWalletTx* wtxInAlias=NULL, const CWalletTx* wtxInEscrow=NULL, bool syscoinTx=true, string justcheck="0");
+extern void SendMoneySyscoin(const vector<CRecipient> &vecSend, CAmount nValue, bool fSubtractFeeFromAmount, CWalletTx& wtxNew, const CWalletTx* wtxInOffer=NULL, const CWalletTx* wtxInCert=NULL, const CWalletTx* wtxInAlias=NULL, const CWalletTx* wtxInEscrow=NULL, bool syscoinTx=true);
 bool DisconnectAlias(const CBlockIndex *pindex, const CTransaction &tx, int op, vector<vector<unsigned char> > &vvchArgs );
 bool DisconnectOffer(const CBlockIndex *pindex, const CTransaction &tx, int op, vector<vector<unsigned char> > &vvchArgs );
 bool DisconnectCertificate(const CBlockIndex *pindex, const CTransaction &tx, int op, vector<vector<unsigned char> > &vvchArgs );
@@ -1059,6 +1059,9 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			theOfferAccept = serializedOffer.accept;
 			CAliasIndex buyeralias;
 			CTransaction buyeraliasTx;
+			CTransaction acceptTx;
+			COfferAccept offerAccept;
+			COffer acceptOffer;
 			if(!GetTxOfAlias(theOfferAccept.vchBuyerAlias, buyeralias, buyeraliasTx))
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 90 - " + _("Cannot find buyer alias. It may be expired");
@@ -1067,9 +1070,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					
 			if(!theOfferAccept.feedback.empty())
 			{
-				CTransaction acceptTx;
-				COfferAccept offerAccept;
-				COffer acceptOffer;
 				if (!GetTxOfOfferAccept(vvchArgs[0], vvchArgs[1], acceptOffer, offerAccept, acceptTx))
 				{
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 96 - " + _("Could not find offer accept from mempool or disk");
@@ -1126,7 +1126,11 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				return true;
 			
 			}
-
+			if (GetTxOfOfferAccept(vvchArgs[0], vvchArgs[1], acceptOffer, offerAccept, acceptTx))
+			{
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 96 - " + _("Offer payment already exists");
+				return true;
+			}
 
 			
 			myPriceOffer.nHeight = theOfferAccept.nAcceptHeight;
@@ -1550,7 +1554,7 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 	if (fHelp || params.size() < 7 || params.size() > 14)
 		throw runtime_error(
 		"offernew <aliaspeg> <alias> <category> <title> <quantity> <price> <description> <currency> [cert. guid] [exclusive resell=1] [paymentOptions=1] [geolocation=''] [safe search=Yes] [private='0']\n"
-						"<aliaspeg> Alias peg you wish to use, leave blank to use sysrates.peg.\n"	
+						"<aliaspeg> Alias peg you wish to use, leave empty to use sysrates.peg.\n"	
 						"<alias> An alias you own.\n"
 						"<category> category, 255 chars max.\n"
 						"<title> title, 255 chars max.\n"
@@ -1652,10 +1656,7 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 	CWalletTx wtx;
 
 	// generate rand identifier
-	int64_t rand = GetRand(std::numeric_limits<int64_t>::max());
-	vector<unsigned char> vchRand = CScriptNum(rand).getvch();
-	vector<unsigned char> vchOffer = vchFromString(HexStr(vchRand));
-
+	vector<unsigned char> vchOffer = vchFromString(GenerateSyscoinGuid());
 	EnsureWalletIsUnlocked();
 
 
@@ -1779,10 +1780,7 @@ UniValue offerlink(const UniValue& params, bool fHelp) {
 
 
 	// generate rand identifier
-	int64_t rand = GetRand(std::numeric_limits<int64_t>::max());
-	vector<unsigned char> vchRand = CScriptNum(rand).getvch();
-	vector<unsigned char> vchOffer = vchFromString(HexStr(vchRand));
-
+	vector<unsigned char> vchOffer = vchFromString(GenerateSyscoinGuid());
 	EnsureWalletIsUnlocked();
 	
 	// unserialize offer from txn, serialize back
@@ -2332,17 +2330,16 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	res.push_back(wtx.GetHash().GetHex());
 	return res;
 }
-
 UniValue offeraccept(const UniValue& params, bool fHelp) {
 	if (fHelp || 1 > params.size() || params.size() > 6)
-		throw runtime_error("offeraccept <alias> <guid> [quantity] [message] [BTC TxId] [justcheck]\n"
+		throw runtime_error("offeraccept <alias> <guid> [quantity] [message] [BTC TxId] [paymentid]\n"
 				"Accept&Pay for a confirmed offer.\n"
 				"<alias> An alias of the buyer.\n"
 				"<guid> guidkey from offer.\n"
 				"<quantity> quantity to buy. Defaults to 1.\n"
 				"<message> payment message to seller, 1KB max.\n"
 				"<BTC TxId> If you have paid in Bitcoin and the offer is in Bitcoin, enter the transaction ID here. Default is empty.\n"
-				"<justcheck> Do not send transaction. For validation only. For internal use only, leave blank\n"
+				"<paymentid> Manual payment ID. For internal use only, leave empty\n"
 				+ HelpRequiringPassphrase());
 	CSyscoinAddress refundAddr;	
 	vector<unsigned char> vchAlias = vchFromValue(params[0]);
@@ -2350,8 +2347,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	vector<unsigned char> vchBTCTxId = vchFromValue(params.size()>=5?params[4]:"");
 
 	vector<unsigned char> vchMessage = vchFromValue(params.size()>=4?params[3]:"");
-
-	string justCheck = params.size()>=6?params[5].get_str():"0";
+	string paymentID = params.size()>=6?params[5].get_str():"";
 	int64_t nHeight = chainActive.Tip()->nHeight;
 	unsigned int nQty = 1;
 	if (params.size() >= 3) {
@@ -2368,10 +2364,14 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	// this is a syscoin txn
 	CWalletTx wtx;
 	CScript scriptPubKeyOrig, scriptPubKeyAliasOrig;
+	vector<unsigned char> vchAccept;
 	// generate offer accept identifier and hash
-	int64_t rand = GetRand(std::numeric_limits<int64_t>::max());
-	vector<unsigned char> vchAcceptRand = CScriptNum(rand).getvch();
-	vector<unsigned char> vchAccept = vchFromString(HexStr(vchAcceptRand));
+	if(paymentID.empty())
+	{
+		vchAccept = vchFromString(GenerateSyscoinGuid());
+	}
+	else
+		vchAccept = paymentID;
 
 	// create OFFERACCEPT txn keys
 	CScript scriptPubKeyAccept, scriptPubKeyPayment;
@@ -2542,7 +2542,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 
 	// if making a purchase and we are using an alias from the whitelist of the offer, we may need to prove that we own that alias so in that case we attach an input from the alias
 	// if purchasing an escrow, we adjust the height to figure out pricing of the accept so we may also attach escrow inputs to the tx
-	SendMoneySyscoin(vecSend, acceptRecipient.nAmount+acceptCommissionRecipient.nAmount+paymentRecipient.nAmount+fee.nAmount+aliasRecipient.nAmount, false, wtx, wtxInOffer, wtxInCert, wtxAliasIn, wtxInEscrow, true, justCheck);
+	SendMoneySyscoin(vecSend, acceptRecipient.nAmount+acceptCommissionRecipient.nAmount+paymentRecipient.nAmount+fee.nAmount+aliasRecipient.nAmount, false, wtx, wtxInOffer, wtxInCert, wtxAliasIn, wtxInEscrow, true);
 	
 	UniValue res(UniValue::VARR);
 	res.push_back(wtx.GetHash().GetHex());

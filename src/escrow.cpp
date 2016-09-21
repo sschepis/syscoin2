@@ -20,7 +20,7 @@
 #include <boost/algorithm/string/predicate.hpp>
 using namespace std;
 extern void SendMoney(const CTxDestination &address, CAmount nValue, bool fSubtractFeeFromAmount, CWalletTx& wtxNew);
-extern void SendMoneySyscoin(const vector<CRecipient> &vecSend, CAmount nValue, bool fSubtractFeeFromAmount, CWalletTx& wtxNew, const CWalletTx* wtxInOffer=NULL, const CWalletTx* wtxInCert=NULL, const CWalletTx* wtxInAlias=NULL, const CWalletTx* wtxInEscrow=NULL, bool syscoinTx=true, string justcheck="0");
+extern void SendMoneySyscoin(const vector<CRecipient> &vecSend, CAmount nValue, bool fSubtractFeeFromAmount, CWalletTx& wtxNew, const CWalletTx* wtxInOffer=NULL, const CWalletTx* wtxInCert=NULL, const CWalletTx* wtxInAlias=NULL, const CWalletTx* wtxInEscrow=NULL, bool syscoinTx=true);
 void PutToEscrowList(std::vector<CEscrow> &escrowList, CEscrow& index) {
 	int i = escrowList.size() - 1;
 	BOOST_REVERSE_FOREACH(CEscrow &o, escrowList) {
@@ -291,7 +291,7 @@ CScript RemoveEscrowScriptPrefix(const CScript& scriptIn) {
 	
     return CScript(pc, scriptIn.end());
 }
-bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, string &errorMessage, const CBlock* block, bool dontaddtodb, string justcheck) {
+bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, string &errorMessage, const CBlock* block, bool dontaddtodb) {
 	if(!IsSys21Fork(nHeight))
 		return true;	
 	if (tx.IsCoinBase())
@@ -1073,9 +1073,9 @@ UniValue generateescrowmultisig(const UniValue& params, bool fHelp) {
 }
 
 UniValue escrownew(const UniValue& params, bool fHelp) {
-    if (fHelp || params.size() < 5 ||  params.size() > 7)
+    if (fHelp || params.size() < 5 ||  params.size() > 8)
         throw runtime_error(
-		"escrownew <alias> <offer> <quantity> <message> <arbiter alias> [btcTx] [redeemScript]\n"
+		"escrownew <alias> <offer> <quantity> <message> <arbiter alias> [btcTx] [redeemScript] [paymentid]\n"
 						"<alias> An alias you own.\n"
                         "<offer> GUID of offer that this escrow is managing.\n"
                         "<quantity> Quantity of items to buy of offer.\n"
@@ -1083,6 +1083,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 						"<arbiter alias> Alias of Arbiter.\n"
 						"<btcTx>. Raw Bitcoin input transaction. Optional, for internal use only. Leave empty\n"
 						"<redeemScript>. Optional, for internal use only. Leave empty\n"
+						"<paymentid> Manual payment ID. For internal use only, leave empty\n"
                         + HelpRequiringPassphrase());
 	vector<unsigned char> vchAlias = vchFromValue(params[0]);
 	vector<unsigned char> vchOffer = vchFromValue(params[1]);
@@ -1188,9 +1189,14 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 
 	
     // gather inputs
-	int64_t rand = GetRand(std::numeric_limits<int64_t>::max());
-	vector<unsigned char> vchRand = CScriptNum(rand).getvch();
-    vector<unsigned char> vchEscrow = vchFromValue(HexStr(vchRand));
+	vector<unsigned char> vchEscrow;
+	if(paymentID.empty())
+	{
+		vchEscrow = vchFromString(generateguid());
+	}
+	else
+		vchEscrow = paymentID;
+
 
     // this is a syscoin transaction
     CWalletTx wtx;

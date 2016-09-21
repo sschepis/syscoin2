@@ -38,6 +38,7 @@ OfferAcceptDialogBTC::OfferAcceptDialogBTC(WalletModel* model, const PlatformSty
 	walletModel(model),
     ui(new Ui::OfferAcceptDialogBTC), platformStyle(platformStyle), alias(alias), offer(offer), notes(notes), quantity(quantity), title(title), sellerAlias(sellerAlias), address(address)
 {
+	generateGUID(paymentID);
     ui->setupUi(this);
 	QString theme = GUIUtil::getThemeName();  
 	ui->aboutShadeBTC->setPixmap(QPixmap(":/images/" + theme + "/about_btc"));
@@ -45,8 +46,8 @@ OfferAcceptDialogBTC::OfferAcceptDialogBTC(WalletModel* model, const PlatformSty
 	string strfPrice = strprintf("%f", dblPrice);
 	fprice = QString::fromStdString(strfPrice);
 	string strCurrencyCode = currencyCode.toStdString();
-	ui->bitcoinInstructionLabel->setText(tr("After paying for this item, please enter the Bitcoin Transaction ID and click on the confirm button below. You may use the QR Code to the left to scan the payment request into your wallet or click on the Open BTC Wallet if you are on the desktop and have Bitcoin Core installed."));
-	ui->acceptMessage->setText(tr("Are you sure you want to purchase <b>%1</b> of <b>%2</b> from merchant <b>%3</b>? Before proceeding, please enter your escrow arbiter if you wish to use escrow below and check the Use Escrow checkbox. Leave the escrow checkbox unchecked if you do not wish to use escrow. To complete your purchase please pay <b>%4 BTC</b> to <b>%5</b> using your Bitcoin wallet. Note that the address you pay to will change if you select to use the escrow service.").arg(quantity).arg(title).arg(sellerAlias).arg(fprice).arg(address));
+	ui->bitcoinInstructionLabel->setText(tr("After paying for this item, please enter the Bitcoin Transaction ID and click on the confirm button below. You may use the QR Code to the left to scan the payment request into your wallet or click on the Open BTC Wallet if you are on the desktop and have Bitcoin Core installed. If you use another wallet to pay, please remember to reference payment ID <b>%1</b> in your Bitcoin payment message.").arg(paymentID));
+	ui->acceptMessage->setText(tr("Are you sure you want to purchase <b>%1</b> of <b>%2</b> from merchant <b>%3</b>? Before proceeding, please enter your escrow arbiter if you wish to use escrow below and check the Use Escrow checkbox. Leave the escrow checkbox unchecked if you do not wish to use escrow. To complete your purchase please pay <b>%4 BTC</b> to <b>%5</b> (this address will change if you click on 'Use Escrow') using your Bitcoin wallet. Please ensure you reference the payment ID <b>%6</b> in your payment message. If you do not, Syscoin will not recognize the payment!").arg(quantity).arg(title).arg(sellerAlias).arg(fprice).arg(address).arg(paymentMessage).arg(paymentID));
 	string strPrice = strprintf("%f", dblPrice);
 	price = QString::fromStdString(strPrice);
 	ui->escrowDisclaimer->setText(tr("<font color='blue'>Enter an arbiter that is mutally trusted between yourself and the merchant. Then enable the <b>Use Escrow</b> checkbox</font>"));
@@ -70,7 +71,7 @@ OfferAcceptDialogBTC::OfferAcceptDialogBTC(WalletModel* model, const PlatformSty
 	connect(ui->openBtcWalletButton, SIGNAL(clicked()), this, SLOT(openBTCWallet()));
 
 #ifdef USE_QRCODE
-	QString message = tr("Payment on Syscoin Decentralized Marketplace for Offer ID %1").arg(this->offer);
+	QString message = tr("Payment on Syscoin Decentralized Marketplace. Payment ID %1").arg(this->paymentID);
 	SendCoinsRecipient info;
 	info.address = this->address;
 	info.label = this->sellerAlias;
@@ -177,6 +178,36 @@ void OfferAcceptDialogBTC::setupEscrowCheckboxState()
 		ui->acceptMessage->setText(tr("Are you sure you want to purchase <b>%1</b> of <b>%2</b> from merchant <b>%3</b>? Before proceeding, please enter your escrow arbiter if you wish to use escrow below and check the Use Escrow checkbox. Leave the escrow checkbox unchecked if you do not wish to use escrow. To complete your purchase please pay <b>%4 BTC</b> to <b>%5</b> using your Bitcoin wallet. Note that the address you pay to will change if you select to use the escrow service.").arg(quantity).arg(title).arg(sellerAlias).arg(fprice).arg(address));
 	}
 }
+void OfferAcceptDialogBTC::generateGUID(QString& guid)
+{
+	UniValue result ;
+	string strMethod = string("generateguid");
+
+	guid = "";
+    try {
+        result = tableRPC.execute(strMethod, params);
+		if (result.type() != UniValue::VOBJ)
+		{
+			const UniValue &arr = result.get_obj();
+			guid =  QString::fromStdString(arr[0].get_str());
+		}
+	}
+	catch (UniValue& objError)
+	{
+		string strError = find_value(objError, "message").get_str();
+		QMessageBox::critical(this, windowTitle(),
+		tr("Error creating new Syscoin GUID: \"%1\"").arg(QString::fromStdString(strError)),
+			QMessageBox::Ok, QMessageBox::Ok);
+		return;
+	}
+	catch(std::exception& e)
+	{
+		QMessageBox::critical(this, windowTitle(),
+			tr("General exception when creating new Syscoin GUID"),
+			QMessageBox::Ok, QMessageBox::Ok);
+		return;
+	}
+}
 void OfferAcceptDialogBTC::onEscrowCheckBoxChanged(bool toggled)
 {
 	setupEscrowCheckboxState();
@@ -201,6 +232,31 @@ void OfferAcceptDialogBTC::slotConfirmedFinished(QNetworkReply * reply){
 	if (read)
 	{
 		UniValue outerObj = outerValue.get_obj();
+		UniValue messageValue = find_value(outerObj, "message");
+		if (messageValue.isStr())
+		{
+			QString messageStr = QString::fromStdString(messageValue.get_str());
+			if(!messageStr.contains(paymentID))
+			{
+				ui->confirmButton->setText(m_buttonText);
+				ui->confirmButton->setEnabled(true);
+				QMessageBox::critical(this, windowTitle(),
+				tr("Could not find payment ID <b>%1</b> in payment message: <b>%2</b>").arg(paymentID).arg(messageStr),
+					QMessageBox::Ok, QMessageBox::Ok);
+				reply->deleteLater();	
+				return;
+			}
+		}
+		else
+		{
+			ui->confirmButton->setText(m_buttonText);
+			ui->confirmButton->setEnabled(true);
+			QMessageBox::critical(this, windowTitle(),
+				tr("Could not find payment ID <b>%1</b> in payment message: <b>%2</b>").arg(paymentID).arg(messageStr),
+					QMessageBox::Ok, QMessageBox::Ok);
+			reply->deleteLater();	
+			return;
+		}
 		UniValue statusValue = find_value(outerObj, "status");
 		if (statusValue.isStr())
 		{
@@ -215,6 +271,18 @@ void OfferAcceptDialogBTC::slotConfirmedFinished(QNetworkReply * reply){
 				return;
 			}
 		}
+		else
+		{
+			ui->confirmButton->setText(m_buttonText);
+			ui->confirmButton->setEnabled(true);
+			QMessageBox::critical(this, windowTitle(),
+				tr("Transaction status not successful: ") + QString::fromStdString(statusValue.get_str()),
+					QMessageBox::Ok, QMessageBox::Ok);
+			reply->deleteLater();	
+			return;
+		}
+
+
 		UniValue dataObj1 = find_value(outerObj, "data");
 		UniValue dataObj = find_value(dataObj1, "tx");
 		UniValue timeValue = find_value(dataObj, "time");
@@ -331,6 +399,7 @@ void OfferAcceptDialogBTC::acceptOffer(){
 		params.push_back(this->quantity.toStdString());
 		params.push_back(this->notes.toStdString());
 		params.push_back(ui->btctxidEdit->text().trimmed().toStdString());
+		params.push_back(this->paymentID.toStdString());
 
 	    try {
             result = tableRPC.execute(strMethod, params);
@@ -398,6 +467,7 @@ void OfferAcceptDialogBTC::acceptEscrow()
 		params.push_back(ui->escrowEdit->text().toStdString());
 		params.push_back(this->rawBTCTx.trimmed().toStdString());
 		params.push_back(redeemScript.toStdString());
+		params.push_back(this->paymentID.toStdString());
 
 
 	    try {
@@ -439,7 +509,7 @@ void OfferAcceptDialogBTC::acceptEscrow()
 }
 void OfferAcceptDialogBTC::openBTCWallet()
 {
-	QString message = tr("Payment on Syscoin Decentralized Marketplace for Offer ID %1").arg(this->offer);
+	QString message = tr("Payment on Syscoin Decentralized Marketplace. Payment ID %1").arg(this->paymentID);
 	SendCoinsRecipient info;
 	info.address = this->address;
 	info.label = this->sellerAlias;

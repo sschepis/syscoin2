@@ -24,6 +24,7 @@ public:
     bool getPaymentStatus();
 
 private:
+	void generateGUID(QString& guid);
 	void setupEscrowCheckboxState();
 	WalletModel* walletModel;
 	const PlatformStyle *platformStyle;
