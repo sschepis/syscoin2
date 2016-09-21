@@ -170,10 +170,10 @@ bool EscrowInfoDialog::lookup()
 			unixTime = atoi(find_value(result.get_obj(), "time").get_str().c_str());
 			dateTime.setTime_t(unixTime);	
 			ui->timeEdit->setText(dateTime.toString());
-			ui->priceEdit->setText(QString("%1 %2").arg(QString::fromStdString(ValueFromAmount(find_value(result.get_obj(), "price").get_str()))).arg(currency))
+			ui->priceEdit->setText(QString("%1 %2").arg(QString::fromStdString(ValueFromAmount(find_value(result.get_obj(), "price").get_str()))).arg(currency));
 			ui->feeEdit->setText(QString("%1 %2").arg(QString::fromStdString(ValueFromAmount(find_value(result.get_obj(), "fee").get_str()))).arg(currency));
 
-			ui->totalEdit->setText(QString::fromStdString(find_value(result.get_obj(), "total").get_str()) + " " + currency));
+			ui->totalEdit->setText(QString("%1 %2").arg(QString::fromStdString(find_value(result.get_obj(), "total").get_str()).arg(currency)));
 			ui->paymessageEdit->setText(QString::fromStdString(find_value(result.get_obj(), "pay_message").get_str()));
 			int avgRating = find_value(result.get_obj(), "avg_rating").get_int();
 			ui->ratingEdit->setText(tr("%1 Stars").arg(QString::number(avgRating)));
