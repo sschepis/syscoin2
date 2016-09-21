@@ -3509,7 +3509,7 @@ UniValue escrowfilter(const UniValue& params, bool fHelp) {
 		int avgBuyerRating, avgSellerRating, avgArbiterRating;
 		if (!pescrowdb->ReadEscrow(pairScan.first, vtxPos) || vtxPos.empty())
 			continue;
-		if (pofferdb->ReadOffer(txEscrow.vchOffer, v) && !offerVtxPos.empty())
+		if (pofferdb->ReadOffer(txEscrow.vchOffer, offerVtxPos) && !offerVtxPos.empty())
 		{
 			offer.nHeight = vtxPos.front().nAcceptHeight;
 			offer.GetOfferFromList(offerVtxPos);
