@@ -324,7 +324,7 @@ void MyAcceptedOfferListPage::on_btcButton_clicked()
         return;
 	}
 
-	CheckPaymentInBTC(btcTxId, acceptid, address, price);
+	CheckPaymentInBTC(btcTxId, address, price);
 
 
 }
