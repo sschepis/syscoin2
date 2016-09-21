@@ -166,7 +166,7 @@ public:
 							currency_str = currency_value.get_str();
 						const UniValue& total_value = find_value(o, "total");
 						if (total_value.type() == UniValue::VSTR)
-							total_str = total_value.get_str() + " " + currency_str;
+							total_str = total_value.get_str() + string(" ") + currency_str;
 						const UniValue& status_value = find_value(o, "status");
 						if (status_value.type() == UniValue::VSTR)
 							status_str = status_value.get_str();
