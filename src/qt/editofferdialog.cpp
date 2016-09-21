@@ -537,6 +537,7 @@ void EditOfferDialog::setModel(WalletModel* walletModel, OfferTableModel *model)
 	mapper->addMapping(ui->aliasPegEdit, OfferTableModel::AliasPeg);	
 	mapper->addMapping(ui->geoLocationEdit, OfferTableModel::GeoLocation);
     mapper->addMapping(ui->categoryEdit, OfferTableModel::Category);
+	mapper->addMapping(ui->paymentOptionsEdit, OfferTableModel::PaymentOptions);
 }
 
 void EditOfferDialog::loadRow(int row)
@@ -549,7 +550,6 @@ void EditOfferDialog::loadRow(int row)
 		QModelIndex indexPrivate = model->index(row, OfferTableModel::Private, tmpIndex);	
 		QModelIndex indexAlias = model->index(row, OfferTableModel::Alias, tmpIndex);
 		QModelIndex indexQty = model->index(row, OfferTableModel::Qty, tmpIndex);
-		QModelIndex indexPaymentOptions = model->index(row, OfferTableModel::PaymentOptions, tmpIndex);
 		QModelIndex indexSafeSearch = model->index(row, OfferTableModel::SafeSearch, tmpIndex);
 		QModelIndex indexCategory = model->index(row, OfferTableModel::Category, tmpIndex);
 		if(indexPrivate.isValid())
@@ -562,15 +562,6 @@ void EditOfferDialog::loadRow(int row)
 			on_aliasPegEdit_editingFinished();
 			QString currencyStr = indexCurrency.data(OfferTableModel::CurrencyRole).toString();
 			ui->currencyEdit->setCurrentIndex(ui->currencyEdit->findText(currencyStr));
-		}
-		if(indexPaymentOptions.isValid())
-		{
-			QString paymentOptionsStr = indexPaymentOptions.data(OfferTableModel::PaymentOptions).toString();
-			int index = ui->paymentOptionsEdit->findText(paymentOptionsStr);
-			if ( index != -1 ) 
-			{ 
-				ui->paymentOptionsEdit->setCurrentIndex(index);
-			}
 		}
 		if(indexSafeSearch.isValid() && ui->safeSearchEdit->isEnabled())
 		{
