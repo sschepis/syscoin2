@@ -173,7 +173,7 @@ bool EscrowInfoDialog::lookup()
 			ui->priceEdit->setText(QString("%1 %2").arg(QString::fromStdString(find_value(result.get_obj(), "price").get_str())).arg(currency));
 			ui->feeEdit->setText(QString("%1 %2").arg(QString::fromStdString(find_value(result.get_obj(), "fee").get_str())).arg(currency));
 
-			ui->totalEdit->setText(QString("%1 %2").arg(QString::fromStdString(find_value(result.get_obj(), "total").get_str()).arg(currency)));
+			ui->totalEdit->setText(QString("%1 %2").arg(QString::fromStdString(find_value(result.get_obj(), "total").get_str())).arg(currency));
 			ui->paymessageEdit->setText(QString::fromStdString(find_value(result.get_obj(), "pay_message").get_str()));
 			int avgRating = find_value(result.get_obj(), "avg_rating").get_int();
 			ui->ratingEdit->setText(tr("%1 Stars").arg(QString::number(avgRating)));
