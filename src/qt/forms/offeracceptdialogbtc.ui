@@ -129,6 +129,13 @@
         </spacer>
        </item>
        <item>
+        <widget class="QLabel" name="label">
+         <property name="text">
+          <string>Bitcoin TXID:</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QLineEdit" name="btctxidEdit"/>
        </item>
       </layout>
