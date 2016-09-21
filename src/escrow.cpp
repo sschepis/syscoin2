@@ -3239,7 +3239,10 @@ UniValue escrowlist(const UniValue& params, bool fHelp) {
 		CTransaction offertx;
 		vector<COffer> offerVtxPos;
 		GetTxAndVtxOfOffer(escrow.vchOffer, offer, offertx, offerVtxPos, true);
-		offer.nHeight = vtxPos.front().nAcceptHeight;
+		if(vtxPos.empty())
+			offer.nHeight = escrow.nAcceptHeight;
+		else
+			offer.nHeight = vtxPos.front().nAcceptHeight;
 		offer.GetOfferFromList(offerVtxPos);
 		// skip this escrow if it doesn't match the given filter value
 		if (vchNameUniq.size() > 0 && vchNameUniq != vchEscrow)
