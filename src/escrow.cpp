@@ -1195,7 +1195,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 		vchEscrow = vchFromString(generateguid());
 	}
 	else
-		vchEscrow = paymentID;
+		vchEscrow = vchFromString(paymentID;
 
 
     // this is a syscoin transaction

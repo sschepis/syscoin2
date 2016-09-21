@@ -2371,7 +2371,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 		vchAccept = vchFromString(GenerateSyscoinGuid());
 	}
 	else
-		vchAccept = paymentID;
+		vchAccept = vchFromString(paymentID);
 
 	// create OFFERACCEPT txn keys
 	CScript scriptPubKeyAccept, scriptPubKeyPayment;
