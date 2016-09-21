@@ -1192,10 +1192,10 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	vector<unsigned char> vchEscrow;
 	if(paymentID.empty())
 	{
-		vchEscrow = vchFromString(generateguid());
+		vchEscrow = vchFromString(GenerateSyscoinGuid());
 	}
 	else
-		vchEscrow = vchFromString(paymentID;
+		vchEscrow = vchFromString(paymentID);
 
 
     // this is a syscoin transaction
