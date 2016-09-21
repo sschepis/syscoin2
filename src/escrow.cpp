@@ -3492,7 +3492,7 @@ UniValue escrowfilter(const UniValue& params, bool fHelp) {
     BOOST_FOREACH(pairScan, escrowScan) {
 		const CEscrow &txEscrow = pairScan.second;  
 		const string &escrow = stringFromVch(pairScan.first);
-		vector<COffer> vtxOfferPos;
+		vector<COffer> offerVtxPos;
 		vector<CEscrow> vtxPos;
 		COffer offer;
         int nHeight = txEscrow.nHeight;
@@ -3509,7 +3509,7 @@ UniValue escrowfilter(const UniValue& params, bool fHelp) {
 		int avgBuyerRating, avgSellerRating, avgArbiterRating;
 		if (!pescrowdb->ReadEscrow(pairScan.first, vtxPos) || vtxPos.empty())
 			continue;
-		if (pofferdb->ReadOffer(txEscrow.vchOffer, vtxOfferPos) && !vtxOfferPos.empty())
+		if (pofferdb->ReadOffer(txEscrow.vchOffer, v) && !offerVtxPos.empty())
 		{
 			offer.nHeight = vtxPos.front().nAcceptHeight;
 			offer.GetOfferFromList(offerVtxPos);
@@ -3551,10 +3551,10 @@ UniValue escrowfilter(const UniValue& params, bool fHelp) {
 		oEscrow.push_back(Pair("status", status));
 		int precision = 2;
 		CAmount nPricePerUnit = convertSyscoinToCurrencyCode(offer.vchAliasPeg, offer.sCurrencyCode, offer.GetPrice(), vtxPos.front().nAcceptHeight, precision);
-		int64_t nEscrowFee = GetEscrowArbiterFee(offer.GetPrice() * txPos2.nQty);
+		int64_t nEscrowFee = GetEscrowArbiterFee(offer.GetPrice() * txEscrow.nQty);
 		oEscrow.push_back(Pair("sysfee", nEscrowFee));
-		oEscrow.push_back(Pair("systotal", offer.GetPrice() * txPos2.nQty));
-		oEscrow.push_back(Pair("total", strprintf("%.*f", precision, ValueFromAmount(nPricePerUnit).get_real() * txPos2.nQty )));
+		oEscrow.push_back(Pair("systotal", offer.GetPrice() * txEscrow.nQty));
+		oEscrow.push_back(Pair("total", strprintf("%.*f", precision, ValueFromAmount(nPricePerUnit).get_real() * txEscrow.nQty )));
 		UniValue oBuyerFeedBack(UniValue::VARR);
 		for(unsigned int i =0;i<buyerFeedBacks.size();i++)
 		{
