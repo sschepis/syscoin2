@@ -338,7 +338,7 @@ public:
 		{
 			return std::string("BTC");
 		}
-		else if((paymentOptions & PAYMENTOPTION_BTC) && (paymentOptions & PAYMENTOPTION_SYS))
+		else if((paymentOptions & (PAYMENTOPTION_BTC | PAYMENTOPTION_SYS)))
 		{
 			return std::string("SYS+BTC");
 		}
