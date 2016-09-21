@@ -172,7 +172,7 @@ bool EscrowInfoDialog::lookup()
 			ui->priceEdit->setText(QString("%1 SYS").arg(QString::number(ValueFromAmount(find_value(result.get_obj(), "systotal").get_int64()).get_real())));
 			ui->feeEdit->setText(QString("%1 SYS").arg(QString::number(ValueFromAmount(find_value(result.get_obj(), "sysfee").get_int64()).get_real())));
 
-			ui->totalEdit->setText(QString::fromStdString(find_value(result.get_obj(), "total").get_str()));
+			ui->totalEdit->setText(QString::fromStdString(find_value(result.get_obj(), "total").get_str()) + " " + QString::fromStdString(find_value(result.get_obj(), "currency").get_str()));
 			ui->paymessageEdit->setText(QString::fromStdString(find_value(result.get_obj(), "pay_message").get_str()));
 			int avgRating = find_value(result.get_obj(), "avg_rating").get_int();
 			ui->ratingEdit->setText(tr("%1 Stars").arg(QString::number(avgRating)));

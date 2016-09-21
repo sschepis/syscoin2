@@ -3095,6 +3095,7 @@ UniValue escrowinfo(const UniValue& params, bool fHelp) {
 	oEscrow.push_back(Pair("sysfee", nEscrowFee));
 	oEscrow.push_back(Pair("systotal", offer.GetPrice() * ca.nQty));
 	oEscrow.push_back(Pair("total", strprintf("%.*f", precision, ValueFromAmount(nPricePerUnit).get_real() * ca.nQty )));
+	oEscrow.push_back(Pair("currency", stringFromVch(offer.sCurrencyCode)));
     oEscrow.push_back(Pair("txid", ca.txHash.GetHex()));
     oEscrow.push_back(Pair("height", sHeight));
 	string strMessage = string("");
@@ -3282,6 +3283,7 @@ UniValue escrowlist(const UniValue& params, bool fHelp) {
 		oName.push_back(Pair("sysfee", nEscrowFee));
 		oName.push_back(Pair("systotal", offer.GetPrice() * escrow.nQty));
 		oName.push_back(Pair("total", strprintf("%.*f", precision, ValueFromAmount(nPricePerUnit).get_real() * escrow.nQty )));
+		oName.push_back(Pair("currency", stringFromVch(offer.sCurrencyCode)));
 		expired_block = nHeight + GetEscrowExpirationDepth();
         if(expired_block < chainActive.Tip()->nHeight && escrow.op == OP_ESCROW_COMPLETE)
 		{
@@ -3439,6 +3441,7 @@ UniValue escrowhistory(const UniValue& params, bool fHelp) {
 			oEscrow.push_back(Pair("sysfee", nEscrowFee));
 			oEscrow.push_back(Pair("systotal", offer.GetPrice() * txPos2.nQty));
 			oEscrow.push_back(Pair("total", strprintf("%.*f", precision, ValueFromAmount(nPricePerUnit).get_real() * txPos2.nQty )));
+			oEscrow.push_back(Pair("currency", stringFromVch(offer.sCurrencyCode)));
 			if(nHeight + GetEscrowExpirationDepth() - chainActive.Tip()->nHeight <= 0  && txPos2.op == OP_ESCROW_COMPLETE)
 			{
 				expired = 1;
@@ -3560,6 +3563,7 @@ UniValue escrowfilter(const UniValue& params, bool fHelp) {
 		oEscrow.push_back(Pair("sysfee", nEscrowFee));
 		oEscrow.push_back(Pair("systotal", offer.GetPrice() * txEscrow.nQty));
 		oEscrow.push_back(Pair("total", strprintf("%.*f", precision, ValueFromAmount(nPricePerUnit).get_real() * txEscrow.nQty )));
+		oEscrow.push_back(Pair("currency", stringFromVch(offer.sCurrencyCode)));
 		UniValue oBuyerFeedBack(UniValue::VARR);
 		for(unsigned int i =0;i<buyerFeedBacks.size();i++)
 		{
