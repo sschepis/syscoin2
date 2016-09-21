@@ -1958,7 +1958,7 @@ string GenerateSyscoinGuid()
 	return HexStr(vchGuidRand);
 }
 UniValue generateguid(const UniValue& params, bool fHelp) {
-	if (fHelp || 0 != params.size()
+	if (fHelp || 0 != params.size())
 		throw runtime_error("generateguid\n"
 				"Generate a new GUID to use for new Syscoin services.\n");
 		
