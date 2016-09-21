@@ -3235,14 +3235,16 @@ UniValue escrowlist(const UniValue& params, bool fHelp) {
 					continue;
 			}
 		}
+		int nHeight;
 		COffer offer;
 		CTransaction offertx;
 		vector<COffer> offerVtxPos;
 		GetTxAndVtxOfOffer(escrow.vchOffer, offer, offertx, offerVtxPos, true);
 		if(vtxPos.empty())
-			offer.nHeight = escrow.nAcceptHeight;
+			nHeight = escrow.nAcceptHeight;
 		else
-			offer.nHeight = vtxPos.front().nAcceptHeight;
+			nHeight = vtxPos.front().nAcceptHeight;
+		offer.nHeight = nHeight;
 		offer.GetOfferFromList(offerVtxPos);
 		// skip this escrow if it doesn't match the given filter value
 		if (vchNameUniq.size() > 0 && vchNameUniq != vchEscrow)
@@ -3275,7 +3277,7 @@ UniValue escrowlist(const UniValue& params, bool fHelp) {
 		oName.push_back(Pair("offer", stringFromVch(escrow.vchOffer)));
 		oName.push_back(Pair("offertitle", stringFromVch(offer.sTitle)));
 		int precision = 2;
-		CAmount nPricePerUnit = convertSyscoinToCurrencyCode(offer.vchAliasPeg, offer.sCurrencyCode, offer.GetPrice(), vtxPos.front().nAcceptHeight, precision);
+		CAmount nPricePerUnit = convertSyscoinToCurrencyCode(offer.vchAliasPeg, offer.sCurrencyCode, offer.GetPrice(), nHeight, precision);
 		int64_t nEscrowFee = GetEscrowArbiterFee(offer.GetPrice() * escrow.nQty);
 		oName.push_back(Pair("sysfee", nEscrowFee));
 		oName.push_back(Pair("systotal", offer.GetPrice() * escrow.nQty));
