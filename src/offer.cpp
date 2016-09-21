@@ -1133,12 +1133,12 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			
 			// if linked offer then get offer info from root offer history because the linked offer may not have history of changes (root offer can update linked offer without tx)	
 			myPriceOffer.GetOfferFromList(vtxPos);	
-			if(theOfferAccept.txBTCId.IsNull() && (myPriceOffer.paymentOptions & PAYMENTOPTION_BTC) == PAYMENTOPTION_BTC)
+			if(theOfferAccept.txBTCId.IsNull() && myPriceOffer.paymentOptions == PAYMENTOPTION_BTC)
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 106 - " + _("This offer must be paid with Bitcoins");
 				return true;
 			}
-			else if(!theOfferAccept.txBTCId.IsNull() && (myPriceOffer.paymentOptions & PAYMENTOPTION_BTC) == 0)
+			else if(!theOfferAccept.txBTCId.IsNull() && myPriceOffer.paymentOptions == PAYMENTOPTION_SYS)
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 106 - " + _("This offer cannot be paid with Bitcoins");
 				return true;
@@ -1409,7 +1409,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				theOffer.nQty = linkOffer.nQty;	
 				theOffer.vchCert = linkOffer.vchCert;
 				theOffer.vchAliasPeg = linkOffer.vchAliasPeg;
-				if((linkOffer.paymentOptions & PAYMENTOPTION_BTC) == PAYMENTOPTION_BTC)
+				if(linkOffer.paymentOptions == PAYMENTOPTION_BTC)
 				{
 					theOffer.paymentOptions = linkOffer.paymentOptions;
 					theOffer.sCurrencyCode = linkOffer.sCurrencyCode;
@@ -1428,7 +1428,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						linkOffer.nQty = theOffer.nQty;	
 						linkOffer.vchCert = theOffer.vchCert;
 						linkOffer.vchAliasPeg = theOffer.vchAliasPeg;
-						if((theOffer.paymentOptions & PAYMENTOPTION_BTC) == PAYMENTOPTION_BTC)
+						if(theOffer.paymentOptions == PAYMENTOPTION_BTC)
 						{
 							linkOffer.paymentOptions = theOffer.paymentOptions;
 							linkOffer.sCurrencyCode = theOffer.sCurrencyCode;

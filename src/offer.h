@@ -25,6 +25,7 @@ std::string offerFromOp(int op);
 CScript RemoveOfferScriptPrefix(const CScript& scriptIn);
 #define PAYMENTOPTION_SYS 0x01
 #define PAYMENTOPTION_BTC 0x02
+#define PAYMENTOPTION_SYSBTC 0x03
 extern bool IsSys21Fork(const uint64_t& nHeight);
 class COfferAccept {
 public:
@@ -330,15 +331,15 @@ public:
     }
 	std::string GetPaymentOptionsString()
 	{
-		if((paymentOptions & PAYMENTOPTION_SYS) == PAYMENTOPTION_SYS)
+		if((paymentOptions == PAYMENTOPTION_SYS)
 		{
 			return std::string("SYS");
 		}
-		else if((paymentOptions & PAYMENTOPTION_BTC) == PAYMENTOPTION_BTC)
+		else if(paymentOptions  == PAYMENTOPTION_BTC)
 		{
 			return std::string("BTC");
 		}
-		else if((paymentOptions & (PAYMENTOPTION_BTC | PAYMENTOPTION_SYS)))
+		else if(paymentOptions == PAYMENTOPTION_SYSBTC)
 		{
 			return std::string("SYS+BTC");
 		}
