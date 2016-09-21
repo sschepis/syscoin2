@@ -1067,7 +1067,7 @@ const string EscrowNew(const string& node, const string& buyeralias, const strin
 	string guid = arr[1].get_str();
 	GenerateBlocks(10, node);
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "offerinfo " + offerguid));
-	CAmount offerprice = AmountFromValue(find_value(r.get_obj(), "sysprice"));
+	CAmount offerprice = find_value(r.get_obj(), "sysprice").get_int64();
 	int nQtyAfter = atoi(find_value(r.get_obj(), "quantity").get_str().c_str());
 	// escrow should deduct qty
 	BOOST_CHECK_EQUAL(nQtyAfter, nQtyBefore-nQty);
