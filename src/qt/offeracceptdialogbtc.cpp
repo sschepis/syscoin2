@@ -168,7 +168,7 @@ void OfferAcceptDialogBTC::setupEscrowCheckboxState()
 		}
 		
 		ui->acceptMessage->setText(tr("Are you sure you want to purchase <b>%1</b> of <b>%2</b> from merchant <b>%3</b>? Before proceeding, please enter your escrow arbiter if you wish to use escrow below. Leave the escrow checkbox unchecked if you do not wish to use escrow. To complete your purchase please pay <b>%4 BTC</b> to <b>%5</b> using your Bitcoin wallet. Note that the address you pay to will change if you select to use the escrow service.").arg(quantity).arg(title).arg(sellerAlias).arg(fprice).arg(multisigaddress));
-		ui->escrowDisclaimer->setText(tr("<font color='green'>multisig created successfully! Please fund using address above and check the <b>Use Escrow</b> checkbox</font>"));
+		ui->escrowDisclaimer->setText(tr("<font color='green'>Escrow created successfully! Please fund using BTC address <b>%1</b></font>").arg(multisigaddress));
 	}
 	else
 	{
