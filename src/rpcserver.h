@@ -240,7 +240,6 @@ extern UniValue getnetworkinfo(const UniValue& params, bool fHelp);
 extern UniValue setmocktime(const UniValue& params, bool fHelp);
 extern UniValue resendwallettransactions(const UniValue& params, bool fHelp);
 // SYSCOIN service rpc functions
-extern UniValue generateguid(const UniValue& params, bool fHelp);
 extern UniValue aliasnew(const UniValue& params, bool fHelp);
 extern UniValue aliasupdate(const UniValue& params, bool fHelp);
 extern UniValue aliaslist(const UniValue& params, bool fHelp);

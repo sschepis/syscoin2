@@ -1957,15 +1957,6 @@ string GenerateSyscoinGuid()
 	vector<unsigned char> vchGuidRand = CScriptNum(rand).getvch();
 	return HexStr(vchGuidRand);
 }
-UniValue generateguid(const UniValue& params, bool fHelp) {
-	if (fHelp || 0 != params.size())
-		throw runtime_error("generateguid\n"
-				"Generate a new GUID to use for new Syscoin services.\n");
-		
-	UniValue res(UniValue::VOBJ);
-	res.push_back(GenerateSyscoinGuid());
-	return res;
-}
 /**
  * [aliasinfo description]
  * @param  params [description]

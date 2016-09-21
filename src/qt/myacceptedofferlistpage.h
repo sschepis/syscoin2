@@ -36,7 +36,7 @@ public:
     void setOptionsModel(ClientModel* clientmodel, OptionsModel *optionsModel);
     const QString &getReturnValue() const { return returnValue; }
 	void showEvent ( QShowEvent * event );
-	bool lookup(const QString &lookupid, const QString &acceptid, QString& address, QString& price, QString& btcTxId);
+	bool lookup(const QString &lookupid, QString& address, QString& price, QString& btcTxId);
 	void CheckPaymentInBTC(const QString &strBTCTxId, const QString &strAcceptID, const QString& address, const QString& price);
 public Q_SLOTS:
     void done(int retval);
@@ -56,7 +56,6 @@ private:
 	QString m_buttonText;
 	QString m_strBTCTxId;
 	QString m_strAddress;
-	QString m_paymentID;
 	double dblPrice;
 private Q_SLOTS:
 	void slotConfirmedFinished(QNetworkReply *);

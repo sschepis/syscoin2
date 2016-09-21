@@ -24,7 +24,6 @@ public:
     bool getPaymentStatus();
 
 private:
-	void generateGUID(QString& guid);
 	void setupEscrowCheckboxState();
 	WalletModel* walletModel;
 	const PlatformStyle *platformStyle;
@@ -42,7 +41,6 @@ private:
 	QString fprice;
 	QString rawBTCTx;
 	QString m_buttonText;
-	QString paymentID;
 	double dblPrice;
 	bool offerPaid; 
 	QString redeemScript;	

@@ -2331,15 +2331,14 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	return res;
 }
 UniValue offeraccept(const UniValue& params, bool fHelp) {
-	if (fHelp || 1 > params.size() || params.size() > 6)
-		throw runtime_error("offeraccept <alias> <guid> [quantity] [message] [BTC TxId] [paymentid]\n"
+	if (fHelp || 1 > params.size() || params.size() > 5)
+		throw runtime_error("offeraccept <alias> <guid> [quantity] [message] [BTC TxId]\n"
 				"Accept&Pay for a confirmed offer.\n"
 				"<alias> An alias of the buyer.\n"
 				"<guid> guidkey from offer.\n"
 				"<quantity> quantity to buy. Defaults to 1.\n"
 				"<message> payment message to seller, 1KB max.\n"
 				"<BTC TxId> If you have paid in Bitcoin and the offer is in Bitcoin, enter the transaction ID here. Default is empty.\n"
-				"<paymentid> Manual payment ID. For internal use only, leave empty\n"
 				+ HelpRequiringPassphrase());
 	CSyscoinAddress refundAddr;	
 	vector<unsigned char> vchAlias = vchFromValue(params[0]);
@@ -2347,7 +2346,6 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	vector<unsigned char> vchBTCTxId = vchFromValue(params.size()>=5?params[4]:"");
 
 	vector<unsigned char> vchMessage = vchFromValue(params.size()>=4?params[3]:"");
-	string paymentID = params.size()>=6?params[5].get_str():"";
 	int64_t nHeight = chainActive.Tip()->nHeight;
 	unsigned int nQty = 1;
 	if (params.size() >= 3) {
@@ -2364,14 +2362,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	// this is a syscoin txn
 	CWalletTx wtx;
 	CScript scriptPubKeyOrig, scriptPubKeyAliasOrig;
-	vector<unsigned char> vchAccept;
-	// generate offer accept identifier and hash
-	if(paymentID.empty())
-	{
-		vchAccept = vchFromString(GenerateSyscoinGuid());
-	}
-	else
-		vchAccept = vchFromString(paymentID);
+	vector<unsigned char> vchAccept = vchFromString(GenerateSyscoinGuid());
 
 	// create OFFERACCEPT txn keys
 	CScript scriptPubKeyAccept, scriptPubKeyPayment;

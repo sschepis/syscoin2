@@ -1073,9 +1073,9 @@ UniValue generateescrowmultisig(const UniValue& params, bool fHelp) {
 }
 
 UniValue escrownew(const UniValue& params, bool fHelp) {
-    if (fHelp || params.size() < 5 ||  params.size() > 8)
+    if (fHelp || params.size() < 5 ||  params.size() > 7)
         throw runtime_error(
-		"escrownew <alias> <offer> <quantity> <message> <arbiter alias> [btcTx] [redeemScript] [paymentid]\n"
+		"escrownew <alias> <offer> <quantity> <message> <arbiter alias> [btcTx] [redeemScript]\n"
 						"<alias> An alias you own.\n"
                         "<offer> GUID of offer that this escrow is managing.\n"
                         "<quantity> Quantity of items to buy of offer.\n"
@@ -1083,7 +1083,6 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 						"<arbiter alias> Alias of Arbiter.\n"
 						"<btcTx>. Raw Bitcoin input transaction. Optional, for internal use only. Leave empty\n"
 						"<redeemScript>. Optional, for internal use only. Leave empty\n"
-						"<paymentid> Manual payment ID. For internal use only, leave empty\n"
                         + HelpRequiringPassphrase());
 	vector<unsigned char> vchAlias = vchFromValue(params[0]);
 	vector<unsigned char> vchOffer = vchFromValue(params[1]);
@@ -1099,7 +1098,6 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	vector<unsigned char> vchMessage = vchFromValue(params[3]);
 	vector<unsigned char> vchBTCTx = params.size() >= 6? vchFromValue(params[5]): vchFromString("");
 	vector<unsigned char> vchRedeemScript = params.size() >= 7? vchFromValue(params[6]): vchFromString("");
-	string paymentID = params.size()>=8?params[7].get_str():"";
 	CTransaction rawTx;
 	if (!vchBTCTx.empty() && !DecodeHexTx(rawTx,stringFromVch(vchBTCTx)))
 			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4064 - " + _("Could not find decode raw BTC transaction"));
@@ -1190,14 +1188,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 
 	
     // gather inputs
-	vector<unsigned char> vchEscrow;
-	if(paymentID.empty())
-	{
-		vchEscrow = vchFromString(GenerateSyscoinGuid());
-	}
-	else
-		vchEscrow = vchFromString(paymentID);
-
+	vector<unsigned char> vchEscrow = vchFromString(GenerateSyscoinGuid());
 
     // this is a syscoin transaction
     CWalletTx wtx;

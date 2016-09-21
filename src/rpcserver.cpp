@@ -378,7 +378,6 @@ static const CRPCCommand vRPCCommands[] =
     { "wallet",             "walletpassphrasechange", &walletpassphrasechange, true  },
     { "wallet",             "walletpassphrase",       &walletpassphrase,       true  },
 	// SYSCOIN rpc functions
-	{ "wallet", "generateguid",      &generateguid,      false },
 	{ "wallet", "aliasnew",          &aliasnew,          false },
     { "wallet", "aliasupdate",       &aliasupdate,       false },
     { "wallet", "aliaslist",         &aliaslist,         false },
