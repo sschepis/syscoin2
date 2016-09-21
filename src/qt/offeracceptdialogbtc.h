@@ -42,6 +42,7 @@ private:
 	QString fprice;
 	QString rawBTCTx;
 	QString m_buttonText;
+	QString paymentID;
 	double dblPrice;
 	bool offerPaid; 
 	QString redeemScript;	

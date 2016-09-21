@@ -47,7 +47,7 @@ OfferAcceptDialogBTC::OfferAcceptDialogBTC(WalletModel* model, const PlatformSty
 	fprice = QString::fromStdString(strfPrice);
 	string strCurrencyCode = currencyCode.toStdString();
 	ui->bitcoinInstructionLabel->setText(tr("After paying for this item, please enter the Bitcoin Transaction ID and click on the confirm button below. You may use the QR Code to the left to scan the payment request into your wallet or click on the Open BTC Wallet if you are on the desktop and have Bitcoin Core installed. If you use another wallet to pay, please remember to reference payment ID <b>%1</b> in your Bitcoin payment message.").arg(paymentID));
-	ui->acceptMessage->setText(tr("Are you sure you want to purchase <b>%1</b> of <b>%2</b> from merchant <b>%3</b>? Before proceeding, please enter your escrow arbiter if you wish to use escrow below and check the Use Escrow checkbox. Leave the escrow checkbox unchecked if you do not wish to use escrow. To complete your purchase please pay <b>%4 BTC</b> to <b>%5</b> (this address will change if you click on 'Use Escrow') using your Bitcoin wallet. Please ensure you reference the payment ID <b>%6</b> in your payment message. If you do not, Syscoin will not recognize the payment!").arg(quantity).arg(title).arg(sellerAlias).arg(fprice).arg(address).arg(paymentMessage).arg(paymentID));
+	ui->acceptMessage->setText(tr("Are you sure you want to purchase <b>%1</b> of <b>%2</b> from merchant <b>%3</b>? Before proceeding, please enter your escrow arbiter if you wish to use escrow below and check the Use Escrow checkbox. Leave the escrow checkbox unchecked if you do not wish to use escrow. To complete your purchase please pay <b>%4 BTC</b> to <b>%5</b> (this address will change if you click on 'Use Escrow') using your Bitcoin wallet. Please ensure you reference the payment ID <b>%6</b> in your payment message. If you do not, Syscoin will not recognize the payment!").arg(quantity).arg(title).arg(sellerAlias).arg(fprice).arg(address).arg(paymentID));
 	string strPrice = strprintf("%f", dblPrice);
 	price = QString::fromStdString(strPrice);
 	ui->escrowDisclaimer->setText(tr("<font color='blue'>Enter an arbiter that is mutally trusted between yourself and the merchant. Then enable the <b>Use Escrow</b> checkbox</font>"));
@@ -182,7 +182,7 @@ void OfferAcceptDialogBTC::generateGUID(QString& guid)
 {
 	UniValue result ;
 	string strMethod = string("generateguid");
-
+	UniValue params(UniValue::VARR);
 	guid = "";
     try {
         result = tableRPC.execute(strMethod, params);
