@@ -49,7 +49,7 @@ OfferAcceptDialog::OfferAcceptDialog(WalletModel* model, const PlatformStyle *pl
 	CAmount iPrice = convertCurrencyCodeToSyscoin(vchFromString(strAliasPeg), vchFromString(strCurrencyCode), dblPrice, chainActive.Tip()->nHeight, precision);
 	string strPrice = strprintf("%.*f", sysprecision, ValueFromAmount(iPrice).get_real()*quantity.toUInt() );
 	price = QString::fromStdString(strPrice);
-	ui->escrowDisclaimer->setText(tr("<font color='blue'>Select an arbiter that is mutally trusted between yourself and the merchant.</font>"));
+	ui->escrowDisclaimer->setText(tr("<font color='blue'>Enter an arbiter that is mutally trusted between yourself and the merchant.</font>"));
 	if(paymentOptions == PAYMENTOPTION_BTC || paymentOptions == PAYMENTOPTION_SYSBTC)
 	{
 		string strfPrice = strprintf("%f", dblPrice*quantity.toUInt());

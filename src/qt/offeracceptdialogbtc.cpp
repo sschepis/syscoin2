@@ -49,8 +49,8 @@ OfferAcceptDialogBTC::OfferAcceptDialogBTC(WalletModel* model, const PlatformSty
 	ui->acceptMessage->setText(tr("Are you sure you want to purchase <b>%1</b> of <b>%2</b> from merchant <b>%3</b>? Before proceeding, please enter your escrow arbiter if you wish to use escrow below and check the Use Escrow checkbox. Leave the escrow checkbox unchecked if you do not wish to use escrow. To complete your purchase please pay <b>%4 BTC</b> to <b>%5</b> using your Bitcoin wallet. Note that the address you pay to will change if you select to use the escrow service.").arg(quantity).arg(title).arg(sellerAlias).arg(fprice).arg(address));
 	string strPrice = strprintf("%f", dblPrice);
 	price = QString::fromStdString(strPrice);
-	ui->escrowDisclaimer->setText(tr("<font color='blue'>Select an arbiter that is mutally trusted between yourself and the merchant.</font>"));
-	ui->escrowDisclaimer->setVisible(false);
+	ui->escrowDisclaimer->setText(tr("<font color='blue'>Enter an arbiter that is mutally trusted between yourself and the merchant. Then enable the <b>Use Escrow</b> checkbox</font>"));
+	ui->escrowDisclaimer->setVisible(true);
 	if (!platformStyle->getImagesOnButtons())
 	{
 		ui->confirmButton->setIcon(QIcon());
@@ -122,7 +122,6 @@ void OfferAcceptDialogBTC::setupEscrowCheckboxState()
 {
 	if(ui->checkBox->isChecked())
 	{
-		ui->escrowDisclaimer->setVisible(true);
 		ui->escrowEdit->setEnabled(false);
 		// get new multisig address from escrow service
 		UniValue params(UniValue::VARR);
@@ -136,13 +135,11 @@ void OfferAcceptDialogBTC::setupEscrowCheckboxState()
 		}
 		catch (UniValue& objError)
 		{
-			throw runtime_error(find_value(objError, "message").get_str());
+			ui->escrowDisclaimer->setText(tr("<font color='red'>Failed to generate multisig address: %1</font>").arg(QString::fromStdString(find_value(objError, "message").get_str())));
 		}
 		if (!resCreate.isObject())
 		{
-			QMessageBox::information(this, windowTitle(),
-				tr("Could not generate escrow multisig address: Invalid response from generateescrowmultisig"),
-				QMessageBox::Ok, QMessageBox::Ok);
+			ui->escrowDisclaimer->setText(tr("<font color='red'>Could not generate escrow multisig address: Invalid response from generateescrowmultisig</font>"));
 			return;
 		}
 			
@@ -156,9 +153,7 @@ void OfferAcceptDialogBTC::setupEscrowCheckboxState()
 		}
 		else
 		{
-			QMessageBox::information(this, windowTitle(),
-				tr("Could not create escrow transaction: could not find redeem script in response"),
-				QMessageBox::Ok, QMessageBox::Ok);
+			ui->escrowDisclaimer->setText(tr("<font color='red'>Could not create escrow transaction: could not find redeem script in response</font>"));
 			return;
 		}
 			
@@ -168,17 +163,16 @@ void OfferAcceptDialogBTC::setupEscrowCheckboxState()
 		}
 		else
 		{
-			QMessageBox::information(this, windowTitle(),
-				tr("Could not create escrow transaction: could not find redeem script in response"),
-				QMessageBox::Ok, QMessageBox::Ok);
+			ui->escrowDisclaimer->setText(tr("<font color='red'>Could not create escrow transaction: could not find redeem script in response</font>"));
 			return;
 		}
 		
 		ui->acceptMessage->setText(tr("Are you sure you want to purchase <b>%1</b> of <b>%2</b> from merchant <b>%3</b>? Before proceeding, please enter your escrow arbiter if you wish to use escrow below. Leave the escrow checkbox unchecked if you do not wish to use escrow. To complete your purchase please pay <b>%4 BTC</b> to <b>%5</b> using your Bitcoin wallet. Note that the address you pay to will change if you select to use the escrow service.").arg(quantity).arg(title).arg(sellerAlias).arg(fprice).arg(multisigaddress));
-
+		ui->escrowDisclaimer->setText(tr("<font color='green'>multisig created successfully! Please fund using address above and check the <b>Use Escrow</b> checkbox</font>"));
 	}
 	else
 	{
+		ui->escrowDisclaimer->setText(tr("<font color='blue'>Enter an arbiter that is mutally trusted between yourself and the merchant. Then enable the <b>Use Escrow</b> checkbox</font>"));
 		ui->escrowDisclaimer->setVisible(false);
 		ui->escrowEdit->setEnabled(true);
 		ui->acceptMessage->setText(tr("Are you sure you want to purchase <b>%1</b> of <b>%2</b> from merchant <b>%3</b>? Before proceeding, please enter your escrow arbiter if you wish to use escrow below and check the Use Escrow checkbox. Leave the escrow checkbox unchecked if you do not wish to use escrow. To complete your purchase please pay <b>%4 BTC</b> to <b>%5</b> using your Bitcoin wallet. Note that the address you pay to will change if you select to use the escrow service.").arg(quantity).arg(title).arg(sellerAlias).arg(fprice).arg(address));

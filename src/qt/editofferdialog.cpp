@@ -566,7 +566,7 @@ void EditOfferDialog::loadRow(int row)
 		if(indexPaymentOptions.isValid())
 		{
 			QString paymentOptionsStr = indexPaymentOptions.data(OfferTableModel::PaymentOptions).toString();
-			int index = ui->paymentOptionsEdit->findData(QVariant(paymentOptionsStr));
+			int index = ui->paymentOptionsEdit->findText(paymentOptionsStr);
 			if ( index != -1 ) 
 			{ 
 				ui->paymentOptionsEdit->setCurrentIndex(index);
