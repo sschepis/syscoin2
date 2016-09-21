@@ -208,7 +208,7 @@ void MyAcceptedOfferListPage::slotConfirmedFinished(QNetworkReply * reply){
 			ui->btcButton->setText(m_buttonText);
 			ui->btcButton->setEnabled(true);
 			QMessageBox::critical(this, windowTitle(),
-				tr("Could not find payment ID <b>%1</b> in payment message: <b>%2</b>").arg(m_paymentID).arg(messageStr),
+				tr("Could not find payment message").arg(m_paymentID),
 					QMessageBox::Ok, QMessageBox::Ok);
 			reply->deleteLater();	
 			return;

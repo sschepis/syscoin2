@@ -252,7 +252,7 @@ void OfferAcceptDialogBTC::slotConfirmedFinished(QNetworkReply * reply){
 			ui->confirmButton->setText(m_buttonText);
 			ui->confirmButton->setEnabled(true);
 			QMessageBox::critical(this, windowTitle(),
-				tr("Could not find payment ID <b>%1</b> in payment message: <b>%2</b>").arg(paymentID).arg(messageStr),
+				tr("Could not find payment message").arg(paymentID),
 					QMessageBox::Ok, QMessageBox::Ok);
 			reply->deleteLater();	
 			return;
