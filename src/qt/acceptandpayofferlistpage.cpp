@@ -332,7 +332,7 @@ void AcceptandPayOfferListPage::acceptOffer()
 	
 	this->offerPaid = false;
 	ui->labelExplanation->setText(tr("Waiting for confirmation on the purchase of this offer"));
-	if((paymentOptions & PAYMENTOPTION_BTC) == PAYMENTOPTION_BTC)
+	if(paymentOptions == PAYMENTOPTION_BTC)
 		OpenBTCPayDialog();
 	else
 		OpenPayDialog();

@@ -331,7 +331,7 @@ public:
     }
 	std::string GetPaymentOptionsString()
 	{
-		if((paymentOptions == PAYMENTOPTION_SYS)
+		if(paymentOptions == PAYMENTOPTION_SYS)
 		{
 			return std::string("SYS");
 		}
