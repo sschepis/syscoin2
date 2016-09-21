@@ -1099,6 +1099,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	vector<unsigned char> vchMessage = vchFromValue(params[3]);
 	vector<unsigned char> vchBTCTx = params.size() >= 6? vchFromValue(params[5]): vchFromString("");
 	vector<unsigned char> vchRedeemScript = params.size() >= 7? vchFromValue(params[6]): vchFromString("");
+	string paymentID = params.size()>=8?params[7].get_str():"";
 	CTransaction rawTx;
 	if (!vchBTCTx.empty() && !DecodeHexTx(rawTx,stringFromVch(vchBTCTx)))
 			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4064 - " + _("Could not find decode raw BTC transaction"));
