@@ -255,13 +255,7 @@ bool GetTxOfOffer(const vector<unsigned char> &vchOffer,
 	if (!pofferdb->ReadOffer(vchOffer, vtxPos) || vtxPos.empty())
 		return false;
 	int nHeight = vtxPos.back().nHeight;
-	txPos.nHeight = nHeight;
-	if(!txPos.GetOfferFromList(vtxPos))
-	{
-		if(fDebug)
-			LogPrintf("GetTxOfOffer() : cannot find offer from this offer position");
-		return false;
-	}
+	txPos =  vtxPos.back();
 	if (!skipExpiresCheck && (nHeight + GetOfferExpirationDepth()
 			< chainActive.Tip()->nHeight)) {
 		string offer = stringFromVch(vchOffer);
@@ -549,7 +543,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	COfferAccept theOfferAccept;
 	vector<CAliasIndex> vtxAliasPos;
 	COffer linkOffer;
-	COffer myPriceOffer;
 	COffer myOffer;
 	CTransaction linkedTx;
 	uint64_t heightToCheckAgainst;
@@ -1132,41 +1125,35 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				return true;
 			}
 
-			
-			myPriceOffer.nHeight = theOfferAccept.nAcceptHeight;
-			
-			// if linked offer then get offer info from root offer history because the linked offer may not have history of changes (root offer can update linked offer without tx)	
-			myPriceOffer.GetOfferFromList(vtxPos);	
-			if(theOfferAccept.txBTCId.IsNull() && myPriceOffer.paymentOptions == PAYMENTOPTION_BTC)
+		
+			if(theOfferAccept.txBTCId.IsNull() && theOffer.paymentOptions == PAYMENTOPTION_BTC)
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 106 - " + _("This offer must be paid with Bitcoins");
 				return true;
 			}
-			else if(!theOfferAccept.txBTCId.IsNull() && myPriceOffer.paymentOptions == PAYMENTOPTION_SYS)
+			else if(!theOfferAccept.txBTCId.IsNull() && theOffer.paymentOptions == PAYMENTOPTION_SYS)
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 106 - " + _("This offer cannot be paid with Bitcoins");
 				return true;
 			}
-			if(!GetTxOfAlias(myPriceOffer.vchAlias, alias, aliasTx))
+			if(!GetTxOfAlias(theOffer.vchAlias, alias, aliasTx))
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 90 - " + _("Cannot find alias for this offer. It may be expired");
 				return true;
 			}
-			if(!myPriceOffer.vchLinkOffer.empty())
+			if(!theOffer.vchLinkOffer.empty())
 			{
-				if(!GetTxAndVtxOfOffer( myPriceOffer.vchLinkOffer, linkOffer, linkedTx, offerVtxPos))
+				if(!GetTxAndVtxOfOffer( theOffer.vchLinkOffer, linkOffer, linkedTx, offerVtxPos))
 				{
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 107 - " + _("Could not get linked offer");
 					return true;
-				}
-				linkOffer.nHeight = theOfferAccept.nAcceptHeight;
-				linkOffer.GetOfferFromList(offerVtxPos);				
+				}			
 				if(!GetTxOfAlias(linkOffer.vchAlias, linkAlias, aliasLinkTx))
 				{
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 90 - " + _("Cannot find alias for this linked offer. It may be expired");
 					return true;
 				}
-				else if(!myPriceOffer.vchCert.empty() && theCert.vchAlias != linkOffer.vchAlias)
+				else if(!theOffer.vchCert.empty() && theCert.vchAlias != linkOffer.vchAlias)
 				{
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 108 - " + _("Cannot purchase this linked offer because the certificate has been transferred or it is linked to another offer");
 					return true;
@@ -1196,10 +1183,10 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				}
 			}
 			// trying to purchase a cert
-			if(!myPriceOffer.vchCert.empty())
+			if(!theOffer.vchCert.empty())
 			{
 				CTransaction txCert;
-				if (!GetTxOfCert( myPriceOffer.vchCert, theCert, txCert))
+				if (!GetTxOfCert( theOffer.vchCert, theCert, txCert))
 				{
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 91 - " + _("Cannot sell an expired certificate");
 					return true;
@@ -1209,9 +1196,9 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 92 - " + _("Cannot purchase certificates with Bitcoins");
 					return true;
 				}
-				else if(myPriceOffer.vchLinkOffer.empty())
+				else if(theOffer.vchLinkOffer.empty())
 				{
-					if(theCert.vchAlias != myPriceOffer.vchAlias)
+					if(theCert.vchAlias != theOffer.vchAlias)
 					{
 						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 94 - " + _("Cannot purchase this offer because the certificate has been transferred or it is linked to another offer");
 						return true;
@@ -1223,7 +1210,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 95 - " + _("Offer payment message cannot be empty");
 				return true;
 			}		
-			if(myPriceOffer.sCategory.size() > 0 && boost::algorithm::starts_with(stringFromVch(myPriceOffer.sCategory), "wanted"))
+			if(theOffer.sCategory.size() > 0 && boost::algorithm::starts_with(stringFromVch(theOffer.sCategory), "wanted"))
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 105 - " + _("Cannot purchase a wanted offer");
 				return true;
@@ -1260,25 +1247,25 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				CAmount nPrice;
 				CAmount nCommission;
 				// try to get the whitelist entry here from the sellers whitelist, apply the discount with GetPrice()
-				if(myPriceOffer.vchLinkOffer.empty())
+				if(theOffer.vchLinkOffer.empty())
 				{
 					if(!serializedOffer.vchLinkAlias.empty())
 					{
-						myPriceOffer.linkWhitelist.GetLinkEntryByHash(serializedOffer.vchLinkAlias, entry);
+						theOffer.linkWhitelist.GetLinkEntryByHash(serializedOffer.vchLinkAlias, entry);
 						if(entry.IsNull())
 						{
 							errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 120 - " + _("Cannot find the alias entry in the offer's affiliate list");
 							return true;
 						}	
 					}
-					nPrice = myPriceOffer.GetPrice(entry);
+					nPrice = theOffer.GetPrice(entry);
 					nCommission = 0;
 				}
 				else 
 				{
-					linkOffer.linkWhitelist.GetLinkEntryByHash(myPriceOffer.vchAlias, entry);
+					linkOffer.linkWhitelist.GetLinkEntryByHash(theOffer.vchAlias, entry);
 					nPrice = linkOffer.GetPrice(entry);
-					nCommission = myPriceOffer.GetPrice() - nPrice;
+					nCommission = theOffer.GetPrice() - nPrice;
 				}
 
 	
@@ -1296,7 +1283,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 122 - " + _("Offer payment does not pay enough according to the offer price");
 					return true;
 				}
-				if(!myPriceOffer.vchLinkOffer.empty())
+				if(!theOffer.vchLinkOffer.empty())
 				{
 					nOutCommission = FindOfferAcceptPayment(tx, nTotalCommission);
 					if(nOutCommission < 0)
@@ -2451,9 +2438,6 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	txAccept.vchAcceptRand = vchAccept;
 	txAccept.nQty = nQty;
 	txAccept.nPrice = nPrice;
-	// if we have a linked offer accept then use height from linked accept (the one buyer makes, not the reseller). We need to do this to make sure we convert price at the time of initial buyer's accept.
-	// in checkescrowinput we override this if its from an escrow release, just like above.
-	txAccept.nAcceptHeight = nHeight;
 	txAccept.vchBuyerAlias = vchAlias;
 	txAccept.vchMessage = vchPaymentMessage;
     CAmount nTotalValue = ( nPrice * nQty );
@@ -2979,10 +2963,6 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 			ismine = IsSyscoinTxMine(offerTx, "offer");
 			if(ismine && !IsSyscoinTxMine(aliasTx, "alias"))
 				continue;
-			int nHeight;
-			nHeight = theOfferAccept.nAcceptHeight;	
-			theOffer.nHeight = nHeight;
-			theOffer.GetOfferFromList(vtxPos);
 
 			bool commissionPaid = false;
 			bool discountApplied = false;
@@ -3009,7 +2989,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 			if( !theOffer.vchLinkOffer.empty())
 			{	
 				GetTxAndVtxOfOffer( theOffer.vchLinkOffer, linkOffer, linkTx, vtxLinkPos, true);
-				linkOffer.nHeight = nHeight;
+				linkOffer.nHeight = theOfferAccept.nHeight;
 				linkOffer.GetOfferFromList(vtxLinkPos);
 				GetTxOfAlias(linkOffer.vchAlias, alias, linkAliasTx, true);
 				// if you don't own this offer check the linked offer
@@ -3075,7 +3055,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 				oOfferAccept.push_back(Pair("offer_discount_percentage", "0%"));		
 
 			int precision = 2;
-			CAmount nPricePerUnit = convertSyscoinToCurrencyCode(theOffer.vchAliasPeg, theOffer.sCurrencyCode, priceAtTimeOfAccept, theOfferAccept.nAcceptHeight, precision);
+			CAmount nPricePerUnit = convertSyscoinToCurrencyCode(theOffer.vchAliasPeg, theOffer.sCurrencyCode, priceAtTimeOfAccept, theOfferAccept.nHeight, precision);
 			oOfferAccept.push_back(Pair("systotal", priceAtTimeOfAccept * theOfferAccept.nQty));
 			oOfferAccept.push_back(Pair("sysprice", priceAtTimeOfAccept));
 			oOfferAccept.push_back(Pair("price", strprintf("%.*f", precision, ValueFromAmount(nPricePerUnit).get_real()))); 	
@@ -3191,14 +3171,9 @@ UniValue offeracceptinfo(const UniValue& params, bool fHelp) {
 	for(int i=vtxPos.size()-1;i>=0;i--) {
 		CTransaction txA;
 		COfferAccept theOfferAccept;
-		COffer tmpOffer;
-		if(!GetTxOfOfferAccept(vtxPos[i].vchOffer, vtxPos[i].accept.vchAcceptRand, tmpOffer, theOfferAccept, txA, true))
+		if(!GetTxOfOfferAccept(vtxPos[i].vchOffer, vtxPos[i].accept.vchAcceptRand, theOffer, theOfferAccept, txA, true))
 			continue;
-		int nHeight;
-		nHeight = theOfferAccept.nAcceptHeight;
-		linkOffer.nHeight = nHeight;
-		theOffer.nHeight = nHeight;	
-		theOffer.GetOfferFromList(vtxPos);
+		linkOffer.nHeight = theOfferAccept.nHeight;
 		linkOffer.GetOfferFromList(vtxLinkPos);
 
 		CAmount priceAtTimeOfAccept = theOfferAccept.nPrice;
@@ -3258,7 +3233,7 @@ UniValue offeracceptinfo(const UniValue& params, bool fHelp) {
 			oOfferAccept.push_back(Pair("offer_discount_percentage", "0%"));		
 
 		int precision = 2;
-		CAmount nPricePerUnit = convertSyscoinToCurrencyCode(theOffer.vchAliasPeg, theOffer.sCurrencyCode, priceAtTimeOfAccept, theOfferAccept.nAcceptHeight, precision);
+		CAmount nPricePerUnit = convertSyscoinToCurrencyCode(theOffer.vchAliasPeg, theOffer.sCurrencyCode, priceAtTimeOfAccept, theOfferAccept.nHeight, precision);
 		oOfferAccept.push_back(Pair("systotal", priceAtTimeOfAccept * theOfferAccept.nQty));
 		oOfferAccept.push_back(Pair("sysprice", priceAtTimeOfAccept));
 		oOfferAccept.push_back(Pair("price", strprintf("%.*f", precision, ValueFromAmount(nPricePerUnit).get_real()))); 	
