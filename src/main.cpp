@@ -878,14 +878,6 @@ bool CheckSyscoinInputs(const CTransaction& tx, const CCoinsViewCache& inputs, i
 			}
 			if(fDebug && !errorMessage.empty())
 				LogPrintf("%s\n", errorMessage.c_str());
-			if(!errorMessage.empty() && mempool.exists(tx.GetHash())
-  			{
- 				std::list<CTransaction> dummy;
- 				mempool.remove(tx, dummy, false);
- 				mempool.removeConflicts(tx, dummy);
- 				mempool.ClearPrioritisation(tx.GetHash());
-  				good = false;
-  			}
 			// remove tx's that don't pass our check
 			if(!good)
 			{
@@ -929,14 +921,6 @@ bool AddSyscoinServicesToDB(const CBlock& block, const CCoinsViewCache& inputs, 
 			}
 			if(fDebug && !errorMessage.empty())
 				LogPrintf("%s\n", errorMessage.c_str());
-			if(!errorMessage.empty() && mempool.exists(tx.GetHash())
-  			{
- 				std::list<CTransaction> dummy;
- 				mempool.remove(tx, dummy, false);
- 				mempool.removeConflicts(tx, dummy);
- 				mempool.ClearPrioritisation(tx.GetHash());
-  				good = false;
-  			}
 			if(!good)
 			{
 				return false;
@@ -955,14 +939,6 @@ bool AddSyscoinServicesToDB(const CBlock& block, const CCoinsViewCache& inputs, 
 			}	
 			if(fDebug && !errorMessage.empty())
 				LogPrintf("%s\n", errorMessage.c_str());
-			if(!errorMessage.empty() && mempool.exists(tx.GetHash())
-  			{
- 				std::list<CTransaction> dummy;
- 				mempool.remove(tx, dummy, false);
- 				mempool.removeConflicts(tx, dummy);
- 				mempool.ClearPrioritisation(tx.GetHash());
-  				good = false;
-  			}
 			if(!good)
 			{
 				return false;
