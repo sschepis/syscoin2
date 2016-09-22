@@ -1362,29 +1362,18 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	if (!GetSyscoinTransaction(vtxPos.front().nHeight, vtxPos.front().txHash, initialTx, Params().GetConsensus()))
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4086 - " + _("Failed to find escrow transaction"));
 	bool foundWhitelistAlias = false;
-	const COutPoint *prevOutput = NULL;
-	CCoins prevCoins;
-	CCoinsViewCache inputs(pcoinsTip);
-	// Strict check - bug disallowed
 	for (unsigned int i = 0; i < initialTx.vin.size(); i++) {
-		vector<vector<unsigned char> > vvch;
-		int pop;
-		prevOutput = &initialTx.vin[i].prevout;	
-		if(!prevOutput)
+		vector<vector<unsigned char> > vvchIn;
+		int opIn;
+		const COutPoint *prevOutput = &initialTx.vin[i].prevout;
+		if(!GetPreviousInput(prevOutput, opIn, vvchIn))
 			continue;
-		// ensure inputs are unspent when doing consensus check to add to block
-		if(!inputs.GetCoins(prevOutput->hash, prevCoins))
-			continue;
-		if(prevCoins.vout.size() <= prevOutput->n || !IsSyscoinScript(prevCoins.vout[prevOutput->n].scriptPubKey, pop, vvch))
-			continue;
-	
-		if (IsAliasOp(pop) && escrow.vchBuyerAlias == vvch[0])
+		if (IsAliasOp(opIn) && escrow.vchBuyerAlias == vvchIn[0])
 		{
 			foundWhitelistAlias = true; 
 			break;
 		}
 	}
-
 
 	CAliasIndex sellerAlias, buyerAlias, arbiterAlias, resellerAlias;
 	vector<CAliasIndex> aliasVtxPos, aliasBuyerVtxPos, aliasArbiterVtxPos, aliasResellerVtxPos;
@@ -1729,26 +1718,17 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
     CTransaction fundingTx, initialTx;
 	if (!GetSyscoinTransaction(vtxPos.front().nHeight,vtxPos.front().txHash, initialTx, Params().GetConsensus()))
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4100 - " + _("Failed to find escrow transaction"));
-
 	bool foundWhitelistAlias = false;
-	const COutPoint *prevOutput = NULL;
-	CCoins prevCoins;
-	CCoinsViewCache inputs(pcoinsTip);
-	// Strict check - bug disallowed
 	for (unsigned int i = 0; i < initialTx.vin.size(); i++) {
-		vector<vector<unsigned char> > vvch;
-		int pop;
-		prevOutput = &initialTx.vin[i].prevout;	
-		if(!prevOutput)
+		vector<vector<unsigned char> > vvchIn;
+		int opIn;
+		const COutPoint *prevOutput = &initialTx.vin[i].prevout;
+		if(!GetPreviousInput(prevOutput, opIn, vvchIn))
 			continue;
-		if(!inputs.GetCoins(prevOutput->hash, prevCoins))
-			continue;
-		if(prevCoins.vout.size() <= prevOutput->n || !IsSyscoinScript(prevCoins.vout[prevOutput->n].scriptPubKey, pop, vvch))
-			continue;
-	
-		if (IsAliasOp(pop) && escrow.vchBuyerAlias == vvch[0])
+		if (IsAliasOp(opIn) && escrow.vchBuyerAlias == vvchIn[0])
 		{
 			foundWhitelistAlias = true; 
+			break;
 		}
 	}
  	int nOutMultiSig = 0;
@@ -2045,24 +2025,16 @@ UniValue escrowcomplete(const UniValue& params, bool fHelp) {
 	if (!GetSyscoinTransaction(vtxPos.front().nHeight, vtxPos.front().txHash, initialTx, Params().GetConsensus()))
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4121 - " + _("Failed to find escrow transaction"));
 	bool foundWhitelistAlias = false;
-	const COutPoint *prevOutput = NULL;
-	CCoins prevCoins;
-	CCoinsViewCache inputs(pcoinsTip);
-	// Strict check - bug disallowed
 	for (unsigned int i = 0; i < initialTx.vin.size(); i++) {
-		vector<vector<unsigned char> > vvch;
-		int pop;
-		prevOutput = &initialTx.vin[i].prevout;	
-		if(!prevOutput)
+		vector<vector<unsigned char> > vvchIn;
+		int opIn;
+		const COutPoint *prevOutput = &initialTx.vin[i].prevout;
+		if(!GetPreviousInput(prevOutput, opIn, vvchIn))
 			continue;
-		if(!inputs.GetCoins(prevOutput->hash, prevCoins))
-			continue;
-		if(prevCoins.vout.size() <= prevOutput->n || !IsSyscoinScript(prevCoins.vout[prevOutput->n].scriptPubKey, pop, vvch))
-			continue;
-	
-		if (IsAliasOp(pop) && escrow.vchBuyerAlias == vvch[0])
+		if (IsAliasOp(opIn) && escrow.vchBuyerAlias == vvchIn[0])
 		{
 			foundWhitelistAlias = true; 
+			break;
 		}
 	}
 	CAliasIndex sellerAlias, buyerAlias, arbiterAlias, resellerAlias;
@@ -2194,27 +2166,18 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 	if (!GetSyscoinTransaction(vtxPos.front().nHeight, vtxPos.front().txHash, initialTx, Params().GetConsensus()))
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4121 - " + _("Failed to find escrow transaction"));
 	bool foundWhitelistAlias = false;
-	const COutPoint *prevOutput = NULL;
-	CCoins prevCoins;
-	CCoinsViewCache inputs(pcoinsTip);
-	// Strict check - bug disallowed
 	for (unsigned int i = 0; i < initialTx.vin.size(); i++) {
-		vector<vector<unsigned char> > vvch;
-		int pop;
-		prevOutput = &initialTx.vin[i].prevout;	
-		if(!prevOutput)
+		vector<vector<unsigned char> > vvchIn;
+		int opIn;
+		const COutPoint *prevOutput = &initialTx.vin[i].prevout;
+		if(!GetPreviousInput(prevOutput, opIn, vvchIn))
 			continue;
-		if(!inputs.GetCoins(prevOutput->hash, prevCoins))
-			continue;
-		if(prevCoins.vout.size() <= prevOutput->n || !IsSyscoinScript(prevCoins.vout[prevOutput->n].scriptPubKey, pop, vvch))
-			continue;
-	
-		if (IsAliasOp(pop) && escrow.vchBuyerAlias == vvch[0])
+		if (IsAliasOp(opIn) && escrow.vchBuyerAlias == vvchIn[0])
 		{
 			foundWhitelistAlias = true; 
 			break;
 		}
-	}
+	}	
 	CAliasIndex sellerAlias, buyerAlias, arbiterAlias, resellerAlias;
 	vector<CAliasIndex> aliasVtxPos, aliasBuyerVtxPos, aliasArbiterVtxPos, aliasResellerVtxPos;
 	CTransaction selleraliastx, buyeraliastx, arbiteraliastx, reselleraliastx;
@@ -2544,24 +2507,16 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 	if (!GetSyscoinTransaction(vtxPos.front().nHeight, vtxPos.front().txHash, initialTx, Params().GetConsensus()))
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4138 - " + _("Failed to find escrow transaction"));
 	bool foundWhitelistAlias = false;
-	const COutPoint *prevOutput = NULL;
-	CCoins prevCoins;
-	CCoinsViewCache inputs(pcoinsTip);
-	// Strict check - bug disallowed
 	for (unsigned int i = 0; i < initialTx.vin.size(); i++) {
-		vector<vector<unsigned char> > vvch;
-		int pop;
-		prevOutput = &initialTx.vin[i].prevout;	
-		if(!prevOutput)
+		vector<vector<unsigned char> > vvchIn;
+		int opIn;
+		const COutPoint *prevOutput = &initialTx.vin[i].prevout;
+		if(!GetPreviousInput(prevOutput, opIn, vvchIn))
 			continue;
-		if(!inputs.GetCoins(prevOutput->hash, prevCoins))
-			continue;
-		if(prevCoins.vout.size() <= prevOutput->n || !IsSyscoinScript(prevCoins.vout[prevOutput->n].scriptPubKey, pop, vvch))
-			continue;
-	
-		if (IsAliasOp(pop) && escrow.vchBuyerAlias == vvch[0])
+		if (IsAliasOp(opIn) && escrow.vchBuyerAlias == vvchIn[0])
 		{
 			foundWhitelistAlias = true; 
+			break;
 		}
 	}
  	int nOutMultiSig = 0;
