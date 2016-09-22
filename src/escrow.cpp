@@ -1242,16 +1242,15 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 		if (redeemScript_value.isStr())
 		{
 			redeemScript = ParseHex(redeemScript_value.get_str());
-			scriptPubKey = CScript(redeemScript.begin(), redeemScript.end());
 		}
 		else
 			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4080 - " + _("Could not create escrow transaction: could not find redeem script in response"));
 	}
 	else
 	{
-			redeemScript = ParseHex(stringFromVch(vchRedeemScript));
-			scriptPubKey = CScript(redeemScript.begin(), redeemScript.end());
+			redeemScript = ParseHex(stringFromVch(vchRedeemScript));		
 	}
+	scriptPubKey = CScript(redeemScript.begin(), redeemScript.end());
 	int precision = 2;
 	// send to escrow address
 	CAmount nTotal = theOffer.GetPrice(foundEntry)*nQty;
@@ -1487,6 +1486,8 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 		if (!DecodeHexTx(fundingTx, escrow.escrowInputTx))
 			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4064 - " + _("Could not find the escrow funding transaction in the blockchain database."));
 	}
+	CRecipient recipientEscrow  = {redeemScriptPubKey, nEscrowTotal, false};
+	nEscrowTotal = recipientEscrow.nAmount;
 	for(unsigned int i=0;i<fundingTx.vout.size();i++)
 	{
 		if(fundingTx.vout[i].nValue == nEscrowTotal)
