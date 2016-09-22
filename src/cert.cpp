@@ -374,7 +374,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 	bool found = false;
 	vector<unsigned char> vchHash;
 	int nDataOut;
-	if(!GetSyscoinData(tx, vchData, vchHash, nDataOut) || !theOffer.UnserializeFromData(vchData, vchHash))
+	if(!GetSyscoinData(tx, vchData, vchHash, nDataOut) || !theCert.UnserializeFromData(vchData, vchHash))
 	{
 		errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR ERRCODE: 2001 - " + _("Cannot unserialize data inside of this transaction relating to a certificate");
 		return true;
