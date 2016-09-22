@@ -1350,25 +1350,14 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
     // look for a transaction with this key
     CTransaction tx;
 	CEscrow escrow;
-    if (!GetTxOfEscrow( vchEscrow, 
-		escrow, tx))
-        throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4081 - " + _("Could not find a escrow with this key"));
-    vector<vector<unsigned char> > vvch;
-    int op, nOut;
-    if (!DecodeEscrowTx(tx, op, nOut, vvch) 
-    	|| !IsEscrowOp(op))
-        throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4082 - " + _("Could not decode escrow transaction"));
+	vector<CEscrow> vtxPos;
+    if (!GetTxAndVtxOfEscrow( vchEscrow, 
+		escrow, tx, vtxPos))
+        throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4099 - " + _("Could not find a escrow with this key"));
 	const CWalletTx *wtxIn = pwalletMain->GetWalletTx(tx.GetHash());
 	if (wtxIn == NULL)
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4083 - " + _("This escrow is not in your wallet"));
 
-    // unserialize escrow UniValue from txn
-    CEscrow theEscrow;
-    if(!theEscrow.UnserializeFromTx(tx))
-        throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4084 - " + _("Cannot unserialize escrow from transaction"));
-	vector<CEscrow> vtxPos;
-	if (!pescrowdb->ReadEscrow(vchEscrow, vtxPos) || vtxPos.empty())
-		  throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4085 - " + _("Failed to read from escrow DB"));
     CTransaction fundingTx, initialTx;
 	if (!GetSyscoinTransaction(vtxPos.front().nHeight, vtxPos.front().txHash, initialTx, Params().GetConsensus()))
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4086 - " + _("Failed to find escrow transaction"));
@@ -1392,6 +1381,7 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 		if (IsAliasOp(pop) && escrow.vchBuyerAlias == vvch[0])
 		{
 			foundWhitelistAlias = true; 
+			break;
 		}
 	}
 
@@ -1501,7 +1491,6 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	// if we can't get it in this blockchain, try full raw tx decode (bitcoin input raw tx)
 	if (!GetTransaction(txHash, fundingTx, Params().GetConsensus(), hashBlock, true))
 	{
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4064a - " + _("Could not find the escrow funding transaction in the blockchain database. hex ") + txHash.GetHex() + " escrow.escrowInputTx " + escrow.escrowInputTx);
 		nExpectedCommissionAmount = convertSyscoinToCurrencyCode(theOffer.vchAliasPeg, vchFromString("BTC"), nCommission, theOffer.nHeight, precision)*escrow.nQty;
 		nExpectedAmount = convertSyscoinToCurrencyCode(theOffer.vchAliasPeg, vchFromString("BTC"), theOffer.GetPrice(foundEntry), theOffer.nHeight, precision)*escrow.nQty; 
 		nEscrowFee = GetEscrowArbiterFee(nExpectedAmount);
@@ -2041,11 +2030,7 @@ UniValue escrowcomplete(const UniValue& params, bool fHelp) {
     if (!GetTxOfEscrow( vchEscrow, 
 		escrow, tx))
         throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4116 - " + _("Could not find a escrow with this key"));
-    vector<vector<unsigned char> > vvch;
-    int op, nOut;
-    if (!DecodeEscrowTx(tx, op, nOut, vvch) 
-    	|| !IsEscrowOp(op))
-        throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4117 - " + _("Could not decode escrow transaction"));
+
 	const CWalletTx *wtxIn = pwalletMain->GetWalletTx(tx.GetHash());
 	if (wtxIn == NULL)
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4118 - " + _("This escrow is not in your wallet"));
@@ -2194,27 +2179,17 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 
 	EnsureWalletIsUnlocked();
 
-    // look for a transaction with this key
+     // look for a transaction with this key
     CTransaction tx;
 	CEscrow escrow;
-    if (!GetTxOfEscrow( vchEscrow, 
-		escrow, tx))
-        throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4116 - " + _("Could not find a escrow with this key"));
-    vector<vector<unsigned char> > vvch;
-    int op, nOut;
-    if (!DecodeEscrowTx(tx, op, nOut, vvch) 
-    	|| !IsEscrowOp(op))
-        throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4117 - " + _("Could not decode escrow transaction"));
+	vector<CEscrow> vtxPos;
+    if (!GetTxAndVtxOfEscrow( vchEscrow, 
+		escrow, tx, vtxPos))
+        throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4099 - " + _("Could not find a escrow with this key"));
 	const CWalletTx *wtxIn = pwalletMain->GetWalletTx(tx.GetHash());
 	if (wtxIn == NULL)
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4118 - " + _("This escrow is not in your wallet"));
-    // unserialize escrow from txn
-    CEscrow theEscrow;
-    if(!theEscrow.UnserializeFromTx(tx))
-        throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4119 - " + _("Cannot unserialize escrow from transaction"));
-	vector<CEscrow> vtxPos;
-	if (!pescrowdb->ReadEscrow(vchEscrow, vtxPos) || vtxPos.empty())
-		  throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4120 - " + _("Failed to read from escrow DB"));
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4083 - " + _("This escrow is not in your wallet"));
+
     CTransaction fundingTx, initialTx;
 	if (!GetSyscoinTransaction(vtxPos.front().nHeight, vtxPos.front().txHash, initialTx, Params().GetConsensus()))
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4121 - " + _("Failed to find escrow transaction"));
@@ -2237,6 +2212,7 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 		if (IsAliasOp(pop) && escrow.vchBuyerAlias == vvch[0])
 		{
 			foundWhitelistAlias = true; 
+			break;
 		}
 	}
 	CAliasIndex sellerAlias, buyerAlias, arbiterAlias, resellerAlias;
