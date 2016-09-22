@@ -856,10 +856,17 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 			// make sure offer is still valid and then deduct qty
 			if (GetTxAndVtxOfOffer( theEscrow.vchOffer, dbOffer, txOffer, myVtxPos))
 			{
-
+				if(theEscrow.nAcceptHeight < dbOffer.nHeight || theEscrow.nAcceptHeight > nHeight)
+				{
+					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 96 - " + _("nAcceptHeight set incorrectly");
+					return true;
+				}
+				dbOffer.nHeight = theEscrow.nAcceptHeight;
+				dbOffer.GetOfferFromList(myVtxPos);
 				if(dbOffer.sCategory.size() > 0 && boost::algorithm::starts_with(stringFromVch(dbOffer.sCategory), "wanted"))
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4058 - " + _("Cannot purchase a wanted offer");
+					return true;
 				}
 				else if(dbOffer.nQty != -1)
 				{
@@ -927,7 +934,12 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 					}			
 				}
 			}
+			{
+				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4058 - " + _("Cannot find offer for this escrow. It may be expired");
+				return true;
+			}
 		}
+	
         // set the escrow's txn-dependent values
 		theEscrow.txHash = tx.GetHash();
 		theEscrow.nHeight = nHeight;

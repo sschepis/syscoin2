@@ -1132,7 +1132,11 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				return true;
 			}
 
-			
+			if(theOfferAccept.nAcceptHeight < theOffer.nHeight || theOfferAccept.nAcceptHeight > nHeight)
+			{
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 96 - " + _("nAcceptHeight set incorrectly");
+				return true;
+			}
 			myPriceOffer.nHeight = theOfferAccept.nAcceptHeight;
 			
 			// if linked offer then get offer info from root offer history because the linked offer may not have history of changes (root offer can update linked offer without tx)	
@@ -1157,6 +1161,12 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				if(!GetTxAndVtxOfOffer( myPriceOffer.vchLinkOffer, linkOffer, linkedTx, offerVtxPos))
 				{
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 107 - " + _("Could not get linked offer");
+					return true;
+				}
+
+				if(theOfferAccept.nAcceptHeight < linkOffer.nHeight)
+				{
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 96 - " + _("nAcceptHeight set incorrectly");
 					return true;
 				}
 				linkOffer.nHeight = theOfferAccept.nAcceptHeight;
