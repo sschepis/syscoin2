@@ -878,7 +878,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, const CCoinsViewCache& inputs, i
 			}
 			if(fDebug && !errorMessage.empty())
 				LogPrintf("%s\n", errorMessage.c_str());
-			if(!errorMessage.empty() && mempool.exists(tx.GetHash())
+			if(!errorMessage.empty() && mempool.exists(tx.GetHash()))
   			{
  				std::list<CTransaction> dummy;
  				mempool.remove(tx, dummy, false);
@@ -929,7 +929,7 @@ bool AddSyscoinServicesToDB(const CBlock& block, const CCoinsViewCache& inputs, 
 			}
 			if(fDebug && !errorMessage.empty())
 				LogPrintf("%s\n", errorMessage.c_str());
-			if(!errorMessage.empty() && mempool.exists(tx.GetHash())
+			if(!errorMessage.empty() && mempool.exists(tx.GetHash()))
   			{
  				std::list<CTransaction> dummy;
  				mempool.remove(tx, dummy, false);
@@ -955,7 +955,7 @@ bool AddSyscoinServicesToDB(const CBlock& block, const CCoinsViewCache& inputs, 
 			}	
 			if(fDebug && !errorMessage.empty())
 				LogPrintf("%s\n", errorMessage.c_str());
-			if(!errorMessage.empty() && mempool.exists(tx.GetHash())
+			if(!errorMessage.empty() && mempool.exists(tx.GetHash()))
   			{
  				std::list<CTransaction> dummy;
  				mempool.remove(tx, dummy, false);
