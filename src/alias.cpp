@@ -34,27 +34,6 @@ CCertDB *pcertdb = NULL;
 CEscrowDB *pescrowdb = NULL;
 CMessageDB *pmessagedb = NULL;
 extern void SendMoneySyscoin(const vector<CRecipient> &vecSend, CAmount nValue, bool fSubtractFeeFromAmount, CWalletTx& wtxNew, const CWalletTx* wtxInOffer=NULL, const CWalletTx* wtxInCert=NULL, const CWalletTx* wtxInAlias=NULL, const CWalletTx* wtxInEscrow=NULL, bool syscoinTx=true);
-bool IsSysCompressedOrUncompressedPubKey(const vector<unsigned char> &vchPubKey) {
-    if (vchPubKey.size() < 33) {
-        //  Non-canonical public key: too short
-        return false;
-    }
-    if (vchPubKey[0] == 0x04) {
-        if (vchPubKey.size() != 65) {
-            //  Non-canonical public key: invalid length for uncompressed key
-            return false;
-        }
-    } else if (vchPubKey[0] == 0x02 || vchPubKey[0] == 0x03) {
-        if (vchPubKey.size() != 33) {
-            //  Non-canonical public key: invalid length for compressed key
-            return false;
-        }
-    } else {
-          //  Non-canonical public key: neither compressed nor uncompressed
-          return false;
-    }
-    return true;
-}
 bool GetPreviousInput(const COutPoint * outpoint, int &op, vector<vector<unsigned char> > &vvchArgs)
 {
 	if(!pwalletMain || !outpoint)
