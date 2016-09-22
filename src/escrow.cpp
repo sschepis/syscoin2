@@ -1275,7 +1275,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	newEscrow.vchSellerAlias = selleralias.vchAlias;
 	newEscrow.vchPaymentMessage = vchFromString(strCipherText);
 	newEscrow.nQty = nQty;
-	newEscrow.escrowInputTx = vchBTCTx.empty()? escrowWtx.GetHash().ToString(): stringFromVch(vchBTCTx);
+	newEscrow.escrowInputTx = vchBTCTx.empty()? escrowWtx.GetHash().GetHex(): stringFromVch(vchBTCTx);
 	newEscrow.nHeight = chainActive.Tip()->nHeight;
 	newEscrow.nAcceptHeight = chainActive.Tip()->nHeight;
 
