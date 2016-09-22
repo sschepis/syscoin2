@@ -1491,7 +1491,7 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	uint256 txHash;
 	txHash.SetHex(escrow.escrowInputTx);
 	// if we can't get it in this blockchain, try full raw tx decode (bitcoin input raw tx)
-	if (!GetTransaction(txHash, fundingTx, Params().GetConsensus(), hashBlock))
+	if (!GetTransaction(txHash, fundingTx, Params().GetConsensus(), hashBlock, true))
 	{
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4064a - " + _("Could not find the escrow funding transaction in the blockchain database. hex ") + txHash.GetHex() + " escrow.escrowInputTx " + escrow.escrowInputTx);
 		nExpectedCommissionAmount = convertSyscoinToCurrencyCode(theOffer.vchAliasPeg, vchFromString("BTC"), nCommission, theOffer.nHeight, precision)*escrow.nQty;
@@ -1801,7 +1801,7 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 	uint256 txHash;
 	txHash.SetHex(escrow.escrowInputTx);
 	// if we can't get it in this blockchain, try full raw tx decode (bitcoin input raw tx)
-	if (!GetTransaction(txHash, fundingTx, Params().GetConsensus(), hashBlock))
+	if (!GetTransaction(txHash, fundingTx, Params().GetConsensus(), hashBlock, true))
 	{
 		nExpectedCommissionAmount = convertSyscoinToCurrencyCode(theOffer.vchAliasPeg, vchFromString("BTC"), nCommission, theOffer.nHeight, precision)*escrow.nQty;
 		nExpectedAmount = convertSyscoinToCurrencyCode(theOffer.vchAliasPeg, vchFromString("BTC"), theOffer.GetPrice(foundEntry), theOffer.nHeight, precision)*escrow.nQty; 
@@ -2323,7 +2323,7 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 	uint256 txHash;
 	txHash.SetHex(escrow.escrowInputTx);
 	// if we can't get it in this blockchain, try full raw tx decode (bitcoin input raw tx)
-	if (!GetTransaction(txHash, fundingTx, Params().GetConsensus(), hashBlock))
+	if (!GetTransaction(txHash, fundingTx, Params().GetConsensus(), hashBlock, true))
 	{
 		nExpectedCommissionAmount = convertSyscoinToCurrencyCode(theOffer.vchAliasPeg, vchFromString("BTC"), nCommission, theOffer.nHeight, precision)*escrow.nQty;
 		nExpectedAmount = convertSyscoinToCurrencyCode(theOffer.vchAliasPeg, vchFromString("BTC"), theOffer.GetPrice(foundEntry), theOffer.nHeight, precision)*escrow.nQty; 
@@ -2613,7 +2613,7 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 	uint256 txHash;
 	txHash.SetHex(escrow.escrowInputTx);
 	// if we can't get it in this blockchain, try full raw tx decode (bitcoin input raw tx)
-	if (!GetTransaction(txHash, fundingTx, Params().GetConsensus(), hashBlock))
+	if (!GetTransaction(txHash, fundingTx, Params().GetConsensus(), hashBlock, true))
 	{
 		int precision = 2;
 		nExpectedAmount = convertSyscoinToCurrencyCode(theOffer.vchAliasPeg, vchFromString("BTC"), theOffer.GetPrice(foundEntry), theOffer.nHeight, precision)*escrow.nQty; 
