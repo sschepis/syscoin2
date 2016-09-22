@@ -607,16 +607,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 19 - " + _("Cannot have accept information on offer activation");
 				return error(errorMessage.c_str());
 			}
-			if (!theOffer.vchCert.empty() && !IsCertOp(prevCertOp))
-			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 20 - " + _("You must own the certificate you wish to sell");
-				return error(errorMessage.c_str());
-			}
-			if (IsCertOp(prevCertOp) && !theOffer.vchCert.empty() && theOffer.vchCert != vvchPrevCertArgs[0])
-			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 21 - " + _("Cert input and offer cert guid mismatch");
-				return error(errorMessage.c_str());
-			}
 			if ( theOffer.vchOffer != vvchArgs[0])
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 22 - " + _("Offer input and offer guid mismatch");
@@ -690,16 +680,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			if (vvchPrevArgs[0] != vvchArgs[0])
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 37 - " + _("Offerupdate offer mismatch");
-				return error(errorMessage.c_str());
-			}
-			if (IsCertOp(prevCertOp) && theOffer.vchCert != vvchPrevCertArgs[0])
-			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 38 - " + _("Cert input and offer cert guid mismatch");
-				return error(errorMessage.c_str());
-			}
-			if (!theOffer.vchCert.empty() && !IsCertOp(prevCertOp))
-			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 39 - " + _("You must own the cert offer you wish to update");
 				return error(errorMessage.c_str());
 			}
 			if ( theOffer.vchOffer != vvchArgs[0])
@@ -1108,11 +1088,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				return true;
 			}
 
-			if(theOfferAccept.nAcceptHeight >= nHeight)
-			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 96 - " + _("nAcceptHeight set incorrectly");
-				return true;
-			}
 			myPriceOffer.nHeight = theOfferAccept.nAcceptHeight;
 			
 			// if linked offer then get offer info from root offer history because the linked offer may not have history of changes (root offer can update linked offer without tx)	
@@ -1570,23 +1545,14 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 	}
 	nPrice = atof(params[5].get_str().c_str());
 	vchDesc = vchFromValue(params[6]);
-	CScript scriptPubKeyOrig, scriptPubKeyCertOrig;
-	CScript scriptPubKey, scriptPubKeyCert;
-	const CWalletTx *wtxCertIn = NULL;
-	CCert theCert;
+	CScript scriptPubKeyOrig;
+	CScript scriptPubKey;
 	if(params.size() >= 9)
 	{
 		
 		vchCert = vchFromValue(params[8]);
 		if(vchCert == vchFromString("nocert"))
 			vchCert.clear();
-		CTransaction txCert;
-		
-		// make sure this cert is still valid
-		if (GetTxOfCert( vchCert, theCert, txCert, true))
-		{
-			wtxCertIn = pwalletMain->GetWalletTx(txCert.GetHash());
-		}
 	}
 
 	if(params.size() >= 10)
@@ -1656,8 +1622,6 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 	scriptPubKeyOrig= GetScriptForDestination(currentOfferKey.GetID());
 	scriptPubKey << CScript::EncodeOP_N(OP_OFFER_ACTIVATE) << vchOffer << vchHashOffer << OP_2DROP << OP_DROP;
 	scriptPubKey += scriptPubKeyOrig;
-	scriptPubKeyCert << CScript::EncodeOP_N(OP_CERT_UPDATE) << vchCert << vchFromString("") << OP_2DROP << OP_DROP;
-	scriptPubKeyCert += scriptPubKeyOrig;
 	CScript scriptPubKeyAlias;
 	scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << alias.vchAlias << alias.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
 	scriptPubKeyAlias += scriptPubKeyOrig;				
@@ -1666,8 +1630,6 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 	CRecipient recipient;
 	CreateRecipient(scriptPubKey, recipient);
 	vecSend.push_back(recipient);
-	CRecipient certRecipient;
-	CreateRecipient(scriptPubKeyCert, certRecipient);
 	CRecipient aliasRecipient;
 	CreateRecipient(scriptPubKeyAlias, aliasRecipient);
 	vecSend.push_back(aliasRecipient);
@@ -1681,6 +1643,7 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 	CreateFeeRecipient(scriptData, data, fee);
 	vecSend.push_back(fee);
 	const CWalletTx * wtxInOffer=NULL;
+	const CWalletTx * wtxInCert=NULL;
 	const CWalletTx * wtxInEscrow=NULL;
 	SendMoneySyscoin(vecSend, recipient.nAmount+fee.nAmount+aliasRecipient.nAmount, false, wtx, wtxInOffer, wtxCertIn, wtxAliasIn, wtxInEscrow);
 	UniValue res(UniValue::VARR);
@@ -2188,24 +2151,12 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	CPubKey currentKey(alias.vchPubKey);
 	scriptPubKeyOrig = GetScriptForDestination(currentKey.GetID());
 
-	// create OFFERUPDATE, CERTUPDATE, ALIASUPDATE txn keys
-	CScript scriptPubKey, scriptPubKeyCert;
+	// create OFFERUPDATE, ALIASUPDATE txn keys
+	CScript scriptPubKey;
 
 	wtxIn = pwalletMain->GetWalletTx(tx.GetHash());
 	if (wtxIn == NULL)
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 163 - " + _("This offer is not in your wallet"));
-
-	CCert theCert;
-	CTransaction txCert;
-	const CWalletTx *wtxCertIn = NULL;
-
-	// make sure this cert is still valid
-	if (GetTxOfCert( vchCert, theCert, txCert, true))
-	{
-		wtxCertIn = pwalletMain->GetWalletTx(txCert.GetHash());
-		scriptPubKeyCert << CScript::EncodeOP_N(OP_CERT_UPDATE) << vchCert << vchFromString("") << OP_2DROP << OP_DROP;
-		scriptPubKeyCert += scriptPubKeyOrig;
-	}
 	
 
 	COffer offerCopy = theOffer;
@@ -2228,8 +2179,8 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	// linked offers can't change these settings, they are overrided by parent info
 	if(offerCopy.vchLinkOffer.empty())
 	{
-		if(wtxCertIn != NULL)
-			theOffer.vchCert = vchCert;
+		if(offerCopy.vchCert != vchCert)
+			theOffer.vchCert = vchCert;		
 		if(vchAliasPeg.empty())
 			vchAliasPeg = offerCopy.vchAliasPeg;
 		if(offerCopy.vchAliasPeg != vchAliasPeg)
@@ -2272,11 +2223,6 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	CRecipient recipient;
 	CreateRecipient(scriptPubKey, recipient);
 	vecSend.push_back(recipient);
-	CRecipient certRecipient;
-	CreateRecipient(scriptPubKeyCert, certRecipient);
-	// if we use a cert as input to this offer tx, we need another utxo for further cert transactions on this cert, so we create one here
-	if(wtxCertIn != NULL)
-		vecSend.push_back(certRecipient);
 
 	CScript scriptPubKeyAlias;
 	scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << alias.vchAlias << alias.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
@@ -2292,7 +2238,8 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	CreateFeeRecipient(scriptData, data, fee);
 	vecSend.push_back(fee);
 	const CWalletTx * wtxInEscrow=NULL;
-	SendMoneySyscoin(vecSend, recipient.nAmount+aliasRecipient.nAmount+fee.nAmount, false, wtx, wtxIn, wtxCertIn, wtxAliasIn, wtxInEscrow);
+	const CWalletTx * wtxInCert=NULL;
+	SendMoneySyscoin(vecSend, recipient.nAmount+aliasRecipient.nAmount+fee.nAmount, false, wtx, wtxIn, wtxInCert, wtxAliasIn, wtxInEscrow);
 	UniValue res(UniValue::VARR);
 	res.push_back(wtx.GetHash().GetHex());
 	return res;

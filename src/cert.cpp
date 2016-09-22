@@ -374,17 +374,12 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 	bool found = false;
 	vector<unsigned char> vchHash;
 	int nDataOut;
-	if(GetSyscoinData(tx, vchData, vchHash, nDataOut) && !theCert.UnserializeFromData(vchData, vchHash))
+	if(!GetSyscoinData(tx, vchData, vchHash, nDataOut) || !theOffer.UnserializeFromData(vchData, vchHash))
 	{
-		theCert.SetNull();
-	}
-	// we need to check for cert update specially because a cert update without data is sent along with offers linked with the cert
-	if (theCert.IsNull() && op != OP_CERT_UPDATE)
-	{
-		if(fDebug)
-			LogPrintf("CheckCertInputs(): Null cert, skipping...\n");	
+		errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR ERRCODE: 2001 - " + _("Cannot unserialize data inside of this transaction relating to a certificate");
 		return true;
-	}	
+	}
+
 	if(fJustCheck)
 	{
 		if(!vchData.empty())
@@ -395,7 +390,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 			CreateFeeRecipient(scriptData, vchData, fee);
 			if (fee.nAmount > tx.vout[nDataOut].nValue) 
 			{
-				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2 - " + _("Transaction does not pay enough fees");
+				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2002 - " + _("Transaction does not pay enough fees");
 				return error(errorMessage.c_str());
 			}
 		}
