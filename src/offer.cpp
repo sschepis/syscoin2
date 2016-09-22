@@ -26,30 +26,6 @@ bool DisconnectOffer(const CBlockIndex *pindex, const CTransaction &tx, int op, 
 bool DisconnectCertificate(const CBlockIndex *pindex, const CTransaction &tx, int op, vector<vector<unsigned char> > &vvchArgs );
 bool DisconnectMessage(const CBlockIndex *pindex, const CTransaction &tx, int op, vector<vector<unsigned char> > &vvchArgs );
 bool DisconnectEscrow(const CBlockIndex *pindex, const CTransaction &tx, int op, vector<vector<unsigned char> > &vvchArgs );
-// transfer cert if its linked to offer
-string makeTransferCertTX(const COffer& theOffer, const COfferAccept& theOfferAccept)
-{
-
-	string strError;
-	string strMethod = string("certtransfer");
-	UniValue params(UniValue::VARR);
-	params.push_back(stringFromVch(theOffer.vchCert));
-	params.push_back(stringFromVch(theOfferAccept.vchBuyerAlias));
-    try {
-        tableRPC.execute(strMethod, params);
-	}
-	catch (UniValue& objError)
-	{
-		return find_value(objError, "message").get_str().c_str();
-	}
-	catch(std::exception& e)
-	{
-		return string(e.what()).c_str();
-	}
-	return "";
-
-}
-
 bool IsOfferOp(int op) {
 	return op == OP_OFFER_ACTIVATE
         || op == OP_OFFER_UPDATE
@@ -1132,7 +1108,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				return true;
 			}
 
-			if(theOfferAccept.nAcceptHeight < theOffer.nHeight || theOfferAccept.nAcceptHeight > nHeight)
+			if(theOfferAccept.nAcceptHeight >= nHeight)
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 96 - " + _("nAcceptHeight set incorrectly");
 				return true;
@@ -1161,12 +1137,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				if(!GetTxAndVtxOfOffer( myPriceOffer.vchLinkOffer, linkOffer, linkedTx, offerVtxPos))
 				{
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 107 - " + _("Could not get linked offer");
-					return true;
-				}
-
-				if(theOfferAccept.nAcceptHeight < linkOffer.nHeight)
-				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 96 - " + _("nAcceptHeight set incorrectly");
 					return true;
 				}
 				linkOffer.nHeight = theOfferAccept.nAcceptHeight;
@@ -1533,19 +1503,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					}
 				}
 			}
- 			// purchased a cert so xfer it
-			// also can't auto xfer offer paid in btc, need to do manually
- 			if(!dontaddtodb && pwalletMain && theOfferAccept.txBTCId.IsNull() && !theOffer.vchCert.empty())
- 			{
-				if((IsSyscoinTxMine(tx, "offer") && theOffer.vchLinkOffer.empty()) || (IsSyscoinTxMine(linkedTx, "offer") && !theOffer.vchLinkOffer.empty()))
-				{
- 					string strError = makeTransferCertTX(theOffer, theOfferAccept);
- 					if(strError != "")
-					{
-						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 131 - " + _("Transfer certificate failure:") + " " + strError;	
-					}
-				}
- 			}
 		}
 		// debug
 		if (fDebug)

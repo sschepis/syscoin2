@@ -856,7 +856,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 			// make sure offer is still valid and then deduct qty
 			if (GetTxAndVtxOfOffer( theEscrow.vchOffer, dbOffer, txOffer, myVtxPos))
 			{
-				if(theEscrow.nAcceptHeight < dbOffer.nHeight || theEscrow.nAcceptHeight > nHeight)
+				if(theEscrow.nAcceptHeight >= nHeight)
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 96 - " + _("nAcceptHeight set incorrectly");
 					return true;
