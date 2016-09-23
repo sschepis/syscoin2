@@ -1270,15 +1270,6 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	CRecipient recipientEscrow  = {scriptPubKey, nAmountWithFee, false};
 	vecSendEscrow.push_back(recipientEscrow);
 	
-	try{
-		SendMoneySyscoin(vecSend,recipientBuyer.nAmount+ recipientArbiter.nAmount+recipientSeller.nAmount+aliasRecipient.nAmount+fee.nAmount, false, wtx, wtxInOffer, wtxInCert, wtxAliasIn, wtxInEscrow, true, true);
-	}
-	catch(std::exception& e)
-	{
-		 throw runtime_error(e.what());
-	}	
-	if(vchRedeemScript.empty())
-		SendMoneySyscoin(vecSendEscrow, recipientEscrow.nAmount, false, escrowWtx, NULL, NULL, NULL, NULL, false);
 	// send to seller/arbiter so they can track the escrow through GUI
     // build escrow
     CEscrow newEscrow;
@@ -1336,6 +1327,36 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	const CWalletTx * wtxInOffer=NULL;
 	const CWalletTx * wtxInEscrow=NULL;
 	
+	try{
+		SendMoneySyscoin(vecSend,recipientBuyer.nAmount+ recipientArbiter.nAmount+recipientSeller.nAmount+aliasRecipient.nAmount+fee.nAmount, false, wtx, wtxInOffer, wtxInCert, wtxAliasIn, wtxInEscrow, true, true);
+	}
+	catch(std::exception& e)
+	{
+		 throw runtime_error(e.what());
+	}	
+	if(vchRedeemScript.empty())
+		SendMoneySyscoin(vecSendEscrow, recipientEscrow.nAmount, false, escrowWtx, NULL, NULL, NULL, NULL, false);
+
+	newEscrow.escrowInputTx = vchBTCTx.empty()? escrowWtx.GetHash().GetHex(): stringFromVch(vchBTCTx);
+	const vector<unsigned char> &data1 = newEscrow.Serialize();
+    uint256 hash = Hash(data.begin(), data.end());
+ 	vector<unsigned char> vchHash1 = CScriptNum(hash.GetCheapHash()).getvch();
+    vector<unsigned char> vchHashEscrow1 = vchFromValue(HexStr(vchHash));
+	scriptPubKeyBuyer << CScript::EncodeOP_N(OP_ESCROW_ACTIVATE) << vchEscrow << vchFromString("0") << vchHashEscrow1 << OP_2DROP << OP_2DROP;
+	scriptPubKeySeller << CScript::EncodeOP_N(OP_ESCROW_ACTIVATE) << vchEscrow  << vchFromString("0") << vchHashEscrow1 << OP_2DROP << OP_2DROP;
+	scriptPubKeyArbiter << CScript::EncodeOP_N(OP_ESCROW_ACTIVATE) << vchEscrow << vchFromString("0") << vchHashEscrow1 << OP_2DROP << OP_2DROP;
+	scriptPubKeySeller += scriptSeller;
+	scriptPubKeyArbiter += scriptArbiter;
+	scriptPubKeyBuyer += scriptBuyer;
+
+	vecSend.clear();
+	CreateRecipient(scriptPubKeyArbiter, recipientArbiter);
+	vecSend.push_back(recipientArbiter);
+	CreateRecipient(scriptPubKeySeller, recipientSeller);
+	vecSend.push_back(recipientSeller);
+	CreateRecipient(scriptPubKeyBuyer, recipientBuyer);
+	vecSend.push_back(recipientBuyer);
+
 	SendMoneySyscoin(vecSend,recipientBuyer.nAmount+ recipientArbiter.nAmount+recipientSeller.nAmount+aliasRecipient.nAmount+fee.nAmount, false, wtx, wtxInOffer, wtxInCert, wtxAliasIn, wtxInEscrow);
 
 	UniValue res(UniValue::VARR);
