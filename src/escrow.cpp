@@ -20,7 +20,7 @@
 #include <boost/algorithm/string/predicate.hpp>
 using namespace std;
 extern void SendMoney(const CTxDestination &address, CAmount nValue, bool fSubtractFeeFromAmount, CWalletTx& wtxNew);
-extern void SendMoneySyscoin(const vector<CRecipient> &vecSend, CAmount nValue, bool fSubtractFeeFromAmount, CWalletTx& wtxNew, const CWalletTx* wtxInOffer=NULL, const CWalletTx* wtxInCert=NULL, const CWalletTx* wtxInAlias=NULL, const CWalletTx* wtxInEscrow=NULL, bool syscoinTx=true, bool justCheck=false);
+extern void SendMoneySyscoin(const vector<CRecipient> &vecSend, CAmount nValue, bool fSubtractFeeFromAmount, CWalletTx& wtxNew, const CWalletTx* wtxInOffer=NULL, const CWalletTx* wtxInCert=NULL, const CWalletTx* wtxInAlias=NULL, const CWalletTx* wtxInEscrow=NULL, bool syscoinTx=true);
 void PutToEscrowList(std::vector<CEscrow> &escrowList, CEscrow& index) {
 	int i = escrowList.size() - 1;
 	BOOST_REVERSE_FOREACH(CEscrow &o, escrowList) {
@@ -1065,7 +1065,7 @@ UniValue generateescrowmultisig(const UniValue& params, bool fHelp) {
 	arrayOfKeys.push_back(HexStr(selleralias.vchPubKey));
 	arrayOfKeys.push_back(HexStr(buyeralias.vchPubKey));
 	arrayParams.push_back(arrayOfKeys);
-	UniValue resCreate, res;
+	UniValue resCreate;
 	try
 	{
 		resCreate = tableRPC.execute("createmultisig", arrayParams);
@@ -1076,8 +1076,8 @@ UniValue generateescrowmultisig(const UniValue& params, bool fHelp) {
 	}
 	if (!resCreate.isObject())
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4079 - " + _("Could not create escrow transaction: Invalid response from createescrow"));
-	res = resCreate;
-	return res;
+	
+	return resCreate;
 }
 
 UniValue escrownew(const UniValue& params, bool fHelp) {
@@ -1104,12 +1104,8 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	
 
 	vector<unsigned char> vchMessage = vchFromValue(params[3]);
-	vector<unsigned char> vchBTCTx;
-	if(params.size() >= 6)
-		vchBTCTx = vchFromValue(params[5]);
-	vector<unsigned char> vchRedeemScript;
-	if(params.size() >= 7)
-		vchRedeemScript = vchFromValue(params[6]);
+	vector<unsigned char> vchBTCTx = params.size() >= 6? vchFromValue(params[5]): vchFromString("");
+	vector<unsigned char> vchRedeemScript = params.size() >= 7? vchFromValue(params[6]): vchFromString("");
 	CTransaction rawTx;
 	if (!vchBTCTx.empty() && !DecodeHexTx(rawTx,stringFromVch(vchBTCTx)))
 			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4064 - " + _("Could not find decode raw BTC transaction"));
@@ -1251,8 +1247,8 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	}
 	else
 	{
-			redeemScript = ParseHex(stringFromVch(vchRedeemScript));
-	}	
+			redeemScript = ParseHex(stringFromVch(vchRedeemScript));		
+	}
 	scriptPubKey = CScript(redeemScript.begin(), redeemScript.end());
 	int precision = 2;
 	// send to escrow address
@@ -1270,6 +1266,18 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	CRecipient recipientEscrow  = {scriptPubKey, nAmountWithFee, false};
 	vecSendEscrow.push_back(recipientEscrow);
 	
+	if(vchRedeemScript.empty())
+	{
+		CReserveKey reservekey(pwalletMain);
+		CAmount nFeeRequired;
+		std::string strError;
+		int nChangePosRet = -1;
+		if (!pwalletMain->CreateTransaction(vecSendEscrow, escrowWtx, reservekey, nFeeRequired, nChangePosRet, strError, NULL, true, NULL, NULL, NULL, NULL, false)) {
+			if (nAmountWithFee + nFeeRequired > pwalletMain->GetBalance())
+				strError = strprintf("Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds!", FormatMoney(nFeeRequired));
+			throw runtime_error(strError);
+		}
+	}
 	// send to seller/arbiter so they can track the escrow through GUI
     // build escrow
     CEscrow newEscrow;
@@ -1326,43 +1334,16 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	const CWalletTx * wtxInCert=NULL;
 	const CWalletTx * wtxInOffer=NULL;
 	const CWalletTx * wtxInEscrow=NULL;
-	
-	try{
-		SendMoneySyscoin(vecSend,recipientBuyer.nAmount+ recipientArbiter.nAmount+recipientSeller.nAmount+aliasRecipient.nAmount+fee.nAmount, false, wtx, wtxInOffer, wtxInCert, wtxAliasIn, wtxInEscrow, true, true);
-	}
-	catch(std::exception& e)
+	try
 	{
-		 throw runtime_error(e.what());
-	}	
-	if(vchRedeemScript.empty())
-		SendMoneySyscoin(vecSendEscrow, recipientEscrow.nAmount, false, escrowWtx, NULL, NULL, NULL, NULL, false);
-
-	newEscrow.escrowInputTx = vchBTCTx.empty()? escrowWtx.GetHash().GetHex(): stringFromVch(vchBTCTx);
-	const vector<unsigned char> &data1 = newEscrow.Serialize();
-    uint256 hash1 = Hash(data1.begin(), data1.end());
- 	vector<unsigned char> vchHash1 = CScriptNum(hash1.GetCheapHash()).getvch();
-    vector<unsigned char> vchHashEscrow1 = vchFromValue(HexStr(vchHash1));
-	scriptPubKeyBuyer = CScript() << CScript::EncodeOP_N(OP_ESCROW_ACTIVATE) << vchEscrow << vchFromString("0") << vchHashEscrow1 << OP_2DROP << OP_2DROP;
-	scriptPubKeySeller = CScript() << CScript::EncodeOP_N(OP_ESCROW_ACTIVATE) << vchEscrow  << vchFromString("0") << vchHashEscrow1 << OP_2DROP << OP_2DROP;
-	scriptPubKeyArbiter = CScript() << CScript::EncodeOP_N(OP_ESCROW_ACTIVATE) << vchEscrow << vchFromString("0") << vchHashEscrow1 << OP_2DROP << OP_2DROP;
-	scriptPubKeySeller += scriptSeller;
-	scriptPubKeyArbiter += scriptArbiter;
-	scriptPubKeyBuyer += scriptBuyer;
-
-	vecSend.clear();
-	CreateRecipient(scriptPubKeyArbiter, recipientArbiter);
-	vecSend.push_back(recipientArbiter);
-	CreateRecipient(scriptPubKeySeller, recipientSeller);
-	vecSend.push_back(recipientSeller);
-	CreateRecipient(scriptPubKeyBuyer, recipientBuyer);
-	vecSend.push_back(recipientBuyer);
-	CScript scriptData1;
-	scriptData1 << OP_RETURN << data1;
-	CreateFeeRecipient(scriptData1, data1, fee);
-	vecSend.push_back(fee);
-
-	SendMoneySyscoin(vecSend,recipientBuyer.nAmount+ recipientArbiter.nAmount+recipientSeller.nAmount+aliasRecipient.nAmount+fee.nAmount, false, wtx, wtxInOffer, wtxInCert, wtxAliasIn, wtxInEscrow);
-
+		SendMoneySyscoin(vecSend,recipientBuyer.nAmount+ recipientArbiter.nAmount+recipientSeller.nAmount+aliasRecipient.nAmount+fee.nAmount, false, wtx, wtxInOffer, wtxInCert, wtxAliasIn, wtxInEscrow);
+	}
+	catch(std::exception &e)
+	{
+		throw runtime_error(e.what());
+	}
+   if (!pwalletMain->CommitTransaction(escrowWtx, reservekey))
+        throw runtime_error("SYSCOIN_RPC_ERROR ERRCODE: 9000 - " + _("The Syscoin input (alias, certificate, offer, escrow) you are trying to use for this transaction is invalid or not confirmed yet! Please wait a block and try again..."));	
 	UniValue res(UniValue::VARR);
 	res.push_back(wtx.GetHash().GetHex());
 	res.push_back(stringFromVch(vchEscrow));
