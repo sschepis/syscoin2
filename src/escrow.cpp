@@ -1266,9 +1266,9 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	CRecipient recipientEscrow  = {scriptPubKey, nAmountWithFee, false};
 	vecSendEscrow.push_back(recipientEscrow);
 	
+	CReserveKey reservekey(pwalletMain);
 	if(vchRedeemScript.empty())
 	{
-		CReserveKey reservekey(pwalletMain);
 		CAmount nFeeRequired;
 		std::string strError;
 		int nChangePosRet = -1;
@@ -1334,15 +1334,10 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	const CWalletTx * wtxInCert=NULL;
 	const CWalletTx * wtxInOffer=NULL;
 	const CWalletTx * wtxInEscrow=NULL;
-	try
-	{
-		SendMoneySyscoin(vecSend,recipientBuyer.nAmount+ recipientArbiter.nAmount+recipientSeller.nAmount+aliasRecipient.nAmount+fee.nAmount, false, wtx, wtxInOffer, wtxInCert, wtxAliasIn, wtxInEscrow);
-	}
-	catch(std::exception &e)
-	{
-		throw runtime_error(e.what());
-	}
-   if (!pwalletMain->CommitTransaction(escrowWtx, reservekey))
+
+	SendMoneySyscoin(vecSend,recipientBuyer.nAmount+ recipientArbiter.nAmount+recipientSeller.nAmount+aliasRecipient.nAmount+fee.nAmount, false, wtx, wtxInOffer, wtxInCert, wtxAliasIn, wtxInEscrow);
+
+   if (vchRedeemScript.empty()) && !pwalletMain->CommitTransaction(escrowWtx, reservekey))
         throw runtime_error("SYSCOIN_RPC_ERROR ERRCODE: 9000 - " + _("The Syscoin input (alias, certificate, offer, escrow) you are trying to use for this transaction is invalid or not confirmed yet! Please wait a block and try again..."));	
 	UniValue res(UniValue::VARR);
 	res.push_back(wtx.GetHash().GetHex());
