@@ -1246,7 +1246,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 		if (redeemScript_value.isStr())
 		{
 			redeemScript = ParseHex(redeemScript_value.get_str());
-				LogPrintf("redeemScript %s\n", stringFromVch(redeemScript));
+				LogPrintf("redeemScript %s\n", HexStr(redeemScript));
 		}
 		else
 			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4080 - " + _("Could not create escrow transaction: could not find redeem script in response"));
@@ -1256,7 +1256,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 			redeemScript = ParseHex(stringFromVch(vchRedeemScript));
 			LogPrintf("redeemScript shouldnt get here %s\n", stringFromVch(redeemScript));
 	}
-	
+	LogPrintf("redeemScript1 %s\n", HexStr(redeemScript));	
 	scriptPubKey = CScript(redeemScript.begin(), redeemScript.end());
 	int precision = 2;
 	// send to escrow address
@@ -1274,9 +1274,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	CRecipient recipientEscrow  = {scriptPubKey, nAmountWithFee, false};
 	vecSendEscrow.push_back(recipientEscrow);
 	
-	if(vchRedeemScript.empty())
-		SendMoneySyscoin(vecSendEscrow, recipientEscrow.nAmount, false, escrowWtx, NULL, NULL, NULL, NULL, false);
-	
+
 	// send to seller/arbiter so they can track the escrow through GUI
     // build escrow
     CEscrow newEscrow;
@@ -1333,7 +1331,15 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	const CWalletTx * wtxInCert=NULL;
 	const CWalletTx * wtxInOffer=NULL;
 	const CWalletTx * wtxInEscrow=NULL;
-	SendMoneySyscoin(vecSend,recipientBuyer.nAmount+ recipientArbiter.nAmount+recipientSeller.nAmount+aliasRecipient.nAmount+fee.nAmount, false, wtx, wtxInOffer, wtxInCert, wtxAliasIn, wtxInEscrow);
+	try{
+		SendMoneySyscoin(vecSend,recipientBuyer.nAmount+ recipientArbiter.nAmount+recipientSeller.nAmount+aliasRecipient.nAmount+fee.nAmount, false, wtx, wtxInOffer, wtxInCert, wtxAliasIn, wtxInEscrow);
+	}
+	catch(std::exception& e)
+	{
+		 throw runtime_error(e.what());
+	}	
+	if(vchRedeemScript.empty())
+		SendMoneySyscoin(vecSendEscrow, recipientEscrow.nAmount, false, escrowWtx, NULL, NULL, NULL, NULL, false);
 	UniValue res(UniValue::VARR);
 	res.push_back(wtx.GetHash().GetHex());
 	res.push_back(stringFromVch(vchEscrow));
