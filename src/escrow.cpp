@@ -1641,7 +1641,7 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 
     CScript scriptPubKeyOrigSeller, scriptPubKeySeller, scriptPubKeyOrigArbiter, scriptPubKeyArbiter;
 	scriptPubKeySeller= GetScriptForDestination(sellerKey.GetID());
-	scriptPubKeyArbiterr= GetScriptForDestination(arbiterKey.GetID());
+	scriptPubKeyArbiter= GetScriptForDestination(arbiterKey.GetID());
 
     scriptPubKeyOrigSeller << CScript::EncodeOP_N(OP_ESCROW_RELEASE) << vchEscrow << vchFromString("0") << vchHashEscrow << OP_2DROP << OP_2DROP;
     scriptPubKeyOrigSeller += scriptPubKeySeller;
