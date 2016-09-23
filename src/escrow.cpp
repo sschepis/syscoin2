@@ -1065,7 +1065,7 @@ UniValue generateescrowmultisig(const UniValue& params, bool fHelp) {
 	arrayOfKeys.push_back(HexStr(selleralias.vchPubKey));
 	arrayOfKeys.push_back(HexStr(buyeralias.vchPubKey));
 	arrayParams.push_back(arrayOfKeys);
-	UniValue resCreate;
+	UniValue resCreate, res;
 	try
 	{
 		resCreate = tableRPC.execute("createmultisig", arrayParams);
@@ -1076,8 +1076,8 @@ UniValue generateescrowmultisig(const UniValue& params, bool fHelp) {
 	}
 	if (!resCreate.isObject())
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4079 - " + _("Could not create escrow transaction: Invalid response from createescrow"));
-	
-	return resCreate;
+	res = resCreate;
+	return res;
 }
 
 UniValue escrownew(const UniValue& params, bool fHelp) {
@@ -1246,15 +1246,17 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 		if (redeemScript_value.isStr())
 		{
 			redeemScript = ParseHex(redeemScript_value.get_str());
+				LogPrintf("redeemScript %s\n", stringFromVch(redeemScript));
 		}
 		else
 			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4080 - " + _("Could not create escrow transaction: could not find redeem script in response"));
 	}
 	else
 	{
-			redeemScript = ParseHex(stringFromVch(vchRedeemScript));		
+			redeemScript = ParseHex(stringFromVch(vchRedeemScript));
+			LogPrintf("redeemScript shouldnt get here %s\n", stringFromVch(redeemScript));
 	}
-	LogPrintf("redeemScript %s\n", stringFromVch(redeemScript));
+	
 	scriptPubKey = CScript(redeemScript.begin(), redeemScript.end());
 	int precision = 2;
 	// send to escrow address
