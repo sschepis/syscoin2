@@ -1271,7 +1271,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	vecSendEscrow.push_back(recipientEscrow);
 	
 	try{
-		SendMoneySyscoin(vecSend,recipientBuyer.nAmount+ recipientArbiter.nAmount+recipientSeller.nAmount+aliasRecipient.nAmount+fee.nAmount, false, wtx, wtxInOffer, wtxInCert, wtxAliasIn, wtxInEscrow, true);
+		SendMoneySyscoin(vecSend,recipientBuyer.nAmount+ recipientArbiter.nAmount+recipientSeller.nAmount+aliasRecipient.nAmount+fee.nAmount, false, wtx, wtxInOffer, wtxInCert, wtxAliasIn, wtxInEscrow, true, true);
 	}
 	catch(std::exception& e)
 	{
