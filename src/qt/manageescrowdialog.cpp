@@ -69,8 +69,7 @@ ManageEscrowDialog::ManageEscrowDialog(WalletModel* model, const QString &escrow
 		}
 		else if(escrowType == Seller)
 		{
-			ui->manageInfo2->setText(tr("You are the <b>merchant</b> of the offer held in escrow. The payment of coins have been released to you, you may claim them now. After claiming, please return to this dialog and provide feedback for this escrow transaction."));
-			ui->refundButton->setEnabled(false);
+			ui->manageInfo2->setText(tr("You are the <b>merchant</b> of the offer held in escrow. The payment of coins have been released to you, you may claim them now. After claiming, please return to this dialog and provide feedback for this escrow transaction. You may also refund the coins back to the buyer."));
 			ui->releaseButton->setText(tr("Claim Payment"));
 		}
 		else if(escrowType == Arbiter)
@@ -82,9 +81,8 @@ ManageEscrowDialog::ManageEscrowDialog(WalletModel* model, const QString &escrow
 	{
 		if(escrowType == Buyer)
 		{
-			ui->manageInfo2->setText(tr("You are the <b>buyer</b> of the offer held in escrow. The coins have been refunded back to you, you may claim them now. After claiming, please return to this dialog and provide feedback for this escrow transaction."));
+			ui->manageInfo2->setText(tr("You are the <b>buyer</b> of the offer held in escrow. The coins have been refunded back to you, you may claim them now. After claiming, please return to this dialog and provide feedback for this escrow transaction. You may also release the coins back to the merchant."));
 			ui->refundButton->setText(tr("Claim Refund"));
-			ui->releaseButton->setEnabled(false);
 		}
 		else if(escrowType == Seller)
 		{
