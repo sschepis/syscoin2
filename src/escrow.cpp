@@ -1633,20 +1633,30 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	escrow.rawTx = ParseHex(hex_str);
 	escrow.nHeight = chainActive.Tip()->nHeight;
 	escrow.vchLinkAlias = vchLinkAlias;
-    CScript scriptPubKey, scriptPubKeySeller;
-	scriptPubKeySeller= GetScriptForDestination(sellerKey.GetID());
 
 	const vector<unsigned char> &data = escrow.Serialize();
     uint256 hash = Hash(data.begin(), data.end());
  	vector<unsigned char> vchHash = CScriptNum(hash.GetCheapHash()).getvch();
     vector<unsigned char> vchHashEscrow = vchFromValue(HexStr(vchHash));
-    scriptPubKey << CScript::EncodeOP_N(OP_ESCROW_RELEASE) << vchEscrow << vchFromString("0") << vchHashEscrow << OP_2DROP << OP_2DROP;
-    scriptPubKey += scriptPubKeySeller;
+
+    CScript scriptPubKeyOrigSeller, scriptPubKeySeller, scriptPubKeyOrigArbiter, scriptPubKeyArbiter;
+	scriptPubKeySeller= GetScriptForDestination(sellerKey.GetID());
+	scriptPubKeyArbiterr= GetScriptForDestination(arbiterKey.GetID());
+
+    scriptPubKeyOrigSeller << CScript::EncodeOP_N(OP_ESCROW_RELEASE) << vchEscrow << vchFromString("0") << vchHashEscrow << OP_2DROP << OP_2DROP;
+    scriptPubKeyOrigSeller += scriptPubKeySeller;
+
+	scriptPubKeyOrigArbiter << CScript::EncodeOP_N(OP_ESCROW_RELEASE) << vchEscrow << vchFromString("0") << vchHashEscrow << OP_2DROP << OP_2DROP;
+    scriptPubKeyOrigArbiter += scriptPubKeyArbiter;
 
 	vector<CRecipient> vecSend;
-	CRecipient recipient;
-	CreateRecipient(scriptPubKey, recipient);
-	vecSend.push_back(recipient);
+	CRecipient recipientSeller;
+	CreateRecipient(scriptPubKeyOrigSeller, recipientSeller);
+	vecSend.push_back(recipientSeller);
+
+	CRecipient recipientArbiter;
+	CreateRecipient(scriptPubKeyOrigArbiter, recipientArbiter);
+	vecSend.push_back(recipientArbiter);
 
 	CRecipient aliasRecipient;
 	CreateRecipient(scriptPubKeyAlias, aliasRecipient);
@@ -1660,7 +1670,7 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 
 	const CWalletTx * wtxInOffer=NULL;
 	const CWalletTx * wtxInCert=NULL;
-	SendMoneySyscoin(vecSend, recipient.nAmount+fee.nAmount+aliasRecipient.nAmount, false, wtx, wtxInOffer, wtxInCert, wtxAliasIn, wtxIn);
+	SendMoneySyscoin(vecSend, recipientSeller.nAmount+recipientArbiter.nAmount+fee.nAmount+aliasRecipient.nAmount, false, wtx, wtxInOffer, wtxInCert, wtxAliasIn, wtxIn);
 	UniValue ret(UniValue::VARR);
 	ret.push_back(wtx.GetHash().GetHex());
 	return ret;
@@ -2404,18 +2414,29 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 	escrow.nHeight = chainActive.Tip()->nHeight;
 	escrow.vchLinkAlias = vchLinkAlias;
 
-    CScript scriptPubKey, scriptPubKeyBuyer;
-	scriptPubKeyBuyer= GetScriptForDestination(buyerKey.GetID());
 	const vector<unsigned char> &data = escrow.Serialize();
     uint256 hash = Hash(data.begin(), data.end());
  	vector<unsigned char> vchHash = CScriptNum(hash.GetCheapHash()).getvch();
     vector<unsigned char> vchHashEscrow = vchFromValue(HexStr(vchHash));
-    scriptPubKey << CScript::EncodeOP_N(OP_ESCROW_REFUND) << vchEscrow << vchFromString("0") << vchHashEscrow << OP_2DROP << OP_2DROP;
-    scriptPubKey += scriptPubKeyBuyer;
+
+    CScript scriptPubKeyOrigBuyer, scriptPubKeyBuyer, scriptPubKeyOrigArbiter, scriptPubKeyArbiter;
+	scriptPubKeyBuyer= GetScriptForDestination(buyerKey.GetID());
+	scriptPubKeyArbiter= GetScriptForDestination(arbiterKey.GetID());
+
+    scriptPubKeyOrigBuyer << CScript::EncodeOP_N(OP_ESCROW_REFUND) << vchEscrow << vchFromString("0") << vchHashEscrow << OP_2DROP << OP_2DROP;
+    scriptPubKeyOrigBuyer += scriptPubKeyBuyer;
+
+	scriptPubKeyOrigArbiter << CScript::EncodeOP_N(OP_ESCROW_REFUND) << vchEscrow << vchFromString("0") << vchHashEscrow << OP_2DROP << OP_2DROP;
+    scriptPubKeyOrigArbiter += scriptPubKeyArbiter;
+
 	vector<CRecipient> vecSend;
-	CRecipient recipient;
-	CreateRecipient(scriptPubKey, recipient);
-	vecSend.push_back(recipient);
+	CRecipient recipientBuyer;
+	CreateRecipient(scriptPubKeyOrigBuyer, recipientBuyer);
+	vecSend.push_back(recipientBuyer);
+
+	CRecipient recipientArbiter;
+	CreateRecipient(scriptPubKeyOrigArbiter, recipientArbiter);
+	vecSend.push_back(recipientArbiter);
 
 	CRecipient aliasRecipient;
 	CreateRecipient(scriptPubKeyAlias, aliasRecipient);
@@ -2429,7 +2450,7 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 
 	const CWalletTx * wtxInOffer=NULL;
 	const CWalletTx * wtxInCert=NULL;
-	SendMoneySyscoin(vecSend, recipient.nAmount+fee.nAmount+aliasRecipient.nAmount, false, wtx, wtxInOffer, wtxInCert, wtxAliasIn, wtxIn);
+	SendMoneySyscoin(vecSend, recipientBuyer.nAmount+recipientArbiter.nAmount+fee.nAmount+aliasRecipient.nAmount, false, wtx, wtxInOffer, wtxInCert, wtxAliasIn, wtxIn);
 	UniValue ret(UniValue::VARR);
 	ret.push_back(wtx.GetHash().GetHex());
 	return ret;
