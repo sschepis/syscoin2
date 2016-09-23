@@ -1339,8 +1339,8 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 
 	newEscrow.escrowInputTx = vchBTCTx.empty()? escrowWtx.GetHash().GetHex(): stringFromVch(vchBTCTx);
 	const vector<unsigned char> &data1 = newEscrow.Serialize();
-    uint256 hash = Hash(data.begin(), data.end());
- 	vector<unsigned char> vchHash1 = CScriptNum(hash.GetCheapHash()).getvch();
+    uint256 hash1 = Hash(data1.begin(), data1.end());
+ 	vector<unsigned char> vchHash1 = CScriptNum(hash1.GetCheapHash()).getvch();
     vector<unsigned char> vchHashEscrow1 = vchFromValue(HexStr(vchHash));
 	scriptPubKeyBuyer << CScript::EncodeOP_N(OP_ESCROW_ACTIVATE) << vchEscrow << vchFromString("0") << vchHashEscrow1 << OP_2DROP << OP_2DROP;
 	scriptPubKeySeller << CScript::EncodeOP_N(OP_ESCROW_ACTIVATE) << vchEscrow  << vchFromString("0") << vchHashEscrow1 << OP_2DROP << OP_2DROP;
@@ -1356,6 +1356,10 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	vecSend.push_back(recipientSeller);
 	CreateRecipient(scriptPubKeyBuyer, recipientBuyer);
 	vecSend.push_back(recipientBuyer);
+	CScript scriptData1;
+	scriptData1 << OP_RETURN << data1;
+	CreateFeeRecipient(scriptData1, data1, fee);
+	vecSend.push_back(fee);
 
 	SendMoneySyscoin(vecSend,recipientBuyer.nAmount+ recipientArbiter.nAmount+recipientSeller.nAmount+aliasRecipient.nAmount+fee.nAmount, false, wtx, wtxInOffer, wtxInCert, wtxAliasIn, wtxInEscrow);
 
