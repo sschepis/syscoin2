@@ -2541,7 +2541,7 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 
 	CAmount nExpectedAmount = theOffer.GetPrice(foundEntry)*escrow.nQty; 
 	// if we can't get it in this blockchain, try full raw tx decode (bitcoin input raw tx)
-	if (!GetTransaction(txHash, fundingTx, Params().GetConsensus(), hashBlock, true))
+	if (!escrow.escrowInputTx.empty())
 	{
 		int precision = 2;
 		nExpectedAmount = convertSyscoinToCurrencyCode(theOffer.vchAliasPeg, vchFromString("BTC"), theOffer.GetPrice(foundEntry), theOffer.nHeight, precision)*escrow.nQty; 
