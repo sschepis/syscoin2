@@ -1788,6 +1788,7 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 		nEscrowTotal =  nExpectedAmount + nEscrowFee + recipientFee.nAmount;
 		if (!DecodeHexTx(fundingTx, escrow.escrowInputTx))
 			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4064 - " + _("Could not find the escrow funding transaction in the blockchain database."));
+		txHash = fundingTx.GetHash();
 	}	
 	for(unsigned int i=0;i<fundingTx.vout.size();i++)
 	{
@@ -1912,7 +1913,7 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 	UniValue arraySignInputs(UniValue::VARR);
 	UniValue arrayPrivateKeys(UniValue::VARR);
 	UniValue signUniValue(UniValue::VOBJ);
-	signUniValue.push_back(Pair("txid", escrow.escrowInputTx));
+	signUniValue.push_back(Pair("txid", txHash.ToString()));
 	signUniValue.push_back(Pair("vout", nOutMultiSig));
 	signUniValue.push_back(Pair("scriptPubKey", strEscrowScriptPubKey));
 	signUniValue.push_back(Pair("redeemScript", HexStr(escrow.vchRedeemScript)));
@@ -1928,7 +1929,7 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 	}
 	catch (UniValue& objError)
 	{
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4105 - " + _("Could not sign escrow transaction"));
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4105 - " + _("Could not sign escrow transaction: ") + find_value(objError, "message").get_str());
 	}	
 	if (!res.isObject())
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4106 - " + _("Could not sign escrow transaction: Invalid response from signrawtransaction"));
@@ -2280,6 +2281,7 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 		nEscrowTotal =  nExpectedAmount + nEscrowFee + recipientFee.nAmount;
 		if (!DecodeHexTx(fundingTx, escrow.escrowInputTx))
 			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4064 - " + _("Could not find the escrow funding transaction in the blockchain database."));
+		txHash = fundingTx.GetHash();
 	}
 	for(unsigned int i=0;i<fundingTx.vout.size();i++)
 	{
@@ -2346,7 +2348,7 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 	UniValue createTxInputsArray(UniValue::VARR);
 	UniValue createTxInputUniValue(UniValue::VOBJ);
 	UniValue createAddressUniValue(UniValue::VOBJ);
-	createTxInputUniValue.push_back(Pair("txid", escrow.escrowInputTx));
+	createTxInputUniValue.push_back(Pair("txid", txHash.ToString()));
 	createTxInputUniValue.push_back(Pair("vout", nOutMultiSig));
 	createTxInputsArray.push_back(createTxInputUniValue);
 	if(arbiterSigning)
@@ -2379,7 +2381,7 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 	UniValue arrayPrivateKeys(UniValue::VARR);
 
 	UniValue signUniValue(UniValue::VOBJ);
-	signUniValue.push_back(Pair("txid", escrow.escrowInputTx));
+	signUniValue.push_back(Pair("txid", txHash.ToString()));
 	signUniValue.push_back(Pair("vout", nOutMultiSig));
 	signUniValue.push_back(Pair("scriptPubKey", strEscrowScriptPubKey));
 	signUniValue.push_back(Pair("redeemScript", HexStr(escrow.vchRedeemScript)));
@@ -2395,7 +2397,7 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 	}
 	catch (UniValue& objError)
 	{
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4133 - " + _("Could not sign escrow transaction"));
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4133 - " + _("Could not sign escrow transaction: ") + find_value(objError, "message").get_str());;
 	}
 	
 	if (!res.isObject())
@@ -2560,6 +2562,7 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 		nExpectedAmount = convertSyscoinToCurrencyCode(theOffer.vchAliasPeg, vchFromString("BTC"), theOffer.GetPrice(foundEntry), theOffer.nHeight, precision)*escrow.nQty; 
 		if (!DecodeHexTx(fundingTx, escrow.escrowInputTx))
 			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4064 - " + _("Could not find the escrow funding transaction in the blockchain database."));
+		txHash = fundingTx.GetHash();
 	}	
 
 	string strEscrowScriptPubKey = HexStr(fundingTx.vout[nOutMultiSig].scriptPubKey.begin(), fundingTx.vout[nOutMultiSig].scriptPubKey.end());
@@ -2634,7 +2637,7 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 	UniValue arraySignInputs(UniValue::VARR);
 	UniValue arrayPrivateKeys(UniValue::VARR);
 	UniValue signUniValue(UniValue::VOBJ);
-	signUniValue.push_back(Pair("txid", escrow.escrowInputTx));
+	signUniValue.push_back(Pair("txid", txHash.ToString()));
 	signUniValue.push_back(Pair("vout", nOutMultiSig));
 	signUniValue.push_back(Pair("scriptPubKey", strEscrowScriptPubKey));
 	signUniValue.push_back(Pair("redeemScript", HexStr(escrow.vchRedeemScript)));
@@ -2650,7 +2653,7 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 	}
 	catch (UniValue& objError)
 	{
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4143 - " + _("Could not sign escrow transaction"));
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4143 - " + _("Could not sign escrow transaction: ") + find_value(objError, "message").get_str());
 	}
 	if (!res.isObject())
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4144 - " + _("Could not sign escrow transaction: Invalid response from signrawtransaction"));
