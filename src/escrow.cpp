@@ -1337,7 +1337,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 
 	SendMoneySyscoin(vecSend,recipientBuyer.nAmount+ recipientArbiter.nAmount+recipientSeller.nAmount+aliasRecipient.nAmount+fee.nAmount, false, wtx, wtxInOffer, wtxInCert, wtxAliasIn, wtxInEscrow);
 
-   if (vchRedeemScript.empty()) && !pwalletMain->CommitTransaction(escrowWtx, reservekey))
+   if (vchRedeemScript.empty() && !pwalletMain->CommitTransaction(escrowWtx, reservekey))
         throw runtime_error("SYSCOIN_RPC_ERROR ERRCODE: 9000 - " + _("The Syscoin input (alias, certificate, offer, escrow) you are trying to use for this transaction is invalid or not confirmed yet! Please wait a block and try again..."));	
 	UniValue res(UniValue::VARR);
 	res.push_back(wtx.GetHash().GetHex());
