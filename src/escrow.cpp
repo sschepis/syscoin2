@@ -1341,7 +1341,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	const vector<unsigned char> &data1 = newEscrow.Serialize();
     uint256 hash1 = Hash(data1.begin(), data1.end());
  	vector<unsigned char> vchHash1 = CScriptNum(hash1.GetCheapHash()).getvch();
-    vector<unsigned char> vchHashEscrow1 = vchFromValue(HexStr(vchHash));
+    vector<unsigned char> vchHashEscrow1 = vchFromValue(HexStr(vchHash1));
 	scriptPubKeyBuyer = CScript() << CScript::EncodeOP_N(OP_ESCROW_ACTIVATE) << vchEscrow << vchFromString("0") << vchHashEscrow1 << OP_2DROP << OP_2DROP;
 	scriptPubKeySeller = CScript() << CScript::EncodeOP_N(OP_ESCROW_ACTIVATE) << vchEscrow  << vchFromString("0") << vchHashEscrow1 << OP_2DROP << OP_2DROP;
 	scriptPubKeyArbiter = CScript() << CScript::EncodeOP_N(OP_ESCROW_ACTIVATE) << vchEscrow << vchFromString("0") << vchHashEscrow1 << OP_2DROP << OP_2DROP;
