@@ -1274,7 +1274,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 		int nChangePosRet = -1;
 		if (!pwalletMain->CreateTransaction(vecSendEscrow, escrowWtx, reservekey, nFeeRequired, nChangePosRet, strError, NULL, true, NULL, NULL, NULL, NULL, false)) {
 			if (nAmountWithFee + nFeeRequired > pwalletMain->GetBalance())
-				strError = strprintf("Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds!", FormatMoney(nFeeRequired));
+				strError = strprintf("Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds!", nFeeRequired/COIN);
 			throw runtime_error(strError);
 		}
 	}
