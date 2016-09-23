@@ -1241,12 +1241,10 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 		if (!resCreate.isObject())
 			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4079 - " + _("Could not generate escrow multisig address: Invalid response from generateescrowmultisig"));
 		const UniValue &o = resCreate.get_obj();
-		vector<unsigned char> redeemScript;
 		const UniValue& redeemScript_value = find_value(o, "redeemScript");
 		if (redeemScript_value.isStr())
 		{
 			redeemScript = ParseHex(redeemScript_value.get_str());
-				LogPrintf("redeemScript %s\n", HexStr(redeemScript));
 		}
 		else
 			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4080 - " + _("Could not create escrow transaction: could not find redeem script in response"));
@@ -1254,9 +1252,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	else
 	{
 			redeemScript = ParseHex(stringFromVch(vchRedeemScript));
-			LogPrintf("redeemScript shouldnt get here %s\n", stringFromVch(redeemScript));
-	}
-	LogPrintf("redeemScript1 %s\n", HexStr(redeemScript));	
+	}	
 	scriptPubKey = CScript(redeemScript.begin(), redeemScript.end());
 	int precision = 2;
 	// send to escrow address
