@@ -1104,8 +1104,12 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	
 
 	vector<unsigned char> vchMessage = vchFromValue(params[3]);
-	vector<unsigned char> vchBTCTx = params.size() >= 6? vchFromValue(params[5]): vchFromString("");
-	vector<unsigned char> vchRedeemScript = params.size() >= 7? vchFromValue(params[6]): vchFromString("");
+	vector<unsigned char> vchBTCTx;
+	if(params.size() >= 6)
+		vchBTCTx = vchFromValue(params[5]);
+	vector<unsigned char> vchRedeemScript;
+	if(params.size() >= 7)
+		vchRedeemScript = vchFromValue(params[6]);
 	CTransaction rawTx;
 	if (!vchBTCTx.empty() && !DecodeHexTx(rawTx,stringFromVch(vchBTCTx)))
 			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4064 - " + _("Could not find decode raw BTC transaction"));
@@ -1220,7 +1224,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	scriptBuyer= GetScriptForDestination(BuyerPubKey.GetID());
 	vector<unsigned char> redeemScript;
 	if(vchRedeemScript.empty())
-		{
+	{
 		UniValue arrayParams(UniValue::VARR);
 		arrayParams.push_back(stringFromVch(buyeralias.vchAlias));
 		arrayParams.push_back(stringFromVch(vchOffer));
@@ -1250,6 +1254,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	{
 			redeemScript = ParseHex(stringFromVch(vchRedeemScript));		
 	}
+	LogPrintf("redeemScript %s\n", stringFromVch(redeemScript));
 	scriptPubKey = CScript(redeemScript.begin(), redeemScript.end());
 	int precision = 2;
 	// send to escrow address
