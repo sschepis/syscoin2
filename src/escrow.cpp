@@ -851,7 +851,6 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4057 - " + _("Escrow already exists");
 				return true;
 			}
-		
 			vector<COffer> myVtxPos;
 			// make sure offer is still valid and then deduct qty
 			if (GetTxAndVtxOfOffer( theEscrow.vchOffer, dbOffer, txOffer, myVtxPos))
@@ -1266,18 +1265,6 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	CRecipient recipientEscrow  = {scriptPubKey, nAmountWithFee, false};
 	vecSendEscrow.push_back(recipientEscrow);
 	
-	CReserveKey reservekey(pwalletMain);
-	if(vchRedeemScript.empty())
-	{
-		CAmount nFeeRequired;
-		std::string strError;
-		int nChangePosRet = -1;
-		if (!pwalletMain->CreateTransaction(vecSendEscrow, escrowWtx, reservekey, nFeeRequired, nChangePosRet, strError, NULL, true, NULL, NULL, NULL, NULL, false)) {
-			if (nAmountWithFee + nFeeRequired > pwalletMain->GetBalance())
-				strError = strprintf("Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds!", nFeeRequired/COIN);
-			throw runtime_error(strError);
-		}
-	}
 	// send to seller/arbiter so they can track the escrow through GUI
     // build escrow
     CEscrow newEscrow;
@@ -1290,7 +1277,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	newEscrow.vchSellerAlias = selleralias.vchAlias;
 	newEscrow.vchPaymentMessage = vchFromString(strCipherText);
 	newEscrow.nQty = nQty;
-	newEscrow.escrowInputTx = vchBTCTx.empty()? escrowWtx.GetHash().GetHex(): stringFromVch(vchBTCTx);
+	newEscrow.escrowInputTx = stringFromVch(vchBTCTx);
 	newEscrow.nHeight = chainActive.Tip()->nHeight;
 	newEscrow.nAcceptHeight = chainActive.Tip()->nHeight;
 
@@ -1317,6 +1304,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	CRecipient recipientBuyer;
 	CreateRecipient(scriptPubKeyBuyer, recipientBuyer);
 	vecSend.push_back(recipientBuyer);
+	vecSend.push_back(recipientEscrow);
 
 	CRecipient aliasRecipient;
 	CreateRecipient(scriptPubKeyAlias, aliasRecipient);
@@ -1334,11 +1322,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	const CWalletTx * wtxInCert=NULL;
 	const CWalletTx * wtxInOffer=NULL;
 	const CWalletTx * wtxInEscrow=NULL;
-
-	SendMoneySyscoin(vecSend,recipientBuyer.nAmount+ recipientArbiter.nAmount+recipientSeller.nAmount+aliasRecipient.nAmount+fee.nAmount, false, wtx, wtxInOffer, wtxInCert, wtxAliasIn, wtxInEscrow);
-
-   if (vchRedeemScript.empty() && !pwalletMain->CommitTransaction(escrowWtx, reservekey))
-        throw runtime_error("SYSCOIN_RPC_ERROR ERRCODE: 9000 - " + _("The Syscoin input (alias, certificate, offer, escrow) you are trying to use for this transaction is invalid or not confirmed yet! Please wait a block and try again..."));	
+	SendMoneySyscoin(vecSend,recipientBuyer.nAmount+recipientArbiter.nAmount+recipientSeller.nAmount+aliasRecipient.nAmount+fee.nAmount+recipientEscrow.nAmount, false, wtx, wtxInOffer, wtxInCert, wtxAliasIn, wtxInEscrow);
 	UniValue res(UniValue::VARR);
 	res.push_back(wtx.GetHash().GetHex());
 	res.push_back(stringFromVch(vchEscrow));
@@ -1369,14 +1353,14 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	if (wtxIn == NULL)
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4083 - " + _("This escrow is not in your wallet"));
 
-    CTransaction fundingTx, initialTx;
-	if (!GetSyscoinTransaction(vtxPos.front().nHeight, vtxPos.front().txHash, initialTx, Params().GetConsensus()))
+    CTransaction fundingTx;
+	if (!GetSyscoinTransaction(vtxPos.front().nHeight, vtxPos.front().txHash, fundingTx, Params().GetConsensus()))
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4086 - " + _("Failed to find escrow transaction"));
 	bool foundWhitelistAlias = false;
-	for (unsigned int i = 0; i < initialTx.vin.size(); i++) {
+	for (unsigned int i = 0; i < fundingTx.vin.size(); i++) {
 		vector<vector<unsigned char> > vvchIn;
 		int opIn;
-		const COutPoint *prevOutput = &initialTx.vin[i].prevout;
+		const COutPoint *prevOutput = &fundingTx.vin[i].prevout;
 		if(!GetPreviousInput(prevOutput, opIn, vvchIn))
 			continue;
 		if (IsAliasOp(opIn) && escrow.vchBuyerAlias == vvchIn[0])
@@ -1485,11 +1469,7 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	CAmount nExpectedAmount = theOffer.GetPrice(foundEntry)*escrow.nQty; 
 	CAmount nEscrowFee = GetEscrowArbiterFee(nExpectedAmount);
 	CAmount nEscrowTotal =  nExpectedAmount + nEscrowFee + recipientFee.nAmount;
-	uint256 hashBlock;
-	uint256 txHash;
-	txHash.SetHex(escrow.escrowInputTx);
-	// if we can't get it in this blockchain, try full raw tx decode (bitcoin input raw tx)
-	if (!GetTransaction(txHash, fundingTx, Params().GetConsensus(), hashBlock, true))
+	if (!escrow.escrowInputTx.empty())
 	{
 		nExpectedCommissionAmount = convertSyscoinToCurrencyCode(theOffer.vchAliasPeg, vchFromString("BTC"), nCommission, theOffer.nHeight, precision)*escrow.nQty;
 		nExpectedAmount = convertSyscoinToCurrencyCode(theOffer.vchAliasPeg, vchFromString("BTC"), theOffer.GetPrice(foundEntry), theOffer.nHeight, precision)*escrow.nQty; 
@@ -1497,7 +1477,6 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 		nEscrowTotal =  nExpectedAmount + nEscrowFee + recipientFee.nAmount;
 		if (!DecodeHexTx(fundingTx, escrow.escrowInputTx))
 			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4064 - " + _("Could not find the escrow funding transaction in the blockchain database."));
-		txHash = fundingTx.GetHash();
 	}
 	CRecipient recipientEscrow  = {redeemScriptPubKey, nEscrowTotal, false};
 	nEscrowTotal = recipientEscrow.nAmount;
@@ -1571,7 +1550,7 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	UniValue createTxInputsArray(UniValue::VARR);
 	UniValue createTxInputUniValue(UniValue::VOBJ);
 	UniValue createAddressUniValue(UniValue::VOBJ);
-	createTxInputUniValue.push_back(Pair("txid", txHash.ToString()));
+	createTxInputUniValue.push_back(Pair("txid", fundingTx.GetHash().ToString()));
 	createTxInputUniValue.push_back(Pair("vout", nOutMultiSig));
 	createTxInputsArray.push_back(createTxInputUniValue);
 	if(arbiterSigning)
@@ -1620,7 +1599,7 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	UniValue arrayPrivateKeys(UniValue::VARR);
 
 	UniValue signUniValue(UniValue::VOBJ);
-	signUniValue.push_back(Pair("txid", txHash.ToString()));
+	signUniValue.push_back(Pair("txid", fundingTx.GetHash().ToString()));
 	signUniValue.push_back(Pair("vout", nOutMultiSig));
 	signUniValue.push_back(Pair("scriptPubKey", strEscrowScriptPubKey));
 	signUniValue.push_back(Pair("redeemScript", HexStr(escrow.vchRedeemScript)));
@@ -1729,14 +1708,14 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 		arbiterAlias.nHeight = vtxPos.front().nHeight;
 		arbiterAlias.GetAliasFromList(aliasArbiterVtxPos);
 	}
-    CTransaction fundingTx, initialTx;
-	if (!GetSyscoinTransaction(vtxPos.front().nHeight,vtxPos.front().txHash, initialTx, Params().GetConsensus()))
+    CTransaction fundingTx;
+	if (!GetSyscoinTransaction(vtxPos.front().nHeight,vtxPos.front().txHash, fundingTx, Params().GetConsensus()))
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4100 - " + _("Failed to find escrow transaction"));
 	bool foundWhitelistAlias = false;
-	for (unsigned int i = 0; i < initialTx.vin.size(); i++) {
+	for (unsigned int i = 0; i < fundingTx.vin.size(); i++) {
 		vector<vector<unsigned char> > vvchIn;
 		int opIn;
-		const COutPoint *prevOutput = &initialTx.vin[i].prevout;
+		const COutPoint *prevOutput = &fundingTx.vin[i].prevout;
 		if(!GetPreviousInput(prevOutput, opIn, vvchIn))
 			continue;
 		if (IsAliasOp(opIn) && escrow.vchBuyerAlias == vvchIn[0])
@@ -1788,11 +1767,8 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 	CAmount nExpectedAmount = theOffer.GetPrice(foundEntry)*escrow.nQty; 
 	CAmount nEscrowFee = GetEscrowArbiterFee(nExpectedAmount);
 	CAmount nEscrowTotal =  nExpectedAmount + nEscrowFee + recipientFee.nAmount;
-	uint256 hashBlock;
-	uint256 txHash;
-	txHash.SetHex(escrow.escrowInputTx);
 	// if we can't get it in this blockchain, try full raw tx decode (bitcoin input raw tx)
-	if (!GetTransaction(txHash, fundingTx, Params().GetConsensus(), hashBlock, true))
+	if (!escrow.escrowInputTx.empty())
 	{
 		nExpectedCommissionAmount = convertSyscoinToCurrencyCode(theOffer.vchAliasPeg, vchFromString("BTC"), nCommission, theOffer.nHeight, precision)*escrow.nQty;
 		nExpectedAmount = convertSyscoinToCurrencyCode(theOffer.vchAliasPeg, vchFromString("BTC"), theOffer.GetPrice(foundEntry), theOffer.nHeight, precision)*escrow.nQty; 
@@ -1800,7 +1776,6 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 		nEscrowTotal =  nExpectedAmount + nEscrowFee + recipientFee.nAmount;
 		if (!DecodeHexTx(fundingTx, escrow.escrowInputTx))
 			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4064 - " + _("Could not find the escrow funding transaction in the blockchain database."));
-		txHash = fundingTx.GetHash();
 	}	
 	for(unsigned int i=0;i<fundingTx.vout.size();i++)
 	{
@@ -1928,7 +1903,7 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 	UniValue arraySignInputs(UniValue::VARR);
 	UniValue arrayPrivateKeys(UniValue::VARR);
 	UniValue signUniValue(UniValue::VOBJ);
-	signUniValue.push_back(Pair("txid", txHash.ToString()));
+	signUniValue.push_back(Pair("txid", fundingTx.GetHash().ToString()));
 	signUniValue.push_back(Pair("vout", nOutMultiSig));
 	signUniValue.push_back(Pair("scriptPubKey", strEscrowScriptPubKey));
 	signUniValue.push_back(Pair("redeemScript", HexStr(escrow.vchRedeemScript)));
@@ -2039,14 +2014,14 @@ UniValue escrowcomplete(const UniValue& params, bool fHelp) {
 	vector<CEscrow> vtxPos;
 	if (!pescrowdb->ReadEscrow(vchEscrow, vtxPos) || vtxPos.empty())
 		  throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4120 - " + _("Failed to read from escrow DB"));
-    CTransaction fundingTx, initialTx;
-	if (!GetSyscoinTransaction(vtxPos.front().nHeight, vtxPos.front().txHash, initialTx, Params().GetConsensus()))
+    CTransaction fundingTx;
+	if (!GetSyscoinTransaction(vtxPos.front().nHeight, vtxPos.front().txHash, fundingTx, Params().GetConsensus()))
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4121 - " + _("Failed to find escrow transaction"));
 	bool foundWhitelistAlias = false;
-	for (unsigned int i = 0; i < initialTx.vin.size(); i++) {
+	for (unsigned int i = 0; i < fundingTx.vin.size(); i++) {
 		vector<vector<unsigned char> > vvchIn;
 		int opIn;
-		const COutPoint *prevOutput = &initialTx.vin[i].prevout;
+		const COutPoint *prevOutput = &fundingTx.vin[i].prevout;
 		if(!GetPreviousInput(prevOutput, opIn, vvchIn))
 			continue;
 		if (IsAliasOp(opIn) && escrow.vchBuyerAlias == vvchIn[0])
@@ -2180,14 +2155,14 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 	if (wtxIn == NULL)
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4083 - " + _("This escrow is not in your wallet"));
 
-    CTransaction fundingTx, initialTx;
-	if (!GetSyscoinTransaction(vtxPos.front().nHeight, vtxPos.front().txHash, initialTx, Params().GetConsensus()))
+    CTransaction fundingTx;
+	if (!GetSyscoinTransaction(vtxPos.front().nHeight, vtxPos.front().txHash, fundingTx, Params().GetConsensus()))
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4121 - " + _("Failed to find escrow transaction"));
 	bool foundWhitelistAlias = false;
-	for (unsigned int i = 0; i < initialTx.vin.size(); i++) {
+	for (unsigned int i = 0; i < fundingTx.vin.size(); i++) {
 		vector<vector<unsigned char> > vvchIn;
 		int opIn;
-		const COutPoint *prevOutput = &initialTx.vin[i].prevout;
+		const COutPoint *prevOutput = &fundingTx.vin[i].prevout;
 		if(!GetPreviousInput(prevOutput, opIn, vvchIn))
 			continue;
 		if (IsAliasOp(opIn) && escrow.vchBuyerAlias == vvchIn[0])
@@ -2284,11 +2259,8 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 	CAmount nExpectedAmount = theOffer.GetPrice(foundEntry)*escrow.nQty; 
 	CAmount nEscrowFee = GetEscrowArbiterFee(nExpectedAmount);
 	CAmount nEscrowTotal =  nExpectedAmount + nEscrowFee + recipientFee.nAmount;
-	uint256 hashBlock;
-	uint256 txHash;
-	txHash.SetHex(escrow.escrowInputTx);
 	// if we can't get it in this blockchain, try full raw tx decode (bitcoin input raw tx)
-	if (!GetTransaction(txHash, fundingTx, Params().GetConsensus(), hashBlock, true))
+	if (!escrow.escrowInputTx.empty())
 	{
 		nExpectedCommissionAmount = convertSyscoinToCurrencyCode(theOffer.vchAliasPeg, vchFromString("BTC"), nCommission, theOffer.nHeight, precision)*escrow.nQty;
 		nExpectedAmount = convertSyscoinToCurrencyCode(theOffer.vchAliasPeg, vchFromString("BTC"), theOffer.GetPrice(foundEntry), theOffer.nHeight, precision)*escrow.nQty; 
@@ -2365,7 +2337,7 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 	UniValue createTxInputsArray(UniValue::VARR);
 	UniValue createTxInputUniValue(UniValue::VOBJ);
 	UniValue createAddressUniValue(UniValue::VOBJ);
-	createTxInputUniValue.push_back(Pair("txid", txHash.ToString()));
+	createTxInputUniValue.push_back(Pair("txid", fundingTx.GetHash().ToString()));
 	createTxInputUniValue.push_back(Pair("vout", nOutMultiSig));
 	createTxInputsArray.push_back(createTxInputUniValue);
 	if(arbiterSigning)
@@ -2398,7 +2370,7 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 	UniValue arrayPrivateKeys(UniValue::VARR);
 
 	UniValue signUniValue(UniValue::VOBJ);
-	signUniValue.push_back(Pair("txid", txHash.ToString()));
+	signUniValue.push_back(Pair("txid", fundingTx.GetHash().ToString()));
 	signUniValue.push_back(Pair("vout", nOutMultiSig));
 	signUniValue.push_back(Pair("scriptPubKey", strEscrowScriptPubKey));
 	signUniValue.push_back(Pair("redeemScript", HexStr(escrow.vchRedeemScript)));
@@ -2524,14 +2496,14 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 	if (wtxIn == NULL)
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4137 - " + _("This escrow is not in your wallet"));
 
-    CTransaction fundingTx, initialTx;
-	if (!GetSyscoinTransaction(vtxPos.front().nHeight, vtxPos.front().txHash, initialTx, Params().GetConsensus()))
+    CTransaction fundingTx;
+	if (!GetSyscoinTransaction(vtxPos.front().nHeight, vtxPos.front().txHash, fundingTx, Params().GetConsensus()))
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4138 - " + _("Failed to find escrow transaction"));
 	bool foundWhitelistAlias = false;
-	for (unsigned int i = 0; i < initialTx.vin.size(); i++) {
+	for (unsigned int i = 0; i < fundingTx.vin.size(); i++) {
 		vector<vector<unsigned char> > vvchIn;
 		int opIn;
-		const COutPoint *prevOutput = &initialTx.vin[i].prevout;
+		const COutPoint *prevOutput = &fundingTx.vin[i].prevout;
 		if(!GetPreviousInput(prevOutput, opIn, vvchIn))
 			continue;
 		if (IsAliasOp(opIn) && escrow.vchBuyerAlias == vvchIn[0])
@@ -2654,7 +2626,7 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 	UniValue arraySignInputs(UniValue::VARR);
 	UniValue arrayPrivateKeys(UniValue::VARR);
 	UniValue signUniValue(UniValue::VOBJ);
-	signUniValue.push_back(Pair("txid", txHash.ToString()));
+	signUniValue.push_back(Pair("txid", fundingTx.GetHash().ToString()));
 	signUniValue.push_back(Pair("vout", nOutMultiSig));
 	signUniValue.push_back(Pair("scriptPubKey", strEscrowScriptPubKey));
 	signUniValue.push_back(Pair("redeemScript", HexStr(escrow.vchRedeemScript)));
