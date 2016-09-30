@@ -19,14 +19,14 @@
 #include <QModelIndex>
 #include <QMenu>
 #include <QItemSelection>
-#include "rpcserver.h"
+#include "rpc/server.h"
 #include "tinyformat.h"
 
 using namespace std;
 
 
 
-extern const CRPCTable tableRPC;
+extern CRPCTable tableRPC;
 MyWhitelistOfferDialog::MyWhitelistOfferDialog(const PlatformStyle *platformStyle, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::MyWhitelistOfferDialog),

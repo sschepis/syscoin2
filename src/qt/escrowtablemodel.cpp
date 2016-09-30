@@ -9,13 +9,13 @@
 
 #include <QFont>
 #include <QDateTime>
-#include "rpcserver.h"
+#include "rpc/server.h"
 #include "starrating.h"
 using namespace std;
 
 
 
-extern const CRPCTable tableRPC;
+extern CRPCTable tableRPC;
 struct EscrowTableEntry
 {
     enum Type {

@@ -7,7 +7,7 @@
 #include "base58.h"
 
 #include <QFont>
-#include "rpcserver.h"
+#include "rpc/server.h"
 #include "starrating.h"
 using namespace std;
 
@@ -15,7 +15,7 @@ using namespace std;
 const QString OfferTableModel::Offer = "O";
 
 
-extern const CRPCTable tableRPC;
+extern CRPCTable tableRPC;
 struct OfferTableEntry
 {
     enum Type {

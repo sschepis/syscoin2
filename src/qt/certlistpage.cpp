@@ -14,13 +14,13 @@
 #include <QKeyEvent>
 #include <QMenu>
 #include "main.h"
-#include "rpcserver.h"
+#include "rpc/server.h"
 #include <QStandardItemModel>
 #include "qcomboboxdelegate.h"
 #include <boost/algorithm/string.hpp>
 #include <QSettings>
 using namespace std;
-extern const CRPCTable tableRPC;
+extern CRPCTable tableRPC;
 extern bool getCategoryList(vector<string>& categoryList);
 CertListPage::CertListPage(const PlatformStyle *platformStyle, QWidget *parent) :
     QDialog(parent),

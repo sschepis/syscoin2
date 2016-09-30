@@ -18,10 +18,10 @@
 #include <QClipboard>
 #include <QMessageBox>
 #include <QMenu>
-#include "rpcserver.h"
+#include "rpc/server.h"
 #include "stardelegate.h"
 using namespace std;
-extern const CRPCTable tableRPC;
+extern CRPCTable tableRPC;
 MyAliasListPage::MyAliasListPage(const PlatformStyle *platformStyle, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::MyAliasListPage),

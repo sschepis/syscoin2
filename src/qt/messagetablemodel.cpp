@@ -9,12 +9,12 @@
 
 #include <QFont>
 #include <QDateTime>
-#include "rpcserver.h"
+#include "rpc/server.h"
 using namespace std;
 
 
 
-extern const CRPCTable tableRPC;
+extern CRPCTable tableRPC;
 struct MessageTableEntry
 {
 

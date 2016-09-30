@@ -8,11 +8,11 @@
 #include "ui_interface.h"
 #include <QDataWidgetMapper>
 #include <QMessageBox>
-#include "rpcserver.h"
+#include "rpc/server.h"
 #include <QSettings>
 using namespace std;
 
-extern const CRPCTable tableRPC;
+extern CRPCTable tableRPC;
 NewMessageDialog::NewMessageDialog(Mode mode, const QString &to, const QString &title, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::NewMessageDialog), mapper(0), mode(mode), model(0), walletModel(0)

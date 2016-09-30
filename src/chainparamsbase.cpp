@@ -32,7 +32,6 @@ class CBaseMainParams : public CBaseChainParams
 public:
     CBaseMainParams()
     {
-		// SYSCOIN
         nRPCPort = 8370;
     }
 };
@@ -46,7 +45,6 @@ class CBaseTestNetParams : public CBaseChainParams
 public:
     CBaseTestNetParams()
     {
-		// SYSCOIN
         nRPCPort = 18370;
         strDataDir = "testnet3";
     }
@@ -61,7 +59,6 @@ class CBaseRegTestParams : public CBaseChainParams
 public:
     CBaseRegTestParams()
     {
-		// SYSCOIN
         nRPCPort = 18370;
         strDataDir = "regtest";
     }

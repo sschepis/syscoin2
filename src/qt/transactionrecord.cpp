@@ -9,6 +9,7 @@
 #include "main.h"
 #include "timedata.h"
 #include "wallet/wallet.h"
+
 #include <stdint.h>
 
 #include <boost/foreach.hpp>
@@ -21,20 +22,6 @@ extern bool IsSyscoinTxMine(const CTransaction& tx, const string &type);
 extern std::string stringFromVch(const std::vector<unsigned char> &vch);
 extern bool DecodeAndParseSyscoinTx(const CTransaction& tx, int& op, int& nOut, vector<vector<unsigned char> >& vvch);
 enum {RECV=0, SEND=1};
-/* Return positive answer if transaction should be shown in list.
- */
-bool TransactionRecord::showTransaction(const CWalletTx &wtx)
-{
-    if (wtx.IsCoinBase())
-    {
-        // Ensures we show generated coins / mined transactions at depth 1
-        if (!wtx.IsInMainChain())
-        {
-            return false;
-        }
-    }
-    return true;
-}
 static bool CreateSyscoinTransactionRecord(TransactionRecord& sub, int op, const vector<vector<unsigned char> > &vvchArgs, const CWalletTx &wtx, int type)
 {
 	COffer offer;
@@ -160,6 +147,20 @@ static bool CreateSyscoinTransactions(const CWallet *wallet, const CWalletTx& wt
 	}
 	return false;
 }
+/* Return positive answer if transaction should be shown in list.
+ */
+bool TransactionRecord::showTransaction(const CWalletTx &wtx)
+{
+    if (wtx.IsCoinBase())
+    {
+        // Ensures we show generated coins / mined transactions at depth 1
+        if (!wtx.IsInMainChain())
+        {
+            return false;
+        }
+    }
+    return true;
+}
 
 /*
  * Decompose CWallet transaction to model transaction records.
@@ -173,11 +174,6 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
     CAmount nNet = nCredit - nDebit;
     uint256 hash = wtx.GetHash();
     std::map<std::string, std::string> mapValue = wtx.mapValue;
-	// SYSCOIN Check if tx is a syscoin service
-    vector<vector<unsigned char> > vvchArgs;
-    int op, nOut;
-	op = 0;
-
     if (nNet > 0 || wtx.IsCoinBase())
     {
         //
@@ -198,15 +194,15 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
 					sub.involvesWatchAddress = mine & ISMINE_WATCH_ONLY;
 					if (ExtractDestination(txout.scriptPubKey, address) && IsMine(*wallet, address))
 					{
-						// Received by Syscoin Address
-						sub.type = TransactionRecord::RecvWithAddress;
-						// SYSCOIN show alias in record
-						CSyscoinAddress sysAddress = CSyscoinAddress(address);
-						sysAddress = CSyscoinAddress(sysAddress.ToString());
-						if(sysAddress.isAlias)
-							sub.address = sysAddress.aliasName;
-						else
-							sub.address = sysAddress.ToString();
+							// Received by Syscoin Address
+							sub.type = TransactionRecord::RecvWithAddress;
+							// SYSCOIN show alias in record
+							CSyscoinAddress sysAddress = CSyscoinAddress(address);
+							sysAddress = CSyscoinAddress(sysAddress.ToString());
+							if(sysAddress.isAlias)
+								sub.address = sysAddress.aliasName;
+							else
+								sub.address = sysAddress.ToString();
 					}
 					else
 					{
@@ -224,7 +220,6 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
 				}
 			}
 		}
-		
     }
     else
     {
@@ -249,7 +244,8 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
         {
             // Payment to self
             CAmount nChange = wtx.GetChange();
-			parts.append(TransactionRecord(hash, nTime, TransactionRecord::SendToSelf, "",
+
+            parts.append(TransactionRecord(hash, nTime, TransactionRecord::SendToSelf, "",
                             -(nDebit - nChange), nCredit - nChange));
             parts.last().involvesWatchAddress = involvesWatchAddress;   // maybe pass to TransactionRecord as constructor argument
         }
@@ -269,12 +265,14 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
 					TransactionRecord sub(hash, nTime);
 					sub.idx = parts.size();
 					sub.involvesWatchAddress = involvesWatchAddress;
+
 					if(wallet->IsMine(txout))
 					{
 						// Ignore parts sent to self, as this is usually the change
 						// from a transaction sent back to our own address.
 						continue;
 					}
+
 					CTxDestination address;
 					if (ExtractDestination(txout.scriptPubKey, address))
 					{
@@ -294,7 +292,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
 						sub.type = TransactionRecord::SendToOther;
 						sub.address = mapValue["to"];
 					}
-					
+
 					CAmount nValue = txout.nValue;
 					/* Add fee to first output */
 					if (nTxFee > 0)
@@ -307,7 +305,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
 					parts.append(sub);
 				}
 			}
-        }
+		}
         else
         {
             //
@@ -397,6 +395,8 @@ void TransactionRecord::updateStatus(const CWalletTx &wtx)
         else if (status.depth == 0)
         {
             status.status = TransactionStatus::Unconfirmed;
+            if (wtx.isAbandoned())
+                status.status = TransactionStatus::Abandoned;
         }
         else if (status.depth < RecommendedNumConfirmations)
         {
@@ -418,11 +418,10 @@ bool TransactionRecord::statusUpdateNeeded()
 
 QString TransactionRecord::getTxID() const
 {
-    return formatSubTxId(hash, idx);
+    return QString::fromStdString(hash.ToString());
 }
 
-QString TransactionRecord::formatSubTxId(const uint256 &hash, int vout)
+int TransactionRecord::getOutputIndex() const
 {
-    return QString::fromStdString(hash.ToString() + strprintf("-%03d", vout));
+    return idx;
 }
-

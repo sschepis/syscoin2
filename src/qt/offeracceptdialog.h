@@ -25,8 +25,9 @@ private:
 	QString alias;
 	QString offer;
 	QString notes;
-	QString price;
-	QString fprice;
+	QString qstrPrice;
+	QString strSYSPrice;
+	QString strBTCPrice;
 	QString title;
 	QString currency;
 	QString seller;

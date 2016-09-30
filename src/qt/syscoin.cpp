@@ -26,7 +26,7 @@
 #endif
 
 #include "init.h"
-#include "rpcserver.h"
+#include "rpc/server.h"
 #include "scheduler.h"
 #include "ui_interface.h"
 #include "util.h"
@@ -196,7 +196,7 @@ class SyscoinApplication: public QApplication
 public:
     explicit SyscoinApplication(int &argc, char **argv);
     ~SyscoinApplication();
-	virtual bool notify(QObject * receiver, QEvent * event);
+
 #ifdef ENABLE_WALLET
     /// Create payment server
     void createPaymentServer();
@@ -255,19 +255,7 @@ SyscoinCore::SyscoinCore():
     QObject()
 {
 }
-// SYSCOIN catch exceptions
-bool SyscoinApplication::notify(QObject* receiver, QEvent* event) {
-  bool done = true;
-  try {
-    done = QApplication::notify(receiver, event);
-  } catch (const std::exception& ex) {
-	qDebug() << "***notify exception";
-    PrintExceptionContinue(&ex, "notify exception");
-  } catch (...) {
-    qDebug() << "***notify exception***";
-  }
-  return done;
-} 
+
 void SyscoinCore::handleRunawayException(const std::exception *e)
 {
     PrintExceptionContinue(e, "Runaway exception");
@@ -376,9 +364,8 @@ void SyscoinApplication::createWindow(const NetworkStyle *networkStyle)
 
 void SyscoinApplication::createSplashScreen(const NetworkStyle *networkStyle)
 {
-    SplashScreen *splash = new SplashScreen(Qt::SplashScreen, networkStyle);
-
-    //make window translucent modal w/no background
+    SplashScreen *splash = new SplashScreen(0, networkStyle);
+    // SYSCOIN make window translucent modal w/no background
     splash->setWindowFlags(Qt::Widget | Qt::FramelessWindowHint);
     splash->setParent(0); // Create TopLevel-Widget
     splash->setAttribute(Qt::WA_TranslucentBackground, true);
@@ -388,6 +375,7 @@ void SyscoinApplication::createSplashScreen(const NetworkStyle *networkStyle)
     splash->setAttribute(Qt::WA_DeleteOnClose);
     splash->show();
     connect(this, SIGNAL(splashFinished(QWidget*)), splash, SLOT(slotFinish(QWidget*)));
+    connect(this, SIGNAL(requestedShutdown()), splash, SLOT(close()));
 }
 
 void SyscoinApplication::startThread()
@@ -550,6 +538,9 @@ int main(int argc, char *argv[])
     // Generate high-dpi pixmaps
     QApplication::setAttribute(Qt::AA_UseHighDpiPixmaps);
 #endif
+#if QT_VERSION >= 0x050600
+    QGuiApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+#endif
 #ifdef Q_OS_MAC
     QApplication::setAttribute(Qt::AA_DontShowIconsInMenus);
 #endif
@@ -592,20 +583,21 @@ int main(int argc, char *argv[])
 
     /// 5. Now that settings and translations are available, ask user for data directory
     // User language is set up: pick a data directory
-    Intro::pickDataDirectory();
+    if (!Intro::pickDataDirectory())
+        return 0;
 
     /// 6. Determine availability of data directory and parse syscoin.conf
     /// - Do not call GetDataDir(true) before this step finishes
     if (!boost::filesystem::is_directory(GetDataDir(false)))
     {
-        QMessageBox::critical(0, QObject::tr("Syscoin Core"),
+        QMessageBox::critical(0, QObject::tr(PACKAGE_NAME),
                               QObject::tr("Error: Specified data directory \"%1\" does not exist.").arg(QString::fromStdString(mapArgs["-datadir"])));
         return 1;
     }
     try {
         ReadConfigFile(mapArgs, mapMultiArgs);
     } catch (const std::exception& e) {
-        QMessageBox::critical(0, QObject::tr("Syscoin Core"),
+        QMessageBox::critical(0, QObject::tr(PACKAGE_NAME),
                               QObject::tr("Error: Cannot parse configuration file: %1. Only use key=value syntax.").arg(e.what()));
         return false;
     }
@@ -620,7 +612,7 @@ int main(int argc, char *argv[])
     try {
         SelectParams(ChainNameFromCommandLine());
     } catch(std::exception &e) {
-        QMessageBox::critical(0, QObject::tr("Syscoin Core"), QObject::tr("Error: %1").arg(e.what()));
+        QMessageBox::critical(0, QObject::tr(PACKAGE_NAME), QObject::tr("Error: %1").arg(e.what()));
         return 1;
     }
 #ifdef ENABLE_WALLET
@@ -680,7 +672,7 @@ int main(int argc, char *argv[])
         app.createWindow(networkStyle.data());
         app.requestInitialize();
 #if defined(Q_OS_WIN) && QT_VERSION >= 0x050000
-        WinShutdownMonitor::registerShutdownBlockReason(QObject::tr("Syscoin Core didn't yet exit safely..."), (HWND)app.getMainWinId());
+        WinShutdownMonitor::registerShutdownBlockReason(QObject::tr("%1 didn't yet exit safely...").arg(QObject::tr(PACKAGE_NAME)), (HWND)app.getMainWinId());
 #endif
         app.exec();
         app.requestShutdown();

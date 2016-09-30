@@ -6,11 +6,11 @@
 #include "platformstyle.h"
 #include "ui_interface.h"
 #include <QMessageBox>
-#include "rpcserver.h"
+#include "rpc/server.h"
 #include "walletmodel.h"
 using namespace std;
 
-extern const CRPCTable tableRPC;
+extern CRPCTable tableRPC;
 OfferFeedbackDialog::OfferFeedbackDialog(WalletModel* model, const QString &offerStr, const QString &acceptStr, QWidget *parent) :
     QDialog(parent),
 	walletModel(model),

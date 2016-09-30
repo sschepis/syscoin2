@@ -13,7 +13,7 @@
 #include "util.h"
 #include "random.h"
 #include "wallet/wallet.h"
-#include "rpcserver.h"
+#include "rpc/server.h"
 #include "base58.h"
 #include "txmempool.h"
 #include "txdb.h"
@@ -24,6 +24,7 @@
 #include <boost/algorithm/string/case_conv.hpp> // for to_lower()
 #include <boost/xpressive/xpressive_dynamic.hpp>
 #include <boost/foreach.hpp>
+#include <boost/lexical_cast.hpp>
 #include <boost/thread.hpp>
 #include <boost/algorithm/hex.hpp>
 #include <boost/algorithm/string/find.hpp>
@@ -270,16 +271,25 @@ unsigned int QtyOfPendingAcceptsInMempool(const vector<unsigned char>& vchToFind
 
 }
 // how much is 1.1 BTC in syscoin? 1 BTC = 110000 SYS for example, nPrice would be 1.1, sysPrice would be 110000
-CAmount convertCurrencyCodeToSyscoin(const vector<unsigned char> &vchAliasPeg, const vector<unsigned char> &vchCurrencyCode, const float &nPrice, const unsigned int &nHeight, int &precision)
+CAmount convertCurrencyCodeToSyscoin(const vector<unsigned char> &vchAliasPeg, const vector<unsigned char> &vchCurrencyCode, const double &nPrice, const unsigned int &nHeight, int &precision)
 {
 	CAmount sysPrice = 0;
-	float nRate;
+	double nRate;
 	vector<string> rateList;
 	try
 	{
 		if(getCurrencyToSYSFromAlias(vchAliasPeg, vchCurrencyCode, nRate, nHeight, rateList, precision) == "")
 		{
-			sysPrice = CAmount(nPrice*nRate*COIN);
+			float fTotal = nPrice*nRate;
+			CAmount nTotal = fTotal;
+			int myprecision = precision;
+			if(myprecision < 8)
+				myprecision += 1;
+			if(nTotal != fTotal)
+				sysPrice = AmountFromValue(strprintf("%.*f", myprecision, fTotal)); 
+			else
+				sysPrice = nTotal*COIN;
+
 		}
 	}
 	catch(...)
@@ -295,7 +305,7 @@ CAmount convertCurrencyCodeToSyscoin(const vector<unsigned char> &vchAliasPeg, c
 CAmount convertSyscoinToCurrencyCode(const vector<unsigned char> &vchAliasPeg, const vector<unsigned char> &vchCurrencyCode, const CAmount &nPrice, const unsigned int &nHeight, int &precision)
 {
 	CAmount currencyPrice = 0;
-	float nRate;
+	double nRate;
 	vector<string> rateList;
 	try
 	{
@@ -313,7 +323,7 @@ CAmount convertSyscoinToCurrencyCode(const vector<unsigned char> &vchAliasPeg, c
 		currencyPrice = 0;
 	return currencyPrice;
 }
-string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchAliasPeg, const vector<unsigned char> &vchCurrency, float &nFee, const unsigned int &nHeightToFind, vector<string>& rateList, int &precision)
+string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchAliasPeg, const vector<unsigned char> &vchCurrency, double &nFee, const unsigned int &nHeightToFind, vector<string>& rateList, int &precision)
 {
 	string currencyCodeToFind = stringFromVch(vchCurrency);
 	// check for alias existence in DB
@@ -1420,14 +1430,14 @@ void CreateFeeRecipient(CScript& scriptPubKey, const vector<unsigned char>& data
  	vector<unsigned char> vchHash = CScriptNum(hash.GetCheapHash()).getvch();
     vector<unsigned char> vchHashRand = vchFromValue(HexStr(vchHash));
 	scriptPubKey << vchHashRand;
-
-	CRecipient recp = {scriptPubKey, 0.02*COIN, false};
+	CAmount minFee = AmountFromValue(0.02);
+	CRecipient recp = {scriptPubKey, minFee, false};
 	recipient = recp;
 	CTxOut txout(0,	recipient.scriptPubKey);
     size_t nSize = txout.GetSerializeSize(SER_DISK,0)+148u;
 	CAmount fee = 3*minRelayTxFee.GetFee(nSize);
 	// minimum of 0.02 COIN fees for data
-	recipient.nAmount = fee > 0.02*COIN? fee: 0.02*COIN;
+	recipient.nAmount = fee > minFee? fee: minFee;
 }
 UniValue aliasnew(const UniValue& params, bool fHelp) {
 	if (fHelp || 2 > params.size() || 5 < params.size())
@@ -1480,13 +1490,13 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 
 	string strPrivateValue = params.size()>=3?params[2].get_str():"";
 	string strSafeSearch = "Yes";
-	unsigned char nRenewal = 1;
+	int nRenewal = 1;
 	if(params.size() >= 4)
 	{
 		strSafeSearch = params[3].get_str();
 	}
 	if(params.size() >= 5)
-		nRenewal = atoi(params[4].get_str());
+		nRenewal = boost::lexical_cast<int>(params[4].get_str());
 	
 	vchPrivateValue = vchFromString(strPrivateValue);
 
@@ -1585,7 +1595,7 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 	string strPrivateValue = params.size()>=3 && params[2].get_str().size() > 0?params[2].get_str():"";
 	vchPrivateValue = vchFromString(strPrivateValue);
 	vector<unsigned char> vchPubKeyByte;
-	unsigned char nRenewal = 1;
+	int nRenewal = 1;
 	CWalletTx wtx;
 	CAliasIndex updateAlias;
 	const CWalletTx* wtxIn;
@@ -1604,7 +1614,7 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 	}
 	if(params.size() >= 6)
 	{
-		nRenewal = atoi(params[5].get_str());
+		nRenewal = boost::lexical_cast<int>(params[5].get_str());
 	}
 	EnsureWalletIsUnlocked();
 	CTransaction tx;
@@ -1789,7 +1799,7 @@ UniValue aliaslist(const UniValue& params, bool fHelp) {
 			oName.push_back(Pair("value", stringFromVch(alias.vchPublicValue)));
 			string strPrivateValue = "";
 			if(!alias.vchPrivateValue.empty())
-				strPrivateValue = "Encrypted for alias owner";
+				strPrivateValue = _("Encrypted for alias owner");
 			string strDecrypted = "";
 			if(DecryptMessage(alias.vchPubKey, alias.vchPrivateValue, strDecrypted))
 				strPrivateValue = strDecrypted;		
@@ -1797,7 +1807,7 @@ UniValue aliaslist(const UniValue& params, bool fHelp) {
 
 			string strPrivateKey = "";
 			if(!alias.vchPrivateKey.empty())
-				strPrivateKey = "Encrypted for alias owner";
+				strPrivateKey = _("Encrypted for alias owner");
 			string strDecryptedKey = "";
 			if(DecryptMessage(alias.vchPubKey, alias.vchPrivateKey, strDecryptedKey))
 				strPrivateKey = strDecryptedKey;		
@@ -1973,7 +1983,7 @@ UniValue aliasinfo(const UniValue& params, bool fHelp) {
 		oName.push_back(Pair("value", stringFromVch(alias.vchPublicValue)));
 		string strPrivateValue = "";
 		if(!alias.vchPrivateValue.empty())
-			strPrivateValue = "Encrypted for alias owner";
+			strPrivateValue = _("Encrypted for alias owner");
 		string strDecrypted = "";
 		if(DecryptMessage(alias.vchPubKey, alias.vchPrivateValue, strDecrypted))
 			strPrivateValue = strDecrypted;		
@@ -1981,7 +1991,7 @@ UniValue aliasinfo(const UniValue& params, bool fHelp) {
 
 		string strPrivateKey = "";
 		if(!alias.vchPrivateKey.empty())
-			strPrivateKey = "Encrypted for alias owner";
+			strPrivateKey = _("Encrypted for alias owner");
 		string strDecryptedKey = "";
 		if(DecryptMessage(alias.vchPubKey, alias.vchPrivateKey, strDecryptedKey))
 			strPrivateKey = strDecryptedKey;		
@@ -2077,7 +2087,7 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 			oName.push_back(Pair("value", stringFromVch(txPos2.vchPublicValue)));
 			string strPrivateValue = "";
 			if(!txPos2.vchPrivateValue.empty())
-				strPrivateValue = "Encrypted for alias owner";
+				strPrivateValue = _("Encrypted for alias owner");
 			string strDecrypted = "";
 			if(DecryptMessage(txPos2.vchPubKey, txPos2.vchPrivateValue, strDecrypted))
 				strPrivateValue = strDecrypted;		
@@ -2085,7 +2095,7 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 
 			string strPrivateKey = "";
 			if(!txPos2.vchPrivateKey.empty())
-				strPrivateKey = "Encrypted for alias owner";
+				strPrivateKey = _("Encrypted for alias owner");
 			string strDecryptedKey = "";
 			if(DecryptMessage(txPos2.vchPubKey, txPos2.vchPrivateKey, strDecryptedKey))
 				strPrivateKey = strDecryptedKey;		
@@ -2175,11 +2185,13 @@ UniValue importalias(const UniValue& params, bool fHelp) {
 		CTransaction tx;
 		if (GetSyscoinTransaction(theAlias.nHeight, theAlias.txHash, tx, Params().GetConsensus()))
 		{
-            CBlock block;
-            if(ReadBlockFromDisk(block, chainActive[theAlias.nHeight], Params().GetConsensus()))
+			CBlock block;
+            ReadBlockFromDisk(block, chainActive[theAlias.nHeight], Params().GetConsensus());
+			int posInBlock;
+			for (posInBlock = 0; posInBlock < (int)block.vtx.size(); posInBlock++)
 			{
-				pwalletMain->SyncTransaction(tx, &block);
-			}
+				pwalletMain->SyncTransaction(tx, chainActive[theAlias.nHeight], posInBlock);
+			}	
 		}
 	}
 	UniValue res(UniValue::VARR);
@@ -2247,7 +2259,7 @@ UniValue aliasfilter(const UniValue& params, bool fHelp) {
 		oName.push_back(Pair("value", stringFromVch(txName.vchPublicValue)));
 		string strPrivateValue = "";
 		if(!alias.vchPrivateValue.empty())
-			strPrivateValue = "Encrypted for alias owner";
+			strPrivateValue = _("Encrypted for alias owner");
 		string strDecrypted = "";
 		if(DecryptMessage(txName.vchPubKey, alias.vchPrivateValue, strDecrypted))
 			strPrivateValue = strDecrypted;		
@@ -2255,7 +2267,7 @@ UniValue aliasfilter(const UniValue& params, bool fHelp) {
 
 		string strPrivateKey = "";
 		if(!txName.vchPrivateKey.empty())
-			strPrivateKey = "Encrypted for alias owner";
+			strPrivateKey = _("Encrypted for alias owner");
 		string strDecryptedKey = "";
 		if(DecryptMessage(txName.vchPubKey, txName.vchPrivateKey, strDecryptedKey))
 			strPrivateKey = strDecryptedKey;		

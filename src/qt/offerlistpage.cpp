@@ -18,7 +18,7 @@
 #include <QKeyEvent>
 #include <QMenu>
 #include "main.h"
-#include "rpcserver.h"
+#include "rpc/server.h"
 #include "qcomboboxdelegate.h"
 #include <QSettings>
 #include <QStandardItemModel>
@@ -28,7 +28,7 @@
 using namespace std;
 
 
-extern const CRPCTable tableRPC;
+extern CRPCTable tableRPC;
 extern bool getCategoryList(vector<string>& categoryList);
 OfferListPage::OfferListPage(const PlatformStyle *platformStyle, OfferView *parent) :
     QDialog(0),

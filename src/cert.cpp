@@ -6,7 +6,7 @@
 #include "util.h"
 #include "random.h"
 #include "base58.h"
-#include "rpcserver.h"
+#include "rpc/server.h"
 #include "wallet/wallet.h"
 #include "chainparams.h"
 #include "messagecrypter.h"
@@ -14,6 +14,7 @@
 #include <boost/algorithm/string/case_conv.hpp> // for to_lower()
 #include <boost/xpressive/xpressive_dynamic.hpp>
 #include <boost/foreach.hpp>
+#include <boost/lexical_cast.hpp>
 #include <boost/thread.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 using namespace std;
@@ -701,7 +702,7 @@ UniValue certnew(const UniValue& params, bool fHelp) {
 
 	if(params.size() >= 4)
 	{
-		bPrivate = atoi(params[3].get_str().c_str()) == 1? true: false;
+		bPrivate = boost::lexical_cast<int>(params[3].get_str()) == 1? true: false;
 	}
 	string strSafeSearch = "Yes";
 	if(params.size() >= 5)
@@ -806,7 +807,7 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
 	vector<unsigned char> vchCat = vchFromString("certificates");
 	if(params.size() >= 7)
 		vchCat = vchFromValue(params[6]);
-	bool bPrivate = atoi(params[4].get_str().c_str()) == 1? true: false;
+	bool bPrivate = boost::lexical_cast<int>(params[4].get_str()) == 1? true: false;
 	string strSafeSearch = "Yes";
 	if(params.size() >= 6)
 	{
@@ -1069,8 +1070,9 @@ UniValue certinfo(const UniValue& params, bool fHelp) {
     oCert.push_back(Pair("title", stringFromVch(ca.vchTitle)));
 	string strData = stringFromVch(ca.vchData);
 	string strDecrypted = "";
-	if(ca.bPrivate)
+	if(ca.bPrivate && !ca.vchData.empty())
 	{
+		strData = _("Encrypted for owner of certificate private data");
 		if(DecryptMessage(alias.vchPubKey, ca.vchData, strDecrypted))
 			strData = strDecrypted;		
 	}
@@ -1194,9 +1196,9 @@ UniValue certlist(const UniValue& params, bool fHelp) {
 		if(!IsSyscoinTxMine(aliastx, "alias"))
 			continue;
 		string strDecrypted = "";
-		if(cert.bPrivate)
+		if(cert.bPrivate && !cert.vchData.empty())
 		{
-			strData = "Encrypted for owner of certificate private data";
+			strData = _("Encrypted for owner of certificate private data");
 			if(DecryptMessage(theAlias.vchPubKey, cert.vchData, strDecrypted))
 				strData = strDecrypted;	
 		}
@@ -1278,9 +1280,9 @@ UniValue certhistory(const UniValue& params, bool fHelp) {
 				theAlias.nHeight = txPos2.nHeight;
 				theAlias.GetAliasFromList(aliasVtxPos);
 			}
-			if(txPos2.bPrivate)
+			if(txPos2.bPrivate && !txPos2.vchData.empty())
 			{
-				strData = "Encrypted for owner of certificate private data";
+				strData = _("Encrypted for owner of certificate private data");
 				if(DecryptMessage(theAlias.vchPubKey, txPos2.vchData, strDecrypted))
 					strData = strDecrypted;
 
@@ -1368,9 +1370,9 @@ UniValue certfilter(const UniValue& params, bool fHelp) {
 			theAlias.nHeight = txCert.nHeight;
 			theAlias.GetAliasFromList(aliasVtxPos);
 		}
-		if(txCert.bPrivate)
+		if(txCert.bPrivate && !txCert.vchData.empty())
 		{
-			strData = string("Encrypted for owner of certificate");
+			strData = _("Encrypted for owner of certificate private data");
 			if(DecryptMessage(theAlias.vchPubKey, txCert.vchData, strDecrypted))
 				strData = strDecrypted;
 			

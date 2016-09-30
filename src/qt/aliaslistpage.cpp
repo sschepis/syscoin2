@@ -19,13 +19,13 @@
 #include <QKeyEvent>
 #include <QMenu>
 #include "main.h"
-#include "rpcserver.h"
+#include "rpc/server.h"
 #include "stardelegate.h"
 #include <QSettings>
 using namespace std;
 
 
-extern const CRPCTable tableRPC;
+extern CRPCTable tableRPC;
 
 AliasListPage::AliasListPage(const PlatformStyle *platformStyle, QWidget *parent) :
     QDialog(parent),

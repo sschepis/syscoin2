@@ -18,12 +18,12 @@
 #include <QDateTime>
 #include <QMenu>
 #include "main.h"
-#include "rpcserver.h"
+#include "rpc/server.h"
 #include "stardelegate.h"
 using namespace std;
 
 
-extern const CRPCTable tableRPC;
+extern CRPCTable tableRPC;
 
 EscrowListPage::EscrowListPage(const PlatformStyle *platformStyle, QWidget *parent) :
     QDialog(parent),

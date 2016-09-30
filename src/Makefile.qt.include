@@ -3,12 +3,12 @@ EXTRA_LIBRARIES += qt/libsyscoinqt.a
 
 # syscoin qt core #
 QT_TS = \
+  qt/locale/syscoin_af.ts \
   qt/locale/syscoin_af_ZA.ts \
   qt/locale/syscoin_ar.ts \
   qt/locale/syscoin_be_BY.ts \
-  qt/locale/syscoin_bg_BG.ts \
   qt/locale/syscoin_bg.ts \
-  qt/locale/syscoin_bs.ts \
+  qt/locale/syscoin_bg_BG.ts \
   qt/locale/syscoin_ca_ES.ts \
   qt/locale/syscoin_ca.ts \
   qt/locale/syscoin_ca@valencia.ts \
@@ -22,7 +22,9 @@ QT_TS = \
   qt/locale/syscoin_en_GB.ts \
   qt/locale/syscoin_en.ts \
   qt/locale/syscoin_eo.ts \
+  qt/locale/syscoin_es_AR.ts \
   qt/locale/syscoin_es_CL.ts \
+  qt/locale/syscoin_es_CO.ts \
   qt/locale/syscoin_es_DO.ts \
   qt/locale/syscoin_es_ES.ts \
   qt/locale/syscoin_es_MX.ts \
@@ -43,11 +45,13 @@ QT_TS = \
   qt/locale/syscoin_hr.ts \
   qt/locale/syscoin_hu.ts \
   qt/locale/syscoin_id_ID.ts \
+  qt/locale/syscoin_it_IT.ts \
   qt/locale/syscoin_it.ts \
   qt/locale/syscoin_ja.ts \
   qt/locale/syscoin_ka.ts \
   qt/locale/syscoin_kk_KZ.ts \
   qt/locale/syscoin_ko_KR.ts \
+  qt/locale/syscoin_ku_IQ.ts \
   qt/locale/syscoin_ky.ts \
   qt/locale/syscoin_la.ts \
   qt/locale/syscoin_lt.ts \
@@ -62,13 +66,16 @@ QT_TS = \
   qt/locale/syscoin_pt_BR.ts \
   qt/locale/syscoin_pt_PT.ts \
   qt/locale/syscoin_ro_RO.ts \
+  qt/locale/syscoin_ro.ts \
   qt/locale/syscoin_ru_RU.ts \
   qt/locale/syscoin_ru.ts \
   qt/locale/syscoin_sk.ts \
   qt/locale/syscoin_sl_SI.ts \
   qt/locale/syscoin_sq.ts \
+  qt/locale/syscoin_sr@latin.ts \
   qt/locale/syscoin_sr.ts \
   qt/locale/syscoin_sv.ts \
+  qt/locale/syscoin_ta.ts \
   qt/locale/syscoin_th_TH.ts \
   qt/locale/syscoin_tr_TR.ts \
   qt/locale/syscoin_tr.ts \
@@ -78,6 +85,7 @@ QT_TS = \
   qt/locale/syscoin_vi.ts \
   qt/locale/syscoin_vi_VN.ts \
   qt/locale/syscoin_zh_CN.ts \
+  qt/locale/syscoin_zh_HK.ts \
   qt/locale/syscoin_zh.ts \
   qt/locale/syscoin_zh_TW.ts
 
@@ -88,6 +96,7 @@ QT_FORMS_UI = \
   qt/forms/editaddressdialog.ui \
   qt/forms/helpmessagedialog.ui \
   qt/forms/intro.ui \
+  qt/forms/modaloverlay.ui \
   qt/forms/openuridialog.ui \
   qt/forms/optionsdialog.ui \
   qt/forms/overviewpage.ui \
@@ -128,7 +137,7 @@ QT_FORMS_UI = \
   qt/forms/offeracceptdialogbtc.ui \
   qt/forms/editcertdialog.ui \
   qt/forms/certlistpage.ui
-
+  
 QT_MOC_CPP = \
   qt/moc_addressbookpage.cpp \
   qt/moc_addresstablemodel.cpp \
@@ -147,6 +156,7 @@ QT_MOC_CPP = \
   qt/moc_intro.cpp \
   qt/moc_macdockiconhandler.cpp \
   qt/moc_macnotificationhandler.cpp \
+  qt/moc_modaloverlay.cpp \
   qt/moc_notificator.cpp \
   qt/moc_openuridialog.cpp \
   qt/moc_optionsdialog.cpp \
@@ -156,7 +166,6 @@ QT_MOC_CPP = \
   qt/moc_paymentserver.cpp \
   qt/moc_qvalidatedlineedit.cpp \
   qt/moc_qvaluecombobox.cpp \
-  qt/moc_qcomboboxdelegate.cpp \
   qt/moc_receivecoinsdialog.cpp \
   qt/moc_receiverequestdialog.cpp \
   qt/moc_recentrequeststablemodel.cpp \
@@ -221,8 +230,9 @@ QT_MOC_CPP = \
   qt/moc_stardelegate.cpp \
   qt/moc_stareditor.cpp \
   qt/moc_starrating.cpp \
-  qt/moc_certlistpage.cpp
-  
+  qt/moc_certlistpage.cpp \
+  qt/moc_qcomboboxdelegate.cpp
+
 SYSCOIN_MM = \
   qt/macdockiconhandler.mm \
   qt/macnotificationhandler.mm
@@ -262,6 +272,7 @@ SYSCOIN_QT_H = \
   qt/intro.h \
   qt/macdockiconhandler.h \
   qt/macnotificationhandler.h \
+  qt/modaloverlay.h \
   qt/networkstyle.h \
   qt/notificator.h \
   qt/openuridialog.h \
@@ -346,6 +357,7 @@ SYSCOIN_QT_H = \
 
 RES_ICONS = \
   qt/res/icons/syscoin.ico \
+  qt/res/icons/syscoin_testnet.ico \
   qt/res/icons/shade/add.png \
   qt/res/icons/shade/address-book.png \
   qt/res/icons/shade/about.png \
@@ -372,6 +384,11 @@ RES_ICONS = \
   qt/res/icons/shade/eye_plus.png \
   qt/res/icons/shade/filesave.png \
   qt/res/icons/shade/history.png \
+  qt/res/icons/shade/fontbigger.png \
+  qt/res/icons/shade/fontsmaller.png \
+  qt/res/icons/shade/hd_disabled.png \
+  qt/res/icons/shade/hd_enabled.png \
+  qt/res/icons/shade/chevron.png \
   qt/res/icons/shade/info.png \
   qt/res/icons/shade/key.png \
   qt/res/icons/shade/lock_closed.png \
@@ -385,6 +402,7 @@ RES_ICONS = \
   qt/res/icons/shade/synced.png \
   qt/res/icons/shade/transaction0.png \
   qt/res/icons/shade/transaction2.png \
+  qt/res/icons/shade/transaction_abandoned.png \
   qt/res/icons/shade/transaction_conflicted.png \
   qt/res/icons/shade/tx_inout.png \
   qt/res/icons/shade/tx_input.png \
@@ -434,6 +452,11 @@ RES_ICONS = \
   qt/res/icons/solid/filesave.png \
   qt/res/icons/solid/history.png \
   qt/res/icons/solid/info.png \
+  qt/res/icons/solid/fontbigger.png \
+  qt/res/icons/solid/fontsmaller.png \
+  qt/res/icons/solid/hd_disabled.png \
+  qt/res/icons/solid/hd_enabled.png \
+  qt/res/icons/solid/chevron.png \
   qt/res/icons/solid/key.png \
   qt/res/icons/solid/lock_closed.png \
   qt/res/icons/solid/lock_open.png \
@@ -446,6 +469,7 @@ RES_ICONS = \
   qt/res/icons/solid/synced.png \
   qt/res/icons/solid/transaction0.png \
   qt/res/icons/solid/transaction2.png \
+  qt/res/icons/solid/transaction_abandoned.png \
   qt/res/icons/solid/transaction_conflicted.png \
   qt/res/icons/solid/tx_inout.png \
   qt/res/icons/solid/tx_input.png \
@@ -495,6 +519,11 @@ RES_ICONS = \
   qt/res/icons/white/filesave.png \
   qt/res/icons/white/history.png \
   qt/res/icons/white/info.png \
+  qt/res/icons/solid/fontbigger.png \
+  qt/res/icons/solid/fontsmaller.png \
+  qt/res/icons/solid/hd_disabled.png \
+  qt/res/icons/solid/hd_enabled.png \
+  qt/res/icons/solid/chevron.png \
   qt/res/icons/white/key.png \
   qt/res/icons/white/lock_closed.png \
   qt/res/icons/white/lock_open.png \
@@ -507,6 +536,7 @@ RES_ICONS = \
   qt/res/icons/white/synced.png \
   qt/res/icons/white/transaction0.png \
   qt/res/icons/white/transaction2.png \
+  qt/res/icons/white/transaction_abandoned.png \
   qt/res/icons/white/transaction_conflicted.png \
   qt/res/icons/white/tx_inout.png \
   qt/res/icons/white/tx_input.png \
@@ -514,7 +544,7 @@ RES_ICONS = \
   qt/res/icons/white/tx_mined.png \
   qt/res/icons/white/warning.png \
   qt/res/icons/white/verify.png \
-  qt/res/icons/white/thumbsup.png \  
+  qt/res/icons/white/thumbsup.png \
   qt/res/icons/white/alias.png \
   qt/res/icons/white/cart.png \
   qt/res/icons/white/cert.png \
@@ -528,8 +558,8 @@ RES_ICONS = \
   qt/res/icons/white/mailout.png \
   qt/res/icons/white/message.png \
   qt/res/icons/white/search.png \
-  qt/res/icons/white/refresh.png   
-  
+  qt/res/icons/white/refresh.png
+
 SYSCOIN_QT_CPP = \
   qt/bantablemodel.cpp \
   qt/syscoinaddressvalidator.cpp \
@@ -540,6 +570,7 @@ SYSCOIN_QT_CPP = \
   qt/csvmodelwriter.cpp \
   qt/guiutil.cpp \
   qt/intro.cpp \
+  qt/modaloverlay.cpp \
   qt/networkstyle.cpp \
   qt/notificator.cpp \
   qt/optionsdialog.cpp \
@@ -642,7 +673,7 @@ RES_IMAGES = \
   qt/res/images/shade/shade_overview.png \
   qt/res/images/shade/shade_splash.png \
   qt/res/images/shade/shade_logo_horizontal.png \
-  qt/res/images/shade/shade_logo_horizontal_big.png \  
+  qt/res/images/shade/shade_logo_horizontal_big.png \
   qt/res/images/shade/shade_downArrow.png \
   qt/res/images/shade/shade_downArrow_small.png \
   qt/res/images/shade/shade_upArrow_small.png \
@@ -683,13 +714,13 @@ RES_IMAGES = \
   qt/res/images/white/white_qtreeview_selected.png \
   qt/res/images/white/white_walletFrame_bg.png \
   qt/res/images/white/white_walletFrame.png \
-  qt/res/images/white/white_imageplaceholder.png   
+  qt/res/images/white/white_imageplaceholder.png
 
 RES_CSS = \
   qt/res/css/shade.css \
   qt/res/css/solid.css \
   qt/res/css/white.css
-  
+
 RES_MOVIES = $(wildcard qt/res/movies/spinner-*.png)
 
 SYSCOIN_RC = qt/res/syscoin-qt-res.rc
@@ -702,7 +733,7 @@ qt_libsyscoinqt_a_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES) $(SYSCOIN_QT_INC
 qt_libsyscoinqt_a_CXXFLAGS = $(AM_CXXFLAGS) $(QT_PIE_FLAGS)
 
 qt_libsyscoinqt_a_SOURCES = $(SYSCOIN_QT_CPP) $(SYSCOIN_QT_H) $(QT_FORMS_UI) \
-  $(QT_QRC) $(QT_QRC_LOCALE) $(QT_TS) $(PROTOBUF_PROTO) $(RES_ICONS) $(RES_IMAGES  $(RES_CSS) $(RES_MOVIES)
+  $(QT_QRC) $(QT_QRC_LOCALE) $(QT_TS) $(PROTOBUF_PROTO) $(RES_ICONS) $(RES_IMAGES $(RES_CSS) $(RES_MOVIES)
 
 nodist_qt_libsyscoinqt_a_SOURCES = $(QT_MOC_CPP) $(QT_MOC) $(PROTOBUF_CC) \
   $(PROTOBUF_H) $(QT_QRC_CPP) $(QT_QRC_LOCALE_CPP)
@@ -739,7 +770,7 @@ endif
 if ENABLE_ZMQ
 qt_syscoin_qt_LDADD += $(LIBSYSCOIN_ZMQ) $(ZMQ_LIBS)
 endif
-qt_syscoin_qt_LDADD += $(LIBSYSCOIN_CLI) $(LIBSYSCOIN_COMMON) $(LIBSYSCOIN_UTIL) $(LIBSYSCOIN_CRYPTO) $(LIBUNIVALUE) $(LIBLEVELDB) $(LIBMEMENV) \
+qt_syscoin_qt_LDADD += $(LIBSYSCOIN_CLI) $(LIBSYSCOIN_COMMON) $(LIBSYSCOIN_UTIL) $(LIBSYSCOIN_CONSENSUS) $(LIBSYSCOIN_CRYPTO) $(LIBUNIVALUE) $(LIBLEVELDB) $(LIBMEMENV) \
   $(BOOST_LIBS) $(QT_LIBS) $(QT_DBUS_LIBS) $(QR_LIBS) $(PROTOBUF_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(LIBSECP256K1) \
   $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(LIBCRYPTOPP)
 qt_syscoin_qt_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(QT_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
@@ -750,21 +781,22 @@ QT_QM=$(QT_TS:.ts=.qm)
 
 SECONDARY: $(QT_QM)
 
-qt/syscoinstrings.cpp: $(libsyscoin_server_a_SOURCES) $(libsyscoin_wallet_a_SOURCES)
+$(srcdir)/qt/syscoinstrings.cpp: $(libsyscoin_server_a_SOURCES) $(libsyscoin_wallet_a_SOURCES)
 	@test -n $(XGETTEXT) || echo "xgettext is required for updating translations"
-	$(AM_V_GEN) cd $(srcdir); XGETTEXT=$(XGETTEXT) ../share/qt/extract_strings_qt.py $^
+	$(AM_V_GEN) cd $(srcdir); XGETTEXT=$(XGETTEXT) PACKAGE_NAME="$(PACKAGE_NAME)" COPYRIGHT_HOLDERS="$(COPYRIGHT_HOLDERS)" COPYRIGHT_HOLDERS_SUBSTITUTION="$(COPYRIGHT_HOLDERS_SUBSTITUTION)" $(PYTHON) ../share/qt/extract_strings_qt.py $^
 
-translate: qt/syscoinstrings.cpp $(QT_FORMS_UI) $(QT_FORMS_UI) $(SYSCOIN_QT_CPP) $(SYSCOIN_QT_H) $(SYSCOIN_MM)
+translate: $(srcdir)/qt/syscoinstrings.cpp $(QT_FORMS_UI) $(QT_FORMS_UI) $(SYSCOIN_QT_CPP) $(SYSCOIN_QT_H) $(SYSCOIN_MM)
 	@test -n $(LUPDATE) || echo "lupdate is required for updating translations"
-	$(AM_V_GEN) QT_SELECT=$(QT_SELECT) $(LUPDATE) $^ -locations relative -no-obsolete -ts qt/locale/syscoin_en.ts
+	$(AM_V_GEN) QT_SELECT=$(QT_SELECT) $(LUPDATE) $^ -locations relative -no-obsolete -ts $(srcdir)/qt/locale/syscoin_en.ts
 
 $(QT_QRC_LOCALE_CPP): $(QT_QRC_LOCALE) $(QT_QM)
 	@test -f $(RCC)
-	@test -f $(@D)/$(<F) || cp -f $< $(@D)
-	$(AM_V_GEN) QT_SELECT=$(QT_SELECT) $(RCC) -name syscoin_locale $(@D)/$(<F) | \
+	@cp -f $< $(@D)/temp_$(<F)
+	$(AM_V_GEN) QT_SELECT=$(QT_SELECT) $(RCC) -name syscoin_locale $(@D)/temp_$(<F) | \
 	  $(SED) -e '/^\*\*.*Created:/d' -e '/^\*\*.*by:/d' > $@
+	@rm $(@D)/temp_$(<F)
 
-$(QT_QRC_CPP): $(QT_QRC) $(QT_FORMS_H) $(RES_ICONS) $(RES_IMAGES)  $(RES_CSS) $(RES_MOVIES) $(PROTOBUF_H)
+$(QT_QRC_CPP): $(QT_QRC) $(QT_FORMS_H) $(RES_ICONS) $(RES_IMAGES) $(RES_CSS) $(RES_MOVIES) $(PROTOBUF_H)
 	@test -f $(RCC)
 	$(AM_V_GEN) QT_SELECT=$(QT_SELECT) $(RCC) -name syscoin $< | \
 	  $(SED) -e '/^\*\*.*Created:/d' -e '/^\*\*.*by:/d' > $@
@@ -784,11 +816,11 @@ ui_%.h: %.ui
 	$(AM_V_GEN) QT_SELECT=$(QT_SELECT) $(UIC) -o $@ $< || (echo "Error creating $@"; false)
 
 %.moc: %.cpp
-	$(AM_V_GEN) QT_SELECT=$(QT_SELECT) $(MOC) $(QT_INCLUDES) $(MOC_DEFS) $< | \
+	$(AM_V_GEN) QT_SELECT=$(QT_SELECT) $(MOC) $(DEFAULT_INCLUDES) $(QT_INCLUDES) $(MOC_DEFS) $< | \
 	  $(SED) -e '/^\*\*.*Created:/d' -e '/^\*\*.*by:/d' > $@
 
 moc_%.cpp: %.h
-	$(AM_V_GEN) QT_SELECT=$(QT_SELECT) $(MOC) $(QT_INCLUDES) $(MOC_DEFS) $< | \
+	$(AM_V_GEN) QT_SELECT=$(QT_SELECT) $(MOC) $(DEFAULT_INCLUDES) $(QT_INCLUDES) $(MOC_DEFS) $< | \
 	  $(SED) -e '/^\*\*.*Created:/d' -e '/^\*\*.*by:/d' > $@
 
 %.qm: %.ts

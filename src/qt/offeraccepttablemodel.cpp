@@ -7,14 +7,14 @@
 #include "base58.h"
 
 #include <QFont>
-#include "rpcserver.h"
+#include "rpc/server.h"
 using namespace std;
 
 
 const QString OfferAcceptTableModel::Offer = "O";
 
 
-extern const CRPCTable tableRPC;
+extern CRPCTable tableRPC;
 struct OfferAcceptTableEntry
 {
     enum Type {

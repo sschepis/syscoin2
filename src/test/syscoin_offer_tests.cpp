@@ -1,6 +1,6 @@
 #include "test/test_syscoin_services.h"
 #include "utiltime.h"
-#include "rpcserver.h"
+#include "rpc/server.h"
 #include "alias.h"
 #include "feedback.h"
 #include <boost/test/unit_test.hpp>
@@ -58,35 +58,41 @@ BOOST_AUTO_TEST_CASE (generate_certoffernew)
 	GenerateBlocks(5, "node3");
 
 	AliasNew("node1", "node1alias", "node1aliasdata");
+	AliasNew("node1", "node1aalias", "node1aliasdata");
 	AliasNew("node2", "node2alias", "node2aliasdata");
 
 	string certguid1  = CertNew("node1", "node1alias", "title", "data");
-	string certguid1a = CertNew("node1", "node1alias", "title", "data");
+	string certguid1a = CertNew("node1", "node1aalias", "title", "data");
 	string certguid2  = CertNew("node2", "node2alias", "title", "data");
 
 	// generate a good cert offer
 	string offerguid = OfferNew("node1", "node1alias", "category", "title", "1", "0.05", "description", "USD", certguid1);
 
 	// should fail: generate a cert offer using a quantity greater than 1
-	BOOST_CHECK_THROW(r = CallRPC("node1", "offernew sysrates.peg node1alias category title 2 0.05 description USD " + certguid1a), runtime_error);
+	BOOST_CHECK_THROW(r = CallRPC("node1", "offernew sysrates.peg node1aalias category title 2 0.05 description USD " + certguid1a), runtime_error);
 
 	// should fail: generate a cert offer using a zero quantity
-	BOOST_CHECK_THROW(r = CallRPC("node1", "offernew sysrates.peg node1alias category title 0 0.05 description USD " + certguid1a), runtime_error);
+	BOOST_CHECK_THROW(r = CallRPC("node1", "offernew sysrates.peg node1aalias category title 0 0.05 description USD " + certguid1a), runtime_error);
 
 	// should fail: generate a cert offer using an unlimited quantity
-	BOOST_CHECK_THROW(r = CallRPC("node1", "offernew sysrates.peg node1alias category title -1 0.05 description USD " + certguid1a), runtime_error);
+	BOOST_CHECK_THROW(r = CallRPC("node1", "offernew sysrates.peg node1aalias category title -1 0.05 description USD " + certguid1a), runtime_error);
 
 	// should fail: generate a cert offer using a cert guid you don't own
 	BOOST_CHECK_THROW(r = CallRPC("node1", "offernew sysrates.peg node1alias category title 1 0.05 description USD " + certguid2), runtime_error);	
 
+	// should fail: do not provide an alias peg
 	BOOST_CHECK_THROW(r = CallRPC("node1", "offernew node1alias category title 1 0.05 description USD " + certguid2), runtime_error);	
 
-	// should fail: generate a cert offer if accepting only BTC
-	BOOST_CHECK_THROW(r = CallRPC("node1", "offernew sysrates.peg node1alias category title 1 0.05 description USD " + certguid1a + " 0 1"), runtime_error);
+	// generate a cert offer if accepting only BTC
+	OfferNew("node1", "node1aalias", "category", "title", "1", "0.05", "description", "USD", certguid1a, false, "2");
+	// generate a cert offer if accepting BTC OR SYS
+	OfferNew("node1", "node1aalias", "category", "title", "1", "0.05", "description", "USD", certguid1a, false, "3");
 
-	BOOST_CHECK_THROW(r = CallRPC("node1", "offernew node1alias category title 1 0.05 description USD " + certguid1a + " 0 1"), runtime_error);
-	// should fail: generate a cert offer using different public keys for cert and alias
-	BOOST_CHECK_THROW(r = CallRPC("node1", "offernew node1alias category title 1 0.05 description USD " + certguid1a + " 0 0 1"), runtime_error);
+	// should fail: generate a cert offer using different alias for cert and offer
+	BOOST_CHECK_THROW(r = CallRPC("node1", "offernew sysrates.peg node1alias category title 1 0.05 description USD " + certguid1a), runtime_error);
+
+	// should fail: generate a cert offer with invalid payment option
+	BOOST_CHECK_THROW(r = CallRPC("node1", "offernew sysrates.peg node1aalias category title 1 0.05 description USD " + certguid1a + " 1 0"), runtime_error);
 
 
 }
@@ -316,7 +322,7 @@ BOOST_AUTO_TEST_CASE (generate_offerupdate_editcurrency)
 	acceptRet = FindOfferAccept("node2", offerguid, acceptguid);
 	nTotal = find_value(acceptRet, "systotal").get_int64();
 	// 100000.0 SYS/BTC
-	BOOST_CHECK_EQUAL(nTotal + COIN, AmountFromValue(4*0.00001000*100000.0));
+	BOOST_CHECK_EQUAL(nTotal, AmountFromValue(4*0.00001000*100000.0));
 
 	// try to update currency and accept in same block, ensure payment uses old currency not new
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "offerupdate sysrates.peg selleraliascurrency " + offerguid + " category title 90 0.2 desc EUR"));
@@ -331,14 +337,12 @@ BOOST_AUTO_TEST_CASE (generate_offerupdate_editcurrency)
 	// still used BTC conversion amount
 	BOOST_CHECK_EQUAL(nTotal, AmountFromValue(10*0.00001000*100000.0));
 	// 2695.2 SYS/EUR
-	acceptguid = OfferAccept("node1", "node2", "buyeraliascurrency", offerguid, "1", "message");
+	acceptguid = OfferAccept("node1", "node2", "buyeraliascurrency", offerguid, "3", "message");
 	acceptRet = FindOfferAccept("node2", offerguid, acceptguid);
 	nTotal = find_value(acceptRet, "systotal").get_int64();
-	BOOST_CHECK_EQUAL(nTotal, AmountFromValue(1*0.2*2695.2));
+	BOOST_CHECK_EQUAL(nTotal, AmountFromValue(3*0.2*2695.2));
 
 	// linked offer with root and linked offer changing currencies
-
-	// escrow offer with currency updated before release
 
 	// directbtc
 
@@ -421,9 +425,10 @@ BOOST_AUTO_TEST_CASE (generate_cert_linkedaccept)
 	OfferAccept("node1", "node3", "node3alias", lofferguid, "1", "message", "node2");
 	GenerateBlocks(5, "node1");
 	GenerateBlocks(5, "node3");
+	// cert does not get transferred, need to do it manually after the sale
 	BOOST_CHECK_NO_THROW(r = CallRPC("node3", "certinfo " + certguid));
-	BOOST_CHECK(find_value(r.get_obj(), "ismine").get_str() == "true");
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "alias").get_str(), "node3alias");
+	BOOST_CHECK(find_value(r.get_obj(), "ismine").get_str() == "false");	
+	BOOST_CHECK(find_value(r.get_obj(), "alias").get_str() == "node1alias");
 }
 BOOST_AUTO_TEST_CASE (generate_offeracceptfeedback)
 {
@@ -623,9 +628,9 @@ BOOST_AUTO_TEST_CASE (generate_offersafesearch)
 	// make sure alias doesn't expire 
 	AliasUpdate("node2", "selleralias15", "changeddata2", "privdata2");
 	// offer is safe to search
-	string offerguidsafe = OfferNew("node2", "selleralias15", "category", "title", "100", "10.00", "description", "USD", "nocert", true, "0", "location", "Yes");
+	string offerguidsafe = OfferNew("node2", "selleralias15", "category", "title", "100", "10.00", "description", "USD", "nocert", true, "NONE", "location", "Yes");
 	// not safe to search
-	string offerguidnotsafe = OfferNew("node2", "selleralias15", "category", "title", "100", "10.00", "description", "USD", "nocert", true, "0", "location", "No");
+	string offerguidnotsafe = OfferNew("node2", "selleralias15", "category", "title", "100", "10.00", "description", "USD", "nocert", true, "NONE", "location", "No");
 	// should include result in both safe search mode on and off
 	BOOST_CHECK_EQUAL(OfferFilter("node1", offerguidsafe, "On"), true);
 	BOOST_CHECK_EQUAL(OfferFilter("node1", offerguidsafe, "Off"), true);
@@ -665,9 +670,9 @@ BOOST_AUTO_TEST_CASE (generate_offerban)
 	// make sure alias doesn't expire 
 	AliasUpdate("node2", "selleralias15", "changeddata2", "privdata2");
 	// offer is safe to search
-	string offerguidsafe = OfferNew("node2", "selleralias15", "category", "title", "100", "10.00", "description", "USD", "nocert", true, "0", "location", "Yes");
+	string offerguidsafe = OfferNew("node2", "selleralias15", "category", "title", "100", "10.00", "description", "USD", "nocert", true, "NONE", "location", "Yes");
 	// not safe to search
-	string offerguidnotsafe = OfferNew("node2", "selleralias15", "category", "title", "100", "10.00", "description", "USD", "nocert", true, "0", "location", "No");
+	string offerguidnotsafe = OfferNew("node2", "selleralias15", "category", "title", "100", "10.00", "description", "USD", "nocert", true, "NONE", "location", "No");
 	// can't ban on any other node than one that created sysban
 	BOOST_CHECK_THROW(OfferBan("node2",offerguidnotsafe,SAFETY_LEVEL1), runtime_error);
 	BOOST_CHECK_THROW(OfferBan("node3",offerguidsafe,SAFETY_LEVEL1), runtime_error);

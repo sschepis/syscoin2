@@ -9,7 +9,7 @@
 #include <QDataWidgetMapper>
 #include <QMessageBox>
 #include <QStringList>
-#include "rpcserver.h"
+#include "rpc/server.h"
 #include "main.h"
 #include "qcomboboxdelegate.h"
 #include <QSettings>
@@ -17,8 +17,8 @@
 #include <boost/algorithm/string.hpp>
 using namespace std;
 
-extern const CRPCTable tableRPC;
-string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchAliasPeg, const vector<unsigned char> &vchCurrency, float &nFee, const unsigned int &nHeightToFind, vector<string>& rateList, int &precision);
+extern CRPCTable tableRPC;
+string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchAliasPeg, const vector<unsigned char> &vchCurrency, double &nFee, const unsigned int &nHeightToFind, vector<string>& rateList, int &precision);
 extern bool getCategoryList(vector<string>& categoryList);
 extern vector<unsigned char> vchFromString(const std::string &str);
 EditOfferDialog::EditOfferDialog(Mode mode,  const QString &strOffer,  const QString &strCert,  const QString &strCategory, QWidget *parent) :
@@ -171,7 +171,7 @@ bool EditOfferDialog::isLinkedOffer(const QString& offerGUID)
 }
 void EditOfferDialog::on_aliasPegEdit_editingFinished()
 {
-	float nFee;
+	double nFee;
 	vector<string> rateList;
 	int precision;
 	if(getCurrencyToSYSFromAlias(vchFromString(ui->aliasPegEdit->text().toStdString()), vchFromString(ui->currencyEdit->currentText().toStdString()), nFee, chainActive.Tip()->nHeight, rateList, precision) == "1")
@@ -740,7 +740,7 @@ bool EditOfferDialog::saveCurrentRow()
 				params.push_back("nocert");
 			}
 
-			params.push_back("");
+			params.push_back("0");
 			params.push_back(ui->geoLocationEdit->text().toStdString());
 			params.push_back(ui->safeSearchEdit->currentText().toStdString());
 			params.push_back(ui->commissionEdit->text().toStdString());

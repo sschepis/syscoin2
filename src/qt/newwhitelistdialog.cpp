@@ -9,11 +9,11 @@
 #include <QDataWidgetMapper>
 #include <QMessageBox>
 #include <QStringList>
-#include "rpcserver.h"
+#include "rpc/server.h"
 using namespace std;
 
 
-extern const CRPCTable tableRPC;
+extern CRPCTable tableRPC;
 NewWhitelistDialog::NewWhitelistDialog(const QString &offerGUID, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::NewWhitelistDialog), model(0)

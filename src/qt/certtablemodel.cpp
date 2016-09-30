@@ -5,7 +5,7 @@
 
 #include "wallet/wallet.h"
 #include "base58.h"
-#include "rpcserver.h"
+#include "rpc/server.h"
 #include <QFont>
 using namespace std;
 
@@ -13,7 +13,7 @@ using namespace std;
 const QString CertTableModel::Cert = "C";
 
 
-extern const CRPCTable tableRPC;
+extern CRPCTable tableRPC;
 struct CertTableEntry
 {
     enum Type {

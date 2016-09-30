@@ -103,12 +103,13 @@ public:
  */
 class CSyscoinAddress : public CBase58Data {
 public:
+	// SYSCOIN
 	bool isAlias;
 	unsigned char safetyLevel;
 	int64_t nExpireHeight;
 	bool safeSearch;
 	std::string aliasName;
-	// SYSCOIN support old sys
+
     bool Set(const CKeyID &id, bool oldSys = false);
     bool Set(const CScriptID &id);
     bool Set(const CTxDestination &dest, bool oldSys = false);
@@ -171,7 +172,7 @@ public:
     CSyscoinExtKeyBase() {}
 };
 
-typedef CSyscoinExtKeyBase<CExtKey, 74, CChainParams::EXT_SECRET_KEY> CSyscoinExtKey;
-typedef CSyscoinExtKeyBase<CExtPubKey, 74, CChainParams::EXT_PUBLIC_KEY> CSyscoinExtPubKey;
+typedef CSyscoinExtKeyBase<CExtKey, BIP32_EXTKEY_SIZE, CChainParams::EXT_SECRET_KEY> CSyscoinExtKey;
+typedef CSyscoinExtKeyBase<CExtPubKey, BIP32_EXTKEY_SIZE, CChainParams::EXT_PUBLIC_KEY> CSyscoinExtPubKey;
 
 #endif // SYSCOIN_BASE58_H

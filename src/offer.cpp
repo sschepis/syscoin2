@@ -8,7 +8,7 @@
 #include "util.h"
 #include "random.h"
 #include "base58.h"
-#include "rpcserver.h"
+#include "rpc/server.h"
 #include "wallet/wallet.h"
 #include "consensus/validation.h"
 #include "chainparams.h"
@@ -418,6 +418,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	COffer theOffer;
 	vector<unsigned char> vchData;
 	vector<unsigned char> vchHash;
+	CTxDestination payDest, commissionDest, dest, aliasDest, linkDest;
 	int nDataOut;
 	if(!GetSyscoinData(tx, vchData, vchHash, nDataOut) || !theOffer.UnserializeFromData(vchData, vchHash))
 	{
@@ -539,7 +540,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	vector<COffer> offerVtxPos;
 	string category;
 	int precision = 2;
-	float nRate;
+	double nRate;
 	string retError = "";
 	// just check is for the memory pool inclusion, here we can stop bad transactions from entering before we get to include them in a block	
 	if(fJustCheck)
@@ -602,6 +603,11 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 
 		switch (op) {
 		case OP_OFFER_ACTIVATE:
+			if(theOffer.paymentOptions != PAYMENTOPTION_BTC && theOffer.paymentOptions != PAYMENTOPTION_SYS && theOffer.paymentOptions != PAYMENTOPTION_SYSBTC)
+			{
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 19 - " + _("Invalid payment option");
+				return error(errorMessage.c_str());
+			}
 			if(!theOffer.accept.IsNull())
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 19 - " + _("Cannot have accept information on offer activation");
@@ -662,6 +668,11 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 
 			break;
 		case OP_OFFER_UPDATE:
+			if(theOffer.paymentOptions > 0 && theOffer.paymentOptions != PAYMENTOPTION_BTC && theOffer.paymentOptions != PAYMENTOPTION_SYS && theOffer.paymentOptions != PAYMENTOPTION_SYSBTC)
+			{
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 19 - " + _("Invalid payment option");
+				return error(errorMessage.c_str());
+			}
 			if(!theOffer.accept.IsNull())
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 34 - " + _("Cannot have accept information on offer update");
@@ -891,6 +902,16 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 							errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 82a - " + _("Commission cannot be negative");
 							theOffer.vchLinkOffer.clear();	
 						}
+						else if (!linkOffer.vchLinkOffer.empty())
+						{
+							errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 83 - " + _("Cannot link to an offer that is already linked to another offer");
+							theOffer.vchLinkOffer.clear();	
+						}
+						else if(linkOffer.sCategory.size() > 0 && boost::algorithm::starts_with(stringFromVch(linkOffer.sCategory), "wanted"))
+						{
+							errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 83a - " + _("Cannot link to a wanted offer");
+							theOffer.vchLinkOffer.clear();
+						}
 						else if(!theOffer.vchCert.empty() && theCert.vchAlias != linkOffer.vchAlias)
 						{
 							errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 74 - " + _("Cannot update this offer because the certificate alias does not match the linked offer alias");
@@ -950,6 +971,25 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				{
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 73 - " + _("Linked offer not found. It may be expired");
 					theOffer.vchLinkOffer.clear();
+				}
+				// make sure alias exists in the root offer affiliate list if root offer is in exclusive mode
+				if (linkOffer.linkWhitelist.bExclusiveResell)
+				{
+					if(!linkOffer.linkWhitelist.GetLinkEntryByHash(theOffer.vchAlias, entry))
+					{
+						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 81 - " + _("Cannot find this alias in the parent offer affiliate list");
+						theOffer.vchLinkOffer.clear();	
+					}
+					else if(theOffer.nCommission <= -entry.nDiscountPct)
+					{
+						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 82 - " + _("This resold offer must be of higher price than the original offer including any discount");
+						theOffer.vchLinkOffer.clear();	
+					}
+				}	
+				else if(theOffer.nCommission < 0)
+				{
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 82a - " + _("Commission cannot be negative");
+					theOffer.vchLinkOffer.clear();	
 				}
 				if (!linkOffer.vchLinkOffer.empty())
 				{
@@ -1107,6 +1147,34 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 90 - " + _("Cannot find alias for this offer. It may be expired");
 				return true;
 			}
+			// trying to purchase a cert
+			if(!myPriceOffer.vchCert.empty())
+			{
+				CTransaction txCert;
+				if (!GetTxOfCert( myPriceOffer.vchCert, theCert, txCert))
+				{
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 91 - " + _("Cannot sell an expired certificate");
+					return true;
+				}
+				else if(!theOfferAccept.txBTCId.IsNull())
+				{
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 92 - " + _("Cannot purchase certificates with Bitcoins");
+					return true;
+				}
+				else if(myPriceOffer.vchLinkOffer.empty())
+				{
+					if(theCert.vchAlias != myPriceOffer.vchAlias)
+					{
+						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 94 - " + _("Cannot purchase this offer because the certificate has been transferred or it is linked to another offer");
+						return true;
+					}
+				}
+			}
+			else if (theOfferAccept.vchMessage.size() <= 0)
+			{
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 95 - " + _("Offer payment message cannot be empty");
+				return true;
+			}	
 			if(!myPriceOffer.vchLinkOffer.empty())
 			{
 				if(!GetTxAndVtxOfOffer( myPriceOffer.vchLinkOffer, linkOffer, linkedTx, offerVtxPos))
@@ -1149,35 +1217,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 111a - " + _("Linked offer alias does not exist on the root offer affiliate list and toot offer is set to exclusive mode. You cannot accept this offer. Please contact the affiliate and ask him to get the root offer merchant to put the affiliate on his affiliate list for this offer");
 					return true;
 				}
-			}
-			// trying to purchase a cert
-			if(!myPriceOffer.vchCert.empty())
-			{
-				CTransaction txCert;
-				if (!GetTxOfCert( myPriceOffer.vchCert, theCert, txCert))
-				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 91 - " + _("Cannot sell an expired certificate");
-					return true;
-				}
-				else if(!theOfferAccept.txBTCId.IsNull())
-				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 92 - " + _("Cannot purchase certificates with Bitcoins");
-					return true;
-				}
-				else if(myPriceOffer.vchLinkOffer.empty())
-				{
-					if(theCert.vchAlias != myPriceOffer.vchAlias)
-					{
-						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 94 - " + _("Cannot purchase this offer because the certificate has been transferred or it is linked to another offer");
-						return true;
-					}
-				}
-			}
-			else if (theOfferAccept.vchMessage.size() <= 0)
-			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 95 - " + _("Offer payment message cannot be empty");
-				return true;
-			}		
+			}	
 			if(myPriceOffer.sCategory.size() > 0 && boost::algorithm::starts_with(stringFromVch(myPriceOffer.sCategory), "wanted"))
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 105 - " + _("Cannot purchase a wanted offer");
@@ -1259,7 +1299,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 122 - " + _("Offer payment does not include enough commission to affiliate");
 						return true;
 					}
-					CTxDestination payDest, commissionDest;
 					if (!ExtractDestination(tx.vout[nOutPayment].scriptPubKey, payDest)) 
 					{
 						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 122 - " + _("Cannot extract destination from output script");
@@ -1272,14 +1311,16 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					}
 					CPubKey aliasLinkPubKey(linkAlias.vchPubKey);
 					CSyscoinAddress aliaslinkaddy(aliasLinkPubKey.GetID());
-					if(aliaslinkaddy.Get() != payDest)
+					linkDest = aliaslinkaddy.Get();
+					if(!(linkDest == payDest))
 					{
 						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 122 - " + _("Payment destination does not match merchant address");
 						return true;
 					}
 					CPubKey aliasPubKey(alias.vchPubKey);
 					CSyscoinAddress aliasaddy(aliasPubKey.GetID());
-					if(aliasaddy.Get() != commissionDest)
+					aliasDest = aliasaddy.Get();
+					if(!(aliasDest == commissionDest))
 					{
 						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 122 - " + _("Commission destination does not match affiliate address");
 						return true;
@@ -1287,7 +1328,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				}
 				else 
 				{
-					CTxDestination payDest;
 					if (!ExtractDestination(tx.vout[nOutPayment].scriptPubKey, payDest)) 
 					{
 						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 122 - " + _("Cannot extract destination from output script");
@@ -1295,7 +1335,8 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					}	
 					CPubKey aliasPubKey(alias.vchPubKey);
 					CSyscoinAddress aliasaddy(aliasPubKey.GetID());
-					if(aliasaddy.Get() != payDest)
+					aliasDest = aliasaddy.Get();
+					if(!(aliasDest == payDest))
 					{
 						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 122 - " + _("Payment destination does not match merchant address");
 						return true;
@@ -1303,7 +1344,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				}
 			}	
 			// check that the script for the offer update is sent to the correct destination
-			CTxDestination dest;
 			if (!ExtractDestination(tx.vout[nOut].scriptPubKey, dest)) 
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 122 - " + _("Cannot extract destination from output script");
@@ -1311,7 +1351,8 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			}	
 			CPubKey aliasPubKey(alias.vchPubKey);
 			CSyscoinAddress aliasaddy(aliasPubKey.GetID());
-			if(aliasaddy.Get() != dest)
+			aliasDest = aliasaddy.Get();
+			if(!(aliasDest == dest))
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 122 - " + _("Payment destination does not match merchant address");
 				return true;
@@ -1493,7 +1534,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 }
 
 UniValue offernew(const UniValue& params, bool fHelp) {
-	if (fHelp || params.size() < 7 || params.size() > 14)
+	if (fHelp || params.size() < 8 || params.size() > 14)
 		throw runtime_error(
 		"offernew <aliaspeg> <alias> <category> <title> <quantity> <price> <description> <currency> [cert. guid] [exclusive resell=1] [paymentOptions=1] [geolocation=''] [safe search=Yes] [private='0']\n"
 						"<aliaspeg> Alias peg you wish to use, leave empty to use sysrates.peg.\n"	
@@ -1506,14 +1547,14 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 						"<currency> The currency code that you want your offer to be in ie: USD.\n"
 						"<cert. guid> Set this to the guid of a certificate you wish to sell\n"
 						"<exclusive resell> set to 1 if you only want those who control the affiliate's who are able to resell this offer via offerlink. Defaults to 1.\n"
-						"<paymentOptions> 1 to accept SYS only, 2 for BTC only and 3 to accept BTC or SYS. Defaults to 1.\n"
+						"<paymentOptions> 1 to accept SYS only, 2 for BTC only and 3 to accept BTC or SYS. Levae empty for default. Defaults to 1.\n"
 						"<geolocation> set to your geolocation. Defaults to empty. \n"
 						"<safe search> set to No if this offer should only show in the search when safe search is not selected. Defaults to Yes (offer shows with or without safe search selected in search lists).\n"
 						"<private> set to 1 if this offer should be private not be searchable. Defaults to 0.\n"						
 						+ HelpRequiringPassphrase());
 	// gather inputs
 	string baSig;
-	float nPrice;
+	float fPrice;
 	bool bExclusiveResell = true;
 	vector<unsigned char> vchAliasPeg = vchFromValue(params[0]);
 	vector<unsigned char> vchAlias = vchFromValue(params[1]);
@@ -1539,11 +1580,11 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 	int nQty;
 
 	try {
-		nQty = atoi(params[4].get_str());
+		nQty =  boost::lexical_cast<int>(params[4].get_str());
 	} catch (std::exception &e) {
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 135 - " + _("Invalid quantity value, must be less than 4294967296 and greater than or equal to -1"));
 	}
-	nPrice = atof(params[5].get_str().c_str());
+	fPrice = boost::lexical_cast<float>(params[5].get_str());
 	vchDesc = vchFromValue(params[6]);
 	CScript scriptPubKeyOrig;
 	CScript scriptPubKey;
@@ -1557,11 +1598,11 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 
 	if(params.size() >= 10)
 	{
-		bExclusiveResell = atoi(params[9].get_str().c_str()) == 1? true: false;
+		bExclusiveResell = boost::lexical_cast<int>(params[9].get_str()) == 1? true: false;
 	}
-	if(params.size() >= 11)
+	if(params.size() >= 11 && !params[10].get_str().empty() && params[10].get_str() != "NONE")
 	{
-		paymentOptions = atoi(params[10].get_str().c_str());
+		paymentOptions = boost::lexical_cast<int>(params[10].get_str());
 
 	}	
 	string strGeoLocation = "";
@@ -1575,10 +1616,10 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 		strSafeSearch = params[12].get_str();
 	}
 	bool bPrivate = false;
-	if (params.size() >= 14) bPrivate = atoi(params[13].get_str().c_str()) == 1? true: false;
+	if (params.size() >= 14) bPrivate = boost::lexical_cast<int>(params[13].get_str()) == 1? true: false;
 
 	int precision = 2;
-	CAmount nPricePerUnit = convertCurrencyCodeToSyscoin(vchAliasPeg, vchCurrency, nPrice, chainActive.Tip()->nHeight, precision);
+	CAmount nPricePerUnit = convertCurrencyCodeToSyscoin(vchAliasPeg, vchCurrency, fPrice, chainActive.Tip()->nHeight, precision);
 	if(nPricePerUnit == 0)
 	{
 		string err = "SYSCOIN_OFFER_RPC_ERROR ERRCODE: 136 - " + _("Could not find currency in the peg alias");
@@ -1684,7 +1725,7 @@ UniValue offerlink(const UniValue& params, bool fHelp) {
 	if (vchLinkOffer.empty() || !GetTxOfOffer( vchLinkOffer, linkOffer, tx, true))
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 140 - " + _("Could not find an offer with this guid"));
 
-	int commissionInteger = atoi(params[2].get_str().c_str());
+	int commissionInteger = boost::lexical_cast<int>(params[2].get_str());
 	if(params.size() >= 4)
 	{
 
@@ -1716,6 +1757,7 @@ UniValue offerlink(const UniValue& params, bool fHelp) {
 	newOffer.vchOffer = vchOffer;
 	newOffer.vchAlias = alias.vchAlias;
 	newOffer.sDescription = vchDesc;
+	newOffer.paymentOptions = linkOffer.paymentOptions;
 	newOffer.SetPrice(linkOffer.GetPrice());
 	newOffer.nCommission = commissionInteger;
 	newOffer.vchLinkOffer = vchLinkOffer;
@@ -1779,7 +1821,7 @@ UniValue offeraddwhitelist(const UniValue& params, bool fHelp) {
 	int nDiscountPctInteger = 0;
 	
 	if(params.size() >= 3)
-		nDiscountPctInteger = atoi(params[2].get_str().c_str());
+		nDiscountPctInteger = boost::lexical_cast<int>(params[2].get_str());
 
 	CWalletTx wtx;
 
@@ -2085,34 +2127,34 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	bool bExclusiveResell = true;
 	int bPrivate = false;
 	int nQty;
-	double price;
+	float fPrice;
 	int nCommission = 0;
 	if (params.size() >= 8) vchDesc = vchFromValue(params[7]);
 	if (params.size() >= 9) sCurrencyCode = vchFromValue(params[8]);
-	if (params.size() >= 10) bPrivate = atoi(params[9].get_str().c_str()) == 1? true: false;
+	if (params.size() >= 10) bPrivate = boost::lexical_cast<int>(params[9].get_str()) == 1? true: false;
 	if (params.size() >= 11) vchCert = vchFromValue(params[10]);
 	if(vchCert == vchFromString("nocert"))
 		vchCert.clear();
-	if (params.size() >= 12) bExclusiveResell = atoi(params[11].get_str().c_str()) == 1? true: false;
+	if (params.size() >= 12) bExclusiveResell = boost::lexical_cast<int>(params[11].get_str()) == 1? true: false;
 	if (params.size() >= 13) vchGeoLocation = vchFromValue(params[12]);
 	string strSafeSearch = "Yes";
 	if(params.size() >= 14)
 	{
 		strSafeSearch = params[13].get_str();
 	}
-	if(params.size() >= 15 && !params[14].get_str().empty())
+	if(params.size() >= 15 && !params[14].get_str().empty() && params[14].get_str() != "NONE")
 	{
-		nCommission = atoi(params[14].get_str());
+		nCommission = boost::lexical_cast<int>(params[14].get_str());
 	}
 	unsigned char paymentOptions = PAYMENTOPTION_SYS;
-	if(params.size() >= 16 && !params[15].get_str().empty())
+	if(params.size() >= 16 && !params[15].get_str().empty() && params[15].get_str() != "NONE")
 	{
-		paymentOptions = atoi(params[15].get_str().c_str());
+		paymentOptions = boost::lexical_cast<int>(params[15].get_str());
 
 	}
 	try {
-		nQty = atoi(params[5].get_str());
-		price = atof(params[6].get_str().c_str());
+		nQty = boost::lexical_cast<int>(params[5].get_str());
+		fPrice = boost::lexical_cast<float>(params[6].get_str());
 
 	} catch (std::exception &e) {
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 158 - " + _("Invalid price and/or quantity values. Quantity must be less than 4294967296 and greater than or equal to -1"));
@@ -2183,7 +2225,7 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 		if(offerCopy.vchAliasPeg != vchAliasPeg)
 			theOffer.vchAliasPeg = vchAliasPeg;
 		int precision = 2;
-		nPricePerUnit = convertCurrencyCodeToSyscoin(vchAliasPeg, sCurrencyCode, price, chainActive.Tip()->nHeight, precision);
+		nPricePerUnit = convertCurrencyCodeToSyscoin(vchAliasPeg, sCurrencyCode, fPrice, chainActive.Tip()->nHeight, precision);
 		if(nPricePerUnit == 0)
 		{
 			string err = "SYSCOIN_OFFER_RPC_ERROR ERRCODE: 136 - " + _("Could not find currency in the peg alias");
@@ -2191,9 +2233,10 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 		}
 	}
 
-	if(paymentOptions > 0)
+	if(params.size() >= 15 && params[14].get_str() != "NONE")
 		theOffer.paymentOptions = paymentOptions;
-	theOffer.nCommission = nCommission;
+	if(params.size() >= 16 && params[15].get_str() != "NONE")
+		theOffer.nCommission = nCommission;
 	theOffer.vchAlias = alias.vchAlias;
 	theOffer.safeSearch = strSafeSearch == "Yes"? true: false;
 	theOffer.nQty = nQty;
@@ -2260,9 +2303,6 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	int64_t nHeight = chainActive.Tip()->nHeight;
 	unsigned int nQty = 1;
 	if (params.size() >= 3) {
-		if(atof(params[2].get_str().c_str()) <= 0)
-			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 166 - " + _("Invalid quantity value, must be greater than 0"));
-	
 		try {
 			nQty = boost::lexical_cast<unsigned int>(params[2].get_str());
 		} catch (std::exception &e) {
@@ -2362,8 +2402,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	txAccept.vchAcceptRand = vchAccept;
 	txAccept.nQty = nQty;
 	txAccept.nPrice = nPrice;
-	// if we have a linked offer accept then use height from linked accept (the one buyer makes, not the reseller). We need to do this to make sure we convert price at the time of initial buyer's accept.
-	// in checkescrowinput we override this if its from an escrow release, just like above.
+	// We need to do this to make sure we convert price at the time of initial buyer's accept.
 	txAccept.nAcceptHeight = nHeight;
 	txAccept.vchBuyerAlias = vchAlias;
 	txAccept.vchMessage = vchPaymentMessage;
@@ -2429,7 +2468,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	{
 		vecSend.push_back(paymentRecipient);
 		vecSend.push_back(acceptRecipient);
-		if(!copyOffer.vchLinkOffer.empty() && !foundEntry.IsNull())
+		if(!copyOffer.vchLinkOffer.empty())
 			vecSend.push_back(paymentCommissionRecipient);
 	}
 
@@ -2561,7 +2600,7 @@ UniValue offeracceptfeedback(const UniValue& params, bool fHelp) {
 	vector<unsigned char> vchAcceptRand = vchFromValue(params[1]);
 	vector<unsigned char> vchFeedback = vchFromValue(params[2]);
 	try {
-		nRating = atoi(params[3].get_str());
+		nRating = boost::lexical_cast<int>(params[3].get_str());
 		if(nRating < 0 || nRating > 5)
 			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 187 - " + _("Invalid rating value, must be less than or equal to 5 and greater than or equal to 0"));
 
@@ -2908,7 +2947,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 
 			// NON-LINKED merchant
 			CAmount priceAtTimeOfAccept = theOfferAccept.nPrice;
-			if(theOfferAccept.nPrice != priceAtTimeOfAccept)
+			if(theOffer.GetPrice() != priceAtTimeOfAccept)
 				discountApplied = true;
 			// NON-LINKED buyer
 			if(!ismine)
@@ -2932,7 +2971,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 					{
 						commissionPaid = false;
 						priceAtTimeOfAccept = theOfferAccept.nPrice;
-						if(theOfferAccept.nPrice != priceAtTimeOfAccept)
+						if(linkOffer.GetPrice() != priceAtTimeOfAccept)
 							discountApplied = true;
 					}
 					// You are the buyer
@@ -2987,7 +3026,8 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 
 			int precision = 2;
 			CAmount nPricePerUnit = convertSyscoinToCurrencyCode(theOffer.vchAliasPeg, theOffer.sCurrencyCode, priceAtTimeOfAccept, theOfferAccept.nAcceptHeight, precision);
-			oOfferAccept.push_back(Pair("systotal", priceAtTimeOfAccept * theOfferAccept.nQty));
+			CAmount sysTotal = priceAtTimeOfAccept * theOfferAccept.nQty;
+			oOfferAccept.push_back(Pair("systotal", sysTotal));
 			oOfferAccept.push_back(Pair("sysprice", priceAtTimeOfAccept));
 			oOfferAccept.push_back(Pair("price", strprintf("%.*f", precision, ValueFromAmount(nPricePerUnit).get_real()))); 	
 			oOfferAccept.push_back(Pair("total", strprintf("%.*f", precision, ValueFromAmount(nPricePerUnit).get_real() * theOfferAccept.nQty )));
@@ -3049,7 +3089,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 			oOfferAccept.push_back(Pair("avg_rating", (int)totalAvgRating));	
 			string strMessage = string("");
 			if(!DecryptMessage(alias.vchPubKey, theOfferAccept.vchMessage, strMessage))
-				strMessage = string("Encrypted for owner of offer");
+				strMessage = _("Encrypted for owner of offer");
 			oOfferAccept.push_back(Pair("pay_message", strMessage));
 			aoOfferAccepts.push_back(oOfferAccept);
 
@@ -3066,7 +3106,7 @@ UniValue offeracceptinfo(const UniValue& params, bool fHelp) {
 				"List offer purchases. Parameter is the offer you want all purchase information for");
 	CTransaction offerTx, acceptTx, aliasTx, linkTx, linkAliasTx;
 	COffer theOffer, linkOffer;
-	CAliasIndex alias, linkAlias;
+	CAliasIndex alias;
 	vector<COffer> vtxPos, vtxLinkPos, vtxAliasLinkPos;
     vector<unsigned char> vchOffer;
     vchOffer = vchFromValue(params[0]);	
@@ -3090,7 +3130,7 @@ UniValue offeracceptinfo(const UniValue& params, bool fHelp) {
 		if(!GetTxAndVtxOfOffer( theOffer.vchLinkOffer, linkOffer, linkTx, vtxLinkPos, true))
 			throw runtime_error("failed to read linked offer transaction from disk");
 
-		if(!GetTxOfAlias(linkOffer.vchAlias, linkAlias, linkAliasTx, true))
+		if(!GetTxOfAlias(linkOffer.vchAlias, alias, linkAliasTx, true))
 			throw runtime_error("Could not find the alias associated with this linked offer");
 		// if you don't own this offer check the linked offer
 		if(!ismine)
@@ -3170,7 +3210,8 @@ UniValue offeracceptinfo(const UniValue& params, bool fHelp) {
 
 		int precision = 2;
 		CAmount nPricePerUnit = convertSyscoinToCurrencyCode(theOffer.vchAliasPeg, theOffer.sCurrencyCode, priceAtTimeOfAccept, theOfferAccept.nAcceptHeight, precision);
-		oOfferAccept.push_back(Pair("systotal", priceAtTimeOfAccept * theOfferAccept.nQty));
+		CAmount sysTotal = priceAtTimeOfAccept * theOfferAccept.nQty;
+		oOfferAccept.push_back(Pair("systotal", sysTotal));
 		oOfferAccept.push_back(Pair("sysprice", priceAtTimeOfAccept));
 		oOfferAccept.push_back(Pair("price", strprintf("%.*f", precision, ValueFromAmount(nPricePerUnit).get_real()))); 	
 		oOfferAccept.push_back(Pair("total", strprintf("%.*f", precision, ValueFromAmount(nPricePerUnit).get_real() * theOfferAccept.nQty )));
@@ -3227,7 +3268,7 @@ UniValue offeracceptinfo(const UniValue& params, bool fHelp) {
 		oOfferAccept.push_back(Pair("avg_rating", (int)totalAvgRating));	
 		string strMessage = string("");
 		if(!DecryptMessage(alias.vchPubKey, theOfferAccept.vchMessage, strMessage))
-			strMessage = string("Encrypted for owner of offer");
+			strMessage = _("Encrypted for owner of offer");
 		oOfferAccept.push_back(Pair("pay_message", strMessage));
 		aoOfferAccepts.push_back(oOfferAccept);
 	}
@@ -3583,4 +3624,20 @@ bool GetAcceptByHash(std::vector<COffer> &offerList, COfferAccept &ca, COffer &o
         }
     }
 	return false;
+}
+std::string COffer::GetPaymentOptionsString()
+{
+	if(paymentOptions == PAYMENTOPTION_SYS)
+	{
+		return std::string("SYS");
+	}
+	else if(paymentOptions  == PAYMENTOPTION_BTC)
+	{
+		return std::string("BTC");
+	}
+	else if(paymentOptions == PAYMENTOPTION_SYSBTC)
+	{
+		return std::string("SYS+BTC");
+	}
+	return "";
 }
