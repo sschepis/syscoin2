@@ -149,7 +149,7 @@ public:
     bool WriteEscrow(const std::vector<unsigned char>& name, std::vector<CEscrow>& vtxPos) {
         return Write(make_pair(std::string("escrowi"), name), vtxPos);
     }
-    bool WriteEscrowTx(const uint256& txid, const std::vector<unsigned char>& name) {
+    bool WriteEscrowTx(const std::vector<unsigned char>& name, const uint256& txid) {
         return Write(make_pair(std::string("escrowt"), txid), name);
     }
     bool EraseEscrow(const std::vector<unsigned char>& name, const uint256& txid) {
