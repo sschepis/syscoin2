@@ -869,14 +869,9 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 			}
 			if(!theEscrow.txBTCId.IsNull())
 			{
-				if(pofferdb->ExistsOfferTx(vchFromString(theEscrow.txBTCId.GetHex())))
+				if(pescrowdb->ExistsEscrowTx(vchFromString(theEscrow.txBTCId.GetHex())))
 				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 122 - " + _("BTC Transaction ID specified was already used to pay for an offer");
-					return true;
-				}
-				else if(pescrowdb->ExistsEscrowTx(vchFromString(theEscrow.txBTCId.GetHex())))
-				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 122 - " + _("BTC Transaction ID specified was already used to pay for an offer");
+					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 122 - " + _("BTC Transaction ID specified was already used to pay for an escrow");
 					return true;
 				}
 				if(!dontaddtodb && !pescrowdb->WriteEscrowTx(vchFromString(theEscrow.txBTCId.GetHex()), theEscrow.vchEscrow))
