@@ -867,19 +867,19 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4057 - " + _("Escrow already exists");
 				return true;
 			}
-			if(!theEscrow.txBTCId.empty())
+			if(!theEscrow.txBTCId.IsNull())
 			{
-				if(pofferdb->ExistsOfferTx(theEscrow.txBTCId))
+				if(pofferdb->ExistsOfferTx(vchFromString(theEscrow.txBTCId.ToString())))
 				{
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 122 - " + _("BTC Transaction ID specified was already used to pay for an offer");
 					return true;
 				}
-				else if(pescrowdb->ExistsEscrowTx(theEscrow.txBTCId))
+				else if(pescrowdb->ExistsEscrowTx(vchFromString(theEscrow.txBTCId.ToString())))
 				{
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 122 - " + _("BTC Transaction ID specified was already used to pay for an offer");
 					return true;
 				}
-				if(!dontaddtodb && !pescrowdb->WriteEscrowTx(theEscrow.txBTCId, theEscrow.vchEscrow))
+				if(!dontaddtodb && !pescrowdb->WriteEscrowTx(vchFromString(theEscrow.txBTCId.ToString()), theEscrow.vchEscrow))
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4058a - " + _("Failed to BTC Transaction ID to DB");		
 					return error(errorMessage.c_str());
