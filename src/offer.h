@@ -406,10 +406,10 @@ public:
 	bool WriteOffer(const std::vector<unsigned char>& name, std::vector<COffer>& vtxPos) {
 		return Write(make_pair(std::string("offeri"), name), vtxPos);
 	}
-	bool WriteOfferTx(const std::vector<unsigned char>& name, const std::vector<unsigned char>& txid) {
+	bool WriteOfferTx(const std::vector<unsigned char>& name, const uint256& txid) {
 		return Write(make_pair(std::string("offert"), txid), name);
 	}
-	bool EraseOffer(const std::vector<unsigned char>& name, const std::vector<unsigned char>& txid) {
+	bool EraseOffer(const std::vector<unsigned char>& name, const uint256& txid) {
 	    return Erase(make_pair(std::string("offeri"), name)) && Erase(make_pair(std::string("offert"), txid));
 	}
 
@@ -419,7 +419,7 @@ public:
 	bool ExistsOffer(const std::vector<unsigned char>& name) {
 	    return Exists(make_pair(std::string("offeri"), name));
 	}
-	bool ExistsOfferTx(const std::vector<unsigned char>& txid) {
+	bool ExistsOfferTx(const uint256& txid) {
 	    return Exists(make_pair(std::string("offert"), txid));
 	}
 
