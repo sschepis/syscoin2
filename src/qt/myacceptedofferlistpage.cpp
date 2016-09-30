@@ -217,11 +217,11 @@ void MyAcceptedOfferListPage::slotConfirmedFinished(QNetworkReply * reply){
 		if (timeValue.isStr())
 			time = QString::fromStdString(timeValue.get_str());
 		
-		UniValue unconfirmedValue = find_value(dataObj, "is_unconfirmed");
-		if (unconfirmedValue.isBool())
+		UniValue unconfirmedValue = find_value(dataObj, "confirmations");
+		if (unconfirmedValue.isNum())
 		{
-			bool unconfirmed = unconfirmedValue.get_bool();
-			if(unconfirmed)
+			int confirmations = unconfirmedValue.get_int();
+			if(confirmations <= 1)
 			{
 				ui->btcButton->setText(m_buttonText);
 				ui->btcButton->setEnabled(true);
