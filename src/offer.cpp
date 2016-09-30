@@ -1363,17 +1363,17 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			theOffer.accept = theOfferAccept;
 			if(!theOfferAccept.txBTCId.IsNull())
 			{
-				if(pofferdb->ExistsOfferTx(vchFromString(theOfferAccept.txBTCId.ToString())))
+				if(pofferdb->ExistsOfferTx(vchFromString(theOfferAccept.txBTCId.GetHex())))
 				{
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 122 - " + _("BTC Transaction ID specified was already used to pay for an offer");
 					return true;
 				}
-				else if(pescrowdb->ExistsEscrowTx(vchFromString(theOfferAccept.txBTCId.ToString())))
+				else if(pescrowdb->ExistsEscrowTx(vchFromString(theOfferAccept.txBTCId.GetHex())))
 				{
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 122 - " + _("BTC Transaction ID specified was already used to pay for an offer");
 					return true;
 				}
-				if(!dontaddtodb && !pofferdb->WriteOfferTx(vchFromString(theOfferAccept.txBTCId.ToString()), theOffer.vchOffer))
+				if(!dontaddtodb && !pofferdb->WriteOfferTx(vchFromString(theOfferAccept.txBTCId.GetHex()), theOffer.vchOffer))
 				{
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 4058a - " + _("Failed to BTC Transaction ID to DB");		
 					return error(errorMessage.c_str());
