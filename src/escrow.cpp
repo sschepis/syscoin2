@@ -879,7 +879,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 122 - " + _("BTC Transaction ID specified was already used to pay for an offer");
 					return true;
 				}
-				if(!pescrowdb->WriteEscrowTx(theEscrow.txBTCId, theEscrow.vchEscrow))
+				if(!dontaddtodb && !pescrowdb->WriteEscrowTx(theEscrow.txBTCId, theEscrow.vchEscrow))
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4058a - " + _("Failed to BTC Transaction ID to DB");		
 					return error(errorMessage.c_str());
