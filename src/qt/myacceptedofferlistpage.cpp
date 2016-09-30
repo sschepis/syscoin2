@@ -211,8 +211,8 @@ void MyAcceptedOfferListPage::slotConfirmedFinished(QNetworkReply * reply){
 			reply->deleteLater();	
 			return;
 		}
-		UniValue dataObj1 = find_value(outerObj, "data");
-		UniValue dataObj = find_value(dataObj1, "tx");
+		UniValue dataObj1 = find_value(outerObj, "data").get_obj();
+		UniValue dataObj = find_value(dataObj1, "tx").get_obj();
 		UniValue timeValue = find_value(dataObj, "time");
 		if (timeValue.isStr())
 			time = QString::fromStdString(timeValue.get_str());
@@ -236,7 +236,7 @@ void MyAcceptedOfferListPage::slotConfirmedFinished(QNetworkReply * reply){
 		{
 			UniValue outputs = outputsValue.get_array();
 			for (unsigned int idx = 0; idx < outputs.size(); idx++) {
-				const UniValue& output = outputs[idx];	
+				const UniValue& output = outputs[idx].get_obj();	
 				UniValue addressesValue = find_value(output, "addresses");
 				UniValue paymentValue = find_value(output, "value");
 				if(addressesValue.isArray() &&  addressesValue.get_array().size() == 1)

@@ -240,7 +240,7 @@ void OfferAcceptDialogBTC::slotConfirmedFinished(QNetworkReply * reply){
 		{
 			UniValue outputs = outputsValue.get_array();
 			for (unsigned int idx = 0; idx < outputs.size(); idx++) {
-				const UniValue& output = outputs[idx];	
+				const UniValue& output = outputs[idx].get_obj();	
 				UniValue addressesValue = find_value(output, "addresses");
 				UniValue paymentValue = find_value(output, "value");
 				if(addressesValue.isArray() &&  addressesValue.get_array().size() == 1)
