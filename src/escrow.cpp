@@ -755,7 +755,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 
 				if(op == OP_ESCROW_COMPLETE)
 				{
-					if(vvchArgs[1] == vchFromString("0") && !serializedEscrow.redeemTxBTCId.empty() && !theEscrow.txBTCId.IsNull() && !theEscrow.escrowInputTx.empty())
+					if(vvchArgs[1] == vchFromString("0") && !serializedEscrow.redeemTxBTCId.IsNull() && !theEscrow.txBTCId.IsNull() && !theEscrow.escrowInputTx.empty())
 						theEscrow.redeemTxBTCId = serializedEscrow.redeemTxBTCId;
 					if(vvchArgs[1] == vchFromString("0") && serializedEscrow.vchLinkAlias != theEscrow.vchSellerAlias)
 					{
