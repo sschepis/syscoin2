@@ -129,14 +129,15 @@ public:
         base58Prefixes[EXT_SECRET_KEY] = boost::assign::list_of(0x04)(0x88)(0xAD)(0xE4).convert_to_container<std::vector<unsigned char> >();
 
         vFixedSeeds = std::vector<SeedSpec6>(pnSeed6_main, pnSeed6_main + ARRAYLEN(pnSeed6_main));
-
-        fMiningRequiresPeers = true;
+        vFixedSeeds.clear();
+        vSeeds.clear();
+        fMiningRequiresPeers = false;
         fDefaultConsistencyChecks = false;
-        fRequireStandard = true;
-        fMineBlocksOnDemand = false;
+        fRequireStandard = false;
+        fMineBlocksOnDemand = true;
         fTestnetToBeDeprecatedFieldRPC = false;
 
-        checkpointData = (CCheckpointData) {
+       /* checkpointData = (CCheckpointData) {
             boost::assign::map_list_of
             ( 11111, uint256S("0x444dbed9c994b2f88ccc8980f8d8952bb699de0a3ccb39633fd373289314c0e7"))
             ( 33333, uint256S("0x627457ac67fe173a66eaeb0f8d310c2b53743e95774a96b71bee44a10e854377"))
@@ -150,7 +151,7 @@ public:
             100000,   // * total number of transactions between genesis and last checkpoint
                         //   (the tx=... number in the SetBestChain debug.log lines)
             1000.0     // * estimated number of transactions per day after checkpoint
-        };
+        };*/
     }
 };
 static CMainParams mainParams;
