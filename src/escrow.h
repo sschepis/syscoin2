@@ -149,9 +149,11 @@ public:
     bool WriteEscrow(const std::vector<unsigned char>& name, std::vector<CEscrow>& vtxPos) {
         return Write(make_pair(std::string("escrowi"), name), vtxPos);
     }
-
-    bool EraseEscrow(const std::vector<unsigned char>& name) {
-        return Erase(make_pair(std::string("escrowi"), name));
+    bool WriteEscrowTx(const std::vector<unsigned char>& txid, const std::vector<unsigned char>& name) {
+        return Write(make_pair(std::string("escrowt"), txid), name);
+    }
+    bool EraseEscrow(const std::vector<unsigned char>& name, const std::vector<unsigned char>& txid) {
+        return Erase(make_pair(std::string("escrowi"), name)) && Erase(make_pair(std::string("escrowt"), txid));
     }
 
     bool ReadEscrow(const std::vector<unsigned char>& name, std::vector<CEscrow>& vtxPos) {
@@ -161,7 +163,9 @@ public:
     bool ExistsEscrow(const std::vector<unsigned char>& name) {
         return Exists(make_pair(std::string("escrowi"), name));
     }
-
+    bool ExistsEscrowTx(const std::vector<unsigned char>& txid) {
+        return Exists(make_pair(std::string("escrowt"), txid));
+    }
     bool ScanEscrows(
 		const std::vector<unsigned char>& vchEscrow, const std::string& strRegExp, 
             unsigned int nMax,
