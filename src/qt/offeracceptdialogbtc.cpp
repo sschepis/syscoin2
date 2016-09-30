@@ -226,8 +226,8 @@ void OfferAcceptDialogBTC::slotConfirmedFinished(QNetworkReply * reply){
 		}
 
 
-		UniValue dataObj1 = find_value(outerObj, "data");
-		UniValue dataObj = find_value(dataObj1, "tx");
+		UniValue dataObj1 = find_value(outerObj, "data").get_obj();
+		UniValue dataObj = find_value(dataObj1, "tx").get_obj();
 		UniValue timeValue = find_value(dataObj, "time");
 		if (timeValue.isStr())
 			time = QString::fromStdString(timeValue.get_str());
