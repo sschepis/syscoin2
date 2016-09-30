@@ -56,9 +56,10 @@ OfferAcceptDialog::OfferAcceptDialog(WalletModel* model, const PlatformStyle *pl
 		ui->acceptBtcButton->setVisible(true);
 		if(paymentOptions == PAYMENTOPTION_BTC)
 			ui->acceptMessage->setText(tr("Are you sure you want to purchase <b>%1</b> of <b>%2</b> from merchant <b>%3</b>? You will be charged <b>%4 %5</b>").arg(quantity).arg(title).arg(sellerAlias).arg(strBTCPrice).arg("BTC"));
+		else if(strCurrencyCode == "BTC")
+			ui->acceptMessage->setText(tr("Are you sure you want to purchase <b>%1</b> of <b>%2</b> from merchant <b>%3</b>? You will be charged <b>%4 %5 (%6 SYS)</b>").arg(quantity).arg(title).arg(sellerAlias).arg(qstrPrice).arg(currencyCode).arg(strSYSPrice));
 		else
 			ui->acceptMessage->setText(tr("Are you sure you want to purchase <b>%1</b> of <b>%2</b> from merchant <b>%3</b>? You will be charged <b>%4 %5 (%6 SYS / %7 BTC)</b>").arg(quantity).arg(title).arg(sellerAlias).arg(qstrPrice).arg(currencyCode).arg(strSYSPrice).arg(strBTCPrice));
-
 	}
 	else
 	{

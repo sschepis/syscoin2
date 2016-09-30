@@ -2471,6 +2471,9 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 		if(!copyOffer.vchLinkOffer.empty())
 			vecSend.push_back(paymentCommissionRecipient);
 	}
+	else
+		vecSend.push_back(acceptRecipient);
+
 
 	CScript scriptData;
 	scriptData << OP_RETURN << data;

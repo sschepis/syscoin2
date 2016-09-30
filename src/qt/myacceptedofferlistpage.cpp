@@ -178,7 +178,7 @@ void MyAcceptedOfferListPage::slotConfirmedFinished(QNetworkReply * reply){
 		return;
 	}
 	double valueAmount = 0;
-	QString time;
+	int64 time;
 	int height;
 		
 	QByteArray bytes = reply->readAll();
@@ -214,9 +214,11 @@ void MyAcceptedOfferListPage::slotConfirmedFinished(QNetworkReply * reply){
 		UniValue dataObj1 = find_value(outerObj, "data").get_obj();
 		UniValue dataObj = find_value(dataObj1, "tx").get_obj();
 		UniValue timeValue = find_value(dataObj, "time");
-		if (timeValue.isStr())
-			time = QString::fromStdString(timeValue.get_str());
-		
+		if (timeValue.isNum())
+			time = timeValue.get_int64();
+		QDateTime timestamp;
+		timestamp.setTime_t(time);
+
 		UniValue unconfirmedValue = find_value(dataObj, "confirmations");
 		if (unconfirmedValue.isNum())
 		{
@@ -253,7 +255,7 @@ void MyAcceptedOfferListPage::slotConfirmedFinished(QNetworkReply * reply){
 								ui->btcButton->setText(m_buttonText);
 								ui->btcButton->setEnabled(true);
 								QMessageBox::information(this, windowTitle(),
-									tr("Transaction ID %1 was found in the Bitcoin blockchain! Full payment has been detected at %3. It is recommended that you confirm payment by opening your Bitcoin wallet and seeing the funds in your account.").arg(m_strBTCTxId).arg(time),
+									tr("Transaction ID %1 was found in the Bitcoin blockchain! Full payment has been detected at %3. It is recommended that you confirm payment by opening your Bitcoin wallet and seeing the funds in your account.").arg(m_strBTCTxId).arg(timestamp.toString(Qt::SystemLocaleShortDate)),
 									QMessageBox::Ok, QMessageBox::Ok);
 								return;
 							}

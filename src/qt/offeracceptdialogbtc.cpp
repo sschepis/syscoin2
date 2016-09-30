@@ -188,7 +188,7 @@ void OfferAcceptDialogBTC::slotConfirmedFinished(QNetworkReply * reply){
 		return;
 	}
 	double valueAmount = 0;
-	QString time;
+	int64 time;
 		
 	QByteArray bytes = reply->readAll();
 	QString str = QString::fromUtf8(bytes.data(), bytes.size());
@@ -226,8 +226,10 @@ void OfferAcceptDialogBTC::slotConfirmedFinished(QNetworkReply * reply){
 		UniValue dataObj1 = find_value(outerObj, "data").get_obj();
 		UniValue dataObj = find_value(dataObj1, "tx").get_obj();
 		UniValue timeValue = find_value(dataObj, "time");
-		if (timeValue.isStr())
-			time = QString::fromStdString(timeValue.get_str());
+		if (timeValue.isNum())
+			time = timeValue.get_int64();
+		QDateTime timestamp;
+		timestamp.setTime_t(time);
 		UniValue hexValue = find_value(dataObj, "hex");
 		if (hexValue.isStr())
 			this->rawBTCTx = QString::fromStdString(hexValue.get_str());
@@ -241,7 +243,6 @@ void OfferAcceptDialogBTC::slotConfirmedFinished(QNetworkReply * reply){
 				UniValue paymentValue = find_value(output, "value");
 				UniValue scriptPubKeyObj = find_value(output, "scriptPubKey").get_obj();
 				UniValue addressesValue = find_value(scriptPubKeyObj, "addresses");
-				
 				if(addressesValue.isArray() &&  addressesValue.get_array().size() == 1)
 				{
 					UniValue addressValue = addressesValue.get_array()[0];
@@ -255,7 +256,7 @@ void OfferAcceptDialogBTC::slotConfirmedFinished(QNetworkReply * reply){
 								ui->confirmButton->setText(m_buttonText);
 								ui->confirmButton->setEnabled(true);
 								QMessageBox::information(this, windowTitle(),
-									tr("Transaction ID %1 was found in the Bitcoin blockchain! Full payment has been detected at %2.").arg(ui->btctxidEdit->text().trimmed()).arg(time),
+									tr("Transaction ID %1 was found in the Bitcoin blockchain! Full payment has been detected at %2.").arg(ui->btctxidEdit->text().trimmed()).arg(timestamp.toString(Qt::SystemLocaleShortDate)),
 									QMessageBox::Ok, QMessageBox::Ok);
 								reply->deleteLater();
 								if(ui->checkBox->isChecked())
