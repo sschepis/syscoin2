@@ -141,7 +141,6 @@ void OfferAcceptDialogBTC::setupEscrowCheckboxState()
 		}
 			
 		const UniValue &o = resCreate.get_obj();
-		QString multisigaddress;
 		const UniValue& redeemScript_value = find_value(o, "redeemScript");
 		const UniValue& address_value = find_value(o, "address");
 		if (redeemScript_value.isStr())
@@ -246,7 +245,8 @@ void OfferAcceptDialogBTC::slotConfirmedFinished(QNetworkReply * reply){
 				if(addressesValue.isArray() &&  addressesValue.get_array().size() == 1)
 				{
 					UniValue addressValue = addressesValue.get_array()[0];
-					if(addressValue.get_str() == address.toStdString())
+					if((!ui->checkBox->isChecked() && addressValue.get_str() == address.toStdString())
+						|| (ui->checkBox->isChecked() && addressValue.get_str() == multisigaddress.toStdString()))
 					{
 						if(paymentValue.isNum())
 						{

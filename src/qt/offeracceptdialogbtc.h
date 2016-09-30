@@ -37,6 +37,7 @@ private:
 	QString acceptGuid;
 	QString sellerAlias;
 	QString address;
+	QString multisigaddress;
 	QString alias;
 	QString rawBTCTx;
 	QString m_buttonText;
