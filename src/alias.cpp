@@ -70,7 +70,7 @@ bool GetSyscoinTransaction(int nHeight, const uint256 &hash, CTransaction &txOut
 }
 bool IsSys21Fork(const uint64_t& nHeight)
 {
-	if(nHeight <= SYSCOIN_FORK1 && ChainNameFromCommandLine() == CBaseChainParams::MAIN)
+	if(nHeight <= /*SYSCOIN_FORK1*/0 && ChainNameFromCommandLine() == CBaseChainParams::MAIN)
 		return false;
 	return true;
 }
