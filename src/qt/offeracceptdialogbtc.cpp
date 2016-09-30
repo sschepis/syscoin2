@@ -408,6 +408,7 @@ void OfferAcceptDialogBTC::acceptEscrow()
 		params.push_back(this->notes.toStdString());
 		params.push_back(ui->escrowEdit->text().toStdString());
 		params.push_back(this->rawBTCTx.trimmed().toStdString());
+		params.push_back(ui->btctxidEdit->text().trimmed().toStdString());
 		params.push_back(redeemScript.toStdString());
 
 

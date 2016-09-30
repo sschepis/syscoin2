@@ -439,6 +439,11 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4011 - " + _("Escrow Guid mismatch");
 					return error(errorMessage.c_str());
 				}
+				if ((theEscrow.escrowInputTx.empty() && !theEscrow.txBTCId.IsNull()) || (theEscrow.txBTCId.IsNull() && !theEscrow.escrowInputTx.empty()))
+				{
+					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4011 - " + _("Not enough information to process BTC escrow payment");
+					return error(errorMessage.c_str());
+				}
 				if(!theEscrow.feedback.empty())
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4012 - " + _("Cannot leave feedback in escrow activation");
@@ -750,6 +755,8 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 
 				if(op == OP_ESCROW_COMPLETE)
 				{
+					if(vvchArgs[1] == vchFromString("0") && !serializedEscrow.redeemTxBTCId.empty() && !theEscrow.txBTCId.IsNull() && !theEscrow.escrowInputTx.empty())
+						theEscrow.redeemTxBTCId = serializedEscrow.redeemTxBTCId;
 					if(vvchArgs[1] == vchFromString("0") && serializedEscrow.vchLinkAlias != theEscrow.vchSellerAlias)
 					{
 						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4045 - " + _("Only seller can claim an escrow release");
@@ -860,6 +867,25 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4057 - " + _("Escrow already exists");
 				return true;
 			}
+			if(!theEscrow.txBTCId.empty())
+			{
+				if(pofferdb->ExistsOfferTx(theEscrow.txBTCId))
+				{
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 122 - " + _("BTC Transaction ID specified was already used to pay for an offer");
+					return true;
+				}
+				else if(pescrowdb->ExistsEscrowTx(theEscrow.txBTCId))
+				{
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 122 - " + _("BTC Transaction ID specified was already used to pay for an offer");
+					return true;
+				}
+				if(!pescrowdb->WriteEscrowTx(theEscrow.txBTCId, theEscrow.vchEscrow))
+				{
+					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4058a - " + _("Failed to BTC Transaction ID to DB");		
+					return error(errorMessage.c_str());
+				}
+			}
+
 			if(theEscrow.nQty <= 0)
 				theEscrow.nQty = 1;
 			vector<COffer> myVtxPos;
@@ -1091,15 +1117,16 @@ UniValue generateescrowmultisig(const UniValue& params, bool fHelp) {
 }
 
 UniValue escrownew(const UniValue& params, bool fHelp) {
-    if (fHelp || params.size() < 5 ||  params.size() > 7)
+    if (fHelp || params.size() < 5 ||  params.size() > 8)
         throw runtime_error(
-		"escrownew <alias> <offer> <quantity> <message> <arbiter alias> [btcTx] [redeemScript]\n"
+		"escrownew <alias> <offer> <quantity> <message> <arbiter alias> [btcTx] [BTC TxId] [redeemScript]\n"
 						"<alias> An alias you own.\n"
                         "<offer> GUID of offer that this escrow is managing.\n"
                         "<quantity> Quantity of items to buy of offer.\n"
 						"<message> Delivery details to seller.\n"
 						"<arbiter alias> Alias of Arbiter.\n"
-						"<btcTx>. Raw Bitcoin input transaction. Optional, for internal use only. Leave empty\n"
+						"<btcTx>. If paid in Bitcoin enter raw Bitcoin input transaction. Optional, for internal use only. Leave empty\n"
+						"<BTC TxId> If paid in Bitcoin, enter the Transaction ID here. Default is empty.\n"
 						"<redeemScript>. Optional, for internal use only. Leave empty\n"
                         + HelpRequiringPassphrase());
 	vector<unsigned char> vchAlias = vchFromValue(params[0]);
@@ -1115,11 +1142,11 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 
 	vector<unsigned char> vchMessage = vchFromValue(params[3]);
 	vector<unsigned char> vchBTCTx = params.size() >= 6? vchFromValue(params[5]): vchFromString("");
-	vector<unsigned char> vchRedeemScript = params.size() >= 7? vchFromValue(params[6]): vchFromString("");
+	vector<unsigned char> vchBTCTxId = vchFromValue(params.size()>=7?params[6]:"");
+	vector<unsigned char> vchRedeemScript = params.size() >= 8? vchFromValue(params[7]): vchFromString("");
 	CTransaction rawTx;
 	if (!vchBTCTx.empty() && !DecodeHexTx(rawTx,stringFromVch(vchBTCTx)))
 			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4064 - " + _("Could not find decode raw BTC transaction"));
-
 	unsigned int nQty = 1;
 
 	try {
@@ -1288,7 +1315,11 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	newEscrow.escrowInputTx = stringFromVch(vchBTCTx);
 	newEscrow.nHeight = chainActive.Tip()->nHeight;
 	newEscrow.nAcceptHeight = chainActive.Tip()->nHeight;
-
+	if(!vchBTCTxId.empty())
+	{
+		uint256 txBTCId(uint256S(stringFromVch(vchBTCTxId)));
+		newEscrow.txBTCId = txBTCId;
+	}
 	const vector<unsigned char> &data = newEscrow.Serialize();
     uint256 hash = Hash(data.begin(), data.end());
  	vector<unsigned char> vchHash = CScriptNum(hash.GetCheapHash()).getvch();

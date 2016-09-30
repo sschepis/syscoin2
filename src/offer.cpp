@@ -1361,6 +1361,25 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			theOfferAccept.vchAcceptRand = vvchArgs[1];
 			theOfferAccept.txHash = tx.GetHash();
 			theOffer.accept = theOfferAccept;
+			if(!theOfferAccept.txBTCId.empty())
+			{
+				if(pofferdb->ExistsOfferTx(theOfferAccept.txBTCId))
+				{
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 122 - " + _("BTC Transaction ID specified was already used to pay for an offer");
+					return true;
+				}
+				else if(pescrowdb->ExistsEscrowTx(theOfferAccept.txBTCId))
+				{
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 122 - " + _("BTC Transaction ID specified was already used to pay for an offer");
+					return true;
+				}
+				if(!pofferdb->WriteOfferTx(theOfferAccept.txBTCId, theOffer.vchOffer))
+				{
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 4058a - " + _("Failed to BTC Transaction ID to DB");		
+					return error(errorMessage.c_str());
+				}
+			}
+			
 		}
 		
 
@@ -2292,7 +2311,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 				"<guid> guidkey from offer.\n"
 				"<quantity> quantity to buy. Defaults to 1.\n"
 				"<message> payment message to seller, 1KB max.\n"
-				"<BTC TxId> If you have paid in Bitcoin and the offer is in Bitcoin, enter the transaction ID here. Default is empty.\n"
+				"<BTC TxId> If paid in Bitcoin, enter the Transaction ID here. Default is empty.\n"
 				+ HelpRequiringPassphrase());
 	CSyscoinAddress refundAddr;	
 	vector<unsigned char> vchAlias = vchFromValue(params[0]);

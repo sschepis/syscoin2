@@ -406,19 +406,22 @@ public:
 	bool WriteOffer(const std::vector<unsigned char>& name, std::vector<COffer>& vtxPos) {
 		return Write(make_pair(std::string("offeri"), name), vtxPos);
 	}
-
-	bool EraseOffer(const std::vector<unsigned char>& name) {
-	    return Erase(make_pair(std::string("offeri"), name));
+	bool WriteOfferTx(const std::vector<unsigned char>& name, const std::vector<unsigned char>& txid) {
+		return Write(make_pair(std::string("offert"), txid), name);
+	}
+	bool EraseOffer(const std::vector<unsigned char>& name, const std::vector<unsigned char>& txid) {
+	    return Erase(make_pair(std::string("offeri"), name)) && Erase(make_pair(std::string("offert"), txid));
 	}
 
 	bool ReadOffer(const std::vector<unsigned char>& name, std::vector<COffer>& vtxPos) {
 		return Read(make_pair(std::string("offeri"), name), vtxPos);
 	}
-
 	bool ExistsOffer(const std::vector<unsigned char>& name) {
 	    return Exists(make_pair(std::string("offeri"), name));
 	}
-
+	bool ExistsOfferTx(const std::vector<unsigned char>& txid) {
+	    return Exists(make_pair(std::string("offert"), txid));
+	}
 
     bool ScanOffers(
 		const std::vector<unsigned char>& vchOffer,const std::string &strRegExp, bool safeSearch,const std::string& strCategory,
