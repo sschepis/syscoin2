@@ -163,14 +163,14 @@ void OfferAcceptDialogBTC::setupEscrowCheckboxState()
 			ui->escrowDisclaimer->setText(tr("<font color='red'>Could not create escrow transaction: could not find redeem script in response</font>"));
 			return;
 		}
-		ui->acceptMessage->setText(tr("Are you sure you want to purchase <b>%1</b> of <b>%2</b> from merchant <b>%3</b>? Follow the steps below to successfully pay via Bitcoin:<br/><br/>1. If you are using escrow, please enter your escrow arbiter in the input box below and check the <b>Use Escrow</b> checkbox. Leave the escrow checkbox unchecked if you do not wish to use escrow.<br/>2. Open your Bitcoin wallet. You may use the QR Code to the left to scan the payment request into your wallet or click on <b>Open BTC Wallet</b> if you are on the desktop and have Bitcoin Core installed.<br/>3. Pay <b>%4 BTC</b> to <b>%5</b> using your Bitcoin wallet.<br/>4. Click on the <b>Confirm Payment</b> button once you have paid.").arg(quantity).arg(title).arg(sellerAlias).arg(fprice).arg(multisigaddress));
+		ui->acceptMessage->setText(tr("Are you sure you want to purchase <b>%1</b> of <b>%2</b> from merchant <b>%3</b>? Follow the steps below to successfully pay via Bitcoin:<br/><br/>1. If you are using escrow, please enter your escrow arbiter in the input box below and check the <b>Use Escrow</b> checkbox. Leave the escrow checkbox unchecked if you do not wish to use escrow.<br/>2. Open your Bitcoin wallet. You may use the QR Code to the left to scan the payment request into your wallet or click on <b>Open BTC Wallet</b> if you are on the desktop and have Bitcoin Core installed.<br/>3. Pay <b>%4 BTC</b> to <b>%5</b> using your Bitcoin wallet.<br/>4. Click on the <b>Confirm Payment</b> button once you have paid.").arg(quantity).arg(title).arg(sellerAlias).arg(qstrPrice).arg(multisigaddress));
 		ui->escrowDisclaimer->setText(tr("<font color='green'>Escrow created successfully! Please fund using BTC address <b>%1</b></font>").arg(multisigaddress));
 	}
 	else
 	{
 		ui->escrowDisclaimer->setText(tr("<font color='blue'>Enter a Syscoin arbiter that is mutally trusted between yourself and the merchant. Then enable the <b>Use Escrow</b> checkbox</font>"));
 		ui->escrowEdit->setEnabled(true);
-		ui->acceptMessage->setText(tr("Are you sure you want to purchase <b>%1</b> of <b>%2</b> from merchant <b>%3</b>? Follow the steps below to successfully pay via Bitcoin:<br/><br/>1. If you are using escrow, please enter your escrow arbiter in the input box below and check the <b>Use Escrow</b> checkbox. Leave the escrow checkbox unchecked if you do not wish to use escrow.<br/>2. Open your Bitcoin wallet. You may use the QR Code to the left to scan the payment request into your wallet or click on <b>Open BTC Wallet</b> if you are on the desktop and have Bitcoin Core installed.<br/>3. Pay <b>%4 BTC</b> to <b>%5</b> using your Bitcoin wallet.<br/>4. Click on the <b>Confirm Payment</b> button once you have paid.").arg(quantity).arg(title).arg(sellerAlias).arg(fprice).arg(address));
+		ui->acceptMessage->setText(tr("Are you sure you want to purchase <b>%1</b> of <b>%2</b> from merchant <b>%3</b>? Follow the steps below to successfully pay via Bitcoin:<br/><br/>1. If you are using escrow, please enter your escrow arbiter in the input box below and check the <b>Use Escrow</b> checkbox. Leave the escrow checkbox unchecked if you do not wish to use escrow.<br/>2. Open your Bitcoin wallet. You may use the QR Code to the left to scan the payment request into your wallet or click on <b>Open BTC Wallet</b> if you are on the desktop and have Bitcoin Core installed.<br/>3. Pay <b>%4 BTC</b> to <b>%5</b> using your Bitcoin wallet.<br/>4. Click on the <b>Confirm Payment</b> button once you have paid.").arg(quantity).arg(title).arg(sellerAlias).arg(qstrPrice).arg(address));
 	}
 }
 void OfferAcceptDialogBTC::onEscrowCheckBoxChanged(bool toggled)
@@ -349,7 +349,7 @@ void OfferAcceptDialogBTC::acceptOffer(){
 				QString offerAcceptTXID = QString::fromStdString(strResult);
 				if(offerAcceptTXID != QString(""))
 				{
-					OfferPayDialog dlg(platformStyle, this->title, this->quantity, this->price, "BTC", this);
+					OfferPayDialog dlg(platformStyle, this->title, this->quantity, this->qstrPrice, "BTC", this);
 					dlg.exec();
 					this->offerPaid = true;
 					OfferAcceptDialogBTC::accept();
@@ -452,7 +452,7 @@ void OfferAcceptDialogBTC::openBTCWallet()
 	info.address = this->address;
 	info.label = this->sellerAlias;
 	info.message = message;
-	ParseMoney(price.toStdString(), info.amount);
+	ParseMoney(this->qstrPrice.toStdString(), info.amount);
 	QString uri = GUIUtil::formatBitcoinURI(info);
 	QDesktopServices::openUrl(QUrl(uri, QUrl::TolerantMode));
 }
