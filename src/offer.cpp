@@ -1363,7 +1363,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			theOffer.accept = theOfferAccept;
 			if(!theOfferAccept.txBTCId.IsNull())
 			{
-				if(pofferdb->ExistsOfferTx(theOfferAccept.txBTCId))
+				if(pofferdb->ExistsOfferTx(theOfferAccept.txBTCId) || pescrowdb->ExistsEscrowTx(theOfferAccept.txBTCId))
 				{
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 122 - " + _("BTC Transaction ID specified was already used to pay for an offer");
 					return true;
