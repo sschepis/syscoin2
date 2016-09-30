@@ -72,7 +72,7 @@ OfferAcceptDialogBTC::OfferAcceptDialogBTC(WalletModel* model, const PlatformSty
 	info.address = this->address;
 	info.label = this->sellerAlias;
 	info.message = message;
-	ParseMoney(price.toStdString(), info.amount);
+	ParseMoney(qstrPrice.toStdString(), info.amount);
 	QString uri = GUIUtil::formatBitcoinURI(info);
 
 	ui->lblQRCode->setText("");
