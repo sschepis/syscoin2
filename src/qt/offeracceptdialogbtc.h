@@ -31,14 +31,13 @@ private:
 	SendCoinsRecipient info;
 	QString quantity;
 	QString notes;
-	QString price;
+	QString qstrPrice;
 	QString title;
 	QString offer;
 	QString acceptGuid;
 	QString sellerAlias;
 	QString address;
 	QString alias;
-	QString fprice;
 	QString rawBTCTx;
 	QString m_buttonText;
 	double dblPrice;
