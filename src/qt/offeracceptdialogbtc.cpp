@@ -188,7 +188,7 @@ void OfferAcceptDialogBTC::slotConfirmedFinished(QNetworkReply * reply){
 		return;
 	}
 	double valueAmount = 0;
-	int64 time;
+	unsigned int time;
 		
 	QByteArray bytes = reply->readAll();
 	QString str = QString::fromUtf8(bytes.data(), bytes.size());
@@ -227,7 +227,7 @@ void OfferAcceptDialogBTC::slotConfirmedFinished(QNetworkReply * reply){
 		UniValue dataObj = find_value(dataObj1, "tx").get_obj();
 		UniValue timeValue = find_value(dataObj, "time");
 		if (timeValue.isNum())
-			time = timeValue.get_int64();
+			time = timeValue.get_int();
 		QDateTime timestamp;
 		timestamp.setTime_t(time);
 		UniValue hexValue = find_value(dataObj, "hex");

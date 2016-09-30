@@ -178,7 +178,7 @@ void MyAcceptedOfferListPage::slotConfirmedFinished(QNetworkReply * reply){
 		return;
 	}
 	double valueAmount = 0;
-	int64 time;
+	unsigned int time;
 	int height;
 		
 	QByteArray bytes = reply->readAll();
@@ -215,7 +215,7 @@ void MyAcceptedOfferListPage::slotConfirmedFinished(QNetworkReply * reply){
 		UniValue dataObj = find_value(dataObj1, "tx").get_obj();
 		UniValue timeValue = find_value(dataObj, "time");
 		if (timeValue.isNum())
-			time = timeValue.get_int64();
+			time = timeValue.get_int();
 		QDateTime timestamp;
 		timestamp.setTime_t(time);
 
