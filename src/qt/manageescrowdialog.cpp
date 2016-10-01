@@ -476,7 +476,7 @@ void ManageEscrowDialog::CheckPaymentInBTC()
 {
 	QNetworkAccessManager *nam = new QNetworkAccessManager(this);  
 	connect(nam, SIGNAL(finished(QNetworkReply *)), this, SLOT(slotConfirmedFinishedCheck(QNetworkReply *)));
-	QUrl url("http://btc.blockr.io/api/v1/tx/raw/" + redeemTxid);
+	QUrl url("http://btc.blockr.io/api/v1/tx/raw/" + m_redeemTxid);
 	QNetworkRequest request(url);
 	nam->get(request);
 }

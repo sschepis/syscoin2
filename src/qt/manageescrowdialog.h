@@ -24,11 +24,11 @@ public:
     };
     explicit ManageEscrowDialog(WalletModel* model, const QString &escrow, QWidget *parent = 0);
     ~ManageEscrowDialog();
-	void SendRawTxBTC(const QString &rawTx);
-	void CheckPaymentInBTC(const QString &txid);
+	void SendRawTxBTC();
+	void CheckPaymentInBTC();
 	bool isYourAlias(const QString &alias);
-	void CompleteEscrowRefund(const QString& timestamp);
-	void CompleteEscrowRelease(const QString& timestamp);
+	void CompleteEscrowRefund(const QString& timestamp="");
+	void CompleteEscrowRelease(const QString& timestamp="");
 	bool loadEscrow(const QString &escrow, QString &buyer, QString &seller, QString &arbiter, QString &status, QString &offertitle, QString &total);
 	ManageEscrowDialog::EscrowType findYourEscrowRoleFromAliases(const QString &buyer, const QString &seller, const QString &arbiter);
 public Q_SLOTS:
