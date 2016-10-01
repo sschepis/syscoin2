@@ -1722,7 +1722,7 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 
 
 	EnsureWalletIsUnlocked();
-
+	UniValue ret(UniValue::VARR);
     // look for a transaction with this key
     CTransaction tx;
 	CEscrow escrow;
