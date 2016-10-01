@@ -96,7 +96,7 @@ public:
 
         EscrowActivate,
         EscrowRelease,
-		EscrowReLeaseRecv,
+		EscrowReleaseRecv,
         EscrowRefund,
 		EscrowRefundRecv,
 		EscrowComplete,
