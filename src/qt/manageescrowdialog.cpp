@@ -8,6 +8,11 @@
 #include <QMessageBox>
 #include "rpc/server.h"
 #include "walletmodel.h"
+#if QT_VERSION < 0x050000
+#include <QUrl>
+#else
+#include <QUrlQuery>
+#endif
 using namespace std;
 #include <QNetworkAccessManager>
 #include <QNetworkRequest>
@@ -367,7 +372,7 @@ void ManageEscrowDialog::SendRawTxBTC()
 	QNetworkAccessManager *nam = new QNetworkAccessManager(this); 
 	connect(nam, SIGNAL(finished(QNetworkReply *)), this, SLOT(slotConfirmedFinished(QNetworkReply *)));
 	QUrl postData;
-	postData.addQueryItem("param1", m_rawTx);
+	postData.addQueryItem("hex", m_rawTx);
 	QUrl url("http://btc.blockr.io/api/v1/tx/");
 	QNetworkRequest request(url);
 	request.setHeader(QNetworkRequest::ContentTypeHeader, 
@@ -376,8 +381,10 @@ void ManageEscrowDialog::SendRawTxBTC()
 }
 void ManageEscrowDialog::slotConfirmedFinishedCheck(QNetworkReply * reply){
 	if(reply->error() != QNetworkReply::NoError) {
-		ui->btcButton->setText(m_buttonText);
-		ui->btcButton->setEnabled(true);
+		ui->releaseButton->setText(tr("Claim Payment"));
+		ui->releaseButton->setEnabled(true);	
+		ui->refundButton->setText(tr("Claim Refund"));
+		ui->refundButton->setEnabled(true);	
         QMessageBox::critical(this, windowTitle(),
             tr("Error making request: ") + reply->errorString(),
                 QMessageBox::Ok, QMessageBox::Ok);
@@ -476,7 +483,7 @@ void ManageEscrowDialog::CheckPaymentInBTC()
 {
 	QNetworkAccessManager *nam = new QNetworkAccessManager(this);  
 	connect(nam, SIGNAL(finished(QNetworkReply *)), this, SLOT(slotConfirmedFinishedCheck(QNetworkReply *)));
-	QUrl url("http://btc.blockr.io/api/v1/tx/raw/" + m_redeemTxid);
+	QUrl url("http://btc.blockr.io/api/v1/tx/raw/" + m_redeemTxId);
 	QNetworkRequest request(url);
 	nam->get(request);
 }
@@ -506,16 +513,17 @@ void ManageEscrowDialog::on_releaseButton_clicked()
 	params.push_back(escrow.toStdString());
 	try {
 		UniValue result = tableRPC.execute(strMethod, params);
-		m_rawTx = QString::fromStdString(retarray[0].get_str());	
+		const UniValue& retarray = result.get_array();
 		if(ui->releaseButton->text() == tr("Claim Payment"))
 		{
+			m_rawTx = QString::fromStdString(retarray[0].get_str());	
 			if(this->m_btctxid.size() > 0)
 			{
 				ui->releaseButton->setText(tr("Please Wait..."));
 				ui->releaseButton->setEnabled(false);
 
 				const UniValue &retarray = r.get_array();
-				m_redeemTxid = retarray[1].get_str();
+				m_redeemTxId = retarray[1].get_str();
 				SendRawTxBTC();
 			}
 			else
@@ -564,6 +572,7 @@ void ManageEscrowDialog::on_refundButton_clicked()
 	params.push_back(escrow.toStdString());
 	try {
 		UniValue result = tableRPC.execute(strMethod, params);
+		const UniValue& retarray = result.get_array();
 		if(ui->refundButton->text() == tr("Claim Refund"))
 		{
 			m_rawTx = QString::fromStdString(retarray[0].get_str());	
@@ -574,7 +583,7 @@ void ManageEscrowDialog::on_refundButton_clicked()
 				ui->refundButton->setEnabled(false);
 
 				const UniValue &retarray = r.get_array();
-				m_redeemTxid = retarray[1].get_str();
+				m_redeemTxId = retarray[1].get_str();
 				SendRawTxBTC();		
 			}
 			else
