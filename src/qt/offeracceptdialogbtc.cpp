@@ -287,7 +287,7 @@ void OfferAcceptDialogBTC::slotConfirmedFinished(QNetworkReply * reply){
 	ui->confirmButton->setText(m_buttonText);
 	ui->confirmButton->setEnabled(true);
 	QMessageBox::warning(this, windowTitle(),
-		tr("Payment not found in the Bitcoin blockchain! Please try again later."),
+		tr("Payment not found in the Bitcoin blockchain! Please try again later"),
 			QMessageBox::Ok, QMessageBox::Ok);	
 }
 void OfferAcceptDialogBTC::CheckPaymentInBTC()

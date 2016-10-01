@@ -111,10 +111,12 @@ TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *pa
 
     typeWidget->addItem(tr("Escrow Activated"), TransactionFilterProxy::TYPE(TransactionRecord::EscrowActivate));
     typeWidget->addItem(tr("Escrow Released"), TransactionFilterProxy::TYPE(TransactionRecord::EscrowRelease));
+	typeWidget->addItem(tr("Escrow Release Received"), TransactionFilterProxy::TYPE(TransactionRecord::EscrowReleaseRecv));
     typeWidget->addItem(tr("Escrow Refunded"), TransactionFilterProxy::TYPE(TransactionRecord::EscrowRefund));
 	typeWidget->addItem(tr("Escrow Refund Complete"), TransactionFilterProxy::TYPE(TransactionRecord::EscrowRefundComplete));
 	typeWidget->addItem(tr("Escrow Refund Received"), TransactionFilterProxy::TYPE(TransactionRecord::EscrowRefundRecv));
 	typeWidget->addItem(tr("Escrow Feedback"), TransactionFilterProxy::TYPE(TransactionRecord::EscrowFeedback));
+	typeWidget->addItem(tr("Escrow Feedback Received"), TransactionFilterProxy::TYPE(TransactionRecord::EscrowFeedbackRecv));
 	typeWidget->addItem(tr("Escrow Complete"), TransactionFilterProxy::TYPE(TransactionRecord::EscrowComplete));
 
 	typeWidget->addItem(tr("Message Sent"), TransactionFilterProxy::TYPE(TransactionRecord::MessageActivate));

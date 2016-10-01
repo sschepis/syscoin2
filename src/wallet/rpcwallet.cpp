@@ -2756,7 +2756,6 @@ extern UniValue certfilter(const UniValue& params, bool fHelp);
 extern UniValue generateescrowmultisig(const UniValue& params, bool fHelp);
 extern UniValue escrownew(const UniValue& params, bool fHelp);
 extern UniValue escrowrelease(const UniValue& params, bool fHelp);
-extern UniValue escrowcomplete(const UniValue& params, bool fHelp);
 extern UniValue escrowclaimrelease(const UniValue& params, bool fHelp);
 extern UniValue escrowrefund(const UniValue& params, bool fHelp);
 extern UniValue escrowclaimrefund(const UniValue& params, bool fHelp);
@@ -2864,7 +2863,6 @@ static const CRPCCommand commands[] =
 	{ "wallet", "escrownew",         &escrownew,     false },
 	{ "wallet", "escrowrelease",      &escrowrelease,  false },
 	{ "wallet", "escrowclaimrelease",      &escrowclaimrelease,  false },
-	{ "wallet", "escrowcomplete",      &escrowcomplete,  false },
 	{ "wallet", "escrowrefund",          &escrowrefund,      false },
 	{ "wallet", "escrowclaimrefund",          &escrowclaimrefund,      false },
 	{ "wallet", "escrowlist",              &escrowlist,          false },

@@ -280,7 +280,7 @@ void MyAcceptedOfferListPage::slotConfirmedFinished(QNetworkReply * reply){
 	ui->btcButton->setText(m_buttonText);
 	ui->btcButton->setEnabled(true);
 	QMessageBox::warning(this, windowTitle(),
-		tr("Payment not found in the Bitcoin blockchain! Please try again later."),
+		tr("Payment not found in the Bitcoin blockchain! Please try again later"),
 			QMessageBox::Ok, QMessageBox::Ok);	
 }
 void MyAcceptedOfferListPage::CheckPaymentInBTC(const QString &strBTCTxId, const QString& address, const QString& price)

@@ -96,6 +96,7 @@ public:
 
         EscrowActivate,
         EscrowRelease,
+		EscrowReLeaseRecv,
         EscrowRefund,
 		EscrowRefundRecv,
 		EscrowComplete,
@@ -104,6 +105,7 @@ public:
 		MessageRecv,
 		EscrowRefundComplete,
 		EscrowFeedback,
+		EscrowFeedbackRecv,
         OfferAcceptFeedback,
 		OfferAcceptFeedbackRecv
     };

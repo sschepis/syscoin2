@@ -78,17 +78,24 @@ static bool CreateSyscoinTransactionRecord(TransactionRecord& sub, int op, const
 			sub.type = TransactionRecord::EscrowActivate;
 		break;
 	case OP_ESCROW_RELEASE:
-		if(type == SEND  || type == RECV)
-			sub.type = TransactionRecord::EscrowRelease;
-		break;
-	case OP_ESCROW_COMPLETE:
-		if(type == SEND || type == RECV)
+		if(vvchArgs[1] == vchFromString("1"))
 		{
-			if(vvchArgs[1] == vchFromString("1"))
-				sub.type = TransactionRecord::EscrowFeedback;
-			else
+			if(type == SEND || type == RECV)
 				sub.type = TransactionRecord::EscrowComplete;
 		}
+		else
+		{
+			if(type == SEND)
+				sub.type = TransactionRecord::EscrowRelease;
+			else if(type == RECV)
+				sub.type = TransactionRecord::EscrowReleaseRecv;
+		}
+		break;
+	case OP_ESCROW_COMPLETE:		
+			if(type == SEND)
+				sub.type = TransactionRecord::EscrowFeedback;
+			else if(type == RECV)
+				sub.type = TransactionRecord::EscrowFeedbackRecv;		
 		break;
 	case OP_ESCROW_REFUND:
 		if(vvchArgs[1] == vchFromString("1"))
