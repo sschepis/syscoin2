@@ -6,7 +6,9 @@ class WalletModel;
 namespace Ui {
     class ManageEscrowDialog;
 }
-
+QT_BEGIN_NAMESPACE
+class QNetworkReply;
+QT_END_NAMESPACE
 /** Dialog for editing an address and associated information.
  */
 class ManageEscrowDialog : public QDialog
@@ -25,6 +27,8 @@ public:
 	void SendRawTxBTC(const QString &rawTx);
 	void CheckPaymentInBTC(const QString &txid);
 	bool isYourAlias(const QString &alias);
+	void CompleteEscrowRefund(const QString& timestamp);
+	void CompleteEscrowRelease(const QString& timestamp);
 	bool loadEscrow(const QString &escrow, QString &buyer, QString &seller, QString &arbiter, QString &status, QString &offertitle, QString &total);
 	ManageEscrowDialog::EscrowType findYourEscrowRoleFromAliases(const QString &buyer, const QString &seller, const QString &arbiter);
 public Q_SLOTS:
@@ -38,8 +42,9 @@ private:
 	WalletModel* walletModel;
     Ui::ManageEscrowDialog *ui;
 	QString escrow;
-	QString btctxid;
-	QString redeemTxid;
+	QString m_btctxid;
+	QString m_redeemTxid;
+	QString m_rawTx;
 	QString refundWarningStr;
 	QString releaseWarningStr;
 };

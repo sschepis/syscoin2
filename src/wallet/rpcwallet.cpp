@@ -2757,8 +2757,10 @@ extern UniValue generateescrowmultisig(const UniValue& params, bool fHelp);
 extern UniValue escrownew(const UniValue& params, bool fHelp);
 extern UniValue escrowrelease(const UniValue& params, bool fHelp);
 extern UniValue escrowclaimrelease(const UniValue& params, bool fHelp);
+extern UniValue escrowcompleteelease(const UniValue& params, bool fHelp);
 extern UniValue escrowrefund(const UniValue& params, bool fHelp);
 extern UniValue escrowclaimrefund(const UniValue& params, bool fHelp);
+extern UniValue escrowcomplerefund(const UniValue& params, bool fHelp);
 extern UniValue escrowinfo(const UniValue& params, bool fHelp);
 extern UniValue escrowlist(const UniValue& params, bool fHelp);
 extern UniValue escrowhistory(const UniValue& params, bool fHelp);
@@ -2863,8 +2865,10 @@ static const CRPCCommand commands[] =
 	{ "wallet", "escrownew",         &escrownew,     false },
 	{ "wallet", "escrowrelease",      &escrowrelease,  false },
 	{ "wallet", "escrowclaimrelease",      &escrowclaimrelease,  false },
+	{ "wallet", "escrowcompleterelease",      &escrowcompleterelease,  false },
 	{ "wallet", "escrowrefund",          &escrowrefund,      false },
 	{ "wallet", "escrowclaimrefund",          &escrowclaimrefund,      false },
+	{ "wallet", "escrowcompleterefund",          &escrowcompleterefund,      false },
 	{ "wallet", "escrowlist",              &escrowlist,          false },
 	{ "wallet", "escrowinfo",              &escrowinfo,          false },
 	{ "wallet", "escrowhistory",     &escrowhistory, false },

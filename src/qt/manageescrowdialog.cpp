@@ -9,7 +9,9 @@
 #include "rpc/server.h"
 #include "walletmodel.h"
 using namespace std;
-
+#include <QNetworkAccessManager>
+#include <QNetworkRequest>
+#include <QNetworkReply>
 extern CRPCTable tableRPC;
 ManageEscrowDialog::ManageEscrowDialog(WalletModel* model, const QString &escrow, QWidget *parent) :
     QDialog(parent),
@@ -27,7 +29,7 @@ ManageEscrowDialog::ManageEscrowDialog(WalletModel* model, const QString &escrow
 	ui->secondaryLabel->setVisible(false);
 	ui->secondaryRating->setVisible(false);
 	ui->secondaryFeedback->setVisible(false);
-	if(!loadEscrow(escrow, buyer, seller, arbiter, status, offertitle, total, btctxid))
+	if(!loadEscrow(escrow, buyer, seller, arbiter, status, offertitle, total, m_btctxid))
 	{
 		ui->manageInfo2->setText(tr("Cannot find this escrow on the network, please try again later."));
 		ui->releaseButton->setEnabled(false);
@@ -281,23 +283,98 @@ void ManageEscrowDialog::onLeaveFeedback()
             tr("General exception sending feedbackescrow"),
 			QMessageBox::Ok, QMessageBox::Ok);
 	}	
-
-void ManageEscrowDialog::slotConfirmedFinished(QNetworkReply * reply){
-	CheckPaymentInBTC(redeemTxid);
 }
-void ManageEscrowDialog::SendRawTxBTC(const QString &rawTx)
+void ManageEscrowDialog::CompleteEscrowRelease(const QString& timestamp)
+{
+	UniValue params(UniValue::VARR);
+	string strMethod = string("escrowcompleterelease");
+	params.push_back(escrow.toStdString());
+	params.push_back(this->m_rawTx.toStdString());
+
+	try {
+		UniValue result = tableRPC.execute(strMethod, params);
+
+		if(timestamp.size() > 0)
+		{
+			QMessageBox::information(this, windowTitle(),
+			tr("Escrow release completed successfully! Payment was found on the Bitcoin blockchain Transaction ID <b>%1</b> at %2").arg(m_redeemTxId).arg(timestamp),
+				QMessageBox::Ok, QMessageBox::Ok);
+		}
+		else
+		{
+			QMessageBox::information(this, windowTitle(),
+			tr("Escrow release completed successfully!"),
+				QMessageBox::Ok, QMessageBox::Ok);
+		}
+	}
+	catch (UniValue& objError)
+	{
+		string strError = find_value(objError, "message").get_str();
+		QMessageBox::critical(this, windowTitle(),
+        tr("Error completing release: \"%1\"").arg(QString::fromStdString(strError)),
+			QMessageBox::Ok, QMessageBox::Ok);
+	}
+	catch(std::exception& e)
+	{
+		QMessageBox::critical(this, windowTitle(),
+            tr("General exception completing release"),
+			QMessageBox::Ok, QMessageBox::Ok);
+	}
+}
+void ManageEscrowDialog::CompleteEscrowRefund(const QString& timestamp)
+{
+	UniValue params(UniValue::VARR);
+	string strMethod = string("escrowcompleterefund");
+	params.push_back(escrow.toStdString());
+	params.push_back(this->m_rawTx.toStdString());
+
+	try {
+		UniValue result = tableRPC.execute(strMethod, params);
+
+		if(timestamp.size() > 0)
+		{
+			QMessageBox::information(this, windowTitle(),
+			tr("Escrow refund completed successfully! Payment was found on the Bitcoin blockchain Transaction ID <b>%1</b> at %2").arg(m_redeemTxId).arg(timestamp),
+				QMessageBox::Ok, QMessageBox::Ok);
+		}
+		else
+		{
+			QMessageBox::information(this, windowTitle(),
+			tr("Escrow refund completed successfully!"),
+				QMessageBox::Ok, QMessageBox::Ok);
+		}
+	}
+	catch (UniValue& objError)
+	{
+		string strError = find_value(objError, "message").get_str();
+		QMessageBox::critical(this, windowTitle(),
+        tr("Error completing refund: \"%1\"").arg(QString::fromStdString(strError)),
+			QMessageBox::Ok, QMessageBox::Ok);
+	}
+	catch(std::exception& e)
+	{
+		QMessageBox::critical(this, windowTitle(),
+            tr("General exception completing refund"),
+			QMessageBox::Ok, QMessageBox::Ok);
+	}
+}
+void ManageEscrowDialog::slotConfirmedFinished(QNetworkReply * reply){
+	reply->deleteLater();
+	CheckPaymentInBTC();
+}
+void ManageEscrowDialog::SendRawTxBTC()
 {
 	QNetworkAccessManager *nam = new QNetworkAccessManager(this); 
 	connect(nam, SIGNAL(finished(QNetworkReply *)), this, SLOT(slotConfirmedFinished(QNetworkReply *)));
 	QUrl postData;
-	postData.addQueryItem("param1", rawTx);
+	postData.addQueryItem("param1", m_rawTx);
 	QUrl url("http://btc.blockr.io/api/v1/tx/");
 	QNetworkRequest request(url);
 	request.setHeader(QNetworkRequest::ContentTypeHeader, 
 		"application/x-www-form-urlencoded");
 	networkManager->post(request, postData.toString(QUrl::FullyEncoded).toUtf8());
 }
-void MyAcceptedOfferListPage::slotConfirmedFinishedCheck(QNetworkReply * reply){
+void ManageEscrowDialog::slotConfirmedFinishedCheck(QNetworkReply * reply){
 	if(reply->error() != QNetworkReply::NoError) {
 		ui->btcButton->setText(m_buttonText);
 		ui->btcButton->setEnabled(true);
@@ -356,37 +433,20 @@ void MyAcceptedOfferListPage::slotConfirmedFinishedCheck(QNetworkReply * reply){
 		if (unconfirmedValue.isNum())
 		{
 			int confirmations = unconfirmedValue.get_int();
-			if(confirmations <= 0)
+			if(confirmations >= 1)
 			{
-				QMessageBox::critical(this, windowTitle(),
-				tr("Payment not found in the Bitcoin blockchain! Please try again later""),
-					QMessageBox::Ok, QMessageBox::Ok);
-				ui->releaseButton->setText(tr("Claim Payment"));
-				ui->releaseButton->setEnabled(true);	
-				ui->refundButton->setText(tr("Claim Refund"));
-				ui->refundButton->setEnabled(true);	
-				return;
-				
-			}
-			else if(confirmations <= 1)
-			{
-				QMessageBox::warning(this, windowTitle(),
-				tr("Payment was found on the Bitcoin blockchain Transaction ID <b>%1</b>. This transaction however has not been confirmed yet so you may try claiming again to ensure it confirms").arg(redeemTxId),
-					QMessageBox::Ok, QMessageBox::Ok);	
-				ui->releaseButton->setText(tr("Claim Payment"));
-				ui->releaseButton->setEnabled(true);	
-				ui->refundButton->setText(tr("Claim Refund"));
-				ui->refundButton->setEnabled(true);	
-				return;
-			}
-			else 
-			{
-				QMessageBox::information(this, windowTitle(),
-				tr("Escrow released successfully! Payment was found on the Bitcoin blockchain Transaction ID <b>%1</b> (%2 confirms) at %4").arg(redeemTxId).arg(confirmations).arg(timestamp.toString(Qt::SystemLocaleShortDate),
-					QMessageBox::Ok, QMessageBox::Ok);
-				reply->deleteLater();
-				ManageEscrowDialog::accept();
-				return;
+				if(ui->releaseButton->text() == tr("Claim Payment"))
+				{
+					CompleteEscrowRelease(timestamp.toString(Qt::SystemLocaleShortDate));
+					reply->deleteLater();
+					return;
+				}
+				else if(ui->releaseButton->text() == tr("Claim Payment"))
+				{
+					CompleteEscrowRefund(timestamp.toString(Qt::SystemLocaleShortDate));
+					reply->deleteLater();
+					return;
+				}
 			}
 		}
 	}
@@ -412,11 +472,11 @@ void MyAcceptedOfferListPage::slotConfirmedFinishedCheck(QNetworkReply * reply){
 			QMessageBox::Ok, QMessageBox::Ok);	
 }
 
-void ManageEscrowDialog::CheckPaymentInBTC(const QString &txid)
+void ManageEscrowDialog::CheckPaymentInBTC()
 {
 	QNetworkAccessManager *nam = new QNetworkAccessManager(this);  
 	connect(nam, SIGNAL(finished(QNetworkReply *)), this, SLOT(slotConfirmedFinishedCheck(QNetworkReply *)));
-	QUrl url("http://btc.blockr.io/api/v1/tx/raw/" + txid);
+	QUrl url("http://btc.blockr.io/api/v1/tx/raw/" + redeemTxid);
 	QNetworkRequest request(url);
 	nam->get(request);
 }
@@ -446,15 +506,20 @@ void ManageEscrowDialog::on_releaseButton_clicked()
 	params.push_back(escrow.toStdString());
 	try {
 		UniValue result = tableRPC.execute(strMethod, params);
-		if(ui->releaseButton->text() == tr("Claim Payment") && this->btctxid.size() > 0)
+		m_rawTx = QString::fromStdString(retarray[0].get_str());	
+		if(ui->releaseButton->text() == tr("Claim Payment"))
 		{
-			ui->releaseButton->setText(tr("Please Wait..."));
-			ui->releaseButton->setEnabled(false);
+			if(this->m_btctxid.size() > 0)
+			{
+				ui->releaseButton->setText(tr("Please Wait..."));
+				ui->releaseButton->setEnabled(false);
 
-			const UniValue &retarray = r.get_array();
-			QString rawTx = QString::fromStdString(retarray[0].get_str());	
-			redeemTxid = retarray[1].get_str();
-			SendRawTxBTC(rawTx);
+				const UniValue &retarray = r.get_array();
+				m_redeemTxid = retarray[1].get_str();
+				SendRawTxBTC();
+			}
+			else
+				CompleteEscrowRelease();
 		}
 		else
 		{
@@ -499,15 +564,21 @@ void ManageEscrowDialog::on_refundButton_clicked()
 	params.push_back(escrow.toStdString());
 	try {
 		UniValue result = tableRPC.execute(strMethod, params);
-		if(ui->refundButton->text() == tr("Claim Refund") && this->btctxid.size() > 0)
+		if(ui->refundButton->text() == tr("Claim Refund"))
 		{
-			ui->refundButton->setText(tr("Please Wait..."));
-			ui->refundButton->setEnabled(false);
+			m_rawTx = QString::fromStdString(retarray[0].get_str());	
+			if(this->m_btctxid.size() > 0)
 
-			const UniValue &retarray = r.get_array();
-			QString rawTx = QString::fromStdString(retarray[0].get_str());	
-			redeemTxid = retarray[1].get_str();
-			SendRawTxBTC(rawTx);		
+			{
+				ui->refundButton->setText(tr("Please Wait..."));
+				ui->refundButton->setEnabled(false);
+
+				const UniValue &retarray = r.get_array();
+				m_redeemTxid = retarray[1].get_str();
+				SendRawTxBTC();		
+			}
+			else
+				CompleteEscrowRefund();
 		}
 		else
 		{
