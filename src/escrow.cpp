@@ -1991,9 +1991,9 @@ UniValue escrowcompleterelease(const UniValue& params, bool fHelp) {
                         + HelpRequiringPassphrase());
     // gather & validate inputs
     vector<unsigned char> vchEscrow = vchFromValue(params[0]);
-	string rawTx = stringFromVch(params[1].get_str());
+	string rawTx = params[1].get_str();
 	CTransaction myRawTx;
-	DecodeHexTx(myRawTx,stringFromVch(rawTx));
+	DecodeHexTx(myRawTx,rawTx);
     // this is a syscoin transaction
     CWalletTx wtx;
 
@@ -2663,9 +2663,9 @@ UniValue escrowcompleterefund(const UniValue& params, bool fHelp) {
                         + HelpRequiringPassphrase());
     // gather & validate inputs
     vector<unsigned char> vchEscrow = vchFromValue(params[0]);
-	string rawTx = stringFromVch(params[1].get_str());
+	string rawTx = params[1].get_str();
 	CTransaction myRawTx;
-	DecodeHexTx(myRawTx,stringFromVch(rawTx));
+	DecodeHexTx(myRawTx,rawTx);
     // this is a syscoin transaction
     CWalletTx wtx;
 
