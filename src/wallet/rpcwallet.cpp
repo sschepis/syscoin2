@@ -2760,7 +2760,7 @@ extern UniValue escrowclaimrelease(const UniValue& params, bool fHelp);
 extern UniValue escrowcompleterelease(const UniValue& params, bool fHelp);
 extern UniValue escrowrefund(const UniValue& params, bool fHelp);
 extern UniValue escrowclaimrefund(const UniValue& params, bool fHelp);
-extern UniValue escrowcompletefund(const UniValue& params, bool fHelp);
+extern UniValue escrowcompleterefund(const UniValue& params, bool fHelp);
 extern UniValue escrowinfo(const UniValue& params, bool fHelp);
 extern UniValue escrowlist(const UniValue& params, bool fHelp);
 extern UniValue escrowhistory(const UniValue& params, bool fHelp);
