@@ -2076,7 +2076,7 @@ UniValue escrowcompleterelease(const UniValue& params, bool fHelp) {
 	escrow.op = OP_ESCROW_COMPLETE;
 	escrow.nHeight = chainActive.Tip()->nHeight;
 	escrow.vchLinkAlias = vchLinkAlias;
-	escrow.txBTCId = myRawTx.GetHash();
+	escrow.redeemTxBTCId = myRawTx.GetHash();
 
     CScript scriptPubKeyBuyer, scriptPubKeySeller, scriptPubKeyArbiter;
 
@@ -2747,7 +2747,7 @@ UniValue escrowcompleterefund(const UniValue& params, bool fHelp) {
 	escrow.op = OP_ESCROW_COMPLETE;
 	escrow.nHeight = chainActive.Tip()->nHeight;
 	escrow.vchLinkAlias = vchLinkAlias;
-	escrow.txBTCId = myRawTx.GetHash();
+	escrow.redeemTxBTCId = myRawTx.GetHash();
 
     CScript scriptPubKeyBuyer, scriptPubKeySeller, scriptPubKeyArbiter;
 
@@ -3114,6 +3114,10 @@ UniValue escrowinfo(const UniValue& params, bool fHelp) {
 	if(!ca.txBTCId.IsNull())
 		strBTCId = ca.txBTCId.GetHex();
 	oEscrow.push_back(Pair("btctxid", strBTCId));
+	string strRedeemBTCId = "";
+	if(!ca.redeemTxBTCId.IsNull())
+		strRedeemBTCId = ca.redeemTxBTCId.GetHex();
+	oEscrow.push_back(Pair("redeem_btctxid", strRedeemBTCId));
     oEscrow.push_back(Pair("txid", ca.txHash.GetHex()));
     oEscrow.push_back(Pair("height", sHeight));
 	string strMessage = string("");
@@ -3307,6 +3311,10 @@ UniValue escrowlist(const UniValue& params, bool fHelp) {
 		if(!escrow.txBTCId.IsNull())
 			strBTCId = escrow.txBTCId.GetHex();
 		oName.push_back(Pair("btctxid", strBTCId));
+		string strRedeemBTCId = "";
+		if(!escrow.redeemTxBTCId.IsNull())
+			strRedeemBTCId = escrow.redeemTxBTCId.GetHex();
+		oName.push_back(Pair("redeem_btctxid", strRedeemBTCId));
 		expired_block = nHeight + GetEscrowExpirationDepth();
         if(expired_block < chainActive.Tip()->nHeight && escrow.op == OP_ESCROW_COMPLETE)
 		{
@@ -3472,6 +3480,10 @@ UniValue escrowhistory(const UniValue& params, bool fHelp) {
 			if(!txPos2.txBTCId.IsNull())
 				strBTCId = txPos2.txBTCId.GetHex();
 			oEscrow.push_back(Pair("btctxid", strBTCId));
+			string strRedeemBTCId = "";
+			if(!txPos2.redeemTxBTCId.IsNull())
+				strRedeemBTCId = txPos2.redeemTxBTCId.GetHex();
+			oEscrow.push_back(Pair("redeem_btctxid", strRedeemBTCId));
 			if(nHeight + GetEscrowExpirationDepth() - chainActive.Tip()->nHeight <= 0  && txPos2.op == OP_ESCROW_COMPLETE)
 			{
 				expired = 1;
@@ -3601,6 +3613,11 @@ UniValue escrowfilter(const UniValue& params, bool fHelp) {
 		if(!txEscrow.txBTCId.IsNull())
 			strBTCId = txEscrow.txBTCId.GetHex();
 		oEscrow.push_back(Pair("btctxid", strBTCId));
+		string strRedeemBTCId = "";
+		if(!txEscrow.redeemTxBTCId.IsNull())
+			strRedeemBTCId = txEscrow.redeemTxBTCId.GetHex();
+		oEscrow.push_back(Pair("redeem_btctxid", strRedeemBTCId));
+
 		UniValue oBuyerFeedBack(UniValue::VARR);
 		for(unsigned int i =0;i<buyerFeedBacks.size();i++)
 		{
