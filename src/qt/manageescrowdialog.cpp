@@ -521,9 +521,7 @@ void ManageEscrowDialog::on_releaseButton_clicked()
 			{
 				ui->releaseButton->setText(tr("Please Wait..."));
 				ui->releaseButton->setEnabled(false);
-
-				const UniValue &retarray = r.get_array();
-				m_redeemTxId = retarray[1].get_str();
+				m_redeemTxId = QString::fromStdString(retarray[1].get_str());
 				SendRawTxBTC();
 			}
 			else
@@ -581,9 +579,7 @@ void ManageEscrowDialog::on_refundButton_clicked()
 			{
 				ui->refundButton->setText(tr("Please Wait..."));
 				ui->refundButton->setEnabled(false);
-
-				const UniValue &retarray = r.get_array();
-				m_redeemTxId = retarray[1].get_str();
+				m_redeemTxId = QString::fromStdString(retarray[1].get_str());
 				SendRawTxBTC();		
 			}
 			else
