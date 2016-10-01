@@ -29,7 +29,7 @@ public:
 	bool isYourAlias(const QString &alias);
 	void CompleteEscrowRefund(const QString& timestamp="");
 	void CompleteEscrowRelease(const QString& timestamp="");
-	bool loadEscrow(const QString &escrow, QString &buyer, QString &seller, QString &arbiter, QString &status, QString &offertitle, QString &total);
+	bool loadEscrow(const QString &escrow, QString &buyer, QString &seller, QString &arbiter, QString &status, QString &offertitle, QString &total, QString &btctxid);
 	ManageEscrowDialog::EscrowType findYourEscrowRoleFromAliases(const QString &buyer, const QString &seller, const QString &arbiter);
 public Q_SLOTS:
 	void on_releaseButton_clicked();
