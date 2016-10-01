@@ -377,7 +377,7 @@ void ManageEscrowDialog::SendRawTxBTC()
 	QNetworkRequest request(url);
 	request.setHeader(QNetworkRequest::ContentTypeHeader, 
 		"application/x-www-form-urlencoded");
-	networkManager->post(request, postData.toString(QUrl::FullyEncoded).toUtf8());
+	nam->post(request, postData.toString(QUrl::FullyEncoded).toUtf8());
 }
 void ManageEscrowDialog::slotConfirmedFinishedCheck(QNetworkReply * reply){
 	if(reply->error() != QNetworkReply::NoError) {
