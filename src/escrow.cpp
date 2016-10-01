@@ -1975,7 +1975,6 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4107 - " + _("Could not sign escrow transaction. It is showing as incomplete, you may not allowed to complete this request at this time"));
 
 	CTransaction rawTx;
-	UniValue ret(UniValue::ARR);
 	DecodeHexTx(rawTx,hex_str);
 	ret.push_back(hex_str);
 	ret.push_back(rawTx.GetHash().GetHex());
@@ -2651,7 +2650,6 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 
 	CTransaction rawTx;
 	DecodeHexTx(rawTx,hex_str);
-	UniValue ret(UniValue::ARR);
 	ret.push_back(hex_str);
 	ret.push_back(rawTx.GetHash().GetHex());
 	return ret;
