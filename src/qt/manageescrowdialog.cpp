@@ -489,7 +489,7 @@ void ManageEscrowDialog::slotConfirmedFinishedCheck(QNetworkReply * reply){
 		ui->refundButton->setText(tr("Claim Refund"));
 		ui->refundButton->setEnabled(true);	
         QMessageBox::critical(this, windowTitle(),
-            tr("Could not send payment on the Bitcoin blockchain, please ensure that the payment transaction ID <b>%1</b> has been confirmed on the network before trying to claim the coins").arg(m_btctxid),
+            tr("Could not send payment on the Bitcoin blockchain, please ensure that the payment transaction ID <b>%1</b> has been confirmed on the network before trying to claim the coins").arg(m_redeemTxId),
                 QMessageBox::Ok, QMessageBox::Ok);
 		reply->deleteLater();
 		return;
