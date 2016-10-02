@@ -511,7 +511,7 @@ void ManageEscrowDialog::on_releaseButton_clicked()
 	UniValue params(UniValue::VARR);
 	string strMethod;
 	if(ui->releaseButton->text() == tr("Claim Payment"))
-		strMethod = string("escrowcompleterelease");
+		strMethod = string("escrowclaimrelease");
 	else
 		strMethod = string("escrowrelease");
 
@@ -573,7 +573,7 @@ void ManageEscrowDialog::on_refundButton_clicked()
 	UniValue params(UniValue::VARR);
 	string strMethod;
 	if(ui->refundButton->text() == tr("Claim Refund"))
-		strMethod = string("escrowcompleterefund");
+		strMethod = string("escrowclaimrefund");
 	else
 		strMethod = string("escrowrefund");
 
