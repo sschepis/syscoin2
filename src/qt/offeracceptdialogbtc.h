@@ -43,7 +43,8 @@ private:
 	QString m_buttonText;
 	double dblPrice;
 	bool offerPaid; 
-	QString redeemScript;	
+	QString m_redeemScript;	
+	qint64 m_height;
 
 private Q_SLOTS:
 	void on_cancelButton_clicked();

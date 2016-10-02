@@ -117,6 +117,7 @@ OfferAcceptDialogBTC::~OfferAcceptDialogBTC()
 }
 void OfferAcceptDialogBTC::setupEscrowCheckboxState()
 {
+	double total = 0;
 	if(ui->checkBox->isChecked())
 	{
 		ui->escrowEdit->setEnabled(false);
@@ -143,9 +144,15 @@ void OfferAcceptDialogBTC::setupEscrowCheckboxState()
 		const UniValue &o = resCreate.get_obj();
 		const UniValue& redeemScript_value = find_value(o, "redeemScript");
 		const UniValue& address_value = find_value(o, "address");
+		const UniValue& height_value = find_value(o, "height");
+		const UniValue& total_value = find_value(o, "total");
+		if(total_value.isNum())
+			total = total_value.get_real();
+		if(height_value.isNum())
+			m_height = height_value.get_int64();
 		if (redeemScript_value.isStr())
 		{
-			redeemScript = QString::fromStdString(redeemScript_value.get_str());
+			m_redeemScript = QString::fromStdString(redeemScript_value.get_str());
 		}
 		else
 		{
@@ -162,7 +169,7 @@ void OfferAcceptDialogBTC::setupEscrowCheckboxState()
 			ui->escrowDisclaimer->setText(tr("<font color='red'>Could not create escrow transaction: could not find redeem script in response</font>"));
 			return;
 		}
-		ui->acceptMessage->setText(tr("Are you sure you want to purchase <b>%1</b> of <b>%2</b> from merchant <b>%3</b>? Follow the steps below to successfully pay via Bitcoin:<br/><br/>1. If you are using escrow, please enter your escrow arbiter in the input box below and check the <b>Use Escrow</b> checkbox. Leave the escrow checkbox unchecked if you do not wish to use escrow.<br/>2. Open your Bitcoin wallet. You may use the QR Code to the left to scan the payment request into your wallet or click on <b>Open BTC Wallet</b> if you are on the desktop and have Bitcoin Core installed.<br/>3. Pay <b>%4 BTC</b> to <b>%5</b> using your Bitcoin wallet.<br/>4. Click on the <b>Confirm Payment</b> button once you have paid.").arg(quantity).arg(title).arg(sellerAlias).arg(qstrPrice).arg(multisigaddress));
+		ui->acceptMessage->setText(tr("Are you sure you want to purchase <b>%1</b> of <b>%2</b> from merchant <b>%3</b>? Follow the steps below to successfully pay via Bitcoin:<br/><br/>1. If you are using escrow, please enter your escrow arbiter in the input box below and check the <b>Use Escrow</b> checkbox. Leave the escrow checkbox unchecked if you do not wish to use escrow.<br/>2. Open your Bitcoin wallet. You may use the QR Code to the left to scan the payment request into your wallet or click on <b>Open BTC Wallet</b> if you are on the desktop and have Bitcoin Core installed.<br/>3. Pay <b>%4 BTC</b> to <b>%5</b> using your Bitcoin wallet.<br/>4. Click on the <b>Confirm Payment</b> button once you have paid.").arg(quantity).arg(title).arg(sellerAlias).arg(QString::number(total)).arg(multisigaddress));
 		ui->escrowDisclaimer->setText(tr("<font color='green'>Escrow created successfully! Please fund using BTC address <b>%1</b></font>").arg(multisigaddress));
 	}
 	else
@@ -408,9 +415,8 @@ void OfferAcceptDialogBTC::acceptEscrow()
 		params.push_back(this->notes.toStdString());
 		params.push_back(ui->escrowEdit->text().toStdString());
 		params.push_back(this->rawBTCTx.trimmed().toStdString());
-		params.push_back(ui->btctxidEdit->text().trimmed().toStdString());
-		params.push_back(redeemScript.toStdString());
-
+		params.push_back(m_redeemScript.toStdString());
+		params.push_back(QString::number(m_height).toStdString());
 
 	    try {
             result = tableRPC.execute(strMethod, params);
