@@ -509,7 +509,12 @@ void ManageEscrowDialog::on_releaseButton_clicked()
 			return;
 	}
 	UniValue params(UniValue::VARR);
-	string strMethod = string("escrowrelease");
+	string strMethod;
+	if(ui->releaseButton->text() == tr("Claim Payment"))
+		strMethod = string("escrowcompleterelease");
+	else
+		strMethod = string("escrowrelease");
+
 	params.push_back(escrow.toStdString());
 	try {
 		UniValue result = tableRPC.execute(strMethod, params);
@@ -566,7 +571,12 @@ void ManageEscrowDialog::on_refundButton_clicked()
 			return;
 	}
 	UniValue params(UniValue::VARR);
-	string strMethod = string("escrowrefund");
+	string strMethod;
+	if(ui->refundButton->text() == tr("Claim Refund"))
+		strMethod = string("escrowcompleterefund");
+	else
+		strMethod = string("escrowrefund");
+
 	params.push_back(escrow.toStdString());
 	try {
 		UniValue result = tableRPC.execute(strMethod, params);
