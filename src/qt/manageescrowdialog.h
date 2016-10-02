@@ -25,6 +25,7 @@ public:
     explicit ManageEscrowDialog(WalletModel* model, const QString &escrow, QWidget *parent = 0);
     ~ManageEscrowDialog();
 	void SendRawTxBTC();
+	void SendRawTxBTCIfConfirmed();
 	void CheckPaymentInBTC();
 	bool isYourAlias(const QString &alias);
 	void CompleteEscrowRefund(const QString& timestamp="");
