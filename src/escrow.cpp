@@ -1139,7 +1139,7 @@ UniValue generateescrowmultisig(const UniValue& params, bool fHelp) {
 	CAmount nEscrowFee = GetEscrowArbiterFee(nTotal);
 	CAmount nBTCFee = convertSyscoinToCurrencyCode(theOffer.vchAliasPeg, vchFromString("BTC"), nEscrowFee, chainActive.Tip()->nHeight, precision);
 	CAmount nBTCTotal = convertSyscoinToCurrencyCode(theOffer.vchAliasPeg, vchFromString("BTC"), theOffer.GetPrice(foundEntry), chainActive.Tip()->nHeight, precision)*nQty;
-	nBTCTotal += nEscrowFee + DEFAULT_MIN_RELAY_TX_FEE;
+	nBTCTotal += nBTCFee + DEFAULT_MIN_RELAY_TX_FEE;
 	resCreate.push_back(Pair("total", ValueFromAmount(nBTCTotal)));
 	resCreate.push_back(Pair("height", chainActive.Tip()->nHeight));
 	return resCreate;
@@ -1524,7 +1524,7 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 
 	for(unsigned int i=0;i<fundingTx.vout.size();i++)
 	{
-		if(fundingTx.vout[i].nValue == nEscrowTotal)
+		if(fundingTx.vout[i].nValue >= nEscrowTotal)
 		{
 			nOutMultiSig = i;
 			break;
@@ -1829,7 +1829,7 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 	}	
 	for(unsigned int i=0;i<fundingTx.vout.size();i++)
 	{
-		if(fundingTx.vout[i].nValue == nEscrowTotal)
+		if(fundingTx.vout[i].nValue >= nEscrowTotal)
 		{
 			nOutMultiSig = i;
 			break;
@@ -1889,26 +1889,26 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 			// check arb fee is paid to arbiter or buyer
 			if(!foundFeePayment)
 			{
-				if(stringFromVch(arbiterAlias.vchAlias) == payoutAddress.aliasName && iVout == nEscrowFee)
+				if(stringFromVch(arbiterAlias.vchAlias) == payoutAddress.aliasName && iVout >= nEscrowFee)
 					foundFeePayment = true;
 			}
 			if(!foundFeePayment)
 			{
-				if(stringFromVch(buyerAlias.vchAlias) == payoutAddress.aliasName && iVout == nEscrowFee)
+				if(stringFromVch(buyerAlias.vchAlias) == payoutAddress.aliasName && iVout >= nEscrowFee)
 					foundFeePayment = true;
 			}	
 			if(!theOffer.vchLinkOffer.empty())
 			{
 				if(!foundCommissionPayment)
 				{
-					if(stringFromVch(resellerAlias.vchAlias) == payoutAddress.aliasName && iVout == nExpectedCommissionAmount)
+					if(stringFromVch(resellerAlias.vchAlias) == payoutAddress.aliasName && iVout >= nExpectedCommissionAmount)
 					{
 						foundCommissionPayment = true;
 					}
 				}
 				if(!foundSellerPayment)
 				{
-					if(stringFromVch(sellerAlias.vchAlias) == payoutAddress.aliasName && iVout == (nExpectedAmount-nExpectedCommissionAmount))
+					if(stringFromVch(sellerAlias.vchAlias) == payoutAddress.aliasName && iVout >= (nExpectedAmount-nExpectedCommissionAmount))
 					{
 						foundSellerPayment = true;
 					}
@@ -1916,7 +1916,7 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 			}
 			else if(!foundSellerPayment)
 			{
-				if(stringFromVch(sellerAlias.vchAlias) == payoutAddress.aliasName && iVout == nExpectedAmount)
+				if(stringFromVch(sellerAlias.vchAlias) == payoutAddress.aliasName && iVout >= nExpectedAmount)
 				{
 					foundSellerPayment = true;
 				}
@@ -2249,7 +2249,7 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 	}
 	for(unsigned int i=0;i<fundingTx.vout.size();i++)
 	{
-		if(fundingTx.vout[i].nValue == nEscrowTotal)
+		if(fundingTx.vout[i].nValue >= nEscrowTotal)
 		{
 			nOutMultiSig = i;
 			break;
