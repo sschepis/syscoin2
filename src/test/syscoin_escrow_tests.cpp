@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE (generate_escrowrefund_invalid)
 	EscrowRefund("node2", guid);
 	// cant refund already refunded escrow
 	BOOST_CHECK_THROW(CallRPC("node2", "escrowrefund " + guid), runtime_error);
-	// noone other than buyer can claim release
+	// noone other than buyer can claim refund
 	BOOST_CHECK_THROW(CallRPC("node3", "escrowclaimrefund " + guid), runtime_error);
 	BOOST_CHECK_THROW(CallRPC("node2", "escrowclaimrefund " + guid), runtime_error);
 	EscrowClaimRefund("node1", guid);
