@@ -645,7 +645,6 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				// these are the only settings allowed to change outside of activate
 				if(!serializedEscrow.rawTx.empty())
 					theEscrow.rawTx = serializedEscrow.rawTx;
-				theEscrow.op = serializedEscrow.op;
 
 				if(op == OP_ESCROW_REFUND && vvchArgs[1] == vchFromString("0"))
 				{
@@ -978,6 +977,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 		}
 	
         // set the escrow's txn-dependent values
+		theEscrow.op = serializedEscrow.op;
 		theEscrow.txHash = tx.GetHash();
 		theEscrow.nHeight = nHeight;
 		PutToEscrowList(vtxPos, theEscrow);

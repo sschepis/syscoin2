@@ -1113,7 +1113,7 @@ void EscrowClaimRefund(const string& node, const string& guid)
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowclaimrefund " + guid));
 	UniValue resArray = r.get_array();
 	string strRawTx = resArray[0].get_str();
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowrefundcomplete " + guid + " " + strRawTx));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowrecompletefund " + guid + " " + strRawTx));
 	GenerateBlocks(10, node);
 
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "offerinfo " + offer));
@@ -1276,7 +1276,7 @@ void EscrowClaimRelease(const string& node, const string& guid)
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowclaimrelease " + guid));
 	UniValue resArray = r.get_array();
 	string strRawTx = resArray[0].get_str();
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowreleasecomplete " + guid + " " + strRawTx));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "escrowrcompleterelease " + guid + " " + strRawTx));
 	GenerateBlocks(10, node);
 
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "offerinfo " + offer));
