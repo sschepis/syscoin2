@@ -451,9 +451,10 @@ void ManageEscrowDialog::slotConfirmedCheck(QNetworkReply * reply){
 	ui->releaseButton->setEnabled(true);	
 	ui->refundButton->setText(tr("Claim Refund"));
 	ui->refundButton->setEnabled(true);	
+	GUIUtil::setClipboard(m_btctxid);
 	QMessageBox::warning(this, windowTitle(),
-		tr("Payment ID <b>%1</b> found in the Bitcoin blockchain but it has not been confirmed yet. Please try again later").arg(m_btctxid),
-			QMessageBox::Ok, QMessageBox::Ok);	
+		tr("Payment ID <b>%1</b> found in the Bitcoin blockchain but it has not been confirmed yet. Please try again later. Payment ID has been copied to your clipboard for your reference.").arg(m_btctxid),
+			QMessageBox::Ok, QMessageBox::Ok);		
 }
 
 void ManageEscrowDialog::SendRawTxBTCIfConfirmed()
@@ -571,8 +572,9 @@ void ManageEscrowDialog::slotConfirmedFinishedCheck(QNetworkReply * reply){
 	ui->releaseButton->setEnabled(true);	
 	ui->refundButton->setText(tr("Claim Refund"));
 	ui->refundButton->setEnabled(true);	
+	GUIUtil::setClipboard(m_redeemTxId);
 	QMessageBox::warning(this, windowTitle(),
-		tr("Payment ID <b>%1</b> found in the Bitcoin blockchain but it has not been confirmed yet. Please try again later").arg(m_redeemTxId),
+		tr("Payment ID <b>%1</b> found in the Bitcoin blockchain but it has not been confirmed yet. Please try again later. Payment ID has been copied to your clipboard for your reference.").arg(m_redeemTxId),
 			QMessageBox::Ok, QMessageBox::Ok);	
 }
 
