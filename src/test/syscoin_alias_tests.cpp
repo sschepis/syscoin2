@@ -521,7 +521,9 @@ BOOST_AUTO_TEST_CASE (generate_aliasprunewithoffer)
 	BOOST_CHECK_NO_THROW(CallRPC("node2", "escrowrelease " + escrowguid));
 	BOOST_CHECK_NO_THROW(CallRPC("node2", "generate 5"));
 	MilliSleep(2500);
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "escrowrelease " + escrowguid));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "escrowclaimrelease " + escrowguid));
+	UniValue retArray = r.get_array();
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "escrowreleasecomplete " + escrowguid + " " + retArray[0].get_str()));
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 10"));
 	MilliSleep(2500);
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 10"));

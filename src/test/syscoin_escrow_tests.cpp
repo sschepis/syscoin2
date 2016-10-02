@@ -329,7 +329,9 @@ BOOST_AUTO_TEST_CASE (generate_escrowpruning)
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 5"));
 	MilliSleep(2500);
 	BOOST_CHECK_NO_THROW(CallRPC("node2", "generate 5"));	
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "escrowrelease " + guid1));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "escrowclaimrelease " + guid1));
+	UniValue retArray = r.get_array();
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "escrowreleasecomplete " + guid1 + " " + retArray[0].get_str()));
 	MilliSleep(1000);
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 5"));
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "offerupdate sysrates.peg selleraliasprune " + offerguid + " category title 100 0.05 description"));

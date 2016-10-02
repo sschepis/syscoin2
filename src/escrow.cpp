@@ -1443,25 +1443,7 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 
 	const CWalletTx *wtxAliasIn = NULL;
 	CScript scriptPubKeyAlias;
-	bool foundSellerKey = false;
-	try
-	{
-		// if this is the seller calling release, try to claim the release	
-		CKeyID keyID;
-		if (!sellerAddress.GetKeyID(keyID))
-			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4087 - " + _("Seller address does not refer to a key"));
-		CKey vchSecret;
-		if (!pwalletMain->GetKey(keyID, vchSecret))
-			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4088 - " + _("Private key for seller address is not known"));
-		foundSellerKey = true;
-		
-	}
-	catch(...)
-	{
-		foundSellerKey = false;
-	}
-	if(foundSellerKey)
-		return tableRPC.execute("escrowclaimrelease", params);
+
 	int nOutMultiSig = 0;
 	CScript redeemScriptPubKey = CScript(escrow.vchRedeemScript.begin(), escrow.vchRedeemScript.end());
 	COfferLinkWhitelistEntry foundEntry;
@@ -2198,24 +2180,6 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 		sellerKey = CPubKey(sellerAlias.vchPubKey);
 		sellerAddress = CSyscoinAddress(sellerKey.GetID());
 	}
-	bool foundBuyerKey = false;
-	try
-	{
-		// if this is the buyer calling refund, try to claim the refund
-		CKeyID keyID;
-		if (!buyerAddress.GetKeyID(keyID))
-			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4122 - " + _("Buyer address does not refer to a key"));
-		CKey vchSecret;
-		if (!pwalletMain->GetKey(keyID, vchSecret))
-			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4123 - " + _("Private key for buyer address is not known"));
-		foundBuyerKey = true;
-	}
-	catch(...)
-	{
-		foundBuyerKey = false;
-	}
-	if(foundBuyerKey)
-		return tableRPC.execute("escrowclaimrefund", params);
 
 	int nOutMultiSig = 0;
 	CScript redeemScriptPubKey = CScript(escrow.vchRedeemScript.begin(), escrow.vchRedeemScript.end());
