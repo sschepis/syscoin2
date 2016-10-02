@@ -1047,14 +1047,21 @@ void HandleEscrowFeedback(const CEscrow& serializedEscrow, CEscrow& dbEscrow, ve
 	pescrowdb->WriteEscrow(dbEscrow.vchEscrow, vtxPos);
 }
 UniValue generateescrowmultisig(const UniValue& params, bool fHelp) {
-    if (fHelp || params.size() != 3 )
+    if (fHelp || params.size() != 4 )
         throw runtime_error(
-		"generateescrowmultisig <buyer> <offer guid> <arbiter>\n"
+		"generateescrowmultisig <buyer> <offer guid> <qty> <arbiter>\n"
                         + HelpRequiringPassphrase());
 
 	vector<unsigned char> vchBuyer = vchFromValue(params[0]);
 	vector<unsigned char> vchOffer = vchFromValue(params[1]);
-	vector<unsigned char> vchArbiter = vchFromValue(params[2]);
+	unsigned int nQty = 1;
+
+	try {
+		nQty = boost::lexical_cast<unsigned int>(params[2].get_str());
+	} catch (std::exception &e) {
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4064 - " + _("Invalid quantity value. Quantity must be less than 4294967296."));
+	}
+	vector<unsigned char> vchArbiter = vchFromValue(params[3]);
 
 	CAliasIndex arbiteralias;
 	CTransaction arbiteraliastx;
@@ -1133,7 +1140,7 @@ UniValue generateescrowmultisig(const UniValue& params, bool fHelp) {
 	CAmount nBTCFee = convertSyscoinToCurrencyCode(theOffer.vchAliasPeg, vchFromString("BTC"), nEscrowFee, chainActive.Tip()->nHeight, precision);
 	CAmount nBTCTotal = convertSyscoinToCurrencyCode(theOffer.vchAliasPeg, vchFromString("BTC"), theOffer.GetPrice(foundEntry), chainActive.Tip()->nHeight, precision)*nQty;
 	nBTCTotal += nEscrowFee + DEFAULT_MIN_RELAY_TX_FEE;
-	resCreate.push_back(Pair("total", ValueFroomAmount(nBTCTotal)));
+	resCreate.push_back(Pair("total", ValueFromAmount(nBTCTotal)));
 	resCreate.push_back(Pair("height", chainActive.Tip()->nHeight));
 	return resCreate;
 }
@@ -1282,6 +1289,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 		UniValue arrayParams(UniValue::VARR);
 		arrayParams.push_back(stringFromVch(buyeralias.vchAlias));
 		arrayParams.push_back(stringFromVch(vchOffer));
+		arrayParams.push_back( boost::lexical_cast<string>(nQty));
 		arrayParams.push_back(stringFromVch(arbiteralias.vchAlias));
 		UniValue resCreate;
 		try
@@ -2515,14 +2523,9 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 	}	
 
 	CAmount nExpectedAmount = theOffer.GetPrice(foundEntry)*escrow.nQty; 
-	CAmount nEscrowFee = GetEscrowArbiterFee(nExpectedAmount);
-	CAmount nEscrowTotal =  nExpectedAmount + nEscrowFee + recipientFee.nAmount;
 	if (!escrow.escrowInputTx.empty())
 	{
-		nExpectedCommissionAmount = convertSyscoinToCurrencyCode(theOffer.vchAliasPeg, vchFromString("BTC"), nCommission, theOffer.nHeight, precision)*escrow.nQty;
 		nExpectedAmount = convertSyscoinToCurrencyCode(theOffer.vchAliasPeg, vchFromString("BTC"), theOffer.GetPrice(foundEntry), theOffer.nHeight, precision)*escrow.nQty; 
-		nEscrowFee = convertSyscoinToCurrencyCode(theOffer.vchAliasPeg, vchFromString("BTC"), nEscrowFee, theOffer.nHeight, precision);
-		nEscrowTotal =  nExpectedAmount + nEscrowFee + DEFAULT_MIN_RELAY_TX_FEE;
 		if (!DecodeHexTx(fundingTx, escrow.escrowInputTx))
 			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4064 - " + _("Could not find the escrow funding transaction in the blockchain database."));
 	}	

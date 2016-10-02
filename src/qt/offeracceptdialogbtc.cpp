@@ -125,6 +125,7 @@ void OfferAcceptDialogBTC::setupEscrowCheckboxState()
 		UniValue params(UniValue::VARR);
 		params.push_back(this->alias.toStdString());
 		params.push_back(this->offer.toStdString());
+		params.push_back(this->quantity.toStdString());
 		params.push_back(ui->escrowEdit->text().trimmed().toStdString());
 		UniValue resCreate;
 		try
