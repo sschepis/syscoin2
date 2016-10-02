@@ -2525,6 +2525,7 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 	CAmount nExpectedAmount = theOffer.GetPrice(foundEntry)*escrow.nQty; 
 	if (!escrow.escrowInputTx.empty())
 	{
+		int precision = 2;
 		nExpectedAmount = convertSyscoinToCurrencyCode(theOffer.vchAliasPeg, vchFromString("BTC"), theOffer.GetPrice(foundEntry), theOffer.nHeight, precision)*escrow.nQty; 
 		if (!DecodeHexTx(fundingTx, escrow.escrowInputTx))
 			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4064 - " + _("Could not find the escrow funding transaction in the blockchain database."));
