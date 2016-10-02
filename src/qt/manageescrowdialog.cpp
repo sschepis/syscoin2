@@ -376,6 +376,7 @@ void ManageEscrowDialog::slotConfirmedCheck(QNetworkReply * reply){
         QMessageBox::critical(this, windowTitle(),
             tr("Could not send payment on the Bitcoin blockchain, please ensure that the payment transaction ID <b>%1</b> has been confirmed on the network before trying to claim the coins").arg(m_btctxid),
                 QMessageBox::Ok, QMessageBox::Ok);
+		reply->deleteLater();
 		return;
 	}
 	double valueAmount = 0;
@@ -401,6 +402,7 @@ void ManageEscrowDialog::slotConfirmedCheck(QNetworkReply * reply){
 				QMessageBox::critical(this, windowTitle(),
 					tr("Transaction status not successful: ") + QString::fromStdString(statusValue.get_str()),
 						QMessageBox::Ok, QMessageBox::Ok);
+				reply->deleteLater();
 				return;
 			}
 		}
@@ -431,6 +433,8 @@ void ManageEscrowDialog::slotConfirmedCheck(QNetworkReply * reply){
 			if(confirmations >= 1)
 			{
 				SendRawTxBTC();
+				reply->deleteLater();
+				return;
 			}
 		}
 	}
@@ -443,6 +447,7 @@ void ManageEscrowDialog::slotConfirmedCheck(QNetworkReply * reply){
 		QMessageBox::critical(this, windowTitle(),
 			tr("Cannot parse JSON response: ") + str,
 				QMessageBox::Ok, QMessageBox::Ok);
+		reply->deleteLater();
 		return;
 	}
 	
@@ -486,6 +491,7 @@ void ManageEscrowDialog::slotConfirmedFinishedCheck(QNetworkReply * reply){
         QMessageBox::critical(this, windowTitle(),
             tr("Could not send payment on the Bitcoin blockchain, please ensure that the payment transaction ID <b>%1</b> has been confirmed on the network before trying to claim the coins").arg(m_btctxid),
                 QMessageBox::Ok, QMessageBox::Ok);
+		reply->deleteLater();
 		return;
 	}
 	double valueAmount = 0;
@@ -511,6 +517,7 @@ void ManageEscrowDialog::slotConfirmedFinishedCheck(QNetworkReply * reply){
 				QMessageBox::critical(this, windowTitle(),
 					tr("Transaction status not successful: ") + QString::fromStdString(statusValue.get_str()),
 						QMessageBox::Ok, QMessageBox::Ok);
+				reply->deleteLater();
 				return;
 			}
 		}
@@ -564,6 +571,7 @@ void ManageEscrowDialog::slotConfirmedFinishedCheck(QNetworkReply * reply){
 		QMessageBox::critical(this, windowTitle(),
 			tr("Cannot parse JSON response: ") + str,
 				QMessageBox::Ok, QMessageBox::Ok);
+		reply->deleteLater();
 		return;
 	}
 	
