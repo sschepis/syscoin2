@@ -255,7 +255,7 @@ void MyAcceptedOfferListPage::slotConfirmedFinished(QNetworkReply * reply){
 								ui->btcButton->setText(m_buttonText);
 								ui->btcButton->setEnabled(true);
 								QMessageBox::information(this, windowTitle(),
-									tr("Transaction ID %1 was found in the Bitcoin blockchain! Full payment has been detected. It is recommended that you confirm payment by opening your Bitcoin wallet and seeing the funds in your account.").arg(m_strBTCTxId)),
+									tr("Transaction ID %1 was found in the Bitcoin blockchain! Full payment has been detected. It is recommended that you confirm payment by opening your Bitcoin wallet and seeing the funds in your account.").arg(m_strBTCTxId),
 									QMessageBox::Ok, QMessageBox::Ok);
 								return;
 							}
