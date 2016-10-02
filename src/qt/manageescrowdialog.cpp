@@ -475,7 +475,7 @@ void ManageEscrowDialog::slotConfirmedFinishedCheck(QNetworkReply * reply){
 	ui->refundButton->setText(tr("Claim Refund"));
 	ui->refundButton->setEnabled(true);	
 	QMessageBox::warning(this, windowTitle(),
-		tr("Payment not found in the Bitcoin blockchain! Please try again later"),
+		tr("Payment not found in the Bitcoin blockchain! It may not have confirmed yet. Please try again later"),
 			QMessageBox::Ok, QMessageBox::Ok);	
 }
 

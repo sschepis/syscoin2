@@ -3091,12 +3091,22 @@ UniValue escrowinfo(const UniValue& params, bool fHelp) {
 	int64_t nEscrowFee = GetEscrowArbiterFee(offer.GetPrice() * ca.nQty);
 	CAmount nPricePerUnit = convertSyscoinToCurrencyCode(offer.vchAliasPeg, offer.sCurrencyCode, offer.GetPrice(), vtxPos.front().nAcceptHeight, precision);
 	CAmount nFee = convertSyscoinToCurrencyCode(offer.vchAliasPeg, offer.sCurrencyCode, nEscrowFee, vtxPos.front().nAcceptHeight, precision);
+	if(!ca.txBTCId.IsNull())
+		oEscrow.push_back(Pair("btcrelayfee", strprintf("%.*f", precision, ValueFromAmount(0).get_real() )));
+	else
+	{
+		nFee += DEFAULT_MIN_RELAY_TX_FEE;
+		oEscrow.push_back(Pair("btcrelayfee",strprintf("%.*f", precision, ValueFromAmount(DEFAULT_MIN_RELAY_TX_FEE).get_real() ))); 
+	}
+
 	oEscrow.push_back(Pair("sysfee", nEscrowFee));
 	oEscrow.push_back(Pair("systotal", (offer.GetPrice() * ca.nQty)));
 	oEscrow.push_back(Pair("price", strprintf("%.*f", precision, ValueFromAmount(nPricePerUnit).get_real() )));
 	oEscrow.push_back(Pair("fee", strprintf("%.*f", precision, ValueFromAmount(nFee).get_real() )));
-	oEscrow.push_back(Pair("total", strprintf("%.*f", precision, ValueFromAmount((nPricePerUnit* ca.nQty)).get_real() )));
+	oEscrow.push_back(Pair("total", strprintf("%.*f", precision, ValueFromAmount(nFee + (nPricePerUnit* ca.nQty)).get_real() )));
 	oEscrow.push_back(Pair("currency", stringFromVch(offer.sCurrencyCode)));
+
+				
 	string strBTCId = "";
 	if(!ca.txBTCId.IsNull())
 		strBTCId = ca.txBTCId.GetHex();
@@ -3288,11 +3298,18 @@ UniValue escrowlist(const UniValue& params, bool fHelp) {
 		int64_t nEscrowFee = GetEscrowArbiterFee(offer.GetPrice() * escrow.nQty);
 		CAmount nPricePerUnit = convertSyscoinToCurrencyCode(offer.vchAliasPeg, offer.sCurrencyCode, offer.GetPrice(), nHeight, precision);
 		CAmount nFee = convertSyscoinToCurrencyCode(offer.vchAliasPeg, offer.sCurrencyCode, nEscrowFee, nHeight, precision);
+		if(!escrow.txBTCId.IsNull())
+			oName.push_back(Pair("btcrelayfee", strprintf("%.*f", precision, ValueFromAmount(0).get_real() )));
+		else
+		{
+			nFee += DEFAULT_MIN_RELAY_TX_FEE;
+			oName.push_back(Pair("btcrelayfee",strprintf("%.*f", precision, ValueFromAmount(DEFAULT_MIN_RELAY_TX_FEE).get_real() ))); 
+		}
 		oName.push_back(Pair("sysfee", nEscrowFee));
 		oName.push_back(Pair("systotal", (offer.GetPrice() * escrow.nQty)));
 		oName.push_back(Pair("price", strprintf("%.*f", precision, ValueFromAmount(nPricePerUnit).get_real() )));
 		oName.push_back(Pair("fee", strprintf("%.*f", precision, ValueFromAmount(nFee).get_real() )));
-		oName.push_back(Pair("total", strprintf("%.*f", precision, ValueFromAmount((nPricePerUnit* escrow.nQty)).get_real() )));
+		oName.push_back(Pair("total", strprintf("%.*f", precision, ValueFromAmount(nFee + (nPricePerUnit* escrow.nQty)).get_real() )));
 		oName.push_back(Pair("currency", stringFromVch(offer.sCurrencyCode)));
 		string strBTCId = "";
 		if(!escrow.txBTCId.IsNull())
@@ -3457,11 +3474,18 @@ UniValue escrowhistory(const UniValue& params, bool fHelp) {
 			int64_t nEscrowFee = GetEscrowArbiterFee(offer.GetPrice() * txPos2.nQty);
 			CAmount nPricePerUnit = convertSyscoinToCurrencyCode(offer.vchAliasPeg, offer.sCurrencyCode, offer.GetPrice(),  vtxPos.front().nAcceptHeight, precision);
 			CAmount nFee = convertSyscoinToCurrencyCode(offer.vchAliasPeg, offer.sCurrencyCode, nEscrowFee, vtxPos.front().nAcceptHeight, precision);
+			if(!txPos2.txBTCId.IsNull())
+				oEscrow.push_back(Pair("btcrelayfee", strprintf("%.*f", precision, ValueFromAmount(0).get_real() )));
+			else
+			{
+				nFee += DEFAULT_MIN_RELAY_TX_FEE;
+				oEscrow.push_back(Pair("btcrelayfee",strprintf("%.*f", precision, ValueFromAmount(DEFAULT_MIN_RELAY_TX_FEE).get_real() ))); 
+			}
 			oEscrow.push_back(Pair("sysfee", nEscrowFee));
 			oEscrow.push_back(Pair("systotal", (offer.GetPrice() * txPos2.nQty)));
 			oEscrow.push_back(Pair("price", strprintf("%.*f", precision, ValueFromAmount(nPricePerUnit).get_real() )));
 			oEscrow.push_back(Pair("fee", strprintf("%.*f", precision, ValueFromAmount(nFee).get_real() )));
-			oEscrow.push_back(Pair("total", strprintf("%.*f", precision, ValueFromAmount((nPricePerUnit* txPos2.nQty)).get_real() )));
+			oEscrow.push_back(Pair("total", strprintf("%.*f", precision, ValueFromAmount(nFee + (nPricePerUnit* txPos2.nQty)).get_real() )));
 			oEscrow.push_back(Pair("currency", stringFromVch(offer.sCurrencyCode)));
 			string strBTCId = "";
 			if(!txPos2.txBTCId.IsNull())
@@ -3590,11 +3614,18 @@ UniValue escrowfilter(const UniValue& params, bool fHelp) {
 		int64_t nEscrowFee = GetEscrowArbiterFee(offer.GetPrice() * txEscrow.nQty);
 		CAmount nPricePerUnit = convertSyscoinToCurrencyCode(offer.vchAliasPeg, offer.sCurrencyCode, offer.GetPrice(),  vtxPos.front().nAcceptHeight, precision);
 		CAmount nFee = convertSyscoinToCurrencyCode(offer.vchAliasPeg, offer.sCurrencyCode, nEscrowFee, vtxPos.front().nAcceptHeight, precision);
+		if(!txEscrow.txBTCId.IsNull())
+			oEscrow.push_back(Pair("btcrelayfee", strprintf("%.*f", precision, ValueFromAmount(0).get_real() )));
+		else
+		{
+			nFee += DEFAULT_MIN_RELAY_TX_FEE;
+			oEscrow.push_back(Pair("btcrelayfee",strprintf("%.*f", precision, ValueFromAmount(DEFAULT_MIN_RELAY_TX_FEE).get_real() ))); 
+		}
 		oEscrow.push_back(Pair("sysfee", nEscrowFee));
 		oEscrow.push_back(Pair("systotal", (offer.GetPrice() * txEscrow.nQty)));
 		oEscrow.push_back(Pair("price", strprintf("%.*f", precision, ValueFromAmount(nPricePerUnit).get_real() )));
 		oEscrow.push_back(Pair("fee", strprintf("%.*f", precision, ValueFromAmount(nFee).get_real() )));
-		oEscrow.push_back(Pair("total", strprintf("%.*f", precision, ValueFromAmount((nPricePerUnit* txEscrow.nQty)).get_real() )));
+		oEscrow.push_back(Pair("total", strprintf("%.*f", precision, ValueFromAmount(nFee + (nPricePerUnit* txEscrow.nQty)).get_real() )));
 		oEscrow.push_back(Pair("currency", stringFromVch(offer.sCurrencyCode)));
 		string strBTCId = "";
 		if(!txEscrow.txBTCId.IsNull())
