@@ -22,7 +22,7 @@ public:
     ~OfferAcceptDialogBTC();
 	void CheckPaymentInBTC();
     bool getPaymentStatus();
-
+	void SetupQRCode(const QString&price);
 private:
 	void setupEscrowCheckboxState();
 	WalletModel* walletModel;
