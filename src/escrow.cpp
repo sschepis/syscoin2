@@ -1328,7 +1328,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	CWalletTx escrowWtx;
 	vector<CRecipient> vecSendEscrow;
 	CRecipient recipientEscrow  = {scriptPubKey, nAmountWithFee, false};
-	if(!vchBTCTx.empty())
+	if(vchBTCTx.empty())
 		vecSendEscrow.push_back(recipientEscrow);
 	
 	// send to seller/arbiter so they can track the escrow through GUI

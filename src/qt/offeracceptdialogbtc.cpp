@@ -264,7 +264,7 @@ void OfferAcceptDialogBTC::slotConfirmedFinished(QNetworkReply * reply){
 								ui->confirmButton->setText(m_buttonText);
 								ui->confirmButton->setEnabled(true);
 								QMessageBox::information(this, windowTitle(),
-									tr("Transaction ID %1 was found in the Bitcoin blockchain! Full payment has been detected at %2.").arg(ui->btctxidEdit->text().trimmed()).arg(timestamp.toString(Qt::SystemLocaleShortDate)),
+									tr("Transaction ID %1 was found in the Bitcoin blockchain! Full payment has been detected.").arg(ui->btctxidEdit->text().trimmed()),
 									QMessageBox::Ok, QMessageBox::Ok);
 								reply->deleteLater();
 								if(ui->checkBox->isChecked())
