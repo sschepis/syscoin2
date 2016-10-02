@@ -1531,7 +1531,7 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 		}
 	} 
 	CAmount nAmount = fundingTx.vout[nOutMultiSig].nValue;
-	if(nAmount != nEscrowTotal)
+	if(nAmount < nEscrowTotal)
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4088 - " + _("Expected amount of escrow does not match what is held in escrow. Expected amount: ") +  boost::lexical_cast<string>(nEscrowTotal));
 
 	string strEscrowScriptPubKey = HexStr(fundingTx.vout[nOutMultiSig].scriptPubKey.begin(), fundingTx.vout[nOutMultiSig].scriptPubKey.end());
@@ -1836,7 +1836,7 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 		}
 	} 
 	CAmount nAmount = fundingTx.vout[nOutMultiSig].nValue;
-	if(nAmount != nEscrowTotal)
+	if(nAmount < nEscrowTotal)
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4088 - " + _("Expected amount of escrow does not match what is held in escrow. Expected amount: ") +  boost::lexical_cast<string>(nEscrowTotal));
 
 	string strEscrowScriptPubKey = HexStr(fundingTx.vout[nOutMultiSig].scriptPubKey.begin(), fundingTx.vout[nOutMultiSig].scriptPubKey.end());
@@ -2256,7 +2256,7 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 		}
 	} 
 	CAmount nAmount = fundingTx.vout[nOutMultiSig].nValue;
-	if(nAmount != nEscrowTotal)
+	if(nAmount < nEscrowTotal)
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4088 - " + _("Expected amount of escrow does not match what is held in escrow. Expected amount: ") +  boost::lexical_cast<string>(nEscrowTotal));
 
 	string strEscrowScriptPubKey = HexStr(fundingTx.vout[nOutMultiSig].scriptPubKey.begin(), fundingTx.vout[nOutMultiSig].scriptPubKey.end());
