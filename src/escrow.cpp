@@ -3091,7 +3091,7 @@ UniValue escrowinfo(const UniValue& params, bool fHelp) {
 	int64_t nEscrowFee = GetEscrowArbiterFee(offer.GetPrice() * ca.nQty);
 	CAmount nPricePerUnit = convertSyscoinToCurrencyCode(offer.vchAliasPeg, offer.sCurrencyCode, offer.GetPrice(), vtxPos.front().nAcceptHeight, precision);
 	CAmount nFee = convertSyscoinToCurrencyCode(offer.vchAliasPeg, offer.sCurrencyCode, nEscrowFee, vtxPos.front().nAcceptHeight, precision);
-	if(!ca.txBTCId.IsNull())
+	if(ca.txBTCId.IsNull())
 		oEscrow.push_back(Pair("btcrelayfee", strprintf("%.*f", precision, ValueFromAmount(0).get_real() )));
 	else
 	{
@@ -3298,7 +3298,7 @@ UniValue escrowlist(const UniValue& params, bool fHelp) {
 		int64_t nEscrowFee = GetEscrowArbiterFee(offer.GetPrice() * escrow.nQty);
 		CAmount nPricePerUnit = convertSyscoinToCurrencyCode(offer.vchAliasPeg, offer.sCurrencyCode, offer.GetPrice(), nHeight, precision);
 		CAmount nFee = convertSyscoinToCurrencyCode(offer.vchAliasPeg, offer.sCurrencyCode, nEscrowFee, nHeight, precision);
-		if(!escrow.txBTCId.IsNull())
+		if(escrow.txBTCId.IsNull())
 			oName.push_back(Pair("btcrelayfee", strprintf("%.*f", precision, ValueFromAmount(0).get_real() )));
 		else
 		{
@@ -3474,7 +3474,7 @@ UniValue escrowhistory(const UniValue& params, bool fHelp) {
 			int64_t nEscrowFee = GetEscrowArbiterFee(offer.GetPrice() * txPos2.nQty);
 			CAmount nPricePerUnit = convertSyscoinToCurrencyCode(offer.vchAliasPeg, offer.sCurrencyCode, offer.GetPrice(),  vtxPos.front().nAcceptHeight, precision);
 			CAmount nFee = convertSyscoinToCurrencyCode(offer.vchAliasPeg, offer.sCurrencyCode, nEscrowFee, vtxPos.front().nAcceptHeight, precision);
-			if(!txPos2.txBTCId.IsNull())
+			if(txPos2.txBTCId.IsNull())
 				oEscrow.push_back(Pair("btcrelayfee", strprintf("%.*f", precision, ValueFromAmount(0).get_real() )));
 			else
 			{
@@ -3614,7 +3614,7 @@ UniValue escrowfilter(const UniValue& params, bool fHelp) {
 		int64_t nEscrowFee = GetEscrowArbiterFee(offer.GetPrice() * txEscrow.nQty);
 		CAmount nPricePerUnit = convertSyscoinToCurrencyCode(offer.vchAliasPeg, offer.sCurrencyCode, offer.GetPrice(),  vtxPos.front().nAcceptHeight, precision);
 		CAmount nFee = convertSyscoinToCurrencyCode(offer.vchAliasPeg, offer.sCurrencyCode, nEscrowFee, vtxPos.front().nAcceptHeight, precision);
-		if(!txEscrow.txBTCId.IsNull())
+		if(txEscrow.txBTCId.IsNull())
 			oEscrow.push_back(Pair("btcrelayfee", strprintf("%.*f", precision, ValueFromAmount(0).get_real() )));
 		else
 		{

@@ -373,7 +373,7 @@ void ManageEscrowDialog::SendRawTxBTC()
 	connect(nam, SIGNAL(finished(QNetworkReply *)), this, SLOT(slotConfirmedFinished(QNetworkReply *)));
 	QUrlQuery postData;
 	postData.addQueryItem("hex", m_rawTx);
-	QUrl url("http://btc.blockr.io/api/v1/tx/");
+	QUrl url("http://btc.blockr.io/api/v1/tx/push");
 	QNetworkRequest request(url);
 	request.setHeader(QNetworkRequest::ContentTypeHeader, 
 		"application/x-www-form-urlencoded");
