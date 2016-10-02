@@ -367,6 +367,103 @@ void ManageEscrowDialog::slotConfirmedFinished(QNetworkReply * reply){
 	reply->deleteLater();
 	CheckPaymentInBTC();
 }
+void ManageEscrowDialog::slotConfirmedCheck(QNetworkReply * reply){
+	if(reply->error() != QNetworkReply::NoError) {
+		ui->releaseButton->setText(tr("Claim Payment"));
+		ui->releaseButton->setEnabled(true);	
+		ui->refundButton->setText(tr("Claim Refund"));
+		ui->refundButton->setEnabled(true);	
+        QMessageBox::critical(this, windowTitle(),
+            tr("Could not send payment on the Bitcoin blockchain, please ensure that the payment transaction ID <b>%1</b> has been confirmed on the network before trying to claim the coins").arg(m_btctxid),
+                QMessageBox::Ok, QMessageBox::Ok);
+		return;
+	}
+	double valueAmount = 0;
+	unsigned int time;
+	int height;
+			
+	QByteArray bytes = reply->readAll();
+	QString str = QString::fromUtf8(bytes.data(), bytes.size());
+	UniValue outerValue;
+	bool read = outerValue.read(str.toStdString());
+	if (read)
+	{
+		UniValue outerObj = outerValue.get_obj();
+		UniValue statusValue = find_value(outerObj, "status");
+		if (statusValue.isStr())
+		{
+			if(statusValue.get_str() != "success")
+			{
+				ui->releaseButton->setText(tr("Claim Payment"));
+				ui->releaseButton->setEnabled(true);	
+				ui->refundButton->setText(tr("Claim Refund"));
+				ui->refundButton->setEnabled(true);	
+				QMessageBox::critical(this, windowTitle(),
+					tr("Transaction status not successful: ") + QString::fromStdString(statusValue.get_str()),
+						QMessageBox::Ok, QMessageBox::Ok);
+				return;
+			}
+		}
+		else
+		{
+			ui->releaseButton->setText(tr("Claim Payment"));
+			ui->releaseButton->setEnabled(true);	
+			ui->refundButton->setText(tr("Claim Refund"));
+			ui->refundButton->setEnabled(true);	
+			QMessageBox::critical(this, windowTitle(),
+				tr("Transaction status not successful: ") + QString::fromStdString(statusValue.get_str()),
+					QMessageBox::Ok, QMessageBox::Ok);
+			reply->deleteLater();	
+			return;
+		}
+		UniValue dataObj1 = find_value(outerObj, "data").get_obj();
+		UniValue dataObj = find_value(dataObj1, "tx").get_obj();
+		UniValue timeValue = find_value(dataObj, "time");
+		if (timeValue.isNum())
+			time = timeValue.get_int();
+		QDateTime timestamp;
+		timestamp.setTime_t(time);
+
+		UniValue unconfirmedValue = find_value(dataObj, "confirmations");
+		if (unconfirmedValue.isNum())
+		{
+			int confirmations = unconfirmedValue.get_int();
+			if(confirmations >= 1)
+			{
+				SendRawTxBTC();
+			}
+		}
+	}
+	else
+	{
+		ui->releaseButton->setText(tr("Claim Payment"));
+		ui->releaseButton->setEnabled(true);	
+		ui->refundButton->setText(tr("Claim Refund"));
+		ui->refundButton->setEnabled(true);	
+		QMessageBox::critical(this, windowTitle(),
+			tr("Cannot parse JSON response: ") + str,
+				QMessageBox::Ok, QMessageBox::Ok);
+		return;
+	}
+	
+	reply->deleteLater();
+	ui->releaseButton->setText(tr("Claim Payment"));
+	ui->releaseButton->setEnabled(true);	
+	ui->refundButton->setText(tr("Claim Refund"));
+	ui->refundButton->setEnabled(true);	
+	QMessageBox::warning(this, windowTitle(),
+		tr("Payment ID <b>%1</b> found in the Bitcoin blockchain but it has not been confirmed yet. Please try again later").arg(m_btctxid),
+			QMessageBox::Ok, QMessageBox::Ok);	
+}
+
+void ManageEscrowDialog::SendRawTxBTCIfConfirmed()
+{
+	QNetworkAccessManager *nam = new QNetworkAccessManager(this);  
+	connect(nam, SIGNAL(finished(QNetworkReply *)), this, SLOT(slotConfirmedCheck(QNetworkReply *)));
+	QUrl url("http://btc.blockr.io/api/v1/tx/raw/" + m_btctxid);
+	QNetworkRequest request(url);
+	nam->get(request);
+}
 void ManageEscrowDialog::SendRawTxBTC()
 {
 	QNetworkAccessManager *nam = new QNetworkAccessManager(this); 
@@ -475,7 +572,7 @@ void ManageEscrowDialog::slotConfirmedFinishedCheck(QNetworkReply * reply){
 	ui->refundButton->setText(tr("Claim Refund"));
 	ui->refundButton->setEnabled(true);	
 	QMessageBox::warning(this, windowTitle(),
-		tr("Payment not found in the Bitcoin blockchain! It may not have confirmed yet. Please try again later"),
+		tr("Payment ID <b>%1</b> found in the Bitcoin blockchain but it has not been confirmed yet. Please try again later").arg(m_redeemTxId),
 			QMessageBox::Ok, QMessageBox::Ok);	
 }
 
@@ -527,7 +624,7 @@ void ManageEscrowDialog::on_releaseButton_clicked()
 				ui->releaseButton->setText(tr("Please Wait..."));
 				ui->releaseButton->setEnabled(false);
 				m_redeemTxId = QString::fromStdString(retarray[1].get_str());
-				SendRawTxBTC();
+				SendRawTxBTCIfConfirmed();
 			}
 			else
 				CompleteEscrowRelease();
@@ -590,7 +687,7 @@ void ManageEscrowDialog::on_refundButton_clicked()
 				ui->refundButton->setText(tr("Please Wait..."));
 				ui->refundButton->setEnabled(false);
 				m_redeemTxId = QString::fromStdString(retarray[1].get_str());
-				SendRawTxBTC();		
+				SendRawTxBTCIfConfirmed();		
 			}
 			else
 				CompleteEscrowRefund();

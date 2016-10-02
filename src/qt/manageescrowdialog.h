@@ -35,6 +35,7 @@ public Q_SLOTS:
 	void on_releaseButton_clicked();
 	void on_refundButton_clicked();
 	void on_cancelButton_clicked();
+	void slotConfirmedCheck(QNetworkReply *);
 	void slotConfirmedFinished(QNetworkReply *);
 	void slotConfirmedFinishedCheck(QNetworkReply *);
 private:
