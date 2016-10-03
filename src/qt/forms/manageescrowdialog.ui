@@ -87,6 +87,13 @@
        </property>
       </widget>
      </item>
+     <item>
+      <widget class="QPushButton" name="btcButton">
+       <property name="text">
+        <string>Check BTC Payment</string>
+       </property>
+      </widget>
+     </item>
     </layout>
    </item>
    <item row="7" column="0">
