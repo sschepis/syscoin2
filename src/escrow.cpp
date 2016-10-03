@@ -3113,12 +3113,16 @@ UniValue escrowinfo(const UniValue& params, bool fHelp) {
 	CAmount nPricePerUnit = convertSyscoinToCurrencyCode(offer.vchAliasPeg, offer.sCurrencyCode, offer.GetPrice(), vtxPos.front().nAcceptHeight, precision);
 	CAmount nFee = convertSyscoinToCurrencyCode(offer.vchAliasPeg, offer.sCurrencyCode, nEscrowFee, vtxPos.front().nAcceptHeight, precision);
 	if(ca.txBTCId.IsNull())
-		oEscrow.push_back(Pair("btcrelayfee", strprintf("%.*f", precision, ValueFromAmount(0).get_real() )));
+	{
+		int nSYSFeePerByte = getFeePerByte(offer.vchAliasPeg, vchFromString("SYS"), vtxPos.front().nAcceptHeight, precision);
+		nFee += nSYSFeePerByte*400;
+		oEscrow.push_back(Pair("relayfee",strprintf("%.*f SYS", precision, ValueFromAmount(nSYSFeePerByte*400).get_real()))); 
+	}
 	else
 	{
 		int nBTCFeePerByte = getFeePerByte(offer.vchAliasPeg, vchFromString("BTC"), vtxPos.front().nAcceptHeight, precision);
 		nFee += nBTCFeePerByte*400;
-		oEscrow.push_back(Pair("btcrelayfee",strprintf("%.*f", precision, ValueFromAmount(nBTCFeePerByte*400).get_real()))); 
+		oEscrow.push_back(Pair("relayfee",strprintf("%.*f BTC", precision, ValueFromAmount(nBTCFeePerByte*400).get_real()))); 
 	}
 
 	oEscrow.push_back(Pair("sysfee", nEscrowFee));
@@ -3321,12 +3325,16 @@ UniValue escrowlist(const UniValue& params, bool fHelp) {
 		CAmount nPricePerUnit = convertSyscoinToCurrencyCode(offer.vchAliasPeg, offer.sCurrencyCode, offer.GetPrice(), nHeight, precision);
 		CAmount nFee = convertSyscoinToCurrencyCode(offer.vchAliasPeg, offer.sCurrencyCode, nEscrowFee, nHeight, precision);
 		if(escrow.txBTCId.IsNull())
-			oName.push_back(Pair("btcrelayfee", strprintf("%.*f", precision, ValueFromAmount(0).get_real() )));
+		{
+			int nSYSFeePerByte = getFeePerByte(offer.vchAliasPeg, vchFromString("SYS"), nHeight, precision);
+			nFee += nSYSFeePerByte*400;
+			oName.push_back(Pair("relayfee",strprintf("%.*f SYS", precision, ValueFromAmount(nSYSFeePerByte*400).get_real()))); 
+		}
 		else
 		{
 			int nBTCFeePerByte = getFeePerByte(offer.vchAliasPeg, vchFromString("BTC"), nHeight, precision);
 			nFee += nBTCFeePerByte*400;
-			oName.push_back(Pair("btcrelayfee",strprintf("%.*f", precision, ValueFromAmount(nBTCFeePerByte*400).get_real()))); 
+			oName.push_back(Pair("relayfee",strprintf("%.*f BTC", precision, ValueFromAmount(nBTCFeePerByte*400).get_real()))); 
 		}
 		oName.push_back(Pair("sysfee", nEscrowFee));
 		oName.push_back(Pair("systotal", (offer.GetPrice() * escrow.nQty)));
@@ -3498,12 +3506,16 @@ UniValue escrowhistory(const UniValue& params, bool fHelp) {
 			CAmount nPricePerUnit = convertSyscoinToCurrencyCode(offer.vchAliasPeg, offer.sCurrencyCode, offer.GetPrice(),  vtxPos.front().nAcceptHeight, precision);
 			CAmount nFee = convertSyscoinToCurrencyCode(offer.vchAliasPeg, offer.sCurrencyCode, nEscrowFee, vtxPos.front().nAcceptHeight, precision);
 			if(txPos2.txBTCId.IsNull())
-				oEscrow.push_back(Pair("btcrelayfee", strprintf("%.*f", precision, ValueFromAmount(0).get_real() )));
+			{
+				int nSYSFeePerByte = getFeePerByte(offer.vchAliasPeg, vchFromString("SYS"), vtxPos.front().nAcceptHeight, precision);
+				nFee += nSYSFeePerByte*400;
+				oEscrow.push_back(Pair("relayfee",strprintf("%.*f SYS", precision, ValueFromAmount(nSYSFeePerByte*400).get_real()))); 
+			}
 			else
 			{
 				int nBTCFeePerByte = getFeePerByte(offer.vchAliasPeg, vchFromString("BTC"), vtxPos.front().nAcceptHeight, precision);
 				nFee += nBTCFeePerByte*400;
-				oEscrow.push_back(Pair("btcrelayfee",strprintf("%.*f", precision, ValueFromAmount(nBTCFeePerByte*400).get_real()))); 
+				oEscrow.push_back(Pair("relayfee",strprintf("%.*f BTC", precision, ValueFromAmount(nBTCFeePerByte*400).get_real()))); 
 			}
 			oEscrow.push_back(Pair("sysfee", nEscrowFee));
 			oEscrow.push_back(Pair("systotal", (offer.GetPrice() * txPos2.nQty)));
@@ -3639,12 +3651,16 @@ UniValue escrowfilter(const UniValue& params, bool fHelp) {
 		CAmount nPricePerUnit = convertSyscoinToCurrencyCode(offer.vchAliasPeg, offer.sCurrencyCode, offer.GetPrice(),  vtxPos.front().nAcceptHeight, precision);
 		CAmount nFee = convertSyscoinToCurrencyCode(offer.vchAliasPeg, offer.sCurrencyCode, nEscrowFee, vtxPos.front().nAcceptHeight, precision);
 		if(txEscrow.txBTCId.IsNull())
-			oEscrow.push_back(Pair("btcrelayfee", strprintf("%.*f", precision, ValueFromAmount(0).get_real() )));
+		{
+			int nSYSFeePerByte = getFeePerByte(offer.vchAliasPeg, vchFromString("SYS"), vtxPos.front().nAcceptHeight, precision);
+			nFee += nSYSFeePerByte*400;
+			oEscrow.push_back(Pair("relayfee",strprintf("%.*f SYS", precision, ValueFromAmount(nSYSFeePerByte*400).get_real()))); 
+		}
 		else
 		{
 			int nBTCFeePerByte = getFeePerByte(offer.vchAliasPeg, vchFromString("BTC"), vtxPos.front().nAcceptHeight, precision);
 			nFee += nBTCFeePerByte*400;
-			oEscrow.push_back(Pair("btcrelayfee",strprintf("%.*f", precision, ValueFromAmount(nBTCFeePerByte*400).get_real()))); 
+			oEscrow.push_back(Pair("relayfee",strprintf("%.*f BTC", precision, ValueFromAmount(nBTCFeePerByte*400).get_real()))); 
 		}
 		oEscrow.push_back(Pair("sysfee", nEscrowFee));
 		oEscrow.push_back(Pair("systotal", (offer.GetPrice() * txEscrow.nQty)));
