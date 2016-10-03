@@ -350,7 +350,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 		}
 		if(!theEscrow.IsNull())
 		{
-			if(vchHash != vvchArgs[2])
+			if(vvchArgs.size() <= 2 || vchHash != vvchArgs[2])
 			{
 				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4002 - " + _("Hash provided doesn't match the calculated hash the data");
 				return error(errorMessage.c_str());
@@ -397,7 +397,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 	COffer dbOffer;
 	if(fJustCheck)
 	{
-		if (vvchArgs[0].size() > MAX_GUID_LENGTH)
+		if (vvchArgs.empty() || vvchArgs[0].size() > MAX_GUID_LENGTH)
 		{
 			errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4002 - " + _("Escrow guid too big");
 			return error(errorMessage.c_str());
@@ -467,12 +467,12 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 					return error(errorMessage.c_str());
 				}	
 				// Check input
-				if (vvchPrevArgs[0] != vvchArgs[0])
+				if (vvchPrevArgs.empty() || vvchArgs.empty() || vvchPrevArgs[0] != vvchArgs[0])
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4017 - " + _("Escrow input guid mismatch");
 					return error(errorMessage.c_str());
 				}
-				if (vvchArgs[1].size() > 1)
+				if (vvchArgs.size() <= 1 || vvchArgs[1].size() > 1)
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4027 - " + _("Escrow release status too large");
 					return error(errorMessage.c_str());
@@ -541,12 +541,12 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4026 - " + _("Alias input missing");
 					return error(errorMessage.c_str());
 				}
-				if (vvchArgs[1].size() > 1)
+				if (vvchArgs.size() <= 1 || vvchArgs[1].size() > 1)
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4027 - " + _("Escrow refund status too large");
 					return error(errorMessage.c_str());
 				}
-				if (vvchPrevArgs[0] != vvchArgs[0])
+				if (vvchPrevArgs.empty() || vvchArgs.empty() || vvchPrevArgs[0] != vvchArgs[0])
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4028 - " + _("Escrow input guid mismatch");
 					return error(errorMessage.c_str());
@@ -741,8 +741,8 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				}
 				else if(op == OP_ESCROW_REFUND && vvchArgs[1] == vchFromString("1"))
 				{
-					if(!serializedEscrow.redeemTxBTCId.IsNull() && !theEscrow.txBTCId.IsNull() && !theEscrow.escrowInputTx.empty())
-						theEscrow.redeemTxBTCId = serializedEscrow.redeemTxBTCId;
+					if(!serializedEscrow.redeemTxId.IsNull())
+						theEscrow.redeemTxId = serializedEscrow.redeemTxId;
 					else if(serializedEscrow.vchLinkAlias != theEscrow.vchBuyerAlias)
 					{
 						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4042 - " + _("Only buyer can claim an escrow refund");
@@ -775,8 +775,8 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				}
 				else if(op == OP_ESCROW_RELEASE && vvchArgs[1] == vchFromString("1"))
 				{
-					if(!serializedEscrow.redeemTxBTCId.IsNull() && !theEscrow.txBTCId.IsNull() && !theEscrow.escrowInputTx.empty())
-						theEscrow.redeemTxBTCId = serializedEscrow.redeemTxBTCId;
+					if(!serializedEscrow.redeemTxId.IsNull())
+						theEscrow.redeemTxId = serializedEscrow.redeemTxId;
 					else if(serializedEscrow.vchLinkAlias != theEscrow.vchSellerAlias)
 					{
 						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4042 - " + _("Only seller can claim an escrow release");
@@ -1149,7 +1149,9 @@ UniValue generateescrowmultisig(const UniValue& params, bool fHelp) {
 	CAmount nEscrowFee = GetEscrowArbiterFee(nTotal);
 	CAmount nBTCFee = convertSyscoinToCurrencyCode(theOffer.vchAliasPeg, vchFromString("BTC"), nEscrowFee, chainActive.Tip()->nHeight, precision);
 	CAmount nBTCTotal = convertSyscoinToCurrencyCode(theOffer.vchAliasPeg, vchFromString("BTC"), theOffer.GetPrice(foundEntry), chainActive.Tip()->nHeight, precision)*nQty;
-	nBTCTotal += nBTCFee + DEFAULT_MIN_RELAY_TX_FEE;
+	int nBTCFeePerByte = getFeePerByte(theOffer.vchAliasPeg, vchFromString("BTC"), chainActive.Tip()->nHeight, precision);
+	// multisig spend is about 400 bytes
+	nBTCTotal += nBTCFee + nBTCFeePerByte*400;
 	resCreate.push_back(Pair("total", ValueFromAmount(nBTCTotal)));
 	resCreate.push_back(Pair("height", chainActive.Tip()->nHeight));
 	return resCreate;
@@ -1331,9 +1333,11 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	CAmount nTotal = theOffer.GetPrice(foundEntry)*nQty;
 
 	CAmount nEscrowFee = GetEscrowArbiterFee(nTotal);
+	int nFeePerByte = getFeePerByte(theOffer.vchAliasPeg, vchFromString("SYS"), chainActive.Tip()->nHeight,precision);
+
 	CRecipient recipientFee;
 	CreateRecipient(scriptPubKey, recipientFee);
-	CAmount nAmountWithFee = nTotal+nEscrowFee+recipientFee.nAmount;
+	CAmount nAmountWithFee = nTotal+nEscrowFee+(nFeePerByte*400);
 	CWalletTx escrowWtx;
 	vector<CRecipient> vecSendEscrow;
 	CRecipient recipientEscrow  = {scriptPubKey, nAmountWithFee, false};
@@ -1399,7 +1403,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	const CWalletTx * wtxInCert=NULL;
 	const CWalletTx * wtxInOffer=NULL;
 	const CWalletTx * wtxInEscrow=NULL;
-	SendMoneySyscoin(vecSend,recipientBuyer.nAmount+recipientArbiter.nAmount+recipientSeller.nAmount+aliasRecipient.nAmount+fee.nAmount+recipientEscrow.nAmount, false, wtx, wtxInOffer, wtxInCert, wtxAliasIn, wtxInEscrow);
+	SendMoneySyscoin(vecSend,recipientBuyer.nAmount+recipientArbiter.nAmount+recipientSeller.nAmount+aliasRecipient.nAmount+fee.nAmount+(nFeePerByte*400), false, wtx, wtxInOffer, wtxInCert, wtxAliasIn, wtxInEscrow);
 	UniValue res(UniValue::VARR);
 	res.push_back(wtx.GetHash().GetHex());
 	res.push_back(stringFromVch(vchEscrow));
@@ -1516,16 +1520,17 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	CRecipient recipientFee;
 	CreateRecipient(redeemScriptPubKey, recipientFee);
 	
-	CAmount nExpectedCommissionAmount = nCommission*escrow.nQty;
 	CAmount nExpectedAmount = theOffer.GetPrice(foundEntry)*escrow.nQty; 
 	CAmount nEscrowFee = GetEscrowArbiterFee(nExpectedAmount);
-	CAmount nEscrowTotal =  nExpectedAmount + nEscrowFee + recipientFee.nAmount;
+	int nFeePerByte = getFeePerByte(theOffer.vchAliasPeg, vchFromString("SYS"),  vtxPos.front().nAcceptHeight,precision);
+	CAmount nEscrowTotal =  nExpectedAmount + nEscrowFee + nFeePerByte*400;
+	// if we can't get it in this blockchain, try full raw tx decode (bitcoin input raw tx)
 	if (!escrow.escrowInputTx.empty())
 	{
-		nExpectedCommissionAmount = convertSyscoinToCurrencyCode(theOffer.vchAliasPeg, vchFromString("BTC"), nCommission, theOffer.nHeight, precision)*escrow.nQty;
-		nExpectedAmount = convertSyscoinToCurrencyCode(theOffer.vchAliasPeg, vchFromString("BTC"), theOffer.GetPrice(foundEntry), theOffer.nHeight, precision)*escrow.nQty; 
-		nEscrowFee = convertSyscoinToCurrencyCode(theOffer.vchAliasPeg, vchFromString("BTC"), nEscrowFee, theOffer.nHeight, precision);
-		nEscrowTotal =  nExpectedAmount + nEscrowFee + DEFAULT_MIN_RELAY_TX_FEE;
+		nExpectedAmount = convertSyscoinToCurrencyCode(theOffer.vchAliasPeg, vchFromString("BTC"), theOffer.GetPrice(foundEntry), vtxPos.front().nAcceptHeight, precision)*escrow.nQty; 
+		nEscrowFee = convertSyscoinToCurrencyCode(theOffer.vchAliasPeg, vchFromString("BTC"), nEscrowFee, vtxPos.front().nAcceptHeight, precision);
+		int nBTCFeePerByte = getFeePerByte(theOffer.vchAliasPeg, vchFromString("BTC"),  vtxPos.front().nAcceptHeight, precision);
+		nEscrowTotal =  nExpectedAmount + nEscrowFee + nBTCFeePerByte*400;
 		if (!DecodeHexTx(fundingTx, escrow.escrowInputTx))
 			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4064 - " + _("Could not find the escrow funding transaction in the blockchain database."));
 	}
@@ -1821,17 +1826,17 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 	CRecipient recipientFee;
 	CreateRecipient(redeemScriptPubKey, recipientFee);
 	
-	CAmount nExpectedCommissionAmount = nCommission*escrow.nQty;
 	CAmount nExpectedAmount = theOffer.GetPrice(foundEntry)*escrow.nQty; 
 	CAmount nEscrowFee = GetEscrowArbiterFee(nExpectedAmount);
-	CAmount nEscrowTotal =  nExpectedAmount + nEscrowFee + recipientFee.nAmount;
+	int nFeePerByte = getFeePerByte(theOffer.vchAliasPeg, vchFromString("SYS"),  vtxPos.front().nAcceptHeight,precision);
+	CAmount nEscrowTotal =  nExpectedAmount + nEscrowFee + nFeePerByte*400;
 	// if we can't get it in this blockchain, try full raw tx decode (bitcoin input raw tx)
 	if (!escrow.escrowInputTx.empty())
 	{
-		nExpectedCommissionAmount = convertSyscoinToCurrencyCode(theOffer.vchAliasPeg, vchFromString("BTC"), nCommission, theOffer.nHeight, precision)*escrow.nQty;
-		nExpectedAmount = convertSyscoinToCurrencyCode(theOffer.vchAliasPeg, vchFromString("BTC"), theOffer.GetPrice(foundEntry), theOffer.nHeight, precision)*escrow.nQty; 
-		nEscrowFee = convertSyscoinToCurrencyCode(theOffer.vchAliasPeg, vchFromString("BTC"), nEscrowFee, theOffer.nHeight, precision);
-		nEscrowTotal =  nExpectedAmount + nEscrowFee + DEFAULT_MIN_RELAY_TX_FEE;
+		nExpectedAmount = convertSyscoinToCurrencyCode(theOffer.vchAliasPeg, vchFromString("BTC"), theOffer.GetPrice(foundEntry), vtxPos.front().nAcceptHeight, precision)*escrow.nQty; 
+		nEscrowFee = convertSyscoinToCurrencyCode(theOffer.vchAliasPeg, vchFromString("BTC"), nEscrowFee, vtxPos.front().nAcceptHeight, precision);
+		int nBTCFeePerByte = getFeePerByte(theOffer.vchAliasPeg, vchFromString("BTC"),  vtxPos.front().nAcceptHeight, precision);
+		nEscrowTotal =  nExpectedAmount + nEscrowFee + nBTCFeePerByte*400;
 		if (!DecodeHexTx(fundingTx, escrow.escrowInputTx))
 			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4064 - " + _("Could not find the escrow funding transaction in the blockchain database."));
 	}	
@@ -1997,11 +2002,11 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 	
 }
 UniValue escrowcompleterelease(const UniValue& params, bool fHelp) {
-    if (fHelp || params.size() < 1 || params.size() > 2)
+    if (fHelp || params.size() != 2)
         throw runtime_error(
-		"escrowcomplete <escrow guid> [rawtx] \n"
+		"escrowcomplete <escrow guid> <rawtx> \n"
                          "Completes an escrow release by creating the escrow complete release transaction on syscoin blockchain.\n"
-						 "<rawtx> Raw syscoin escrow transaction. If its an escrow paying in Bitcoins leave this blank.\n"
+						 "<rawtx> Raw syscoin escrow transaction. Enter the raw tx result from escrowclaimrelease.\n"
                         + HelpRequiringPassphrase());
     // gather & validate inputs
     vector<unsigned char> vchEscrow = vchFromValue(params[0]);
@@ -2090,7 +2095,7 @@ UniValue escrowcompleterelease(const UniValue& params, bool fHelp) {
 	escrow.op = OP_ESCROW_COMPLETE;
 	escrow.nHeight = chainActive.Tip()->nHeight;
 	escrow.vchLinkAlias = vchLinkAlias;
-	escrow.redeemTxBTCId = myRawTx.GetHash();
+	escrow.redeemTxId = myRawTx.GetHash();
 
     CScript scriptPubKeyBuyer, scriptPubKeySeller, scriptPubKeyArbiter;
 
@@ -2245,13 +2250,15 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 	
 	CAmount nExpectedAmount = theOffer.GetPrice(foundEntry)*escrow.nQty; 
 	CAmount nEscrowFee = GetEscrowArbiterFee(nExpectedAmount);
-	CAmount nEscrowTotal =  nExpectedAmount + nEscrowFee + recipientFee.nAmount;
+	int nFeePerByte = getFeePerByte(theOffer.vchAliasPeg, vchFromString("SYS"),  vtxPos.front().nAcceptHeight,precision);
+	CAmount nEscrowTotal =  nExpectedAmount + nEscrowFee + nFeePerByte*400;
 	// if we can't get it in this blockchain, try full raw tx decode (bitcoin input raw tx)
 	if (!escrow.escrowInputTx.empty())
 	{
-		nExpectedAmount = convertSyscoinToCurrencyCode(theOffer.vchAliasPeg, vchFromString("BTC"), theOffer.GetPrice(foundEntry), theOffer.nHeight, precision)*escrow.nQty; 
-		nEscrowFee = convertSyscoinToCurrencyCode(theOffer.vchAliasPeg, vchFromString("BTC"), nEscrowFee, theOffer.nHeight, precision);
-		nEscrowTotal =  nExpectedAmount + nEscrowFee + DEFAULT_MIN_RELAY_TX_FEE;
+		nExpectedAmount = convertSyscoinToCurrencyCode(theOffer.vchAliasPeg, vchFromString("BTC"), theOffer.GetPrice(foundEntry), vtxPos.front().nAcceptHeight, precision)*escrow.nQty; 
+		nEscrowFee = convertSyscoinToCurrencyCode(theOffer.vchAliasPeg, vchFromString("BTC"), nEscrowFee, vtxPos.front().nAcceptHeight, precision);
+		int nBTCFeePerByte = getFeePerByte(theOffer.vchAliasPeg, vchFromString("BTC"),  vtxPos.front().nAcceptHeight, precision);
+		nEscrowTotal =  nExpectedAmount + nEscrowFee + nBTCFeePerByte*400;
 		if (!DecodeHexTx(fundingTx, escrow.escrowInputTx))
 			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4064 - " + _("Could not find the escrow funding transaction in the blockchain database."));
 	}
@@ -2534,7 +2541,7 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 	if (!escrow.escrowInputTx.empty())
 	{
 		int precision = 2;
-		nExpectedAmount = convertSyscoinToCurrencyCode(theOffer.vchAliasPeg, vchFromString("BTC"), theOffer.GetPrice(foundEntry), theOffer.nHeight, precision)*escrow.nQty; 
+		nExpectedAmount = convertSyscoinToCurrencyCode(theOffer.vchAliasPeg, vchFromString("BTC"), theOffer.GetPrice(foundEntry), vtxPos.front().nAcceptHeight, precision)*escrow.nQty; 
 		if (!DecodeHexTx(fundingTx, escrow.escrowInputTx))
 			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4064 - " + _("Could not find the escrow funding transaction in the blockchain database."));
 	}	
@@ -2650,11 +2657,11 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 	return ret;
 }
 UniValue escrowcompleterefund(const UniValue& params, bool fHelp) {
-    if (fHelp || params.size() < 1 || params.size() > 2)
+    if (fHelp || params.size() ~= 2)
         throw runtime_error(
-		"escrowcompleterefund <escrow guid> [rawtx] \n"
+		"escrowcompleterefund <escrow guid> <rawtx> \n"
                          "Completes an escrow refund by creating the escrow complete refund transaction on syscoin blockchain.\n"
-						 "<rawtx> Raw syscoin escrow transaction. If its an escrow paying in Bitcoins leave this blank.\n"
+						 "<rawtx> Raw syscoin escrow transaction. Enter the raw tx result from escrowclaimrefund.\n"
                         + HelpRequiringPassphrase());
     // gather & validate inputs
     vector<unsigned char> vchEscrow = vchFromValue(params[0]);
@@ -2742,7 +2749,7 @@ UniValue escrowcompleterefund(const UniValue& params, bool fHelp) {
 	escrow.op = OP_ESCROW_COMPLETE;
 	escrow.nHeight = chainActive.Tip()->nHeight;
 	escrow.vchLinkAlias = vchLinkAlias;
-	escrow.redeemTxBTCId = myRawTx.GetHash();
+	escrow.redeemTxId = myRawTx.GetHash();
 
     CScript scriptPubKeyBuyer, scriptPubKeySeller, scriptPubKeyArbiter;
 
@@ -3103,8 +3110,9 @@ UniValue escrowinfo(const UniValue& params, bool fHelp) {
 		oEscrow.push_back(Pair("btcrelayfee", strprintf("%.*f", precision, ValueFromAmount(0).get_real() )));
 	else
 	{
-		nFee += DEFAULT_MIN_RELAY_TX_FEE;
-		oEscrow.push_back(Pair("btcrelayfee",strprintf("%.*f", precision, ValueFromAmount(DEFAULT_MIN_RELAY_TX_FEE).get_real() ))); 
+		int nBTCFeePerByte = getFeePerByte(offer.vchAliasPeg, vchFromString("BTC"), vtxPos.front().nAcceptHeight, precision);
+		nFee += nBTCFeePerByte*400;
+		oEscrow.push_back(Pair("btcrelayfee",strprintf("%.*f", precision, ValueFromAmount(nBTCFeePerByte*400).get_real()))); 
 	}
 
 	oEscrow.push_back(Pair("sysfee", nEscrowFee));
@@ -3119,10 +3127,10 @@ UniValue escrowinfo(const UniValue& params, bool fHelp) {
 	if(!ca.txBTCId.IsNull())
 		strBTCId = ca.txBTCId.GetHex();
 	oEscrow.push_back(Pair("btctxid", strBTCId));
-	string strRedeemBTCId = "";
-	if(!ca.redeemTxBTCId.IsNull())
-		strRedeemBTCId = ca.redeemTxBTCId.GetHex();
-	oEscrow.push_back(Pair("redeem_btctxid", strRedeemBTCId));
+	string strRedeemTxIId = "";
+	if(!ca.redeemTxId.IsNull())
+		strRedeemTxIId = ca.redeemTxId.GetHex();
+	oEscrow.push_back(Pair("redeem_txid", strRedeemTxIId));
     oEscrow.push_back(Pair("txid", ca.txHash.GetHex()));
     oEscrow.push_back(Pair("height", sHeight));
 	string strMessage = string("");
@@ -3310,8 +3318,9 @@ UniValue escrowlist(const UniValue& params, bool fHelp) {
 			oName.push_back(Pair("btcrelayfee", strprintf("%.*f", precision, ValueFromAmount(0).get_real() )));
 		else
 		{
-			nFee += DEFAULT_MIN_RELAY_TX_FEE;
-			oName.push_back(Pair("btcrelayfee",strprintf("%.*f", precision, ValueFromAmount(DEFAULT_MIN_RELAY_TX_FEE).get_real() ))); 
+			int nBTCFeePerByte = getFeePerByte(offer.vchAliasPeg, vchFromString("BTC"), nHeight, precision);
+			nFee += nBTCFeePerByte*400;
+			oName.push_back(Pair("btcrelayfee",strprintf("%.*f", precision, ValueFromAmount(nBTCFeePerByte*400).get_real()))); 
 		}
 		oName.push_back(Pair("sysfee", nEscrowFee));
 		oName.push_back(Pair("systotal", (offer.GetPrice() * escrow.nQty)));
@@ -3323,10 +3332,10 @@ UniValue escrowlist(const UniValue& params, bool fHelp) {
 		if(!escrow.txBTCId.IsNull())
 			strBTCId = escrow.txBTCId.GetHex();
 		oName.push_back(Pair("btctxid", strBTCId));
-		string strRedeemBTCId = "";
-		if(!escrow.redeemTxBTCId.IsNull())
-			strRedeemBTCId = escrow.redeemTxBTCId.GetHex();
-		oName.push_back(Pair("redeem_btctxid", strRedeemBTCId));
+		string strRedeemTxIId = "";
+		if(!escrow.redeemTxId.IsNull())
+			strRedeemTxIId = escrow.redeemTxId.GetHex();
+		oName.push_back(Pair("redeem_txid", strRedeemTxIId));
 		expired_block = nHeight + GetEscrowExpirationDepth();
         if(expired_block < chainActive.Tip()->nHeight && escrow.op == OP_ESCROW_COMPLETE)
 		{
@@ -3486,8 +3495,9 @@ UniValue escrowhistory(const UniValue& params, bool fHelp) {
 				oEscrow.push_back(Pair("btcrelayfee", strprintf("%.*f", precision, ValueFromAmount(0).get_real() )));
 			else
 			{
-				nFee += DEFAULT_MIN_RELAY_TX_FEE;
-				oEscrow.push_back(Pair("btcrelayfee",strprintf("%.*f", precision, ValueFromAmount(DEFAULT_MIN_RELAY_TX_FEE).get_real() ))); 
+				int nBTCFeePerByte = getFeePerByte(offer.vchAliasPeg, vchFromString("BTC"), vtxPos.front().nAcceptHeight, precision);
+				nFee += nBTCFeePerByte*400;
+				oEscrow.push_back(Pair("btcrelayfee",strprintf("%.*f", precision, ValueFromAmount(nBTCFeePerByte*400).get_real()))); 
 			}
 			oEscrow.push_back(Pair("sysfee", nEscrowFee));
 			oEscrow.push_back(Pair("systotal", (offer.GetPrice() * txPos2.nQty)));
@@ -3499,10 +3509,10 @@ UniValue escrowhistory(const UniValue& params, bool fHelp) {
 			if(!txPos2.txBTCId.IsNull())
 				strBTCId = txPos2.txBTCId.GetHex();
 			oEscrow.push_back(Pair("btctxid", strBTCId));
-			string strRedeemBTCId = "";
-			if(!txPos2.redeemTxBTCId.IsNull())
-				strRedeemBTCId = txPos2.redeemTxBTCId.GetHex();
-			oEscrow.push_back(Pair("redeem_btctxid", strRedeemBTCId));
+			string strRedeemTxIId = "";
+			if(!txPos2.redeemTxId.IsNull())
+				strRedeemTxIId = txPos2.redeemTxId.GetHex();
+			oEscrow.push_back(Pair("redeem_txid", strRedeemTxIId));
 			if(nHeight + GetEscrowExpirationDepth() - chainActive.Tip()->nHeight <= 0  && txPos2.op == OP_ESCROW_COMPLETE)
 			{
 				expired = 1;
@@ -3626,8 +3636,9 @@ UniValue escrowfilter(const UniValue& params, bool fHelp) {
 			oEscrow.push_back(Pair("btcrelayfee", strprintf("%.*f", precision, ValueFromAmount(0).get_real() )));
 		else
 		{
-			nFee += DEFAULT_MIN_RELAY_TX_FEE;
-			oEscrow.push_back(Pair("btcrelayfee",strprintf("%.*f", precision, ValueFromAmount(DEFAULT_MIN_RELAY_TX_FEE).get_real() ))); 
+			int nBTCFeePerByte = getFeePerByte(offer.vchAliasPeg, vchFromString("BTC"), vtxPos.front().nAcceptHeight, precision);
+			nFee += nBTCFeePerByte*400;
+			oEscrow.push_back(Pair("btcrelayfee",strprintf("%.*f", precision, ValueFromAmount(nBTCFeePerByte*400).get_real()))); 
 		}
 		oEscrow.push_back(Pair("sysfee", nEscrowFee));
 		oEscrow.push_back(Pair("systotal", (offer.GetPrice() * txEscrow.nQty)));
@@ -3639,10 +3650,10 @@ UniValue escrowfilter(const UniValue& params, bool fHelp) {
 		if(!txEscrow.txBTCId.IsNull())
 			strBTCId = txEscrow.txBTCId.GetHex();
 		oEscrow.push_back(Pair("btctxid", strBTCId));
-		string strRedeemBTCId = "";
-		if(!txEscrow.redeemTxBTCId.IsNull())
-			strRedeemBTCId = txEscrow.redeemTxBTCId.GetHex();
-		oEscrow.push_back(Pair("redeem_btctxid", strRedeemBTCId));
+		string strRedeemTxIId = "";
+		if(!txEscrow.redeemTxId.IsNull())
+			strRedeemTxIId = txEscrow.redeemTxId.GetHex();
+		oEscrow.push_back(Pair("redeem_txid", strRedeemTxIId));
 
 		UniValue oBuyerFeedBack(UniValue::VARR);
 		for(unsigned int i =0;i<buyerFeedBacks.size();i++)

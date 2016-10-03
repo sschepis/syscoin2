@@ -403,7 +403,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 
 		if(!theCert.IsNull())
 		{					
-			if(vchHash != vvchArgs[1])
+			if(vvchArgs.size() <= 1 || vchHash != vvchArgs[1])
 			{
 				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2002 - " + _("Hash provided doesn't match the calculated hash the data");
 				return error(errorMessage.c_str());
@@ -457,6 +457,11 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 	string retError = "";
 	if(fJustCheck)
 	{
+		if (vvchArgs.empty() ||  vvchArgs[0].size() > MAX_GUID_LENGTH)
+		{
+			errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2007 - " + _("Certificate hex guid too long");
+			return error(errorMessage.c_str());
+		}
 		if(theCert.sCategory.size() > MAX_NAME_LENGTH)
 		{
 			errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2004 - " + _("Certificate category too big");
@@ -470,11 +475,6 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 		if(!theCert.vchCert.empty() && theCert.vchCert != vvchArgs[0])
 		{
 			errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2006 - " + _("Guid in data output doesn't match guid in transaction");
-			return error(errorMessage.c_str());
-		}
-		if (vvchArgs[0].size() > MAX_GUID_LENGTH)
-		{
-			errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2007 - " + _("Certificate hex guid too long");
 			return error(errorMessage.c_str());
 		}
 		switch (op) {
@@ -513,7 +513,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2013 - " + _("Certificate input transaction is of wrong type");
 				return error(errorMessage.c_str());
 			}
-			if (vvchPrevArgs[0] != vvchArgs[0])
+			if (vvchPrevArgs.empty() || vvchPrevArgs[0] != vvchArgs[0])
 			{
 				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2014 - " + _("Certificate input guid mismatch");
 				return error(errorMessage.c_str());
@@ -550,7 +550,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2019 - " + _("Certificate input transaction is of wrong type");
 				return error(errorMessage.c_str());
 			}
-			if (vvchPrevArgs[0] != vvchArgs[0])
+			if (vvchPrevArgs.empty() || vvchPrevArgs[0] != vvchArgs[0])
 			{
 				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2020 - " + _("Certificate input guid mismatch");
 				return error(errorMessage.c_str());

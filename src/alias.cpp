@@ -275,10 +275,11 @@ CAmount convertCurrencyCodeToSyscoin(const vector<unsigned char> &vchAliasPeg, c
 {
 	CAmount sysPrice = 0;
 	double nRate;
+	int nFeePerByte;
 	vector<string> rateList;
 	try
 	{
-		if(getCurrencyToSYSFromAlias(vchAliasPeg, vchCurrencyCode, nRate, nHeight, rateList, precision) == "")
+		if(getCurrencyToSYSFromAlias(vchAliasPeg, vchCurrencyCode, nRate, nHeight, rateList, precision, nFeePerByte) == "")
 		{
 			float fTotal = nPrice*nRate;
 			CAmount nTotal = fTotal;
@@ -301,15 +302,35 @@ CAmount convertCurrencyCodeToSyscoin(const vector<unsigned char> &vchAliasPeg, c
 		sysPrice = 0;
 	return sysPrice;
 }
+int getFeePerByte(const std::vector<unsigned char> &vchAliasPeg, const std::vector<unsigned char> &vchCurrencyCode, const unsigned int &nHeight, int &precision)
+{
+	double nRate;
+	int nFeePerByte =0;
+	vector<string> rateList;
+	try
+	{
+		if(getCurrencyToSYSFromAlias(vchAliasPeg, vchCurrencyCode, nRate, nHeight, rateList, precision, nFeePerByte) == "")
+		{
+			return nFeePerByte;
+		}
+	}
+	catch(...)
+	{
+		if(fDebug)
+			LogPrintf("getBTCFeePerByte() Exception caught getting rate alias information\n");
+	}
+	return nFeePerByte;
+}
 // convert 110000*COIN SYS into 1.1*COIN BTC
 CAmount convertSyscoinToCurrencyCode(const vector<unsigned char> &vchAliasPeg, const vector<unsigned char> &vchCurrencyCode, const CAmount &nPrice, const unsigned int &nHeight, int &precision)
 {
 	CAmount currencyPrice = 0;
 	double nRate;
+	intn nFeePerByte;
 	vector<string> rateList;
 	try
 	{
-		if(getCurrencyToSYSFromAlias(vchAliasPeg, vchCurrencyCode, nRate, nHeight, rateList, precision) == "")
+		if(getCurrencyToSYSFromAlias(vchAliasPeg, vchCurrencyCode, nRate, nHeight, rateList, precision, nFeePerByte) == "")
 		{
 			currencyPrice = CAmount(nPrice/nRate);
 		}
@@ -323,7 +344,7 @@ CAmount convertSyscoinToCurrencyCode(const vector<unsigned char> &vchAliasPeg, c
 		currencyPrice = 0;
 	return currencyPrice;
 }
-string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchAliasPeg, const vector<unsigned char> &vchCurrency, double &nFee, const unsigned int &nHeightToFind, vector<string>& rateList, int &precision)
+string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchAliasPeg, const vector<unsigned char> &vchCurrency, double &nFee, const unsigned int &nHeightToFind, vector<string>& rateList, int &precision, int &nFeePerByte)
 {
 	string currencyCodeToFind = stringFromVch(vchCurrency);
 	// check for alias existence in DB
@@ -373,6 +394,11 @@ string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchAliasPeg, const
 					rateList.push_back(currencyCode);
 					if(currencyCodeToFind == currencyCode)
 					{		
+						UniValue feePerByteValue = find_value(codeObj, "fee");
+						if(feePerByteValue.isNum())
+						{
+							nFeePerByte = feePerByteValue.get_int();
+						}
 						UniValue precisionValue = find_value(codeObj, "precision");
 						if(precisionValue.isNum())
 						{
@@ -773,7 +799,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 
 		if(!theAlias.IsNull())
 		{
-			if(vchHash != vvchArgs[2])
+			if(vvchArgs.size() <= 2 || vchHash != vvchArgs[2])
 			{
 				errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1002 - " + _("Hash provided doesn't match the calculated hash the data");
 				return error(errorMessage.c_str());
@@ -815,7 +841,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	string retError = "";
 	if(fJustCheck)
 	{
-		if(!IsValidAliasName(vvchArgs[0]))
+		if(vvchArgs.empty() || !IsValidAliasName(vvchArgs[0]))
 		{
 			errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1004 - " + _("Alias name does not follow the domain name specification");
 			return error(errorMessage.c_str());
@@ -875,13 +901,13 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					}
 				}
 				// Check name
-				if (vvchPrevArgs[0] != vvchArgs[0])
+				if (vvchPrevArgs.empty() || vvchPrevArgs[0] != vvchArgs[0])
 				{
 					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1014 - " + _("Alias input mismatch");
 					return error(errorMessage.c_str());
 				}
 				// Check GUID
-				if (vvchPrevArgs[1] != vvchArgs[1])
+				if (vvchPrevArgs.size() <= 1 || vvchPrevArgs[1] != vvchArgs[1])
 				{
 					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 1015 - " + _("Alias Guid input mismatch");
 					return error(errorMessage.c_str());

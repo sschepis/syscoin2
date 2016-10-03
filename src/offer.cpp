@@ -402,7 +402,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		LogPrintf("*** OFFER %d %d %s %s %s %s %s %d\n", nHeight,
 			chainActive.Tip()->nHeight, tx.GetHash().ToString().c_str(),
 			op==OP_OFFER_ACCEPT ? "OFFERACCEPT: ": "", 
-			op==OP_OFFER_ACCEPT ? stringFromVch(vvchArgs[1]).c_str(): "", 
+			op==OP_OFFER_ACCEPT && vvchArgs.size() > 1? stringFromVch(vvchArgs[1]).c_str(): "", 
 			fJustCheck ? "JUSTCHECK" : "BLOCK", " VVCH SIZE: ", vvchArgs.size());
 	bool foundOffer = false;
 	bool foundCert = false;
@@ -459,7 +459,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		{
 			if(op == OP_OFFER_ACCEPT)
 			{
-				if(vchHash != vvchArgs[3])
+				if(vvchArgs.size() <= 3 || vchHash != vvchArgs[3])
 				{
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 5 - " + _("Hash provided doesn't match the calculated hash the data");
 					return error(errorMessage.c_str());
@@ -467,7 +467,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			}
 			else
 			{
-				if(vchHash != vvchArgs[1])
+				if(vvchArgs.size() <= 1 || vchHash != vvchArgs[1])
 				{
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 6 - " + _("Hash provided doesn't match the calculated hash the data");
 					return error(errorMessage.c_str());
@@ -545,6 +545,12 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	// just check is for the memory pool inclusion, here we can stop bad transactions from entering before we get to include them in a block	
 	if(fJustCheck)
 	{
+		if (vvchArgs.empty() || vvchArgs[0].size() > MAX_GUID_LENGTH)
+		{
+			errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 17 - " + _("Offer guid too long");
+			return error(errorMessage.c_str());
+		}
+
 		if(theOffer.sDescription.size() > MAX_VALUE_LENGTH)
 		{
 			errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 7 - " + _("Offer description too long");
@@ -595,12 +601,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 16 - " + _("Offer guid in the data output does not match the guid in the transaction");
 			return error(errorMessage.c_str());
 		}
-		if (vvchArgs[0].size() > MAX_GUID_LENGTH)
-		{
-			errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 17 - " + _("Offer guid too long");
-			return error(errorMessage.c_str());
-		}
-
 		switch (op) {
 		case OP_OFFER_ACTIVATE:
 			if(theOffer.paymentOptions != PAYMENTOPTION_BTC && theOffer.paymentOptions != PAYMENTOPTION_SYS && theOffer.paymentOptions != PAYMENTOPTION_SYSBTC)
@@ -688,7 +688,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 36 - " + _("Cannot use offer purchase as input to an update");
 				return error(errorMessage.c_str());
 			}
-			if (vvchPrevArgs[0] != vvchArgs[0])
+			if (vvchPrevArgs.empty() || vvchPrevArgs[0] != vvchArgs[0])
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 37 - " + _("Offerupdate offer mismatch");
 				return error(errorMessage.c_str());
@@ -734,7 +734,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			theOfferAccept = theOffer.accept;
 			if(!theOfferAccept.feedback.empty())
 			{
-				if(vvchArgs.size() < 3 || vvchArgs[2] != vchFromString("1"))
+				if(vvchArgs.size() <= 2 || vvchArgs[2] != vchFromString("1"))
 				{
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 48 - " + _("Invalid feedback transaction");
 					return error(errorMessage.c_str());
@@ -777,7 +777,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 59 - " + _("Whitelist alias input guid mismatch");
 				return error(errorMessage.c_str());
 			}
-			if (vvchArgs[1].size() > MAX_GUID_LENGTH)
+			if (vvchArgs.size() <= 1 || vvchArgs[1].size() > MAX_GUID_LENGTH)
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 60 - " + _("Offeraccept transaction with guid too big");
 				return error(errorMessage.c_str());

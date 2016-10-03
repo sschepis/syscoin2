@@ -296,7 +296,7 @@ bool CheckMessageInputs(const CTransaction &tx, int op, int nOut, const vector<v
 		}
 		if(!theMessage.IsNull())
 		{
-			if(vchHash != vvchArgs[1])
+			if(vvchArgs.size() <= 1 || vchHash != vvchArgs[1])
 			{
 				errorMessage = "SYSCOIN_MESSAGE_CONSENSUS_ERROR: ERRCODE: 3002 - " + _("Hash provided doesn't match the calculated hash the data");
 				return error(errorMessage.c_str());
@@ -330,7 +330,7 @@ bool CheckMessageInputs(const CTransaction &tx, int op, int nOut, const vector<v
 	string retError = "";
 	if(fJustCheck)
 	{
-		if (vvchArgs[0].size() > MAX_GUID_LENGTH)
+		if (vvchArgs.empty() || vvchArgs[0].size() > MAX_GUID_LENGTH)
 		{
 			errorMessage = "SYSCOIN_MESSAGE_CONSENSUS_ERROR: ERRCODE: 3003 - " + _("Message transaction guid too big");
 			return error(errorMessage.c_str());
