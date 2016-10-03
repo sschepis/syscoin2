@@ -49,6 +49,7 @@ private:
 	QString m_rawTx;
 	QString refundWarningStr;
 	QString releaseWarningStr;
+	QString m_buttontext;
 };
 
 #endif // MANAGEESCROWDIALOG_H
