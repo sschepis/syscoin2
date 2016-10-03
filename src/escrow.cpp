@@ -392,7 +392,6 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 	CTransaction aliasTx;
     COffer theOffer;
 	string retError = "";
-	int escrowOp = theEscrow.op;
 	CTransaction txOffer;
 	COffer dbOffer;
 	if(fJustCheck)
@@ -987,7 +986,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 		}
 	
         // set the escrow's txn-dependent values
-		theEscrow.op = escrowOp;
+		theEscrow.op = serializedEscrow.op;
 		theEscrow.txHash = tx.GetHash();
 		theEscrow.nHeight = nHeight;
 		PutToEscrowList(vtxPos, theEscrow);

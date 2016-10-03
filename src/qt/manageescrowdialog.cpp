@@ -646,7 +646,7 @@ void ManageEscrowDialog::on_releaseButton_clicked()
 			else
 			{
 				if(CompleteEscrowRelease())
-					ui->releaseButton->setEnabled(false);
+					ManageEscrowDialog::accept();
 			}
 		}
 		else
@@ -712,7 +712,7 @@ void ManageEscrowDialog::on_refundButton_clicked()
 			else
 			{
 				if(CompleteEscrowRefund())
-					ui->refundButton->setEnabled(false);
+					ManageEscrowDialog::accept();
 			}
 		}
 		else
