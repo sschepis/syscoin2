@@ -1321,8 +1321,9 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	CAmount nTotal = theOffer.GetPrice(foundEntry)*nQty;
 
 	CAmount nEscrowFee = GetEscrowArbiterFee(nTotal);
-	CAmount nAmountWithFee = nTotal+nEscrowFee;
-
+	CRecipient recipientFee;
+	CreateRecipient(scriptPubKey, recipientFee);
+	CAmount nAmountWithFee = nTotal+nEscrowFee+recipientFee.nAmount;
 	CWalletTx escrowWtx;
 	vector<CRecipient> vecSendEscrow;
 	CRecipient recipientEscrow  = {scriptPubKey, nAmountWithFee, false};
