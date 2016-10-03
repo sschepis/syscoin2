@@ -540,6 +540,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	vector<COffer> offerVtxPos;
 	string category;
 	int precision = 2;
+	int nFeePerByte;
 	double nRate;
 	string retError = "";
 	// just check is for the memory pool inclusion, here we can stop bad transactions from entering before we get to include them in a block	
@@ -929,7 +930,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				}
 			}
 			// check for valid alias peg
-			if(getCurrencyToSYSFromAlias(theOffer.vchAliasPeg, theOffer.sCurrencyCode, nRate, theOffer.nHeight, rateList,precision) != "")
+			if(getCurrencyToSYSFromAlias(theOffer.vchAliasPeg, theOffer.sCurrencyCode, nRate, theOffer.nHeight, rateList,precision, nFeePerByte) != "")
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 76 - " + _("Could not find currency in the peg alias");
 				return true;
@@ -1042,7 +1043,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			else
 			{
 				// check for valid alias peg
-				if(getCurrencyToSYSFromAlias(theOffer.vchAliasPeg, theOffer.sCurrencyCode, nRate, theOffer.nHeight, rateList,precision) != "")
+				if(getCurrencyToSYSFromAlias(theOffer.vchAliasPeg, theOffer.sCurrencyCode, nRate, theOffer.nHeight, rateList,precision, nFeePerByte) != "")
 				{
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 89 - " + _("Could not find currency in the peg alias");
 					return true;
