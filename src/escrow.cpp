@@ -2012,7 +2012,7 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 UniValue escrowcompleterelease(const UniValue& params, bool fHelp) {
     if (fHelp || params.size() != 2)
         throw runtime_error(
-		"escrowcomplete <escrow guid> <rawtx> \n"
+		"escrowcompleterelease <escrow guid> <rawtx> \n"
                          "Completes an escrow release by creating the escrow complete release transaction on syscoin blockchain.\n"
 						 "<rawtx> Raw syscoin escrow transaction. Enter the raw tx result from escrowclaimrelease.\n"
                         + HelpRequiringPassphrase());
@@ -2032,6 +2032,10 @@ UniValue escrowcompleterelease(const UniValue& params, bool fHelp) {
     if (!GetTxOfEscrow( vchEscrow, 
 		escrow, tx))
         throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4116 - " + _("Could not find a escrow with this key"));
+
+	bool btcPayment = false;
+	if (!escrow.escrowInputTx.empty())
+		btcPayment = true;
 
 	const CWalletTx *wtxIn = pwalletMain->GetWalletTx(tx.GetHash());
 	if (wtxIn == NULL)
@@ -2141,7 +2145,7 @@ UniValue escrowcompleterelease(const UniValue& params, bool fHelp) {
 	UniValue ret(UniValue::VARR);
 	ret.push_back(wtx.GetHash().GetHex());
 	// broadcast the payment transaction to syscoin network if not bitcoin transaction
-	if (escrow.escrowInputTx.empty())
+	if (!btcPayment)
 	{
 		UniValue arraySendParams(UniValue::VARR);
 		arraySendParams.push_back(rawTx);
@@ -2688,6 +2692,10 @@ UniValue escrowcompleterefund(const UniValue& params, bool fHelp) {
 		escrow, tx))
         throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4116 - " + _("Could not find a escrow with this key"));
 
+	bool btcPayment = false;
+	if (!escrow.escrowInputTx.empty())
+		btcPayment = true;
+
 	const CWalletTx *wtxIn = pwalletMain->GetWalletTx(tx.GetHash());
 	if (wtxIn == NULL)
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4118 - " + _("This escrow is not in your wallet"));
@@ -2796,7 +2804,7 @@ UniValue escrowcompleterefund(const UniValue& params, bool fHelp) {
 	ret.push_back(wtx.GetHash().GetHex());
 
 	// broadcast the payment transaction to syscoin network if not bitcoin transaction
-	if (escrow.escrowInputTx.empty())
+	if (!btcPayment)
 	{
 		UniValue arraySendParams(UniValue::VARR);
 		arraySendParams.push_back(rawTx);

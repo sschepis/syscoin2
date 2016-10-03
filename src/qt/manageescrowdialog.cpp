@@ -539,8 +539,9 @@ void ManageEscrowDialog::slotConfirmedFinishedCheck(QNetworkReply * reply){
 			int confirmations = unconfirmedValue.get_int();
 			if(confirmations >= 1)
 			{
-				QMessageBox::warning(this, windowTitle(),
-					tr("Escrow payment ID <b>%1</b> found at <b>%2</b> in the Bitcoin blockchain and has <b>%3</b> confirmations.").arg(m_redeemTxId).arg(timestamp.toString(Qt::SystemLocaleShortDate)).arg(QString::number(confirmations)),
+				GUIUtil::setClipboard(m_redeemTxId);
+				QMessageBox::information(this, windowTitle(),
+					tr("Escrow payment ID <b>%1</b> found at <b>%2</b> in the Bitcoin blockchain and has <b>%3</b> confirmations. Payment ID has been copied to your clipboard for your reference.").arg(m_redeemTxId).arg(timestamp.toString(Qt::SystemLocaleShortDate)).arg(QString::number(confirmations)),
 					QMessageBox::Ok, QMessageBox::Ok);	
 				reply->deleteLater();
 				return;
