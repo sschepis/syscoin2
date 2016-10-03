@@ -3263,7 +3263,7 @@ UniValue escrowlist(const UniValue& params, bool fHelp) {
 		vchEscrow = vvch[0];
 		vector<CEscrow> vtxPos;
 		CEscrow escrow;
-		bool escrowRelease = false
+		bool escrowRelease = false;
 		bool escrowRefund = false;
 		if (!pescrowdb->ReadEscrow(vchEscrow, vtxPos) || vtxPos.empty())
 		{
@@ -3512,7 +3512,7 @@ UniValue escrowhistory(const UniValue& params, bool fHelp) {
             if (!DecodeEscrowTx(tx, op, nOut, vvch) 
             	|| !IsEscrowOp(op) )
                 continue;
-			bool escrowRelease = false
+			bool escrowRelease = false;
 			bool escrowRefund = false;
 			if(txPos2.op == OP_ESCROW_COMPLETE)
 			{
@@ -3653,7 +3653,7 @@ UniValue escrowfilter(const UniValue& params, bool fHelp) {
 		int avgBuyerRating, avgSellerRating, avgArbiterRating;
 		if (!pescrowdb->ReadEscrow(pairScan.first, vtxPos) || vtxPos.empty())
 			continue;
-		bool escrowRelease = false
+		bool escrowRelease = false;
 		bool escrowRefund = false;
 		if(txEscrow.op == OP_ESCROW_COMPLETE)
 		{
