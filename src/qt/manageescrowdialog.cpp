@@ -191,41 +191,6 @@ ManageEscrowDialog::ManageEscrowDialog(WalletModel* model, const QString &escrow
 		}
 
 	}
-	else if(status == "escrow feedback")
-	{		
-		if(m_btctxid.size() > 0)
-		{
-			ui->btcButton->setVisible(true);
-			if(m_redeemTxId.size() > 0)
-				ui->btcButton->setEnabled(true);
-		}
-		ui->manageInfo2->setText(tr("Please leave escrow feedback below."));
-		ui->refundButton->setEnabled(false);
-		ui->primaryLabel->setVisible(true);
-		ui->primaryRating->setVisible(true);
-		ui->primaryFeedback->setVisible(true);
-		ui->secondaryLabel->setVisible(true);
-		ui->secondaryRating->setVisible(true);
-		ui->secondaryFeedback->setVisible(true);
-		ui->releaseButton->setText(tr("Leave Feedback"));
-
-		if(escrowType == Buyer)
-		{
-			ui->primaryLabel->setText("Choose a rating for the merchant (1-5) or leave at 0 for no rating. Below please give feedback to the merchant.");
-			ui->secondaryLabel->setText("Choose a rating for the arbiter (1-5) or leave at 0 for no rating. Below please give feedback to the arbiter. Skip if escrow arbiter was not involved.");
-		}
-		else if(escrowType == Seller)
-		{
-			ui->primaryLabel->setText("Choose a rating for the buyer (1-5) or leave at 0 for no rating. Below please give feedback to the buyer.");
-			ui->secondaryLabel->setText("Choose a rating for the arbiter (1-5) or leave at 0 for no rating. Below please give feedback to the arbiter. Skip if escrow arbiter was not involved.");
-
-		}
-		else if(escrowType == Arbiter)
-		{
-			ui->primaryLabel->setText("Choose a rating for the buyer (1-5) or leave at 0 for no rating. Below please give feedback to the buyer.");
-			ui->secondaryLabel->setText("Choose a rating for the merchant (1-5) or leave at 0 for no rating. Below please give feedback to the merchant.");	
-		}
-	}
 	else if(status == "pending")
 	{		
 		ui->manageInfo2->setText(tr("The escrow is still pending a confirmation by the network. Please try again later."));

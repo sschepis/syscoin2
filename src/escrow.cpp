@@ -3263,6 +3263,8 @@ UniValue escrowlist(const UniValue& params, bool fHelp) {
 		vchEscrow = vvch[0];
 		vector<CEscrow> vtxPos;
 		CEscrow escrow;
+		bool escrowRelease = false
+		bool escrowRefund = false;
 		if (!pescrowdb->ReadEscrow(vchEscrow, vtxPos) || vtxPos.empty())
 		{
 			pending = 1;
@@ -3279,6 +3281,22 @@ UniValue escrowlist(const UniValue& params, bool fHelp) {
 			else{
 				if (!DecodeEscrowTx(tx, op, nOut, vvch) || !IsEscrowOp(op))
 					continue;
+			}
+			if(escrow.op == OP_ESCROW_COMPLETE)
+			{
+				for(int i = vtxPos.size() - 1; i >= 0;i--)
+				{
+					if(vtxPos[i].op == OP_ESCROW_RELEASE)
+					{
+						escrowRelease = true;
+						break;
+					}
+					else if(vtxPos[i].op == OP_ESCROW_REFUND)
+					{
+						escrowRefund = true;
+						break;
+					}
+				}
 			}
 		}
 		int nHeight;
@@ -3367,12 +3385,14 @@ UniValue escrowlist(const UniValue& params, bool fHelp) {
 				status = "escrow released";
 			else if(op == OP_ESCROW_RELEASE && vvch[1] == vchFromString("1"))
 				status = "escrow release complete";
+			else if(op == OP_ESCROW_COMPLETE && escrowRelease)
+				status = "escrow release complete";
 			else if(op == OP_ESCROW_REFUND && vvch[1] == vchFromString("0"))
 				status = "escrow refunded";
 			else if(op == OP_ESCROW_REFUND && vvch[1] == vchFromString("1"))
 				status = "escrow refund complete";
-			else if(op == OP_ESCROW_COMPLETE )
-				status = "escrow feedback";
+			else if(op == OP_ESCROW_COMPLETE && escrowRefund)
+				status = "escrow refund complete";
 		}
 		else
 			status = "pending";
@@ -3473,6 +3493,7 @@ UniValue escrowhistory(const UniValue& params, bool fHelp) {
         uint256 txHash;
         uint256 blockHash;
         BOOST_FOREACH(txPos2, vtxPos) {
+
             txHash = txPos2.txHash;
 			CTransaction tx;
 			if (!GetSyscoinTransaction(txPos2.nHeight, txHash, tx, Params().GetConsensus())) {
@@ -3491,6 +3512,24 @@ UniValue escrowhistory(const UniValue& params, bool fHelp) {
             if (!DecodeEscrowTx(tx, op, nOut, vvch) 
             	|| !IsEscrowOp(op) )
                 continue;
+			bool escrowRelease = false
+			bool escrowRefund = false;
+			if(txPos2.op == OP_ESCROW_COMPLETE)
+			{
+				for(int i = vtxPos.size() - 1; i >= 0;i--)
+				{
+					if(vtxPos[i].op == OP_ESCROW_RELEASE)
+					{
+						escrowRelease = true;
+						break;
+					}
+					else if(vtxPos[i].op == OP_ESCROW_REFUND)
+					{
+						escrowRefund = true;
+						break;
+					}
+				}
+			}
 			int expired = 0;
             UniValue oEscrow(UniValue::VOBJ);
             uint64_t nHeight;
@@ -3548,12 +3587,14 @@ UniValue escrowhistory(const UniValue& params, bool fHelp) {
 				status = "escrow released";
 			else if(op == OP_ESCROW_RELEASE && vvch[1] == vchFromString("1"))
 				status = "escrow release complete";
+			else if(op == OP_ESCROW_COMPLETE && escrowRelease)
+				status = "escrow release complete";
 			else if(op == OP_ESCROW_REFUND && vvch[1] == vchFromString("0"))
 				status = "escrow refunded";
 			else if(op == OP_ESCROW_REFUND && vvch[1] == vchFromString("1"))
 				status = "escrow refund complete";
-			else if(op == OP_ESCROW_COMPLETE )
-				status = "escrow feedback";
+			else if(op == OP_ESCROW_COMPLETE && escrowRefund)
+				status = "escrow refund complete";
 
 			oEscrow.push_back(Pair("status", status));
 			oEscrow.push_back(Pair("expired", expired));
@@ -3612,6 +3653,24 @@ UniValue escrowfilter(const UniValue& params, bool fHelp) {
 		int avgBuyerRating, avgSellerRating, avgArbiterRating;
 		if (!pescrowdb->ReadEscrow(pairScan.first, vtxPos) || vtxPos.empty())
 			continue;
+		bool escrowRelease = false
+		bool escrowRefund = false;
+		if(txEscrow.op == OP_ESCROW_COMPLETE)
+		{
+			for(int i = vtxPos.size() - 1; i >= 0;i--)
+			{
+				if(vtxPos[i].op == OP_ESCROW_RELEASE)
+				{
+					escrowRelease = true;
+					break;
+				}
+				else if(vtxPos[i].op == OP_ESCROW_REFUND)
+				{
+					escrowRefund = true;
+					break;
+				}
+			}
+		}
 		if (pofferdb->ReadOffer(txEscrow.vchOffer, offerVtxPos) && !offerVtxPos.empty())
 		{
 			offer.nHeight = vtxPos.front().nAcceptHeight;
@@ -3645,12 +3704,14 @@ UniValue escrowfilter(const UniValue& params, bool fHelp) {
 			status = "escrow released";
 		else if(op == OP_ESCROW_RELEASE && vvch[1] == vchFromString("1"))
 			status = "escrow release complete";
+		else if(op == OP_ESCROW_COMPLETE && escrowRelease)
+			status = "escrow release complete";
 		else if(op == OP_ESCROW_REFUND && vvch[1] == vchFromString("0"))
 			status = "escrow refunded";
 		else if(op == OP_ESCROW_REFUND && vvch[1] == vchFromString("1"))
 			status = "escrow refund complete";
-		else if(op == OP_ESCROW_COMPLETE )
-			status = "escrow feedback";
+		else if(op == OP_ESCROW_COMPLETE && escrowRefund)
+			status = "escrow refund complete";
 		
 
 		oEscrow.push_back(Pair("status", status));
