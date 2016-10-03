@@ -94,7 +94,7 @@ ManageEscrowDialog::ManageEscrowDialog(WalletModel* model, const QString &escrow
 		{
 			ui->manageInfo2->setText(tr("You are the <b>buyer</b> of the offer held in escrow. The coins have been refunded back to you, you may claim them now. After claiming, please return to this dialog and provide feedback for this escrow transaction."));
 			ui->refundButton->setText(tr("Claim Refund"));
-			ui->releaseButton->setEnabled(false););
+			ui->releaseButton->setEnabled(false);
 		}
 		else if(escrowType == Seller)
 		{
