@@ -595,13 +595,13 @@ void ManageEscrowDialog::slotConfirmedFinishedCheck(QNetworkReply * reply){
 			int confirmations = unconfirmedValue.get_int();
 			if(confirmations >= 1)
 			{
-				if(ui->releaseButton->text() == tr("Claim Payment"))
+				if(m_buttontext == tr("Claim Payment"))
 				{
 					CompleteEscrowRelease(timestamp.toString(Qt::SystemLocaleShortDate));
 					reply->deleteLater();
 					return;
 				}
-				else if(ui->releaseButton->text() == tr("Claim Payment"))
+				else if(m_buttontext == tr("Claim Payment"))
 				{
 					CompleteEscrowRefund(timestamp.toString(Qt::SystemLocaleShortDate));
 					reply->deleteLater();
