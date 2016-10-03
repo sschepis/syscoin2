@@ -3119,7 +3119,7 @@ UniValue escrowinfo(const UniValue& params, bool fHelp) {
 		int sysprecision;
 		int nSYSFeePerByte = getFeePerByte(offer.vchAliasPeg, vchFromString("SYS"), vtxPos.front().nAcceptHeight, sysprecision);
 		nFee += (nSYSFeePerByte*400);
-		oEscrow.push_back(Pair("sysrelayfee",strprintf("%ld SYS", (nSYSFeePerByte*400)))); 
+		oEscrow.push_back(Pair("sysrelayfee",strprintf("%ld", (nSYSFeePerByte*400)))); 
 		oEscrow.push_back(Pair("relayfee", strprintf("%.*f SYS", 8, ValueFromAmount(nSYSFeePerByte*400).get_real() )));
 	}
 	else
@@ -3127,7 +3127,7 @@ UniValue escrowinfo(const UniValue& params, bool fHelp) {
 		int btcprecision;
 		int nBTCFeePerByte = getFeePerByte(offer.vchAliasPeg, vchFromString("BTC"), vtxPos.front().nAcceptHeight, btcprecision);
 		nFee += (nBTCFeePerByte*400);
-		oEscrow.push_back(Pair("sysrelayfee",strprintf("%ld BTC", (nBTCFeePerByte*400)))); 
+		oEscrow.push_back(Pair("sysrelayfee",strprintf("%ld", (nBTCFeePerByte*400)))); 
 		oEscrow.push_back(Pair("relayfee", strprintf("%.*f BTC", 8, ValueFromAmount(nBTCFeePerByte*400).get_real() )));
 	}
 
@@ -3322,7 +3322,6 @@ UniValue escrowlist(const UniValue& params, bool fHelp) {
 		if (vNamesI.find(vchEscrow) != vNamesI.end() && (escrow.nHeight <= vNamesI[vchEscrow] || vNamesI[vchEscrow] < 0))
 			continue;
 
-		nHeight = escrow.nHeight;
         // build the output
         UniValue oName(UniValue::VOBJ);
         oName.push_back(Pair("escrow", stringFromVch(vchEscrow)));
@@ -3354,7 +3353,7 @@ UniValue escrowlist(const UniValue& params, bool fHelp) {
 			int sysprecision;
 			int nSYSFeePerByte = getFeePerByte(offer.vchAliasPeg, vchFromString("SYS"), nHeight, sysprecision);
 			nFee += (nSYSFeePerByte*400);
-			oName.push_back(Pair("sysrelayfee",strprintf("%ld SYS", (nSYSFeePerByte*400))));
+			oName.push_back(Pair("sysrelayfee",strprintf("%ld", (nSYSFeePerByte*400))));
 			oName.push_back(Pair("relayfee", strprintf("%.*f SYS", 8, ValueFromAmount(nSYSFeePerByte*400).get_real() )));
 		}
 		else
@@ -3362,7 +3361,7 @@ UniValue escrowlist(const UniValue& params, bool fHelp) {
 			int btcprecision;
 			int nBTCFeePerByte = getFeePerByte(offer.vchAliasPeg, vchFromString("BTC"), nHeight, btcprecision);
 			nFee += (nBTCFeePerByte*400);
-			oName.push_back(Pair("sysrelayfee",strprintf("%ld BTC", (nBTCFeePerByte*400)))); 
+			oName.push_back(Pair("sysrelayfee",strprintf("%ld", (nBTCFeePerByte*400)))); 
 			oName.push_back(Pair("relayfee", strprintf("%.*f BTC", 8, ValueFromAmount(nBTCFeePerByte*400).get_real() )));
 		}
 		oName.push_back(Pair("sysfee", nEscrowFee));
@@ -3379,7 +3378,7 @@ UniValue escrowlist(const UniValue& params, bool fHelp) {
 		if(!escrow.redeemTxId.IsNull())
 			strRedeemTxIId = escrow.redeemTxId.GetHex();
 		oName.push_back(Pair("redeem_txid", strRedeemTxIId));
-		expired_block = nHeight + GetEscrowExpirationDepth();
+		expired_block = escrow.nHeight + GetEscrowExpirationDepth();
         if(expired_block < chainActive.Tip()->nHeight && escrow.op == OP_ESCROW_COMPLETE)
 		{
 			expired = 1;
@@ -3473,7 +3472,7 @@ UniValue escrowlist(const UniValue& params, bool fHelp) {
 		oName.push_back(Pair("status", status));
 		oName.push_back(Pair("expired", expired));
  
-		vNamesI[vchEscrow] = nHeight;
+		vNamesI[vchEscrow] = escrow.nHeight;
 		vNamesO[vchEscrow] = oName;	
 		
     
@@ -3562,7 +3561,7 @@ UniValue escrowhistory(const UniValue& params, bool fHelp) {
 				int sysprecision;
 				int nSYSFeePerByte = getFeePerByte(offer.vchAliasPeg, vchFromString("SYS"), vtxPos.front().nAcceptHeight, sysprecision);
 				nFee += (nSYSFeePerByte*400);
-				oEscrow.push_back(Pair("sysrelayfee",strprintf("%ld SYS", nSYSFeePerByte*400))); 
+				oEscrow.push_back(Pair("sysrelayfee",strprintf("%ld", nSYSFeePerByte*400))); 
 				oEscrow.push_back(Pair("relayfee", strprintf("%.*f SYS", 8, ValueFromAmount(nSYSFeePerByte*400).get_real() )));
 			}
 			else
@@ -3570,7 +3569,7 @@ UniValue escrowhistory(const UniValue& params, bool fHelp) {
 				int btcprecision;
 				int nBTCFeePerByte = getFeePerByte(offer.vchAliasPeg, vchFromString("BTC"), vtxPos.front().nAcceptHeight, btcprecision);
 				nFee += (nBTCFeePerByte*400);
-				oEscrow.push_back(Pair("sysrelayfee",strprintf("%ld BTC", nBTCFeePerByte*400)));
+				oEscrow.push_back(Pair("sysrelayfee",strprintf("%ld", nBTCFeePerByte*400)));
 				oEscrow.push_back(Pair("relayfee", strprintf("%.*f BTC", 8, ValueFromAmount(nBTCFeePerByte*400).get_real() )));
 			}
 			oEscrow.push_back(Pair("sysfee", nEscrowFee));
@@ -3737,7 +3736,7 @@ UniValue escrowfilter(const UniValue& params, bool fHelp) {
 			int sysprecision;
 			int nSYSFeePerByte = getFeePerByte(offer.vchAliasPeg, vchFromString("SYS"), vtxPos.front().nAcceptHeight, sysprecision);
 			nFee += (nSYSFeePerByte*400);
-			oEscrow.push_back(Pair("sysrelayfee",strprintf("%ld SYS", nSYSFeePerByte*400))); 
+			oEscrow.push_back(Pair("sysrelayfee",strprintf("%ld", nSYSFeePerByte*400))); 
 			oEscrow.push_back(Pair("relayfee", strprintf("%.*f SYS", 8, ValueFromAmount(nSYSFeePerByte*400).get_real() )));
 		}
 		else
@@ -3745,7 +3744,7 @@ UniValue escrowfilter(const UniValue& params, bool fHelp) {
 			int btcprecision;
 			int nBTCFeePerByte = getFeePerByte(offer.vchAliasPeg, vchFromString("BTC"), vtxPos.front().nAcceptHeight, btcprecision);
 			nFee += (nBTCFeePerByte*400);
-			oEscrow.push_back(Pair("sysrelayfee",strprintf("%ld BTC", nBTCFeePerByte*400))); 
+			oEscrow.push_back(Pair("sysrelayfee",strprintf("%ld", nBTCFeePerByte*400))); 
 			oEscrow.push_back(Pair("relayfee", strprintf("%.*f BTC", 8, ValueFromAmount(nBTCFeePerByte*400).get_real() )));
 		}
 		oEscrow.push_back(Pair("sysfee", nEscrowFee));
