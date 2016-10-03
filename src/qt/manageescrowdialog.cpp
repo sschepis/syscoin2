@@ -414,6 +414,16 @@ void ManageEscrowDialog::slotConfirmedFinished(QNetworkReply * reply){
 	{
 		if(!CompleteEscrowRelease())
 		{
+			if(m_buttontext == tr("Claim Payment"))
+			{
+				ui->releaseButton->setText(m_buttontext);
+				ui->releaseButton->setEnabled(true);
+			}
+			else if(m_buttontext == tr("Claim Refund"))
+			{
+				ui->refundButton->setText(m_buttontext);
+				ui->refundButton->setEnabled(true);	
+			}
 			reply->deleteLater();
 			return;
 		}
@@ -422,6 +432,16 @@ void ManageEscrowDialog::slotConfirmedFinished(QNetworkReply * reply){
 	{
 		if(!CompleteEscrowRefund())
 		{
+			if(m_buttontext == tr("Claim Payment"))
+			{
+				ui->releaseButton->setText(m_buttontext);
+				ui->releaseButton->setEnabled(true);
+			}
+			else if(m_buttontext == tr("Claim Refund"))
+			{
+				ui->refundButton->setText(m_buttontext);
+				ui->refundButton->setEnabled(true);	
+			}
 			reply->deleteLater();
 			return;
 		}
