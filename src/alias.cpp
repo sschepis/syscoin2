@@ -326,7 +326,7 @@ CAmount convertSyscoinToCurrencyCode(const vector<unsigned char> &vchAliasPeg, c
 {
 	CAmount currencyPrice = 0;
 	double nRate;
-	intn nFeePerByte;
+	int nFeePerByte;
 	vector<string> rateList;
 	try
 	{
