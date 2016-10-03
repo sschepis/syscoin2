@@ -1183,8 +1183,12 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	
 
 	vector<unsigned char> vchMessage = vchFromValue(params[3]);
-	vector<unsigned char> vchBTCTx = params.size() >= 6? vchFromValue(params[5]): vchFromString("");
-	vector<unsigned char> vchRedeemScript = params.size() >= 7? vchFromValue(params[6]): vchFromString("");
+	vector<unsigned char> vchBTCTx;
+	if(params.size() >= 6) 
+		vchBTCTx = vchFromValue(params[5]);
+	vector<unsigned char> vchRedeemScript;
+	if((params.size() >= 7)
+		vchRedeemScript = vchFromValue(params[6]);
 	if(params.size() >= 8)
 		nHeight = boost::lexical_cast<uint64_t>(params[7].get_str());
 	CTransaction rawTx;
@@ -1335,14 +1339,14 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	CAmount nEscrowFee = GetEscrowArbiterFee(nTotal);
 	int nFeePerByte = getFeePerByte(theOffer.vchAliasPeg, vchFromString("SYS"), chainActive.Tip()->nHeight,precision);
 
+	vector<CRecipient> vecSend;
 	CRecipient recipientFee;
 	CreateRecipient(scriptPubKey, recipientFee);
 	CAmount nAmountWithFee = nTotal+nEscrowFee+(nFeePerByte*400);
 	CWalletTx escrowWtx;
-	vector<CRecipient> vecSendEscrow;
 	CRecipient recipientEscrow  = {scriptPubKey, nAmountWithFee, false};
 	if(vchBTCTx.empty())
-		vecSendEscrow.push_back(recipientEscrow);
+		vecSend.push_back(recipientEscrow);
 	
 	// send to seller/arbiter so they can track the escrow through GUI
     // build escrow
@@ -1376,7 +1380,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 
 
 	// send the tranasction
-	vector<CRecipient> vecSend;
+	
 	CRecipient recipientArbiter;
 	CreateRecipient(scriptPubKeyArbiter, recipientArbiter);
 	vecSend.push_back(recipientArbiter);
@@ -1403,7 +1407,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	const CWalletTx * wtxInCert=NULL;
 	const CWalletTx * wtxInOffer=NULL;
 	const CWalletTx * wtxInEscrow=NULL;
-	SendMoneySyscoin(vecSend,recipientBuyer.nAmount+recipientArbiter.nAmount+recipientSeller.nAmount+aliasRecipient.nAmount+fee.nAmount+(nFeePerByte*400), false, wtx, wtxInOffer, wtxInCert, wtxAliasIn, wtxInEscrow);
+	SendMoneySyscoin(vecSend,recipientBuyer.nAmount+recipientArbiter.nAmount+recipientSeller.nAmount+aliasRecipient.nAmount+recipientEscrow.nAmount+fee.nAmount, false, wtx, wtxInOffer, wtxInCert, wtxAliasIn, wtxInEscrow);
 	UniValue res(UniValue::VARR);
 	res.push_back(wtx.GetHash().GetHex());
 	res.push_back(stringFromVch(vchEscrow));
