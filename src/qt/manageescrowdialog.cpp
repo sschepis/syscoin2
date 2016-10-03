@@ -77,9 +77,9 @@ ManageEscrowDialog::ManageEscrowDialog(WalletModel* model, const QString &escrow
 		}
 		else if(escrowType == Seller)
 		{
-			ui->manageInfo2->setText(tr("You are the <b>merchant</b> of the offer held in escrow. The payment of coins have been released to you, you may claim them now. After claiming, please return to this dialog and provide feedback for this escrow transaction. You may also refund the coins back to the buyer."));
+			ui->manageInfo2->setText(tr("You are the <b>merchant</b> of the offer held in escrow. The payment of coins have been released to you, you may claim them now. After claiming, please return to this dialog and provide feedback for this escrow transaction."));
 			ui->releaseButton->setText(tr("Claim Payment"));
-			refundWarningStr = tr("Warning: Payment has already been released, are you sure you wish to refund payment back to the buyer?");
+			ui->refundButton->setEnabled(false);
 		}
 		else if(escrowType == Arbiter)
 		{
@@ -92,9 +92,9 @@ ManageEscrowDialog::ManageEscrowDialog(WalletModel* model, const QString &escrow
 	{
 		if(escrowType == Buyer)
 		{
-			ui->manageInfo2->setText(tr("You are the <b>buyer</b> of the offer held in escrow. The coins have been refunded back to you, you may claim them now. After claiming, please return to this dialog and provide feedback for this escrow transaction. You may also release the coins to the merchant."));
+			ui->manageInfo2->setText(tr("You are the <b>buyer</b> of the offer held in escrow. The coins have been refunded back to you, you may claim them now. After claiming, please return to this dialog and provide feedback for this escrow transaction."));
 			ui->refundButton->setText(tr("Claim Refund"));
-			releaseWarningStr = tr("Warning: Payment has already been refunded, are you sure you wish to release payment to the merchant?");
+			ui->releaseButton->setEnabled(false););
 		}
 		else if(escrowType == Seller)
 		{

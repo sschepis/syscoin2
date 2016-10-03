@@ -664,6 +664,11 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4043 - " + _("Only arbiter can refund an escrow after it has already been refunded");
 						return true;
 					}
+					else if(theEscrow.op == OP_ESCROW_RELEASE && serializedEscrow.vchLinkAlias != theEscrow.vchArbiterAlias)
+					{
+						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4043 - " + _("Only arbiter can refund an escrow after it has already been released");
+						return true;
+					}
 					// make sure offer is still valid and then refund qty
 					if (GetTxAndVtxOfOffer( theEscrow.vchOffer, dbOffer, txOffer, myVtxPos))
 					{
@@ -753,13 +758,18 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 					}
 					else if(serializedEscrow.vchLinkAlias != theEscrow.vchBuyerAlias && serializedEscrow.vchLinkAlias != theEscrow.vchArbiterAlias)
 					{
-						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4041 - " + _("Only arbiter or buyer can initiate an escrow refund");
+						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4041 - " + _("Only arbiter or buyer can initiate an escrow release");
 						return true;
 					}
 					// only the arbiter can re-release an escrow
 					else if(theEscrow.op == OP_ESCROW_RELEASE && serializedEscrow.vchLinkAlias != theEscrow.vchArbiterAlias)
 					{
 						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4043 - " + _("Only arbiter can release an escrow after it has already been released");
+						return true;
+					}
+					else if(theEscrow.op == OP_ESCROW_REFUND && serializedEscrow.vchLinkAlias != theEscrow.vchArbiterAlias)
+					{
+						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4043 - " + _("Only arbiter can release an escrow after it has already been refunded");
 						return true;
 					}
 				}
