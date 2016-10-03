@@ -1187,7 +1187,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	if(params.size() >= 6) 
 		vchBTCTx = vchFromValue(params[5]);
 	vector<unsigned char> vchRedeemScript;
-	if((params.size() >= 7)
+	if(params.size() >= 7)
 		vchRedeemScript = vchFromValue(params[6]);
 	if(params.size() >= 8)
 		nHeight = boost::lexical_cast<uint64_t>(params[7].get_str());
