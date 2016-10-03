@@ -393,6 +393,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
     COffer theOffer;
 	string retError = "";
 	CTransaction txOffer;
+	int escrowOp = OP_ESCROW_ACTIVATE;
 	COffer dbOffer;
 	if(fJustCheck)
 	{
@@ -644,7 +645,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				// these are the only settings allowed to change outside of activate
 				if(!serializedEscrow.rawTx.empty())
 					theEscrow.rawTx = serializedEscrow.rawTx;
-				theEscrow.op = serializedEscrow.op;
+				escrowOp = serializedEscrow.op;
 				if(op == OP_ESCROW_REFUND && vvchArgs[1] == vchFromString("0"))
 				{
 					if(theEscrow.op == OP_ESCROW_COMPLETE)
@@ -986,6 +987,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 		}
 	
         // set the escrow's txn-dependent values
+		theEscrow.op = escrowOp;
 		theEscrow.txHash = tx.GetHash();
 		theEscrow.nHeight = nHeight;
 		PutToEscrowList(vtxPos, theEscrow);
