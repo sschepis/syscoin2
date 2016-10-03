@@ -35,7 +35,7 @@ ManageEscrowDialog::ManageEscrowDialog(WalletModel* model, const QString &escrow
 	ui->secondaryRating->setVisible(false);
 	ui->secondaryFeedback->setVisible(false);
 	ui->btcButton->setVisible(false);
-	ui->btcButton->setEnable(false);
+	ui->btcButton->setEnabled(false);
 	if(!loadEscrow(escrow, buyer, seller, arbiter, status, offertitle, total, m_btctxid, m_redeemTxId))
 	{
 		ui->manageInfo2->setText(tr("Cannot find this escrow on the network, please try again later."));
@@ -127,8 +127,8 @@ ManageEscrowDialog::ManageEscrowDialog(WalletModel* model, const QString &escrow
 		if(m_btctxid.size() > 0)
 		{
 			ui->btcButton->setVisible(true);
-			if(m_redeemtxid.size() > 0)
-				ui->btcButton->setEnable(true);
+			if(m_redeemTxId.size() > 0)
+				ui->btcButton->setEnabled(true);
 		}
 		ui->manageInfo2->setText(tr("The escrow has been successfully claimed by the merchant. The escrow is complete."));
 		ui->refundButton->setEnabled(false);
@@ -171,8 +171,8 @@ ManageEscrowDialog::ManageEscrowDialog(WalletModel* model, const QString &escrow
 		if(m_btctxid.size() > 0)
 		{
 			ui->btcButton->setVisible(true);
-			if(m_redeemtxid.size() > 0)
-				ui->btcButton->setEnable(true);
+			if(m_redeemTxId.size() > 0)
+				ui->btcButton->setEnabled(true);
 		}	
 		ui->manageInfo2->setText(tr("The escrow has been successfully refunded to the buyer. The escrow is complete."));
 		ui->refundButton->setEnabled(false);
@@ -438,8 +438,8 @@ void ManageEscrowDialog::slotConfirmedFinished(QNetworkReply * reply){
 	if(m_btctxid.size() > 0)
 	{
 		ui->btcButton->setVisible(true);
-		if(m_redeemtxid.size() > 0)
-			ui->btcButton->setEnable(true);
+		if(m_redeemTxId.size() > 0)
+			ui->btcButton->setEnabled(true);
 	}
 	if(m_buttontext == tr("Claim Payment"))
 	{
