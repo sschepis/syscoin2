@@ -122,7 +122,7 @@ ManageEscrowDialog::ManageEscrowDialog(WalletModel* model, const QString &escrow
 			refundWarningStr = tr("Warning: Payment has already been refunded, are you sure you wish to re-refund payment back to the buyer?");	
 		}
 	}
-	else if(status == "complete")
+	else if(status == "escrow release complete")
 	{		
 		if(m_btctxid.size() > 0)
 		{

@@ -425,8 +425,8 @@ QString TransactionTableModel::formatTxType(const TransactionRecord *wtx) const
         return tr("Escrow Refund Received");
 	case TransactionRecord::EscrowRefundComplete:
         return tr("Escrow Refund Complete");
-    case TransactionRecord::EscrowComplete:
-        return tr("Escrow Complete");
+    case TransactionRecord::EscrowReleaseComplete:
+        return tr("Escrow Release Complete");
     case TransactionRecord::MessageActivate:
         return tr("Message Sent");
     case TransactionRecord::MessageRecv:
@@ -472,7 +472,7 @@ QVariant TransactionTableModel::txAddressDecoration(const TransactionRecord *wtx
     case TransactionRecord::EscrowRefund:
 	case TransactionRecord::EscrowRefundComplete:
 	case TransactionRecord::EscrowFeedback:
-	case TransactionRecord::EscrowComplete:
+	case TransactionRecord::EscrowReleaseComplete:
 	case TransactionRecord::MessageActivate:
         return QIcon(":/icons/" + theme + "/tx_output");
     default:
@@ -514,7 +514,7 @@ QString TransactionTableModel::formatTxToAddress(const TransactionRecord *wtx, b
 	case TransactionRecord::CertRecv:
     case TransactionRecord::EscrowActivate:
     case TransactionRecord::EscrowRelease:
-	case TransactionRecord::EscrowComplete:
+	case TransactionRecord::EscrowReleaseComplete:
     case TransactionRecord::EscrowRefund:
 	case TransactionRecord::EscrowFeedback:
 	case TransactionRecord::EscrowFeedbackRecv:

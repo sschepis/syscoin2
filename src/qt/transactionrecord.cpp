@@ -81,7 +81,7 @@ static bool CreateSyscoinTransactionRecord(TransactionRecord& sub, int op, const
 		if(vvchArgs[1] == vchFromString("1"))
 		{
 			if(type == SEND || type == RECV)
-				sub.type = TransactionRecord::EscrowComplete;
+				sub.type = TransactionRecord::EscrowReleaseComplete;
 		}
 		else
 		{

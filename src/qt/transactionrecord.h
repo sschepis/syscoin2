@@ -99,12 +99,12 @@ public:
 		EscrowReleaseRecv,
         EscrowRefund,
 		EscrowRefundRecv,
-		EscrowComplete,
+		EscrowReleaseComplete,
+		EscrowRefundComplete,
+		EscrowFeedback,
 
 		MessageActivate,
 		MessageRecv,
-		EscrowRefundComplete,
-		EscrowFeedback,
 		EscrowFeedbackRecv,
         OfferAcceptFeedback,
 		OfferAcceptFeedbackRecv
