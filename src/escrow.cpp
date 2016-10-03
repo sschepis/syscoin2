@@ -2661,7 +2661,7 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 	return ret;
 }
 UniValue escrowcompleterefund(const UniValue& params, bool fHelp) {
-    if (fHelp || params.size() ~= 2)
+    if (fHelp || params.size() != 2)
         throw runtime_error(
 		"escrowcompleterefund <escrow guid> <rawtx> \n"
                          "Completes an escrow refund by creating the escrow complete refund transaction on syscoin blockchain.\n"
