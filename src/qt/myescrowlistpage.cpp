@@ -143,7 +143,7 @@ void MyEscrowListPage::setModel(WalletModel *walletModel, EscrowTableModel *mode
     ui->tableView->setColumnWidth(5, 80); //offer
 	ui->tableView->setColumnWidth(6, 250); //offer title
 	ui->tableView->setColumnWidth(7, 80); //total
-	ui->tableView->setColumnWidth(8, 130); //rating
+	ui->tableView->setColumnWidth(8, 160); //rating
     ui->tableView->setColumnWidth(9, 50); //status
 	ui->tableView->setItemDelegateForColumn(8, new StarDelegate);
 
