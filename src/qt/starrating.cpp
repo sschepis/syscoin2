@@ -56,7 +56,7 @@ void StarRating::paint(QPainter *painter, const QRect &rect,
     }
 	if(myRatingCount > 0)
 	{
-		painter->scale(1/PaintingScaleFactor, 1/PaintingScaleFactor);
+		painter->scale((qreal)1.0f/PaintingScaleFactor, (qreal)1.0f/PaintingScaleFactor);
 		painter->setPen(Qt::black);
 		QFont font = painter->font();
 		font.setPointSize(15);
