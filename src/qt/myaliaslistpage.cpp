@@ -329,12 +329,12 @@ void MyAliasListPage::on_exportButton_clicked()
 	writer.addColumn("Expires On", AliasTableModel::ExpiresOn, Qt::EditRole);
 	writer.addColumn("Expires In", AliasTableModel::ExpiresIn, Qt::EditRole);
 	writer.addColumn("Expired", AliasTableModel::Expired, Qt::EditRole);
-	writer.addColumn("Buyer Rating", AliasTableModel::RatingAsBuyer, Qt::BuyerRatingRole);
-	writer.addColumn("Buyer Rating Count", AliasTableModel::RatingAsBuyer, Qt::BuyerRatingCountRole);
-	writer.addColumn("Seller Rating", AliasTableModel::RatingAsSeller, Qt::SellerRatingRole);
-	writer.addColumn("Seller Rating Count", AliasTableModel::RatingAsSeller, Qt::SellerRatingCountRole);
-	writer.addColumn("Arbiter Rating", AliasTableModel::RatingAsArbiter, Qt::ArbiterRatingRole);
-	writer.addColumn("Arbiter Rating Count", AliasTableModel::RatingAsArbiter, Qt::ArbiterRatingCountRole);
+	writer.addColumn("Buyer Rating", AliasTableModel::RatingAsBuyer, AliasTableModel::BuyerRatingRole);
+	writer.addColumn("Buyer Rating Count", AliasTableModel::RatingAsBuyer, AliasTableModel::BuyerRatingCountRole);
+	writer.addColumn("Seller Rating", AliasTableModel::RatingAsSeller, AliasTableModel::SellerRatingRole);
+	writer.addColumn("Seller Rating Count", AliasTableModel::RatingAsSeller, AliasTableModel::SellerRatingCountRole);
+	writer.addColumn("Arbiter Rating", AliasTableModel::RatingAsArbiter, AliasTableModel::ArbiterRatingRole);
+	writer.addColumn("Arbiter Rating Count", AliasTableModel::RatingAsArbiter, AliasTableModel::ArbiterRatingCountRole);
     if(!writer.write())
     {
         QMessageBox::critical(this, tr("Error exporting"), tr("Could not write to file %1.").arg(filename),
