@@ -18,7 +18,7 @@
 using namespace std;
 
 extern CRPCTable tableRPC;
-string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchAliasPeg, const vector<unsigned char> &vchCurrency, double &nFee, const unsigned int &nHeightToFind, vector<string>& rateList, int &precision, int &nFeePerByte);
+string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchAliasPeg, const vector<unsigned char> &vchCurrency, double &nFee, const unsigned int &nHeightToFind, vector<string>& rateList, int &precision, int &nFeePerByte, float &fEscrowFee;);
 extern bool getCategoryList(vector<string>& categoryList);
 extern vector<unsigned char> vchFromString(const std::string &str);
 EditOfferDialog::EditOfferDialog(Mode mode,  const QString &strOffer,  const QString &strCert,  const QString &strCategory, QWidget *parent) :
@@ -175,7 +175,8 @@ void EditOfferDialog::on_aliasPegEdit_editingFinished()
 	vector<string> rateList;
 	int precision;
 	int nFeePerByte;
-	if(getCurrencyToSYSFromAlias(vchFromString(ui->aliasPegEdit->text().toStdString()), vchFromString(ui->currencyEdit->currentText().toStdString()), nFee, chainActive.Tip()->nHeight, rateList, precision, nFeePerByte) == "1")
+	float fEscrowFee;
+	if(getCurrencyToSYSFromAlias(vchFromString(ui->aliasPegEdit->text().toStdString()), vchFromString(ui->currencyEdit->currentText().toStdString()), nFee, chainActive.Tip()->nHeight, rateList, precision, nFeePerByte, fEscrowFee) == "1")
 	{
 		QMessageBox::warning(this, windowTitle(),
 			tr("Warning: %1 alias not found. No currency information available for %2!").arg(ui->aliasPegEdit->text()).arg(ui->currencyEdit->currentText()),

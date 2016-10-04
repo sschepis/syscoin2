@@ -275,11 +275,12 @@ CAmount convertCurrencyCodeToSyscoin(const vector<unsigned char> &vchAliasPeg, c
 {
 	CAmount sysPrice = 0;
 	double nRate;
+	float fEscrowFee = 0.005;
 	int nFeePerByte;
 	vector<string> rateList;
 	try
 	{
-		if(getCurrencyToSYSFromAlias(vchAliasPeg, vchCurrencyCode, nRate, nHeight, rateList, precision, nFeePerByte) == "")
+		if(getCurrencyToSYSFromAlias(vchAliasPeg, vchCurrencyCode, nRate, nHeight, rateList, precision, nFeePerByte, fEscrowFee) == "")
 		{
 			float fTotal = nPrice*nRate;
 			CAmount nTotal = fTotal;
@@ -302,14 +303,36 @@ CAmount convertCurrencyCodeToSyscoin(const vector<unsigned char> &vchAliasPeg, c
 		sysPrice = 0;
 	return sysPrice;
 }
+float getEscrowFee(const std::vector<unsigned char> &vchAliasPeg, const std::vector<unsigned char> &vchCurrencyCode, const unsigned int &nHeight, int &precision)
+{
+	double nRate;
+	int nFeePerByte =0;
+	// 0.05% escrow fee by default it not provided
+	float fEscrowFee = 0.005;
+	vector<string> rateList;
+	try
+	{
+		if(getCurrencyToSYSFromAlias(vchAliasPeg, vchCurrencyCode, nRate, nHeight, rateList, precision, nFeePerByte, fEscrowFee) == "")
+		{		
+			return fEscrowFee;
+		}
+	}
+	catch(...)
+	{
+		if(fDebug)
+			LogPrintf("getEscrowFee() Exception caught getting rate alias information\n");
+	}
+	return fEscrowFee;
+}
 int getFeePerByte(const std::vector<unsigned char> &vchAliasPeg, const std::vector<unsigned char> &vchCurrencyCode, const unsigned int &nHeight, int &precision)
 {
 	double nRate;
 	int nFeePerByte =0;
+	float fEscrowFee = 0.005;
 	vector<string> rateList;
 	try
 	{
-		if(getCurrencyToSYSFromAlias(vchAliasPeg, vchCurrencyCode, nRate, nHeight, rateList, precision, nFeePerByte) == "")
+		if(getCurrencyToSYSFromAlias(vchAliasPeg, vchCurrencyCode, nRate, nHeight, rateList, precision, nFeePerByte, fEscrowFee) == "")
 		{
 			return nFeePerByte;
 		}
@@ -327,10 +350,11 @@ CAmount convertSyscoinToCurrencyCode(const vector<unsigned char> &vchAliasPeg, c
 	CAmount currencyPrice = 0;
 	double nRate;
 	int nFeePerByte;
+	float fEscrowFee = 0.005;
 	vector<string> rateList;
 	try
 	{
-		if(getCurrencyToSYSFromAlias(vchAliasPeg, vchCurrencyCode, nRate, nHeight, rateList, precision, nFeePerByte) == "")
+		if(getCurrencyToSYSFromAlias(vchAliasPeg, vchCurrencyCode, nRate, nHeight, rateList, precision, nFeePerByte, fEscrowFee) == "")
 		{
 			currencyPrice = CAmount(nPrice/nRate);
 		}
@@ -344,7 +368,7 @@ CAmount convertSyscoinToCurrencyCode(const vector<unsigned char> &vchAliasPeg, c
 		currencyPrice = 0;
 	return currencyPrice;
 }
-string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchAliasPeg, const vector<unsigned char> &vchCurrency, double &nFee, const unsigned int &nHeightToFind, vector<string>& rateList, int &precision, int &nFeePerByte)
+string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchAliasPeg, const vector<unsigned char> &vchCurrency, double &nFee, const unsigned int &nHeightToFind, vector<string>& rateList, int &precision, int &nFeePerByte, float &fEscrowFee)
 {
 	string currencyCodeToFind = stringFromVch(vchCurrency);
 	// check for alias existence in DB
@@ -398,6 +422,11 @@ string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchAliasPeg, const
 						if(feePerByteValue.isNum())
 						{
 							nFeePerByte = feePerByteValue.get_int();
+						}
+						UniValue escrowFeeValue = find_value(codeObj, "escrowfee");
+						if(escrowFeeValue.isNum())
+						{
+							fEscrowFee = escrowFeeValue.get_real();
 						}
 						UniValue precisionValue = find_value(codeObj, "precision");
 						if(precisionValue.isNum())

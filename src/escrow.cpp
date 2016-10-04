@@ -42,10 +42,10 @@ bool IsEscrowOp(int op) {
         || op == OP_ESCROW_REFUND
 		|| op == OP_ESCROW_COMPLETE;
 }
-// 0.05% fee on escrow value for arbiter
-int64_t GetEscrowArbiterFee(int64_t escrowValue) {
+// % fee on escrow value for arbiter
+int64_t GetEscrowArbiterFee(int64_t escrowValue, float fEscrowFee) {
 
-	int64_t nFee = escrowValue*0.005;
+	int64_t nFee = escrowValue*fEscrowFee;
 	if(nFee < DEFAULT_MIN_RELAY_TX_FEE)
 		nFee = DEFAULT_MIN_RELAY_TX_FEE;
 	return nFee;
@@ -1144,9 +1144,9 @@ UniValue generateescrowmultisig(const UniValue& params, bool fHelp) {
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4507 - " + _("Could not create escrow transaction: Invalid response from createescrow"));
 
 	int precision = 2;
-	
+	float fEscrowFee = getEscrowFee(theOffer.vchAliasPeg, vchFromString("BTC"), chainActive.Tip()->nHeight, precision);
 	CAmount nTotal = theOffer.GetPrice(foundEntry)*nQty;
-	CAmount nEscrowFee = GetEscrowArbiterFee(nTotal);
+	CAmount nEscrowFee = GetEscrowArbiterFee(nTotal, fEscrowFee);
 	CAmount nBTCFee = convertSyscoinToCurrencyCode(theOffer.vchAliasPeg, vchFromString("BTC"), nEscrowFee, chainActive.Tip()->nHeight, precision);
 	CAmount nBTCTotal = convertSyscoinToCurrencyCode(theOffer.vchAliasPeg, vchFromString("BTC"), theOffer.GetPrice(foundEntry), chainActive.Tip()->nHeight, precision)*nQty;
 	int nBTCFeePerByte = getFeePerByte(theOffer.vchAliasPeg, vchFromString("BTC"), chainActive.Tip()->nHeight, precision);
@@ -1335,8 +1335,8 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	int precision = 2;
 	// send to escrow address
 	CAmount nTotal = theOffer.GetPrice(foundEntry)*nQty;
-
-	CAmount nEscrowFee = GetEscrowArbiterFee(nTotal);
+	float fEscrowFee = getEscrowFee(theOffer.vchAliasPeg, theOffer.sCurrencyCode, chainActive.Tip()->nHeight, precision);
+	CAmount nEscrowFee = GetEscrowArbiterFee(nTotal, fEscrowFee);
 	int nFeePerByte = getFeePerByte(theOffer.vchAliasPeg, vchFromString("SYS"), chainActive.Tip()->nHeight,precision);
 
 	vector<CRecipient> vecSend;
@@ -1526,7 +1526,8 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	
 	CAmount nExpectedCommissionAmount = nCommission*escrow.nQty;
 	CAmount nExpectedAmount = theOffer.GetPrice(foundEntry)*escrow.nQty; 
-	CAmount nEscrowFee = GetEscrowArbiterFee(nExpectedAmount);
+	float fEscrowFee = getEscrowFee(theOffer.vchAliasPeg, theOffer.sCurrencyCode, chainActive.Tip()->nHeight, precision);
+	CAmount nEscrowFee = GetEscrowArbiterFee(nExpectedAmount, fEscrowFee);
 	int nFeePerByte = getFeePerByte(theOffer.vchAliasPeg, vchFromString("SYS"),  vtxPos.front().nAcceptHeight,precision);
 	CAmount nEscrowTotal =  nExpectedAmount + nEscrowFee + (nFeePerByte*400);
 	// if we can't get it in this blockchain, try full raw tx decode (bitcoin input raw tx)
@@ -1834,7 +1835,8 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 	
 	CAmount nExpectedCommissionAmount = nCommission*escrow.nQty;
 	CAmount nExpectedAmount = theOffer.GetPrice(foundEntry)*escrow.nQty; 
-	CAmount nEscrowFee = GetEscrowArbiterFee(nExpectedAmount);
+	float fEscrowFee = getEscrowFee(theOffer.vchAliasPeg, theOffer.sCurrencyCode, chainActive.Tip()->nHeight, precision);
+	CAmount nEscrowFee = GetEscrowArbiterFee(nExpectedAmount, fEscrowFee);
 	int nFeePerByte = getFeePerByte(theOffer.vchAliasPeg, vchFromString("SYS"),  vtxPos.front().nAcceptHeight,precision);
 	CAmount nEscrowTotal =  nExpectedAmount + nEscrowFee + (nFeePerByte*400);
 	// if we can't get it in this blockchain, try full raw tx decode (bitcoin input raw tx)
@@ -2259,9 +2261,9 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 	int precision = 2;
 	CRecipient recipientFee;
 	CreateRecipient(redeemScriptPubKey, recipientFee);
-	
+	float fEscrowFee = getEscrowFee(theOffer.vchAliasPeg, theOffer.sCurrencyCode, chainActive.Tip()->nHeight, precision);
 	CAmount nExpectedAmount = theOffer.GetPrice(foundEntry)*escrow.nQty; 
-	CAmount nEscrowFee = GetEscrowArbiterFee(nExpectedAmount);
+	CAmount nEscrowFee = GetEscrowArbiterFee(nExpectedAmount, fEscrowFee);
 	int nFeePerByte = getFeePerByte(theOffer.vchAliasPeg, vchFromString("SYS"),  vtxPos.front().nAcceptHeight,precision);
 	CAmount nEscrowTotal =  nExpectedAmount + nEscrowFee + (nFeePerByte*400);
 	// if we can't get it in this blockchain, try full raw tx decode (bitcoin input raw tx)
@@ -3119,7 +3121,8 @@ UniValue escrowinfo(const UniValue& params, bool fHelp) {
 	oEscrow.push_back(Pair("offertitle", stringFromVch(offer.sTitle)));
 	oEscrow.push_back(Pair("quantity", strprintf("%d", ca.nQty)));
 	int precision = 2;
-	int64_t nEscrowFee = GetEscrowArbiterFee(offer.GetPrice() * ca.nQty);
+	float fEscrowFee = getEscrowFee(offer.vchAliasPeg, offer.sCurrencyCode, chainActive.Tip()->nHeight, precision);
+	int64_t nEscrowFee = GetEscrowArbiterFee(offer.GetPrice() * ca.nQty, fEscrowFee);
 	CAmount nPricePerUnit = convertSyscoinToCurrencyCode(offer.vchAliasPeg, offer.sCurrencyCode, offer.GetPrice(), vtxPos.front().nAcceptHeight, precision);
 	CAmount nFee = convertSyscoinToCurrencyCode(offer.vchAliasPeg, offer.sCurrencyCode, nEscrowFee, vtxPos.front().nAcceptHeight, precision);
 	if(ca.txBTCId.IsNull())
@@ -3353,7 +3356,8 @@ UniValue escrowlist(const UniValue& params, bool fHelp) {
 		oName.push_back(Pair("offer", stringFromVch(escrow.vchOffer)));
 		oName.push_back(Pair("offertitle", stringFromVch(offer.sTitle)));
 		int precision = 2;
-		int64_t nEscrowFee = GetEscrowArbiterFee(offer.GetPrice() * escrow.nQty);
+		float fEscrowFee = getEscrowFee(offer.vchAliasPeg, offer.sCurrencyCode, chainActive.Tip()->nHeight, precision);
+		int64_t nEscrowFee = GetEscrowArbiterFee(offer.GetPrice() * escrow.nQty, fEscrowFee);
 		CAmount nPricePerUnit = convertSyscoinToCurrencyCode(offer.vchAliasPeg, offer.sCurrencyCode, offer.GetPrice(), nHeight, precision);
 		CAmount nFee = convertSyscoinToCurrencyCode(offer.vchAliasPeg, offer.sCurrencyCode, nEscrowFee, nHeight, precision);
 		if(escrow.txBTCId.IsNull())
@@ -3561,7 +3565,8 @@ UniValue escrowhistory(const UniValue& params, bool fHelp) {
 			oEscrow.push_back(Pair("offer", stringFromVch(txPos2.vchOffer)));
 			oEscrow.push_back(Pair("offertitle", stringFromVch(offer.sTitle)));
 			int precision = 2;
-			int64_t nEscrowFee = GetEscrowArbiterFee(offer.GetPrice() * txPos2.nQty);
+			float fEscrowFee = getEscrowFee(offer.vchAliasPeg, offer.sCurrencyCode, chainActive.Tip()->nHeight, precision);
+			int64_t nEscrowFee = GetEscrowArbiterFee(offer.GetPrice() * txPos2.nQty, fEscrowFee);
 			CAmount nPricePerUnit = convertSyscoinToCurrencyCode(offer.vchAliasPeg, offer.sCurrencyCode, offer.GetPrice(),  vtxPos.front().nAcceptHeight, precision);
 			CAmount nFee = convertSyscoinToCurrencyCode(offer.vchAliasPeg, offer.sCurrencyCode, nEscrowFee, vtxPos.front().nAcceptHeight, precision);
 			if(txPos2.txBTCId.IsNull())
@@ -3736,7 +3741,8 @@ UniValue escrowfilter(const UniValue& params, bool fHelp) {
 
 		oEscrow.push_back(Pair("status", status));
 		int precision = 2;
-		int64_t nEscrowFee = GetEscrowArbiterFee(offer.GetPrice() * txEscrow.nQty);
+		float fEscrowFee = getEscrowFee(offer.vchAliasPeg, offer.sCurrencyCode, chainActive.Tip()->nHeight, precision);
+		int64_t nEscrowFee = GetEscrowArbiterFee(offer.GetPrice() * txEscrow.nQty, fEscrowFee);
 		CAmount nPricePerUnit = convertSyscoinToCurrencyCode(offer.vchAliasPeg, offer.sCurrencyCode, offer.GetPrice(),  vtxPos.front().nAcceptHeight, precision);
 		CAmount nFee = convertSyscoinToCurrencyCode(offer.vchAliasPeg, offer.sCurrencyCode, nEscrowFee, vtxPos.front().nAcceptHeight, precision);
 		if(txEscrow.txBTCId.IsNull())
