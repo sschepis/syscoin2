@@ -54,16 +54,17 @@ void StarRating::paint(QPainter *painter, const QRect &rect,
         }
         painter->translate(1.0, 0.0);
     }
-	painter->restore();
 	if(myRatingCount > 0)
 	{
-		painter->save();
+		painter->scale(1, 1);
 		painter->setPen(Qt::black);
 		QFont font = painter->font();
 		font.setPointSize(15);
 		font.setBold(true);
-		painter->drawText(rect, Qt::AlignVCenter | Qt::AlignRight, "(" + QString::number(myRatingCount) + ")");    
-		painter->restore();
+		painter->setFont(font);
+		painter->drawText(painter->clipPath().currentPosition(), "(" + QString::number(myRatingCount) + ")");    
 	}
+	painter->restore();
+
     
 }
