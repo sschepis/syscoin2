@@ -2886,7 +2886,7 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 	if(alias.nRatingCountAsSeller > 0)
 		rating = roundf(alias.nRatingAsSeller/(float)alias.nRatingCountAsSeller);
 	oOffer.push_back(Pair("alias_rating",(int)rating));
-	oOffer.push_back(Pair("alias_rating_count"(int),alias.nRatingCountAsSeller));
+	oOffer.push_back(Pair("alias_rating_count",(int)alias.nRatingCountAsSeller));
 	oOffer.push_back(Pair("geolocation", stringFromVch(theOffer.vchGeoLocation)));
 	oOffer.push_back(Pair("offers_sold", (int)theOffer.nSold));
 	
