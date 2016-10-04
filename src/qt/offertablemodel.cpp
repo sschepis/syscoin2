@@ -36,7 +36,7 @@ struct OfferTableEntry
 	QString exclusive_resell;
 	QString private_str;
 	QString alias;
-	int aliasRating;
+	int aliasRating, aliasRatingCount;
 	QString paymentoptions;
 	QString alias_peg;
 	QString safesearch;
