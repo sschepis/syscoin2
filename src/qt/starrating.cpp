@@ -11,6 +11,8 @@ const int PaintingScaleFactor = 20;
 StarRating::StarRating(int starCount, int maxStarCount, int ratingCount)
 {
     myStarCount = starCount;
+	if(myStarCount < 1)
+		myStarCount = 1;
     myMaxStarCount = maxStarCount;
 	myRatingCount = ratingCount;
     starPolygon << QPointF(1.0, 0.5);
@@ -54,18 +56,17 @@ void StarRating::paint(QPainter *painter, const QRect &rect,
         }
         painter->translate(1.0, 0.0);
     }
-	if(myRatingCount > 0)
-	{
-		painter->scale((qreal)1.0f/PaintingScaleFactor, (qreal)1.0f/PaintingScaleFactor);
-		painter->setPen(Qt::darkGray);
-		QFont font = painter->font();
-		font.setPointSize(15);
-		font.setBold(true);
-		painter->setFont(font);
-		QPointF position = painter->clipPath().currentPosition();
-		position.setY(position.y() + 20);
-		painter->drawText(position, "(" + QString::number(myRatingCount) + ")");    
-	}
+
+	painter->scale((qreal)1.0f/PaintingScaleFactor, (qreal)1.0f/PaintingScaleFactor);
+	painter->setPen(Qt::darkGray);
+	QFont font = painter->font();
+	font.setPointSize(15);
+	font.setBold(true);
+	painter->setFont(font);
+	QPointF position = painter->clipPath().currentPosition();
+	position.setY(position.y() + 15);
+	painter->drawText(position, "(" + QString::number(myRatingCount) + ")");    
+	
 	painter->restore();
 
     
