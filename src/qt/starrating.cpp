@@ -54,15 +54,10 @@ void StarRating::paint(QPainter *painter, const QRect &rect,
         }
         painter->translate(1.0, 0.0);
     }
-	painter.setPen(Qt::black);
+	painter->setPen(Qt::black);
 	QFont font = painter->font() ;
-
-	/* twice the size than the current font size */
-	font.setPointSize(font.getPointSize() * 1.25);
-
-	/* set the modified font to the painter */
+	font.setPointSize(14);
 	painter->setFont(font);
-
-	painter.drawText(painter->getClipPath().currentPosition()," (" + QString::number(myRatingCount) + ")");    
+	painter->drawText(painter->getClipPath().currentPosition()," (" + QString::number(myRatingCount) + ")");    
     painter->restore();
 }
