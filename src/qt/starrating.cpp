@@ -56,6 +56,7 @@ void StarRating::paint(QPainter *painter, const QRect &rect,
     }
 	painter->restore();
 	painter->setPen(Qt::black);
-	painter->drawText(rect,Qt::AlignVCenter | Qt::AlignRight, "(" + QString::number(myRatingCount) + ")");    
+	font.setPointSize(14);
+	painter->drawText(rect,Qt::AlignVCenter, "(" + QString::number(myRatingCount) + ")");    
     
 }
