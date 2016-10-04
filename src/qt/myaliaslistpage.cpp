@@ -131,6 +131,8 @@ void MyAliasListPage::setModel(WalletModel *walletModel, AliasTableModel *model)
 	ui->tableView->setColumnWidth(5, 100); //sellerrrating
 	ui->tableView->setColumnWidth(6, 100); //arbiterrating
 	ui->tableView->setItemDelegateForColumn(4, new StarDelegate);
+	ui->tableView->setItemDelegateForColumn(5, new StarDelegate);
+	ui->tableView->setItemDelegateForColumn(6, new StarDelegate);
 
     ui->tableView->horizontalHeader()->setStretchLastSection(true);
 

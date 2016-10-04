@@ -100,9 +100,13 @@ void AliasListPage::setModel(WalletModel* walletModel, AliasTableModel *model)
     ui->tableView->setColumnWidth(1, 75); //expires on
     ui->tableView->setColumnWidth(2, 75); //expires in
     ui->tableView->setColumnWidth(3, 75); //expired status
-	ui->tableView->setColumnWidth(4, 100); //rating
-	ui->tableView->setColumnWidth(5, 50); //ratingcount
+	ui->tableView->setColumnWidth(4, 100); //buyerrating
+	ui->tableView->setColumnWidth(5, 100); //sellerrrating
+	ui->tableView->setColumnWidth(6, 100); //arbiterrating
 	ui->tableView->setItemDelegateForColumn(4, new StarDelegate);
+	ui->tableView->setItemDelegateForColumn(5, new StarDelegate);
+	ui->tableView->setItemDelegateForColumn(6, new StarDelegate);
+
     ui->tableView->horizontalHeader()->setStretchLastSection(true);
 
     connect(ui->tableView->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)),

@@ -99,10 +99,9 @@ void EscrowListPage::setModel(WalletModel* walletModel, EscrowTableModel *model)
     ui->tableView->setColumnWidth(5, 80); //offer
 	ui->tableView->setColumnWidth(6, 250); //offer title
     ui->tableView->setColumnWidth(7, 80); //total
-	ui->tableView->setColumnWidth(8, 80); //offeraccept
-	ui->tableView->setColumnWidth(9, 100); //rating
-    ui->tableView->setColumnWidth(10, 50); //status
-	ui->tableView->setItemDelegateForColumn(9, new StarDelegate);
+	ui->tableView->setColumnWidth(8, 100); //rating
+    ui->tableView->setColumnWidth(9, 50); //status
+	ui->tableView->setItemDelegateForColumn(8, new StarDelegate);
 
     ui->tableView->horizontalHeader()->setStretchLastSection(true);
 
@@ -239,7 +238,6 @@ void EscrowListPage::on_searchEscrow_clicked(string GUID)
 		string seller_str;
 		string arbiter_str;
 		string status_str;
-		string txid_str;
 		string offer_str;
 		string offertitle_str;
 		string total_str;	
@@ -290,7 +288,6 @@ void EscrowListPage::on_searchEscrow_clicked(string GUID)
 				seller_str = "";
 				arbiter_str = "";
 				status_str = "";
-				txid_str = "";
 				offer_str = "";
 				offertitle_str = "";
 				total_str = "";
@@ -321,10 +318,6 @@ void EscrowListPage::on_searchEscrow_clicked(string GUID)
 				const UniValue& offertitle_value = find_value(o, "offertitle");
 				if (offertitle_value.type() == UniValue::VSTR)
 					offertitle_str = offertitle_value.get_str();
-
-				const UniValue& txid_value = find_value(o, "txid");
-				if (txid_value.type() == UniValue::VSTR)
-					txid_str = txid_value.get_str();
 				string currency_str = "";
 				const UniValue& currency_value = find_value(o, "currency");
 				if (currency_value.type() == UniValue::VSTR)
@@ -348,7 +341,6 @@ void EscrowListPage::on_searchEscrow_clicked(string GUID)
 						QString::fromStdString(arbiter_str),
 						QString::fromStdString(offer_str),
 						QString::fromStdString(offertitle_str),
-						QString::fromStdString(txid_str),
 						QString::fromStdString(total_str),
 						rating,
 						QString::fromStdString(status_str),
@@ -358,7 +350,6 @@ void EscrowListPage::on_searchEscrow_clicked(string GUID)
 						QString::fromStdString(arbiter_str),
 						QString::fromStdString(offer_str),
 						QString::fromStdString(offertitle_str),
-						QString::fromStdString(txid_str),
 						QString::fromStdString(total_str),
 						rating,
 						QString::fromStdString(status_str), 
