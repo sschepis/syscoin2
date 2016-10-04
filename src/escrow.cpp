@@ -45,7 +45,8 @@ bool IsEscrowOp(int op) {
 // % fee on escrow value for arbiter
 int64_t GetEscrowArbiterFee(int64_t escrowValue, float fEscrowFee) {
 
-	int64_t nFee = (escrowValue+1)*fEscrowFee;
+	int fee = 1/fEscrowFee;
+	int64_t nFee = escrowValue/fee;
 	if(nFee < DEFAULT_MIN_RELAY_TX_FEE)
 		nFee = DEFAULT_MIN_RELAY_TX_FEE;
 	return nFee;
