@@ -31,7 +31,7 @@ public:
 		OfferTitle = 6,
 		Total = 7,
 		Rating = 8,
-		Status = 9
+		Status = 9,
 		NUMBER_OF_COLUMNS
 
     };
