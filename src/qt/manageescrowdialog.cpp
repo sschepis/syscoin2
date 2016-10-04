@@ -488,8 +488,9 @@ void ManageEscrowDialog::slotConfirmedFinishedCheck(QNetworkReply * reply){
 			ui->refundButton->setText(m_buttontext);
 			ui->refundButton->setEnabled(true);	
 		}
+		GUIUtil::setClipboard(m_redeemTxId);
         QMessageBox::critical(this, windowTitle(),
-            tr("Could find escrow payment on the Bitcoin blockchain, please ensure that the payment transaction ID <b>%1</b> has been confirmed on the network.").arg(m_redeemTxId),
+            tr("Could find escrow payment on the Bitcoin blockchain, please ensure that the payment transaction ID <b>%1</b> has been confirmed on the network. Payment ID has been copied to your clipboard for your reference.").arg(m_redeemTxId),
                 QMessageBox::Ok, QMessageBox::Ok);
 		reply->deleteLater();
 		return;
