@@ -79,8 +79,8 @@ if "SYSCOIND" not in os.environ:
     os.environ["SYSCOIND"] = BUILDDIR + '/src/syscoind' + EXEEXT
 
 if EXEEXT == ".exe" and "-win" not in opts:
-    # https://github.com/syscoin/syscoin/commit/d52802551752140cf41f0d9a225a43e84404d3e9
-    # https://github.com/syscoin/syscoin/pull/5677#issuecomment-136646964
+    # https://github.com/syscoin/syscoin2/commit/d52802551752140cf41f0d9a225a43e84404d3e9
+    # https://github.com/syscoin/syscoin2/pull/5677#issuecomment-136646964
     print("Win tests currently disabled by default.  Use -win option to enable")
     sys.exit(0)
 

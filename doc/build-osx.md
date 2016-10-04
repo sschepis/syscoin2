@@ -25,7 +25,7 @@ Build Syscoin Core
 
 1. Clone the syscoin source code and cd into `syscoin`
 
-        git clone https://github.com/syscoin/syscoin
+        git clone https://github.com/syscoin/syscoin2
         cd syscoin
 
 2.  Build syscoin-core:
@@ -92,4 +92,4 @@ Notes
 
 * Tested on OS X 10.7 through 10.11 on 64-bit Intel processors only.
 
-* Building with downloaded Qt binaries is not officially supported. See the notes in [#7714](https://github.com/syscoin/syscoin/issues/7714)
+* Building with downloaded Qt binaries is not officially supported. See the notes in [#7714](https://github.com/syscoin/syscoin2/issues/7714)

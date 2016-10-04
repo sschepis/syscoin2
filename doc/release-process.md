@@ -3,7 +3,7 @@ Release Process
 
 Before every release candidate:
 
-* Update translations (ping wumpus on IRC) see [translation_process.md](https://github.com/syscoin/syscoin/blob/master/doc/translation_process.md#synchronising-translations).
+* Update translations (ping wumpus on IRC) see [translation_process.md](https://github.com/syscoin/syscoin2/blob/master/doc/translation_process.md#synchronising-translations).
 
 Before every minor and major release:
 
@@ -13,7 +13,7 @@ Before every minor and major release:
 
 Before every major release:
 
-* Update hardcoded [seeds](/contrib/seeds/README.md), see [this pull request](https://github.com/syscoin/syscoin/pull/7415) for an example.
+* Update hardcoded [seeds](/contrib/seeds/README.md), see [this pull request](https://github.com/syscoin/syscoin2/pull/7415) for an example.
 
 ### First time / New builders
 
@@ -23,7 +23,7 @@ Check out the source code in the following directory hierarchy.
     git clone https://github.com/syscoin-core/gitian.sigs.git
     git clone https://github.com/syscoin-core/syscoin-detached-sigs.git
     git clone https://github.com/devrandom/gitian-builder.git
-    git clone https://github.com/syscoin/syscoin.git
+    git clone https://github.com/syscoin/syscoin2.git
 
 ### syscoin maintainers/release engineers, update version in sources
 

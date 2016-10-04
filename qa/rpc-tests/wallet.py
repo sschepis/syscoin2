@@ -329,7 +329,7 @@ class WalletTest (SyscoinTestFramework):
             '-reindex',
             '-zapwallettxes=1',
             '-zapwallettxes=2',
-            # disabled until issue is fixed: https://github.com/syscoin/syscoin/issues/7463
+            # disabled until issue is fixed: https://github.com/syscoin/syscoin2/issues/7463
             # '-salvagewallet',
         ]
         for m in maintenance:

@@ -4,12 +4,12 @@ Syscoin version 0.7.1 is now available from:
 This is a bug-fix minor release.
 
 Please report bugs using the issue tracker at github:
-  https://github.com/syscoin/syscoin/issues
+  https://github.com/syscoin/syscoin2/issues
 
 Project source code is hosted at github; you can get
 source-only tarballs/zipballs directly from there:
-  https://github.com/syscoin/syscoin/tarball/v0.7.1  # .tar.gz
-  https://github.com/syscoin/syscoin/zipball/v0.7.1  # .zip
+  https://github.com/syscoin/syscoin2/tarball/v0.7.1  # .tar.gz
+  https://github.com/syscoin/syscoin2/zipball/v0.7.1  # .zip
 
 Ubuntu Linux users can use the "Personal Package Archive" (PPA)
 maintained by Matt Corallo to automatically keep 

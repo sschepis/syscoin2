@@ -7,7 +7,7 @@ bug fixes.
 
 Please report bugs using the issue tracker at github:
 
-  https://github.com/syscoin/syscoin/issues
+  https://github.com/syscoin/syscoin2/issues
 
 Upgrading and downgrading
 =========================
@@ -230,7 +230,7 @@ bindings such as [python-syscoinlib](https://pypi.python.org/pypi/python-syscoin
 alternative node implementations.
 
 This library is called `libsyscoinconsensus.so` (or, `.dll` for Windows).
-Its interface is defined in the C header [syscoinconsensus.h](https://github.com/syscoin/syscoin/blob/0.10/src/script/syscoinconsensus.h).
+Its interface is defined in the C header [syscoinconsensus.h](https://github.com/syscoin/syscoin2/blob/0.10/src/script/syscoinconsensus.h).
 
 In its initial version the API includes two functions:
 

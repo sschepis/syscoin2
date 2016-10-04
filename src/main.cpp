@@ -6029,7 +6029,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                         if (orphanTx.wit.IsNull() && !stateDummy.CorruptionPossible()) {
                             // Do not use rejection cache for witness transactions or
                             // witness-stripped transactions, as they can have been malleated.
-                            // See https://github.com/syscoin/syscoin/issues/8279 for details.
+                            // See https://github.com/syscoin/syscoin2/issues/8279 for details.
                             assert(recentRejects);
                             recentRejects->insert(orphanHash);
                         }
@@ -6070,7 +6070,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             if (tx.wit.IsNull() && !state.CorruptionPossible()) {
                 // Do not use rejection cache for witness transactions or
                 // witness-stripped transactions, as they can have been malleated.
-                // See https://github.com/syscoin/syscoin/issues/8279 for details.
+                // See https://github.com/syscoin/syscoin2/issues/8279 for details.
                 assert(recentRejects);
                 recentRejects->insert(tx.GetHash());
             }
