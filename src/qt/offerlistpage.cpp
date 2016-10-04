@@ -572,7 +572,7 @@ void OfferListPage::on_searchOffer_clicked(string GUID)
 					QString::fromStdString(exclusive_resell_str),
 					QString::fromStdString(private_str),
 					QString::fromStdString(alias_str),
-					aliasRating, aliasRatingCount
+					aliasRating, aliasRatingCount,
 					QString::fromStdString(paymentoptions_str),
 					QString::fromStdString(alias_peg_str),
 					QString::fromStdString(safesearch_str),
@@ -590,7 +590,7 @@ void OfferListPage::on_searchOffer_clicked(string GUID)
 					QString::fromStdString(exclusive_resell_str),
 					QString::fromStdString(private_str), 
 					QString::fromStdString(alias_str), 
-					aliasRating, aliasRatingCount
+					aliasRating, aliasRatingCount,
 					QString::fromStdString(paymentoptions_str),
 					QString::fromStdString(alias_peg_str), 
 					QString::fromStdString(safesearch_str),
