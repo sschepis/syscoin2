@@ -63,7 +63,7 @@ void StarRating::paint(QPainter *painter, const QRect &rect,
 		QFont font = painter->font();
 		font.setPointSize(14);
 		font.setBold(true);
-		painter->drawText(currentPosition,Qt::AlignVCenter, "(" + QString::number(myRatingCount) + ")");    
+		painter->drawText(currentPosition, "(" + QString::number(myRatingCount) + ")");    
 		painter->restore();
 	}
     
