@@ -18,7 +18,7 @@
 using namespace std;
 
 extern CRPCTable tableRPC;
-string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchAliasPeg, const vector<unsigned char> &vchCurrency, double &nFee, const unsigned int &nHeightToFind, vector<string>& rateList, int &precision, int &nFeePerByte, float &fEscrowFee;);
+string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchAliasPeg, const vector<unsigned char> &vchCurrency, double &nFee, const unsigned int &nHeightToFind, vector<string>& rateList, int &precision, int &nFeePerByte, float &fEscrowFee);
 extern bool getCategoryList(vector<string>& categoryList);
 extern vector<unsigned char> vchFromString(const std::string &str);
 EditOfferDialog::EditOfferDialog(Mode mode,  const QString &strOffer,  const QString &strCert,  const QString &strCategory, QWidget *parent) :
