@@ -3240,6 +3240,7 @@ UniValue escrowinfo(const UniValue& params, bool fHelp) {
 		ratingCount = 1;
 	float totalAvgRating = roundf((avgArbiterRating+avgSellerRating+avgBuyerRating)/(float)ratingCount);
 	oEscrow.push_back(Pair("avg_rating", (int)totalAvgRating));	
+	oEscrow.push_back(Pair("avg_rating_count", ratingCount));	
     return oEscrow;
 }
 
@@ -3484,6 +3485,7 @@ UniValue escrowlist(const UniValue& params, bool fHelp) {
 			ratingCount = 1;
 		float totalAvgRating = roundf((avgArbiterRating+avgSellerRating+avgBuyerRating)/(float)ratingCount);
 		oName.push_back(Pair("avg_rating", (int)totalAvgRating));	
+		oName.push_back(Pair("avg_rating_count", ratingCount));	
 		oName.push_back(Pair("status", status));
 		oName.push_back(Pair("expired", expired));
  
@@ -3841,7 +3843,7 @@ UniValue escrowfilter(const UniValue& params, bool fHelp) {
 			ratingCount = 1;
 		float totalAvgRating = roundf((avgArbiterRating+avgSellerRating+avgBuyerRating)/(float)ratingCount);
 		oEscrow.push_back(Pair("avg_rating", (int)totalAvgRating));	
-
+		oEscrow.push_back(Pair("avg_rating_count", ratingCount));	
         oRes.push_back(oEscrow);
     }
 

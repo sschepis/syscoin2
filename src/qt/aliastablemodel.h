@@ -31,14 +31,21 @@ public:
 		RatingAsArbiter = 6,
 		SafeSearch = 7,
 		Value = 8,  /**< Alias value */
-		PrivValue = 9
+		PrivValue = 9,
+		NUMBER_OF_COLUMNS
     };
 
     enum RoleIndex {
         TypeRole = Qt::UserRole, /**< Type of alias (#Send or #Receive) */
 		NameRole,
 		ExpiredRole,
-		SafeSearchRole
+		SafeSearchRole,
+		BuyerRatingRole,
+		BuyerRatingCountRole,
+		SellerRatingRole,
+		SellerRatingCountRole,
+		ArbiterRatingRole,
+		ArbiterRatingCountRole
 	};
 
     /** Return status of edit/insert operation */

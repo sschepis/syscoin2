@@ -13,7 +13,7 @@ class StarRating
 public:
     enum EditMode { Editable, ReadOnly };
 
-    explicit StarRating(int starCount = 1, int maxStarCount = 5);
+    explicit StarRating(int starCount = 1, int maxStarCount = 5, int ratingCount = 0);
 
     void paint(QPainter *painter, const QRect &rect,
                const QPalette &palette, EditMode mode) const;
@@ -28,6 +28,7 @@ private:
     QPolygonF diamondPolygon;
     int myStarCount;
     int myMaxStarCount;
+	int myRatingCount;
 };
 
 Q_DECLARE_METATYPE(StarRating)

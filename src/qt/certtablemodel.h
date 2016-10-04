@@ -29,7 +29,8 @@ public:
 		ExpiresIn = 6,
 		Expired = 7,
 		Alias = 8,
-		SafeSearch = 9
+		SafeSearch = 9,
+		NUMBER_OF_COLUMNS
     };
 
     enum RoleIndex {

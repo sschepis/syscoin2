@@ -259,6 +259,7 @@ void MyEscrowListPage::on_exportButton_clicked()
 	writer.addColumn("OfferTitle", EscrowTableModel::OfferTitle, Qt::EditRole);
 	writer.addColumn("Total", EscrowTableModel::Total, Qt::EditRole);
 	writer.addColumn("Rating", EscrowTableModel::Rating, EscrowTableModel::RatingRole);
+	writer.addColumn("RatingCount", EscrowTableModel::Rating, EscrowTableModel::RatingCountRole);
 	writer.addColumn("Status", EscrowTableModel::Status, Qt::EditRole);
     if(!writer.write())
     {

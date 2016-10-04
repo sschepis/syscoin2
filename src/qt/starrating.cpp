@@ -8,11 +8,11 @@
 
 const int PaintingScaleFactor = 20;
 
-StarRating::StarRating(int starCount, int maxStarCount)
+StarRating::StarRating(int starCount, int maxStarCount, int ratingCount)
 {
     myStarCount = starCount;
     myMaxStarCount = maxStarCount;
-
+	myRatingCount = ratingCount;
     starPolygon << QPointF(1.0, 0.5);
     for (int i = 1; i < 5; ++i)
         starPolygon << QPointF(0.5 + 0.5 * std::cos(0.8 * i * 3.14),
@@ -54,6 +54,15 @@ void StarRating::paint(QPainter *painter, const QRect &rect,
         }
         painter->translate(1.0, 0.0);
     }
+	painter.setPen(Qt::black);
+	QFont font = painter->font() ;
 
+	/* twice the size than the current font size */
+	font.setPointSize(font.getPointSize() * 1.25);
+
+	/* set the modified font to the painter */
+	painter->setFont(font);
+
+	painter.drawText(painter->getClipPath().currentPosition()," (" + QString::number(myRatingCount) + ")");    
     painter->restore();
 }

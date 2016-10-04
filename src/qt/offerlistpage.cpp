@@ -418,7 +418,7 @@ void OfferListPage::on_searchOffer_clicked(string GUID)
 	string alias_str;
 	string safesearch_str;
 	string geolocation_str;
-	int aliasRating;
+	int aliasRating, aliasRatingCount;
 	int sold = 0;
 
 	int expired = 0;
@@ -481,7 +481,7 @@ void OfferListPage::on_searchOffer_clicked(string GUID)
 			paymentoptions_str = "";
 			alias_peg_str = "";
 			safesearch_str = "";
-			aliasRating = 0;
+			aliasRating = aliasRatingCount = 0;
 			geolocation_str = "";
 			expired = 0;
 			sold = 0;
@@ -529,6 +529,9 @@ void OfferListPage::on_searchOffer_clicked(string GUID)
 			const UniValue& aliasRating_value = find_value(o, "alias_rating");
 			if (aliasRating_value.type() == UniValue::VNUM)
 				aliasRating = aliasRating_value.get_int();
+			const UniValue& aliasRatingCount_value = find_value(o, "alias_rating_count");
+			if (aliasRatingCount_value.type() == UniValue::VNUM)
+				aliasRatingCount = aliasRatingCount_value.get_int();
 			const UniValue& paymentoptions_value = find_value(o, "paymentoptions_display");
 			if (paymentoptions_value.type() == UniValue::VSTR)
 				paymentoptions_str = paymentoptions_value.get_str();
@@ -569,7 +572,7 @@ void OfferListPage::on_searchOffer_clicked(string GUID)
 					QString::fromStdString(exclusive_resell_str),
 					QString::fromStdString(private_str),
 					QString::fromStdString(alias_str),
-					aliasRating,
+					aliasRating, aliasRatingCount
 					QString::fromStdString(paymentoptions_str),
 					QString::fromStdString(alias_peg_str),
 					QString::fromStdString(safesearch_str),
@@ -587,7 +590,7 @@ void OfferListPage::on_searchOffer_clicked(string GUID)
 					QString::fromStdString(exclusive_resell_str),
 					QString::fromStdString(private_str), 
 					QString::fromStdString(alias_str), 
-					aliasRating,
+					aliasRating, aliasRatingCount
 					QString::fromStdString(paymentoptions_str),
 					QString::fromStdString(alias_peg_str), 
 					QString::fromStdString(safesearch_str),

@@ -332,7 +332,8 @@ void MyOfferListPage::on_exportButton_clicked()
 	writer.addColumn("Private", OfferTableModel::Private, Qt::EditRole);
 	writer.addColumn("Expired", OfferTableModel::Expired, Qt::EditRole);
 	writer.addColumn("Seller Alias", OfferTableModel::Alias, Qt::EditRole);
-	writer.addColumn("Seller Rating", OfferTableModel::AliasRating, Qt::EditRole);
+	writer.addColumn("Seller Rating", OfferTableModel::AliasRating, Qt::AliasRatingRole);
+	writer.addColumn("Seller Rating Count", OfferTableModel::AliasRating, Qt::AliasRatingCountRole);
 	writer.addColumn("Payment Options", OfferTableModel::PaymentOptions, Qt::EditRole);
     if(!writer.write())
     {

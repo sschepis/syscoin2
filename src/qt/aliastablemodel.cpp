@@ -299,7 +299,7 @@ AliasTableModel::AliasTableModel(CWallet *wallet, WalletModel *parent,  AliasMod
     QAbstractTableModel(parent),walletModel(parent),wallet(wallet),priv(0), modelType(type)
 {
 
-	columns << tr("Alias") << tr("Expires On") << tr("Expires In") << tr("Alias Status") << tr("Buyer Rating") << tr("Seller Rating") << tr("Arbiter Rating");		 
+	columns << tr("Alias") << tr("Expires On") << tr("Expires In") << tr("Alias Status") << tr("Rating As Buyer") << tr("Rating As Seller") << tr("Rating As Arbiter");		 
     priv = new AliasTablePriv(wallet, this);
 	refreshAliasTable();
 }
@@ -354,16 +354,11 @@ QVariant AliasTableModel::data(const QModelIndex &index, int role) const
         case SafeSearch:
             return rec->safesearch;
         case RatingAsBuyer:
-			return QVariant::fromValue(StarRating(rec->buyer_rating));
-			if(rec->buyer_ratingcount == 1)
-				ratingStr = tr("Rating");
-			else
-				ratingStr = tr("Ratings");
-			return QString::number(rec->buyer_rating) + " " + tr("Stars") + "(" + QString::number(rec->buyer_ratingcount) + " " +  ratingStr + ")";
+			return QVariant::fromValue(StarRating(rec->buyer_rating, 5, rec->buyer_ratingcount));
         case RatingAsSeller:
-			return QVariant::fromValue(StarRating(rec->seller_rating));
+			return QVariant::fromValue(StarRating(rec->seller_rating, 5, rec->seller_ratingcount));
         case RatingAsArbiter:
-			return QVariant::fromValue(StarRating(rec->arbiter_rating));
+			return QVariant::fromValue(StarRating(rec->arbiter_rating, 5, rec->arbiter_ratingcount));
         }
     }
     else if (role == TypeRole)
@@ -386,6 +381,30 @@ QVariant AliasTableModel::data(const QModelIndex &index, int role) const
     else if (role == SafeSearchRole)
     {
          return rec->safesearch;
+    }
+    else if (role == BuyerRatingRole)
+    {
+         return rec->buyer_rating;
+    }
+    else if (role == BuyerRatingCountRole)
+    {
+         return rec->buyer_ratingcount;
+    }
+    else if (role == SellerRatingRole)
+    {
+         return rec->seller_rating;
+    }
+    else if (role == SellerRatingCountRole)
+    {
+         return rec->seller_ratingcount;
+    }
+    else if (role == ArbiterRatingRole)
+    {
+         return rec->arbiter_rating;
+    }
+    else if (role == ArbiterRatingCountRole)
+    {
+         return rec->arbiter_ratingcount;
     }
     return QVariant();
 }

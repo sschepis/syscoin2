@@ -31,7 +31,7 @@ public:
 		OfferTitle = 6,
 		Total = 7,
 		Rating = 8,
-		Status = 9,
+		Status = 9
 		NUMBER_OF_COLUMNS
 
     };
@@ -45,7 +45,8 @@ public:
 		StatusRole,
 		OfferTitleRole,
 		TotalRole,
-		RatingRole
+		RatingRole,
+		RatingCountRole
     };
 
     /** Return status of edit/insert operation */
@@ -73,7 +74,7 @@ public:
     /* Add an escrow to the model.
        Returns the added escrow on success, and an empty string otherwise.
      */
-    QString addRow(const QString &escrow, const int itime, const QString &time, const QString &seller, const QString &arbiter, const QString &offer,const QString &offertitle, const QString &total, const int rating, const QString &status, const QString &buyer);
+    QString addRow(const QString &escrow, const int itime, const QString &time, const QString &seller, const QString &arbiter, const QString &offer,const QString &offertitle, const QString &total, const int rating, const int ratingcount, const QString &status, const QString &buyer);
 
     /* Look up row index of an escrow in the model.
        Return -1 if not found.
@@ -97,7 +98,7 @@ public Q_SLOTS:
 	void showComplete(bool show);
     /* Update escrow list from core.
      */
-    void updateEntry(const QString &escrow, const int itime, const QString &time, const QString &seller, const QString &arbiter, const QString &offer, const QString &offertitle, const QString &total, const int rating, const QString &status, const QString &buyer, EscrowModelType type, int statusi);
+    void updateEntry(const QString &escrow, const int itime, const QString &time, const QString &seller, const QString &arbiter, const QString &offer, const QString &offertitle, const QString &total, const int rating, const int ratingcount, const QString &status, const QString &buyer, EscrowModelType type, int statusi);
     friend class EscrowTablePriv;
 };
 
