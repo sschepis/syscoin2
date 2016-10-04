@@ -339,20 +339,20 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 			CreateFeeRecipient(scriptData, vchData, fee);
 			if (fee.nAmount > tx.vout[nDataOut].nValue) 
 			{
-				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 2 - " + _("Transaction does not pay enough fees");
+				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4001 - " + _("Transaction does not pay enough fees");
 				return error(errorMessage.c_str());
 			}
 		}			
 		if(vvchArgs.size() != 3)
 		{
-			errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4001 - " + _("Escrow arguments incorrect size");
+			errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4002 - " + _("Escrow arguments incorrect size");
 			return error(errorMessage.c_str());
 		}
 		if(!theEscrow.IsNull())
 		{
 			if(vvchArgs.size() <= 2 || vchHash != vvchArgs[2])
 			{
-				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4002 - " + _("Hash provided doesn't match the calculated hash the data");
+				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4003 - " + _("Hash provided doesn't match the calculated hash the data");
 				return error(errorMessage.c_str());
 			}
 		}
@@ -399,27 +399,27 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 	{
 		if (vvchArgs.empty() || vvchArgs[0].size() > MAX_GUID_LENGTH)
 		{
-			errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4002 - " + _("Escrow guid too big");
+			errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4004 - " + _("Escrow guid too big");
 			return error(errorMessage.c_str());
 		}
 		if(theEscrow.vchRedeemScript.size() > MAX_SCRIPT_ELEMENT_SIZE)
 		{
-			errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4003 - " + _("Escrow redeem script too long");
+			errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4005 - " + _("Escrow redeem script too long");
 			return error(errorMessage.c_str());
 		}
 		if(theEscrow.feedback.size() > 0 && theEscrow.feedback[0].vchFeedback.size() > MAX_VALUE_LENGTH)
 		{
-			errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4004 - " + _("Feedback too long");
+			errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4006 - " + _("Feedback too long");
 			return error(errorMessage.c_str());
 		}
 		if(theEscrow.feedback.size() > 1 && theEscrow.feedback[1].vchFeedback.size() > MAX_VALUE_LENGTH)
 		{
-			errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4005 - " + _("Feedback too long");
+			errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4007 - " + _("Feedback too long");
 			return error(errorMessage.c_str());
 		}
 		if(theEscrow.vchOffer.size() > MAX_ID_LENGTH)
 		{
-			errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4006 - " + _("Escrow offer guid too long");
+			errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4008 - " + _("Escrow offer guid too long");
 			return error(errorMessage.c_str());
 		}
 		if(!theEscrow.vchEscrow.empty() && theEscrow.vchEscrow != vvchArgs[0])
@@ -441,12 +441,12 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				}
 				if ((theEscrow.escrowInputTx.empty() && !theEscrow.txBTCId.IsNull()) || (theEscrow.txBTCId.IsNull() && !theEscrow.escrowInputTx.empty()))
 				{
-					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4011 - " + _("Not enough information to process BTC escrow payment");
+					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4012 - " + _("Not enough information to process BTC escrow payment");
 					return error(errorMessage.c_str());
 				}
 				if(!theEscrow.feedback.empty())
 				{
-					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4012 - " + _("Cannot leave feedback in escrow activation");
+					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4013 - " + _("Cannot leave feedback in escrow activation");
 					return error(errorMessage.c_str());
 				}
 				if(IsAliasOp(prevAliasOp) && vvchPrevAliasArgs[0] != theEscrow.vchBuyerAlias)
@@ -474,24 +474,24 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				}
 				if (vvchArgs.size() <= 1 || vvchArgs[1].size() > 1)
 				{
-					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4027 - " + _("Escrow release status too large");
+					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4018 - " + _("Escrow release status too large");
 					return error(errorMessage.c_str());
 				}
 				if(!theEscrow.feedback.empty())
 				{
-					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4018 - " + _("Cannot leave feedback in escrow release");
+					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4019 - " + _("Cannot leave feedback in escrow release");
 					return error(errorMessage.c_str());
 				}
 				if(vvchArgs[1] == vchFromString("1"))
 				{
 					if(prevOp != OP_ESCROW_RELEASE || vvchPrevArgs[1] != vchFromString("0"))
 					{
-						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4030 - " + _("Can only claim a released escrow");
+						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4020 - " + _("Can only claim a released escrow");
 						return error(errorMessage.c_str());
 					}
 					if(theEscrow.op != OP_ESCROW_COMPLETE)
 					{
-						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4031 - " + _("Invalid op, should be escrow complete");
+						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4021 - " + _("Invalid op, should be escrow complete");
 						return error(errorMessage.c_str());
 					}
 
@@ -500,12 +500,12 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				{
 					if(prevOp == OP_ESCROW_COMPLETE)
 					{
-						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4032 - " + _("Can only release an active escrow");
+						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4022 - " + _("Can only release an active escrow");
 						return error(errorMessage.c_str());
 					}
 					if(theEscrow.op != OP_ESCROW_RELEASE)
 					{
-						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4033 - " + _("Invalid op, should be escrow release");
+						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4023 - " + _("Invalid op, should be escrow release");
 						return error(errorMessage.c_str());
 					}
 				}
@@ -514,58 +514,58 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 			case OP_ESCROW_COMPLETE:
 				if(!IsAliasOp(prevAliasOp) || theEscrow.vchLinkAlias != vvchPrevAliasArgs[0] )
 				{
-					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4022 - " + _("Alias input mismatch");
+					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4024 - " + _("Alias input mismatch");
 					return error(errorMessage.c_str());
 				}
 				
 				if (theEscrow.op != OP_ESCROW_COMPLETE)
 				{
-					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4021 - " + _("Invalid op, should be escrow complete");
+					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4025 - " + _("Invalid op, should be escrow complete");
 					return error(errorMessage.c_str());
 				}
 				if(theEscrow.feedback.empty())
 				{
-					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4023 - " + _("Feedback must leave a message");
+					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4026 - " + _("Feedback must leave a message");
 					return error(errorMessage.c_str());
 				}
 						
 				if(theEscrow.op != OP_ESCROW_COMPLETE)
 				{
-					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4019 - " + _("Invalid op, should be escrow complete");
+					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4027 - " + _("Invalid op, should be escrow complete");
 					return error(errorMessage.c_str());
 				}
 				break;			
 			case OP_ESCROW_REFUND:
 				if(!IsAliasOp(prevAliasOp) || theEscrow.vchLinkAlias != vvchPrevAliasArgs[0] )
 				{
-					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4026 - " + _("Alias input missing");
+					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4028 - " + _("Alias input missing");
 					return error(errorMessage.c_str());
 				}
 				if (vvchArgs.size() <= 1 || vvchArgs[1].size() > 1)
 				{
-					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4027 - " + _("Escrow refund status too large");
+					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4029 - " + _("Escrow refund status too large");
 					return error(errorMessage.c_str());
 				}
 				if (vvchPrevArgs.empty() || vvchArgs.empty() || vvchPrevArgs[0] != vvchArgs[0])
 				{
-					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4028 - " + _("Escrow input guid mismatch");
+					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4030 - " + _("Escrow input guid mismatch");
 					return error(errorMessage.c_str());
 				}
 				if (theEscrow.vchEscrow != vvchArgs[0])
 				{
-					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4029 - " + _("Guid mismatch");
+					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4031 - " + _("Guid mismatch");
 					return error(errorMessage.c_str());
 				}
 				if(vvchArgs[1] == vchFromString("1"))
 				{
 					if(prevOp != OP_ESCROW_REFUND || vvchPrevArgs[1] != vchFromString("0"))
 					{
-						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4030 - " + _("Can only claim a refunded escrow");
+						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4032 - " + _("Can only claim a refunded escrow");
 						return error(errorMessage.c_str());
 					}
 					if(theEscrow.op != OP_ESCROW_COMPLETE)
 					{
-						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4031 - " + _("Invalid op, should be escrow complete");
+						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4033 - " + _("Invalid op, should be escrow complete");
 						return error(errorMessage.c_str());
 					}
 
@@ -574,19 +574,19 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				{
 					if(prevOp == OP_ESCROW_COMPLETE)
 					{
-						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4032 - " + _("Can only refund an active escrow");
+						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4034 - " + _("Can only refund an active escrow");
 						return error(errorMessage.c_str());
 					}
 					if(theEscrow.op != OP_ESCROW_REFUND)
 					{
-						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4033 - " + _("Invalid op, should be escrow refund");
+						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4035 - " + _("Invalid op, should be escrow refund");
 						return error(errorMessage.c_str());
 					}
 				}
 				// Check input
 				if(!theEscrow.feedback.empty())
 				{
-					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4034 - " + _("Cannot leave feedback in escrow refund");
+					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4036 - " + _("Cannot leave feedback in escrow refund");
 					return error(errorMessage.c_str());
 				}
 				
@@ -594,7 +594,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 
 				break;
 			default:
-				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4035 - " + _("Escrow transaction has unknown op");
+				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4037 - " + _("Escrow transaction has unknown op");
 				return error(errorMessage.c_str());
 		}
 	}
@@ -606,17 +606,17 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 		{
 			if(!GetTxOfAlias(theEscrow.vchBuyerAlias, alias, aliasTx))
 			{
-				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4036 - " + _("Cannot find buyer alias. It may be expired");
+				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4038 - " + _("Cannot find buyer alias. It may be expired");
 				return true;
 			}
 			if(!GetTxOfAlias(theEscrow.vchSellerAlias, alias, aliasTx))
 			{
-				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4037 - " + _("Cannot find seller alias. It may be expired");
+				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4039 - " + _("Cannot find seller alias. It may be expired");
 				return true;
 			}	
 			if(!GetTxOfAlias(theEscrow.vchArbiterAlias, alias, aliasTx))
 			{
-				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4038 - " + _("Cannot find arbiter alias. It may be expired");
+				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4040 - " + _("Cannot find arbiter alias. It may be expired");
 				return true;
 			}
 		}
@@ -629,7 +629,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 			CTransaction escrowTx;
 			if(!GetTxAndVtxOfEscrow(vvchArgs[0], theEscrow, escrowTx, vtxPos))	
 			{
-				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4039 - " + _("Failed to read from escrow DB");
+				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4041 - " + _("Failed to read from escrow DB");
 				return true;
 			}
 			
@@ -638,7 +638,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 			{
 				if (theEscrow.vchEscrow != vvchArgs[0])
 				{
-					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4040 - " + _("Escrow Guid mismatch");
+					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4042 - " + _("Escrow Guid mismatch");
 					return true;
 				}
 
@@ -650,23 +650,23 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				{
 					if(theEscrow.op == OP_ESCROW_COMPLETE)
 					{
-						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4041 - " + _("Can only refund an active escrow");
+						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4043 - " + _("Can only refund an active escrow");
 						return true;
 					}
 					else if(theEscrow.op == OP_ESCROW_RELEASE)
 					{
-						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4041 - " + _("Cannot refund an escrow that is already released");
+						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4044 - " + _("Cannot refund an escrow that is already released");
 						return true;
 					}
 					else if(serializedEscrow.vchLinkAlias != theEscrow.vchSellerAlias && serializedEscrow.vchLinkAlias != theEscrow.vchArbiterAlias)
 					{
-						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4041 - " + _("Only arbiter or seller can initiate an escrow refund");
+						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4045 - " + _("Only arbiter or seller can initiate an escrow refund");
 						return true;
 					}
 					// only the arbiter can re-refund an escrow
 					else if(theEscrow.op == OP_ESCROW_REFUND && serializedEscrow.vchLinkAlias != theEscrow.vchArbiterAlias)
 					{
-						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4043 - " + _("Only arbiter can refund an escrow after it has already been refunded");
+						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4046 - " + _("Only arbiter can refund an escrow after it has already been refunded");
 						return true;
 					}
 					// make sure offer is still valid and then refund qty
@@ -688,7 +688,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 									myLinkOffer.PutToOfferList(myLinkVtxPos);
 									if (!dontaddtodb && !pofferdb->WriteOffer(dbOffer.vchLinkOffer, myLinkVtxPos))
 									{
-										errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4044 - " + _("Failed to write to offer link to DB");
+										errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4047 - " + _("Failed to write to offer link to DB");
 										return error(errorMessage.c_str());
 									}					
 									// go through the linked offers, if any, and update the linked offer qty based on the this qty
@@ -702,7 +702,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 												offerLink.PutToOfferList(myVtxPos);
 												if (!dontaddtodb && !pofferdb->WriteOffer(myLinkOffer.offerLinks[i], myVtxPos))
 												{
-													errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4044a - " + _("Failed to write to offer link to DB");		
+													errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4048 - " + _("Failed to write to offer link to DB");		
 													return error(errorMessage.c_str());
 												}
 											}
@@ -721,7 +721,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 										offerLink.PutToOfferList(myVtxPos);
 										if (!dontaddtodb && !pofferdb->WriteOffer(dbOffer.offerLinks[i], myVtxPos))
 										{
-											errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4043a - " + _("Failed to write to offer link to DB");		
+											errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4049 - " + _("Failed to write to offer link to DB");		
 											return error(errorMessage.c_str());
 										}
 									}
@@ -733,7 +733,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 							dbOffer.PutToOfferList(myVtxPos);
 							if (!dontaddtodb && !pofferdb->WriteOffer(theEscrow.vchOffer, myVtxPos))
 							{
-								errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4045 - " + _("Failed to write to offer to DB");
+								errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4050 - " + _("Failed to write to offer to DB");
 								return error(errorMessage.c_str());
 							}
 						}			
@@ -745,7 +745,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 						theEscrow.redeemTxId = serializedEscrow.redeemTxId;
 					else if(serializedEscrow.vchLinkAlias != theEscrow.vchBuyerAlias)
 					{
-						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4042 - " + _("Only buyer can claim an escrow refund");
+						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4051 - " + _("Only buyer can claim an escrow refund");
 						return true;
 					}
 				}
@@ -753,23 +753,23 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				{
 					if(theEscrow.op == OP_ESCROW_COMPLETE)
 					{
-						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4041 - " + _("Can only release an active escrow");
+						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4052 - " + _("Can only release an active escrow");
 						return true;
 					}
 					else if(theEscrow.op == OP_ESCROW_REFUND)
 					{
-						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4041 - " + _("Cannot release an escrow that is already refunded");
+						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4053 - " + _("Cannot release an escrow that is already refunded");
 						return true;
 					}
 					else if(serializedEscrow.vchLinkAlias != theEscrow.vchBuyerAlias && serializedEscrow.vchLinkAlias != theEscrow.vchArbiterAlias)
 					{
-						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4041 - " + _("Only arbiter or buyer can initiate an escrow release");
+						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4054 - " + _("Only arbiter or buyer can initiate an escrow release");
 						return true;
 					}
 					// only the arbiter can re-release an escrow
 					else if(theEscrow.op == OP_ESCROW_RELEASE && serializedEscrow.vchLinkAlias != theEscrow.vchArbiterAlias)
 					{
-						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4043 - " + _("Only arbiter can release an escrow after it has already been released");
+						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4055 - " + _("Only arbiter can release an escrow after it has already been released");
 						return true;
 					}
 				}
@@ -779,7 +779,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 						theEscrow.redeemTxId = serializedEscrow.redeemTxId;
 					else if(serializedEscrow.vchLinkAlias != theEscrow.vchSellerAlias)
 					{
-						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4042 - " + _("Only seller can claim an escrow release");
+						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4056 - " + _("Only seller can claim an escrow release");
 						return true;
 					}
 				}
@@ -787,38 +787,38 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				{	
 					if(serializedEscrow.feedback.size() != 2)
 					{
-						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4046 - " + _("Invalid number of escrow feedbacks provided");
+						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4057 - " + _("Invalid number of escrow feedbacks provided");
 						return true;
 					}
 					if(serializedEscrow.feedback[0].nFeedbackUserFrom ==  serializedEscrow.feedback[0].nFeedbackUserTo ||
 						serializedEscrow.feedback[1].nFeedbackUserFrom ==  serializedEscrow.feedback[1].nFeedbackUserTo)
 					{
-						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4047 - " + _("Cannot send yourself feedback");
+						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4058 - " + _("Cannot send yourself feedback");
 						return true;
 					}
 					else if(serializedEscrow.feedback[0].vchFeedback.size() <= 0 && serializedEscrow.feedback[1].vchFeedback.size() <= 0)
 					{
-						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4048 - " + _("Feedback must leave a message");
+						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4059 - " + _("Feedback must leave a message");
 						return true;
 					}
 					else if(serializedEscrow.feedback[0].nRating > 5 || serializedEscrow.feedback[1].nRating > 5)
 					{
-						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4049 - " + _("Invalid rating, must be less than or equal to 5 and greater than or equal to 0");
+						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4060 - " + _("Invalid rating, must be less than or equal to 5 and greater than or equal to 0");
 						return true;
 					}
 					else if((serializedEscrow.feedback[0].nFeedbackUserFrom == FEEDBACKBUYER || serializedEscrow.feedback[1].nFeedbackUserFrom == FEEDBACKBUYER) && serializedEscrow.vchLinkAlias != theEscrow.vchBuyerAlias)
 					{
-						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4050 - " + _("Only buyer can leave this feedback");
+						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4061 - " + _("Only buyer can leave this feedback");
 						return true;
 					}
 					else if((serializedEscrow.feedback[0].nFeedbackUserFrom == FEEDBACKSELLER || serializedEscrow.feedback[1].nFeedbackUserFrom == FEEDBACKSELLER) && serializedEscrow.vchLinkAlias != theEscrow.vchSellerAlias)
 					{
-						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4051 - " + _("Only seller can leave this feedback");
+						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4062 - " + _("Only seller can leave this feedback");
 						return true;
 					}
 					else if((serializedEscrow.feedback[0].nFeedbackUserFrom == FEEDBACKARBITER || serializedEscrow.feedback[0].nFeedbackUserFrom == FEEDBACKARBITER) && serializedEscrow.vchLinkAlias != theEscrow.vchArbiterAlias)
 					{
-						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4052 - " + _("Only arbiter can leave this feedback");
+						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4063 - " + _("Only arbiter can leave this feedback");
 						return true;
 					}
 					serializedEscrow.feedback[0].nHeight = nHeight;
@@ -853,17 +853,17 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 
 					if(feedbackBuyerCount >= 10 && (serializedEscrow.feedback[0].nFeedbackUserFrom == FEEDBACKBUYER || serializedEscrow.feedback[1].nFeedbackUserFrom == FEEDBACKBUYER))
 					{
-						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4053 - " + _("Cannot exceed 10 buyer feedbacks");
+						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4064 - " + _("Cannot exceed 10 buyer feedbacks");
 						return true;
 					}
 					else if(feedbackSellerCount >= 10 && (serializedEscrow.feedback[0].nFeedbackUserFrom == FEEDBACKSELLER || serializedEscrow.feedback[1].nFeedbackUserFrom == FEEDBACKSELLER))
 					{
-						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4054 - " + _("Cannot exceed 10 seller feedbacks");
+						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4065 - " + _("Cannot exceed 10 seller feedbacks");
 						return true;
 					}
 					else if(feedbackArbiterCount >= 10 && (serializedEscrow.feedback[0].nFeedbackUserFrom == FEEDBACKARBITER || serializedEscrow.feedback[1].nFeedbackUserFrom == FEEDBACKARBITER))
 					{
-						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4055 - " + _("Cannot exceed 10 arbiter feedbacks");
+						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4066 - " + _("Cannot exceed 10 arbiter feedbacks");
 						return true;
 					}
 					if(!dontaddtodb)
@@ -873,7 +873,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 			}
 			else
 			{
-				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4056 - " + _("Escrow not found when trying to update");
+				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4067 - " + _("Escrow not found when trying to update");
 				return true;
 			}
 					
@@ -883,19 +883,19 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 
 			if (pescrowdb->ExistsEscrow(vvchArgs[0]))
 			{
-				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4057 - " + _("Escrow already exists");
+				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4068 - " + _("Escrow already exists");
 				return true;
 			}
 			if(!theEscrow.txBTCId.IsNull())
 			{
 				if(pescrowdb->ExistsEscrowTx(theEscrow.txBTCId) || pofferdb->ExistsOfferTx(theEscrow.txBTCId))
 				{
-					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 122 - " + _("BTC Transaction ID specified was already used to pay for an offer");
+					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4069 - " + _("BTC Transaction ID specified was already used to pay for an offer");
 					return true;
 				}
 				if(!dontaddtodb && !pescrowdb->WriteEscrowTx(theEscrow.vchEscrow, theEscrow.txBTCId))
 				{
-					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4058a - " + _("Failed to BTC Transaction ID to DB");		
+					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4070 - " + _("Failed to BTC Transaction ID to DB");		
 					return error(errorMessage.c_str());
 				}
 			}
@@ -910,7 +910,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				dbOffer.GetOfferFromList(myVtxPos);
 				if(dbOffer.sCategory.size() > 0 && boost::algorithm::starts_with(stringFromVch(dbOffer.sCategory), "wanted"))
 				{
-					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4058 - " + _("Cannot purchase a wanted offer");
+					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4071 - " + _("Cannot purchase a wanted offer");
 					return true;
 				}
 				else if(dbOffer.nQty != -1)
@@ -929,7 +929,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 							myLinkOffer.PutToOfferList(myLinkVtxPos);
 							if (!dontaddtodb && !pofferdb->WriteOffer(dbOffer.vchLinkOffer, myLinkVtxPos))
 							{
-								errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4059 - " + _("Failed to write to offer link to DB");
+								errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4072 - " + _("Failed to write to offer link to DB");
 								return true;
 							}
 							// go through the linked offers, if any, and update the linked offer qty based on the this qty
@@ -943,7 +943,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 										offerLink.PutToOfferList(myVtxPos);
 										if (!dontaddtodb && !pofferdb->WriteOffer(myLinkOffer.offerLinks[i], myVtxPos))
 										{
-											errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4059a - " + _("Failed to write to offer link to DB");		
+											errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4073 - " + _("Failed to write to offer link to DB");		
 											return error(errorMessage.c_str());
 										}
 									}
@@ -962,7 +962,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 								offerLink.PutToOfferList(myVtxPos);
 								if (!dontaddtodb && !pofferdb->WriteOffer(dbOffer.offerLinks[i], myVtxPos))
 								{
-									errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4058a - " + _("Failed to write to offer link to DB");		
+									errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4074 - " + _("Failed to write to offer link to DB");		
 									return error(errorMessage.c_str());
 								}
 							}
@@ -974,14 +974,14 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 					dbOffer.PutToOfferList(myVtxPos);
 					if (!dontaddtodb && !pofferdb->WriteOffer(theEscrow.vchOffer, myVtxPos))
 					{
-						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4060 - " + _("Failed to write to offer to DB");
+						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4075 - " + _("Failed to write to offer to DB");
 						return true;
 					}			
 				}
 			}
 			else
 			{
-				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4058 - " + _("Cannot find offer for this escrow. It may be expired");
+				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4076 - " + _("Cannot find offer for this escrow. It may be expired");
 				return true;
 			}
 		}
@@ -995,7 +995,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 		
         if (!dontaddtodb && !pescrowdb->WriteEscrow(vvchArgs[0], vtxPos))
 		{
-			errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4061 - " + _("Failed to write to escrow DB");
+			errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4077 - " + _("Failed to write to escrow DB");
 			return true;
 		}
 		if(fDebug)
@@ -1069,29 +1069,29 @@ UniValue generateescrowmultisig(const UniValue& params, bool fHelp) {
 	try {
 		nQty = boost::lexical_cast<unsigned int>(params[2].get_str());
 	} catch (std::exception &e) {
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4064 - " + _("Invalid quantity value. Quantity must be less than 4294967296."));
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4500 - " + _("Invalid quantity value. Quantity must be less than 4294967296."));
 	}
 	vector<unsigned char> vchArbiter = vchFromValue(params[3]);
 
 	CAliasIndex arbiteralias;
 	CTransaction arbiteraliastx;
 	if (!GetTxOfAlias(vchArbiter, arbiteralias, arbiteraliastx))
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4062 - " + _("Failed to read arbiter alias from DB"));
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4501 - " + _("Failed to read arbiter alias from DB"));
 
 	CAliasIndex buyeralias;
 	CTransaction buyeraliastx;
 	if (!GetTxOfAlias(vchBuyer, buyeralias, buyeraliastx))
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4062 - " + _("Failed to read arbiter alias from DB"));
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4502 - " + _("Failed to read arbiter alias from DB"));
 	
 	CTransaction txOffer, txAlias;
 	vector<COffer> offerVtxPos;
 	COffer theOffer, linkedOffer;
 	if (!GetTxAndVtxOfOffer( vchOffer, theOffer, txOffer, offerVtxPos, true))
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4068 - " + _("Could not find an offer with this identifier"));
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4503 - " + _("Could not find an offer with this identifier"));
 
 	CAliasIndex selleralias;
 	if (!GetTxOfAlias( theOffer.vchAlias, selleralias, txAlias, true))
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4069 - " + _("Could not find seller alias with this identifier"));
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4504 - " + _("Could not find seller alias with this identifier"));
 	
 	COfferLinkWhitelistEntry foundEntry;
 	if(!theOffer.vchLinkOffer.empty())
@@ -1099,12 +1099,12 @@ UniValue generateescrowmultisig(const UniValue& params, bool fHelp) {
 		CTransaction tmpTx;
 		vector<COffer> offerTmpVtxPos;
 		if (!GetTxAndVtxOfOffer( theOffer.vchLinkOffer, linkedOffer, tmpTx, offerTmpVtxPos, true))
-			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4072 - " + _("Trying to accept a linked offer but could not find parent offer"));
+			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4505 - " + _("Trying to accept a linked offer but could not find parent offer"));
 
 		CAliasIndex theLinkedAlias;
 		CTransaction txLinkedAlias;
 		if (!GetTxOfAlias( linkedOffer.vchAlias, theLinkedAlias, txLinkedAlias, true))
-			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4073 - " + _("Could not find an alias with this identifier"));
+			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4506 - " + _("Could not find an alias with this identifier"));
 		
 
 		selleralias = theLinkedAlias;
@@ -1141,7 +1141,7 @@ UniValue generateescrowmultisig(const UniValue& params, bool fHelp) {
 		throw runtime_error(find_value(objError, "message").get_str());
 	}
 	if (!resCreate.isObject())
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4079 - " + _("Could not create escrow transaction: Invalid response from createescrow"));
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4507 - " + _("Could not create escrow transaction: Invalid response from createescrow"));
 
 	int precision = 2;
 	
@@ -1179,7 +1179,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	CAliasIndex arbiteralias;
 	CTransaction aliastx, buyeraliastx;
 	if (!GetTxOfAlias(vchFromString(strArbiter), arbiteralias, aliastx))
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4062 - " + _("Failed to read arbiter alias from DB"));
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4508 - " + _("Failed to read arbiter alias from DB"));
 	
 
 	vector<unsigned char> vchMessage = vchFromValue(params[3]);
@@ -1193,13 +1193,13 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 		nHeight = boost::lexical_cast<uint64_t>(params[7].get_str());
 	CTransaction rawTx;
 	if (!vchBTCTx.empty() && !DecodeHexTx(rawTx,stringFromVch(vchBTCTx)))
-			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4064 - " + _("Could not find decode raw BTC transaction"));
+			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4509 - " + _("Could not find decode raw BTC transaction"));
 	unsigned int nQty = 1;
 
 	try {
 		nQty = boost::lexical_cast<unsigned int>(params[2].get_str());
 	} catch (std::exception &e) {
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4064 - " + _("Invalid quantity value. Quantity must be less than 4294967296."));
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4510 - " + _("Invalid quantity value. Quantity must be less than 4294967296."));
 	}
 
     if (vchMessage.size() <= 0)
@@ -1208,32 +1208,32 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 
 	CAliasIndex buyeralias;
 	if (!GetTxOfAlias(vchAlias, buyeralias, buyeraliastx))
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4065 - " + _("Could not find buyer alias with this name"));
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4511 - " + _("Could not find buyer alias with this name"));
 
 	CPubKey buyerKey(buyeralias.vchPubKey);
     if(!IsSyscoinTxMine(buyeraliastx, "alias")) {
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4066 - " + _("This alias is not yours."));
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4512 - " + _("This alias is not yours."));
     }
 	if (pwalletMain->GetWalletTx(buyeraliastx.GetHash()) == NULL)
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4067 - " + _("This alias is not in your wallet"));
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4513 - " + _("This alias is not in your wallet"));
 
 	COffer theOffer, linkedOffer;
 	
 	CTransaction txOffer, txAlias;
 	vector<COffer> offerVtxPos;
 	if (!GetTxAndVtxOfOffer( vchOffer, theOffer, txOffer, offerVtxPos, true))
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4068 - " + _("Could not find an offer with this identifier"));
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4514 - " + _("Could not find an offer with this identifier"));
 
 	CAliasIndex selleralias;
 	if (!GetTxOfAlias( theOffer.vchAlias, selleralias, txAlias, true))
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4069 - " + _("Could not find seller alias with this identifier"));
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4515 - " + _("Could not find seller alias with this identifier"));
 
 	unsigned int memPoolQty = QtyOfPendingAcceptsInMempool(vchOffer);
 	if(theOffer.nQty != -1 && theOffer.nQty < (nQty+memPoolQty))
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4070 - " + _("Not enough remaining quantity to fulfill this escrow"));
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4516 - " + _("Not enough remaining quantity to fulfill this escrow"));
 
 	if(theOffer.sCategory.size() > 0 && boost::algorithm::starts_with(stringFromVch(theOffer.sCategory), "wanted"))
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4071 - " + _("Cannot purchase a wanted offer"));
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4517 - " + _("Cannot purchase a wanted offer"));
 
 	const CWalletTx *wtxAliasIn = NULL;
 
@@ -1245,14 +1245,14 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 		CTransaction tmpTx;
 		vector<COffer> offerTmpVtxPos;
 		if (!GetTxAndVtxOfOffer( theOffer.vchLinkOffer, linkedOffer, tmpTx, offerTmpVtxPos, true))
-			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4072 - " + _("Trying to accept a linked offer but could not find parent offer"));
+			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4518 - " + _("Trying to accept a linked offer but could not find parent offer"));
 
 		CAliasIndex theLinkedAlias;
 		CTransaction txLinkedAlias;
 		if (!GetTxOfAlias( linkedOffer.vchAlias, theLinkedAlias, txLinkedAlias, true))
-			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4073 - " + _("Could not find an alias with this identifier"));
+			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4519 - " + _("Could not find an alias with this identifier"));
 		if(linkedOffer.sCategory.size() > 0 && boost::algorithm::starts_with(stringFromVch(linkedOffer.sCategory), "wanted"))
-			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4074a - " + _("Cannot purchase a wanted offer"));
+			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4520 - " + _("Cannot purchase a wanted offer"));
 	
 		
 		selleralias = theLinkedAlias;
@@ -1287,10 +1287,10 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	string strCipherText = "";
 	// encrypt to offer owner
 	if(!EncryptMessage(selleralias.vchPubKey, vchMessage, strCipherText))
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4075 - " + _("Could not encrypt message to seller"));
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4521 - " + _("Could not encrypt message to seller"));
 	
 	if (strCipherText.size() > MAX_ENCRYPTED_VALUE_LENGTH)
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4076 - " + _("Payment message length cannot exceed 1023 bytes"));
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4522 - " + _("Payment message length cannot exceed 1023 bytes"));
 
 	CPubKey ArbiterPubKey(arbiteralias.vchPubKey);
 	CPubKey SellerPubKey(selleralias.vchPubKey);
@@ -1317,7 +1317,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 			throw runtime_error(find_value(objError, "message").get_str());
 		}
 		if (!resCreate.isObject())
-			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4079 - " + _("Could not generate escrow multisig address: Invalid response from generateescrowmultisig"));
+			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4523 - " + _("Could not generate escrow multisig address: Invalid response from generateescrowmultisig"));
 		const UniValue &o = resCreate.get_obj();
 		const UniValue& redeemScript_value = find_value(o, "redeemScript");
 		if (redeemScript_value.isStr())
@@ -1325,7 +1325,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 			redeemScript = ParseHex(redeemScript_value.get_str());
 		}
 		else
-			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4080 - " + _("Could not create escrow transaction: could not find redeem script in response"));
+			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4524 - " + _("Could not create escrow transaction: could not find redeem script in response"));
 	}
 	else
 	{
@@ -1433,14 +1433,14 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	vector<CEscrow> vtxPos;
     if (!GetTxAndVtxOfEscrow( vchEscrow, 
 		escrow, tx, vtxPos))
-        throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4099 - " + _("Could not find a escrow with this key"));
+        throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4525 - " + _("Could not find a escrow with this key"));
 	const CWalletTx *wtxIn = pwalletMain->GetWalletTx(tx.GetHash());
 	if (wtxIn == NULL)
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4083 - " + _("This escrow is not in your wallet"));
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4526 - " + _("This escrow is not in your wallet"));
 
     CTransaction fundingTx;
 	if (!GetSyscoinTransaction(vtxPos.front().nHeight, vtxPos.front().txHash, fundingTx, Params().GetConsensus()))
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4086 - " + _("Failed to find escrow transaction"));
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4527 - " + _("Failed to find escrow transaction"));
 	bool foundWhitelistAlias = false;
 	for (unsigned int i = 0; i < fundingTx.vin.size(); i++) {
 		vector<vector<unsigned char> > vvchIn;
@@ -1492,7 +1492,7 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	CTransaction txOffer;
 	vector<COffer> offerVtxPos;
 	if (!GetTxAndVtxOfOffer( escrow.vchOffer, theOffer, txOffer, offerVtxPos, true))
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4068 - " + _("Could not find an offer with this identifier"));
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4528 - " + _("Could not find an offer with this identifier"));
 	theOffer.nHeight = vtxPos.front().nAcceptHeight;
 	theOffer.GetOfferFromList(offerVtxPos);
 	CAmount nCommission;		
@@ -1507,7 +1507,7 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	{
 		vector<COffer> offerLinkVtxPos;
 		if (!GetTxAndVtxOfOffer( theOffer.vchLinkOffer, linkOffer, txOffer, offerLinkVtxPos, true))
-			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4068 - " + _("Could not find an offer with this identifier"));
+			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4529 - " + _("Could not find an offer with this identifier"));
 		linkOffer.nHeight = vtxPos.front().nAcceptHeight;
 		linkOffer.GetOfferFromList(offerLinkVtxPos);
 
@@ -1538,7 +1538,7 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 		int nBTCFeePerByte = getFeePerByte(theOffer.vchAliasPeg, vchFromString("BTC"),  vtxPos.front().nAcceptHeight, precision);
 		nEscrowTotal =  nExpectedAmount + nEscrowFee + (nBTCFeePerByte*400);
 		if (!DecodeHexTx(fundingTx, escrow.escrowInputTx))
-			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4064 - " + _("Could not find the escrow funding transaction in the blockchain database."));
+			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4530 - " + _("Could not find the escrow funding transaction in the blockchain database."));
 	}
 
 	for(unsigned int i=0;i<fundingTx.vout.size();i++)
@@ -1551,7 +1551,7 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	} 
 	CAmount nAmount = fundingTx.vout[nOutMultiSig].nValue;
 	if(nAmount != nEscrowTotal)
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4088 - " + _("Expected amount of escrow does not match what is held in escrow. Expected amount: ") +  boost::lexical_cast<string>(nEscrowTotal));
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4531 - " + _("Expected amount of escrow does not match what is held in escrow. Expected amount: ") +  boost::lexical_cast<string>(nEscrowTotal));
 
 	string strEscrowScriptPubKey = HexStr(fundingTx.vout[nOutMultiSig].scriptPubKey.begin(), fundingTx.vout[nOutMultiSig].scriptPubKey.end());
 
@@ -1565,14 +1565,14 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 		// try arbiter
 		CKeyID keyID;
 		if (!arbiterAddress.GetKeyID(keyID))
-			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4091 - " + _("Arbiter address does not refer to a key"));
+			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4532 - " + _("Arbiter address does not refer to a key"));
 		CKey vchSecret;
 		if (!pwalletMain->GetKey(keyID, vchSecret))
-			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4092 - " + _("Private key for arbiter address is not known"));
+			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4533 - " + _("Private key for arbiter address is not known"));
 		strPrivateKey = CSyscoinSecret(vchSecret).ToString();
 		wtxAliasIn = pwalletMain->GetWalletTx(arbiteraliastx.GetHash());
 		if (wtxAliasIn == NULL)
-			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR ERRCODE: 4093 - This alias is not in your wallet");
+			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR ERRCODE: 4534 - This alias is not in your wallet");
 		CScript scriptPubKeyOrig;
 		scriptPubKeyOrig= GetScriptForDestination(arbiterKey.GetID());
 			
@@ -1587,14 +1587,14 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 		// otherwise try buyer
 		CKeyID keyID;
 		if (!buyerAddress.GetKeyID(keyID))
-			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4094 - " + _("Buyer or Arbiter address does not refer to a key"));
+			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4535 - " + _("Buyer or Arbiter address does not refer to a key"));
 		CKey vchSecret;
 		if (!pwalletMain->GetKey(keyID, vchSecret))
-			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4095 - " + _("Buyer or Arbiter private keys not known"));
+			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4536 - " + _("Buyer or Arbiter private keys not known"));
 		strPrivateKey = CSyscoinSecret(vchSecret).ToString();
 		wtxAliasIn = pwalletMain->GetWalletTx(buyeraliastx.GetHash());
 		if (wtxAliasIn == NULL)
-			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR ERRCODE: 524 - This alias is not in your wallet");
+			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR ERRCODE: 4537 - This alias is not in your wallet");
 		CScript scriptPubKeyOrig;
 		scriptPubKeyOrig= GetScriptForDestination(buyerKey.GetID());
 			
@@ -1651,7 +1651,7 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 		throw runtime_error(find_value(objError, "message").get_str());
 	}	
 	if (!resCreate.isStr())
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4096 - " + _("Could not create escrow transaction: Invalid response from createrawtransaction"));
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4538 - " + _("Could not create escrow transaction: Invalid response from createrawtransaction"));
 	string createEscrowSpendingTx = resCreate.get_str();
 
 	// Buyer/Arbiter signs it
@@ -1676,10 +1676,10 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	}
 	catch (UniValue& objError)
 	{
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4097 - " + _("Could not sign escrow transaction: ") + find_value(objError, "message").get_str());
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4539 - " + _("Could not sign escrow transaction: ") + find_value(objError, "message").get_str());
 	}	
 	if (!res.isObject())
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4098 - " + _("Could not sign escrow transaction: Invalid response from signrawtransaction"));
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4540 - " + _("Could not sign escrow transaction: Invalid response from signrawtransaction"));
 	
 	const UniValue& o = res.get_obj();
 	string hex_str = "";
@@ -1754,7 +1754,7 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 	vector<CEscrow> vtxPos;
     if (!GetTxAndVtxOfEscrow( vchEscrow, 
 		escrow, tx, vtxPos))
-        throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4099 - " + _("Could not find a escrow with this key"));
+        throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4541 - " + _("Could not find a escrow with this key"));
 
 	CAliasIndex sellerAlias, buyerAlias, arbiterAlias, resellerAlias;
 	vector<CAliasIndex> aliasVtxPos;
@@ -1779,7 +1779,7 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 	}
     CTransaction fundingTx;
 	if (!GetSyscoinTransaction(vtxPos.front().nHeight,vtxPos.front().txHash, fundingTx, Params().GetConsensus()))
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4100 - " + _("Failed to find escrow transaction"));
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4542 - " + _("Failed to find escrow transaction"));
 	bool foundWhitelistAlias = false;
 	for (unsigned int i = 0; i < fundingTx.vin.size(); i++) {
 		vector<vector<unsigned char> > vvchIn;
@@ -1800,7 +1800,7 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 	CTransaction txOffer;
 	vector<COffer> offerVtxPos;
 	if (!GetTxAndVtxOfOffer( escrow.vchOffer, theOffer, txOffer, offerVtxPos, true))
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4068 - " + _("Could not find an offer with this identifier"));
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4543 - " + _("Could not find an offer with this identifier"));
 	theOffer.nHeight = vtxPos.front().nAcceptHeight;
 	theOffer.GetOfferFromList(offerVtxPos);
 	CAmount nCommission;		
@@ -1815,7 +1815,7 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 	{
 		vector<COffer> offerLinkVtxPos;
 		if (!GetTxAndVtxOfOffer( theOffer.vchLinkOffer, linkOffer, txOffer, offerLinkVtxPos, true))
-			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4068 - " + _("Could not find an offer with this identifier"));
+			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4544 - " + _("Could not find an offer with this identifier"));
 		linkOffer.nHeight = vtxPos.front().nAcceptHeight;
 		linkOffer.GetOfferFromList(offerLinkVtxPos);
 
@@ -1846,7 +1846,7 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 		int nBTCFeePerByte = getFeePerByte(theOffer.vchAliasPeg, vchFromString("BTC"),  vtxPos.front().nAcceptHeight, precision);
 		nEscrowTotal =  nExpectedAmount + nEscrowFee + (nBTCFeePerByte*400);
 		if (!DecodeHexTx(fundingTx, escrow.escrowInputTx))
-			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4064 - " + _("Could not find the escrow funding transaction in the blockchain database."));
+			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4545 - " + _("Could not find the escrow funding transaction in the blockchain database."));
 	}	
 	for(unsigned int i=0;i<fundingTx.vout.size();i++)
 	{
@@ -1858,7 +1858,7 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 	} 
 	CAmount nAmount = fundingTx.vout[nOutMultiSig].nValue;
 	if(nAmount != nEscrowTotal)
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4088 - " + _("Expected amount of escrow does not match what is held in escrow. Expected amount: ") +  boost::lexical_cast<string>(nEscrowTotal));
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4546 - " + _("Expected amount of escrow does not match what is held in escrow. Expected amount: ") +  boost::lexical_cast<string>(nEscrowTotal));
 
 	string strEscrowScriptPubKey = HexStr(fundingTx.vout[nOutMultiSig].scriptPubKey.begin(), fundingTx.vout[nOutMultiSig].scriptPubKey.end());
 
@@ -1878,33 +1878,33 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 	}
 	if (!decodeRes.isObject())
 	{
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4102 - " + _("Could not decode escrow transaction: Invalid response from decoderawtransaction"));
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4547 - " + _("Could not decode escrow transaction: Invalid response from decoderawtransaction"));
 	}
 	const UniValue& decodeo = decodeRes.get_obj();
 	const UniValue& vout_value = find_value(decodeo, "vout");
 	if (!vout_value.isArray())
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4102 - " + _("Could not decode escrow transaction: Cannot find VOUT from transaction"));	
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4548 - " + _("Could not decode escrow transaction: Cannot find VOUT from transaction"));	
 	const UniValue &vouts = vout_value.get_array();
     for (unsigned int idx = 0; idx < vouts.size(); idx++) {
         const UniValue& vout = vouts[idx];					
 		const UniValue &voutObj = vout.get_obj();					
 		const UniValue &voutValue = find_value(voutObj, "value");
 		if(!voutValue.isNum())
-			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4102 - " + _("Could not decode escrow transaction: Invalid VOUT value"));
+			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4549 - " + _("Could not decode escrow transaction: Invalid VOUT value"));
 		int64_t iVout = AmountFromValue(voutValue);
 		UniValue scriptPubKeyValue = find_value(voutObj, "scriptPubKey");
 		if(!scriptPubKeyValue.isObject())
-			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4102 - " + _("Could not decode escrow transaction: Invalid scriptPubKey value"));
+			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4550 - " + _("Could not decode escrow transaction: Invalid scriptPubKey value"));
 		const UniValue &scriptPubKeyValueObj = scriptPubKeyValue.get_obj();	
 		const UniValue &addressesValue = find_value(scriptPubKeyValueObj, "addresses");
 		if(!addressesValue.isArray())
-			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4102 - " + _("Could not decode escrow transaction: Invalid addresses"));
+			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4551 - " + _("Could not decode escrow transaction: Invalid addresses"));
 
 		const UniValue &addresses = addressesValue.get_array();
 		for (unsigned int idx = 0; idx < addresses.size(); idx++) {
 			const UniValue& address = addresses[idx];
 			if(!address.isStr())
-				throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4102 - " + _("Could not decode escrow transaction: Invalid address"));
+				throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4552 - " + _("Could not decode escrow transaction: Invalid address"));
 			const string &strAddress = address.get_str();
 			CSyscoinAddress payoutAddress(strAddress);
 			// check arb fee is paid to arbiter or buyer
@@ -1946,18 +1946,18 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 		}
 	}
 	if(!foundSellerPayment)
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4102 - " + _("Expected payment amount not found in escrow"));	
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4553 - " + _("Expected payment amount not found in escrow"));	
 	if(!foundFeePayment)    
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4102 - " + _("Expected fee payment to arbiter or buyer not found in escrow"));	
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4554 - " + _("Expected fee payment to arbiter or buyer not found in escrow"));	
 	if(!theOffer.vchLinkOffer.empty() && !foundCommissionPayment)
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4102 - " + _("Expected commission to affiliate not found in escrow"));	
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4555 - " + _("Expected commission to affiliate not found in escrow"));	
 	
 	CKeyID keyID;
 	if (!sellerAddress.GetKeyID(keyID))
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4103 - " + _("Seller address does not refer to a key"));
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4556 - " + _("Seller address does not refer to a key"));
 	CKey vchSecret;
 	if (!pwalletMain->GetKey(keyID, vchSecret))
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4104 - " + _("Private key for seller address is not known"));
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4557 - " + _("Private key for seller address is not known"));
 
 	const string &strPrivateKey = CSyscoinSecret(vchSecret).ToString();
     // Seller signs it
@@ -1981,10 +1981,10 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 	}
 	catch (UniValue& objError)
 	{
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4105 - " + _("Could not sign escrow transaction: ") + find_value(objError, "message").get_str());
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4558 - " + _("Could not sign escrow transaction: ") + find_value(objError, "message").get_str());
 	}	
 	if (!res.isObject())
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4106 - " + _("Could not sign escrow transaction: Invalid response from signrawtransaction"));
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4559 - " + _("Could not sign escrow transaction: Invalid response from signrawtransaction"));
 	
 	const UniValue& o = res.get_obj();
 	string hex_str = "";
@@ -1999,7 +1999,7 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 		bComplete = complete_value.get_bool();
 
 	if(!bComplete)
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4107 - " + _("Could not sign escrow transaction. It is showing as incomplete, you may not allowed to complete this request at this time"));
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4560 - " + _("Could not sign escrow transaction. It is showing as incomplete, you may not allowed to complete this request at this time"));
 
 	CTransaction rawTx;
 	DecodeHexTx(rawTx,hex_str);
@@ -2031,7 +2031,7 @@ UniValue escrowcompleterelease(const UniValue& params, bool fHelp) {
 	CEscrow escrow;
     if (!GetTxOfEscrow( vchEscrow, 
 		escrow, tx))
-        throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4116 - " + _("Could not find a escrow with this key"));
+        throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4561 - " + _("Could not find a escrow with this key"));
 
 	bool btcPayment = false;
 	if (!escrow.escrowInputTx.empty())
@@ -2039,17 +2039,17 @@ UniValue escrowcompleterelease(const UniValue& params, bool fHelp) {
 
 	const CWalletTx *wtxIn = pwalletMain->GetWalletTx(tx.GetHash());
 	if (wtxIn == NULL)
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4118 - " + _("This escrow is not in your wallet"));
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4562 - " + _("This escrow is not in your wallet"));
     // unserialize escrow from txn
     CEscrow theEscrow;
     if(!theEscrow.UnserializeFromTx(tx))
-        throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4119 - " + _("Cannot unserialize escrow from transaction"));
+        throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4563 - " + _("Cannot unserialize escrow from transaction"));
 	vector<CEscrow> vtxPos;
 	if (!pescrowdb->ReadEscrow(vchEscrow, vtxPos) || vtxPos.empty())
-		  throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4120 - " + _("Failed to read from escrow DB"));
+		  throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4564 - " + _("Failed to read from escrow DB"));
     CTransaction fundingTx;
 	if (!GetSyscoinTransaction(vtxPos.front().nHeight, vtxPos.front().txHash, fundingTx, Params().GetConsensus()))
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4121 - " + _("Failed to find escrow transaction"));
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4565 - " + _("Failed to find escrow transaction"));
 
 	CAliasIndex sellerAlias, buyerAlias, arbiterAlias, resellerAlias;
 	vector<CAliasIndex> aliasVtxPos;
@@ -2087,14 +2087,14 @@ UniValue escrowcompleterelease(const UniValue& params, bool fHelp) {
 	// otherwise try seller
 	CKeyID keyID;
 	if (!sellerAddress.GetKeyID(keyID))
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4129 - " + _("Seller address does not refer to a key"));
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4566 - " + _("Seller address does not refer to a key"));
 	CKey vchSecret;
 	if (!pwalletMain->GetKey(keyID, vchSecret))
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4130 - " + _("Seller private keys not known"));
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4567 - " + _("Seller private keys not known"));
 	strPrivateKey = CSyscoinSecret(vchSecret).ToString();
 	wtxAliasIn = pwalletMain->GetWalletTx(selleraliastx.GetHash());
 	if (wtxAliasIn == NULL)
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR ERRCODE: 4131 - This alias is not in your wallet");
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR ERRCODE: 4568 - This alias is not in your wallet");
 	CScript scriptPubKeyOrig;
 	scriptPubKeyOrig= GetScriptForDestination(sellerKey.GetID());
 	
@@ -2159,7 +2159,7 @@ UniValue escrowcompleterelease(const UniValue& params, bool fHelp) {
 			throw runtime_error(find_value(objError, "message").get_str());
 		}
 		if (!returnRes.isStr())
-			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4146 - " + _("Could not send escrow transaction: Invalid response from sendrawtransaction"));
+			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4569 - " + _("Could not send escrow transaction: Invalid response from sendrawtransaction"));
 	}
 	return ret;
 }
@@ -2182,14 +2182,14 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 	vector<CEscrow> vtxPos;
     if (!GetTxAndVtxOfEscrow( vchEscrow, 
 		escrow, tx, vtxPos))
-        throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4099 - " + _("Could not find a escrow with this key"));
+        throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4570 - " + _("Could not find a escrow with this key"));
 	const CWalletTx *wtxIn = pwalletMain->GetWalletTx(tx.GetHash());
 	if (wtxIn == NULL)
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4083 - " + _("This escrow is not in your wallet"));
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4571 - " + _("This escrow is not in your wallet"));
 
     CTransaction fundingTx;
 	if (!GetSyscoinTransaction(vtxPos.front().nHeight, vtxPos.front().txHash, fundingTx, Params().GetConsensus()))
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4121 - " + _("Failed to find escrow transaction"));
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4572 - " + _("Failed to find escrow transaction"));
 	bool foundWhitelistAlias = false;
 	for (unsigned int i = 0; i < fundingTx.vin.size(); i++) {
 		vector<vector<unsigned char> > vvchIn;
@@ -2237,7 +2237,7 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 	CTransaction txOffer;
 	vector<COffer> offerVtxPos;
 	if (!GetTxAndVtxOfOffer( escrow.vchOffer, theOffer, txOffer, offerVtxPos, true))
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4068 - " + _("Could not find an offer with this identifier"));
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4573 - " + _("Could not find an offer with this identifier"));
 	theOffer.nHeight = vtxPos.front().nAcceptHeight;
 	theOffer.GetOfferFromList(offerVtxPos);	
 	if(theOffer.vchLinkOffer.empty())
@@ -2250,7 +2250,7 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 	{
 		vector<COffer> offerLinkVtxPos;
 		if (!GetTxAndVtxOfOffer( theOffer.vchLinkOffer, linkOffer, txOffer, offerLinkVtxPos, true))
-			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4068a - " + _("Could not find an offer with this identifier"));
+			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4574 - " + _("Could not find an offer with this identifier"));
 		linkOffer.nHeight = vtxPos.front().nAcceptHeight;
 		linkOffer.GetOfferFromList(offerLinkVtxPos);
 
@@ -2272,7 +2272,7 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 		int nBTCFeePerByte = getFeePerByte(theOffer.vchAliasPeg, vchFromString("BTC"),  vtxPos.front().nAcceptHeight, precision);
 		nEscrowTotal =  nExpectedAmount + nEscrowFee + (nBTCFeePerByte*400);
 		if (!DecodeHexTx(fundingTx, escrow.escrowInputTx))
-			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4064 - " + _("Could not find the escrow funding transaction in the blockchain database."));
+			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4575 - " + _("Could not find the escrow funding transaction in the blockchain database."));
 	}
 	for(unsigned int i=0;i<fundingTx.vout.size();i++)
 	{
@@ -2284,7 +2284,7 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 	} 
 	CAmount nAmount = fundingTx.vout[nOutMultiSig].nValue;
 	if(nAmount != nEscrowTotal)
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4088 - " + _("Expected amount of escrow does not match what is held in escrow. Expected amount: ") +  boost::lexical_cast<string>(nEscrowTotal));
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4576 - " + _("Expected amount of escrow does not match what is held in escrow. Expected amount: ") +  boost::lexical_cast<string>(nEscrowTotal));
 
 	string strEscrowScriptPubKey = HexStr(fundingTx.vout[nOutMultiSig].scriptPubKey.begin(), fundingTx.vout[nOutMultiSig].scriptPubKey.end());
 	string strPrivateKey ;
@@ -2299,14 +2299,14 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 		// try arbiter
 		CKeyID keyID;
 		if (!arbiterAddress.GetKeyID(keyID))
-			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4126 - " + _("Arbiter address does not refer to a key"));
+			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4577 - " + _("Arbiter address does not refer to a key"));
 		CKey vchSecret;
 		if (!pwalletMain->GetKey(keyID, vchSecret))
-			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4127 - " + _("Private key for arbiter address is not known"));
+			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4578 - " + _("Private key for arbiter address is not known"));
 		strPrivateKey = CSyscoinSecret(vchSecret).ToString();
 		wtxAliasIn = pwalletMain->GetWalletTx(arbiteraliastx.GetHash());
 		if (wtxAliasIn == NULL)
-			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR ERRCODE: 4128 - This alias is not in your wallet");
+			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR ERRCODE: 4579 - This alias is not in your wallet");
 		CScript scriptPubKeyOrig;
 		scriptPubKeyOrig= GetScriptForDestination(arbiterKey.GetID());
 		
@@ -2321,14 +2321,14 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 		// otherwise try seller
 		CKeyID keyID;
 		if (!sellerAddress.GetKeyID(keyID))
-			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4129 - " + _("Seller or Arbiter address does not refer to a key"));
+			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4580 - " + _("Seller or Arbiter address does not refer to a key"));
 		CKey vchSecret;
 		if (!pwalletMain->GetKey(keyID, vchSecret))
-			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4130 - " + _("Seller or Arbiter private keys not known"));
+			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4581 - " + _("Seller or Arbiter private keys not known"));
 		strPrivateKey = CSyscoinSecret(vchSecret).ToString();
 		wtxAliasIn = pwalletMain->GetWalletTx(selleraliastx.GetHash());
 		if (wtxAliasIn == NULL)
-			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR ERRCODE: 4131 - This alias is not in your wallet");
+			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR ERRCODE: 4582 - This alias is not in your wallet");
 		CScript scriptPubKeyOrig;
 		scriptPubKeyOrig= GetScriptForDestination(sellerKey.GetID());
 		
@@ -2365,7 +2365,7 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 		throw runtime_error(find_value(objError, "message").get_str());
 	}
 	if (!resCreate.isStr())
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4132 - " + _("Could not create escrow transaction: Invalid response from createrawtransaction"));
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4583 - " + _("Could not create escrow transaction: Invalid response from createrawtransaction"));
 	string createEscrowSpendingTx = resCreate.get_str();
 
 	// Buyer/Arbiter signs it
@@ -2390,11 +2390,11 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 	}
 	catch (UniValue& objError)
 	{
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4133 - " + _("Could not sign escrow transaction: ") + find_value(objError, "message").get_str());;
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4584 - " + _("Could not sign escrow transaction: ") + find_value(objError, "message").get_str());;
 	}
 	
 	if (!res.isObject())
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4134 - " + _("Could not sign escrow transaction: Invalid response from signrawtransaction"));
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4585 - " + _("Could not sign escrow transaction: Invalid response from signrawtransaction"));
 	
 	const UniValue& o = res.get_obj();
 	string hex_str = "";
@@ -2468,7 +2468,7 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 	vector<CEscrow> vtxPos;
     if (!GetTxAndVtxOfEscrow( vchEscrow, 
 		escrow, tx, vtxPos))
-        throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4135 - " + _("Could not find a escrow with this key"));
+        throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4586 - " + _("Could not find a escrow with this key"));
 
 	CAliasIndex sellerAlias, buyerAlias, arbiterAlias, resellerAlias;
 	vector<CAliasIndex> aliasVtxPos;
@@ -2498,16 +2498,16 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 	}
 	const CWalletTx* wtxAliasIn = pwalletMain->GetWalletTx(buyeraliastx.GetHash());
 	if (wtxAliasIn == NULL)
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR ERRCODE: 4136 - This alias is not in your wallet");
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR ERRCODE: 4587 - This alias is not in your wallet");
 
 	CWalletTx wtx;
 	const CWalletTx *wtxIn = pwalletMain->GetWalletTx(tx.GetHash());
 	if (wtxIn == NULL)
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4137 - " + _("This escrow is not in your wallet"));
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4588 - " + _("This escrow is not in your wallet"));
 
     CTransaction fundingTx;
 	if (!GetSyscoinTransaction(vtxPos.front().nHeight, vtxPos.front().txHash, fundingTx, Params().GetConsensus()))
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4138 - " + _("Failed to find escrow transaction"));
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4589 - " + _("Failed to find escrow transaction"));
 	bool foundWhitelistAlias = false;
 	for (unsigned int i = 0; i < fundingTx.vin.size(); i++) {
 		vector<vector<unsigned char> > vvchIn;
@@ -2529,7 +2529,7 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 	CTransaction txOffer;
 	vector<COffer> offerVtxPos;
 	if (!GetTxAndVtxOfOffer( escrow.vchOffer, theOffer, txOffer, offerVtxPos, true))
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4068 - " + _("Could not find an offer with this identifier"));
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4590 - " + _("Could not find an offer with this identifier"));
 	theOffer.nHeight = vtxPos.front().nAcceptHeight;
 	theOffer.GetOfferFromList(offerVtxPos);		
 	if(theOffer.vchLinkOffer.empty())
@@ -2542,7 +2542,7 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 	{
 		vector<COffer> offerLinkVtxPos;
 		if (!GetTxAndVtxOfOffer( theOffer.vchLinkOffer, linkOffer, txOffer, offerLinkVtxPos, true))
-			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4068 - " + _("Could not find an offer with this identifier"));
+			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4591 - " + _("Could not find an offer with this identifier"));
 		linkOffer.nHeight = vtxPos.front().nAcceptHeight;
 		linkOffer.GetOfferFromList(offerLinkVtxPos);
 
@@ -2555,7 +2555,7 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 		int precision = 2;
 		nExpectedAmount = convertSyscoinToCurrencyCode(theOffer.vchAliasPeg, vchFromString("BTC"), theOffer.GetPrice(foundEntry), vtxPos.front().nAcceptHeight, precision)*escrow.nQty; 
 		if (!DecodeHexTx(fundingTx, escrow.escrowInputTx))
-			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4064 - " + _("Could not find the escrow funding transaction in the blockchain database."));
+			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4592 - " + _("Could not find the escrow funding transaction in the blockchain database."));
 	}	
 
 	string strEscrowScriptPubKey = HexStr(fundingTx.vout[nOutMultiSig].scriptPubKey.begin(), fundingTx.vout[nOutMultiSig].scriptPubKey.end());
@@ -2574,33 +2574,33 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 		throw runtime_error(find_value(objError, "message").get_str());
 	}
 	if (!decodeRes.isObject())
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4140 - " + _("Could not decode escrow transaction: Invalid response from decoderawtransaction"));
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4593 - " + _("Could not decode escrow transaction: Invalid response from decoderawtransaction"));
 	bool foundRefundPayment = false;
 	const UniValue& decodeo = decodeRes.get_obj();
 	const UniValue& vout_value = find_value(decodeo, "vout");
 	if (!vout_value.isArray())
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4102 - " + _("Could not decode escrow transaction: Cannot find VOUT from transaction"));	
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4594 - " + _("Could not decode escrow transaction: Cannot find VOUT from transaction"));	
 	const UniValue &vouts = vout_value.get_array();
     for (unsigned int idx = 0; idx < vouts.size(); idx++) {
         const UniValue& vout = vouts[idx];					
 		const UniValue &voutObj = vout.get_obj();					
 		const UniValue &voutValue = find_value(voutObj, "value");
 		if(!voutValue.isNum())
-			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4102 - " + _("Could not decode escrow transaction: Invalid VOUT value"));
+			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4595 - " + _("Could not decode escrow transaction: Invalid VOUT value"));
 		int64_t iVout = AmountFromValue(voutValue);
 		UniValue scriptPubKeyValue = find_value(voutObj, "scriptPubKey");
 		if(!scriptPubKeyValue.isObject())
-			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4102 - " + _("Could not decode escrow transaction: Invalid scriptPubKey value"));
+			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4596 - " + _("Could not decode escrow transaction: Invalid scriptPubKey value"));
 		const UniValue &scriptPubKeyValueObj = scriptPubKeyValue.get_obj();	
 		const UniValue &addressesValue = find_value(scriptPubKeyValueObj, "addresses");
 		if(!addressesValue.isArray())
-			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4102 - " + _("Could not decode escrow transaction: Invalid addresses"));
+			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4597 - " + _("Could not decode escrow transaction: Invalid addresses"));
 
 		const UniValue &addresses = addressesValue.get_array();
 		for (unsigned int idx = 0; idx < addresses.size(); idx++) {
 			const UniValue& address = addresses[idx];
 			if(!address.isStr())
-				throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4102 - " + _("Could not decode escrow transaction: Invalid address"));
+				throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4598 - " + _("Could not decode escrow transaction: Invalid address"));
 			const string &strAddress = address.get_str();
 			CSyscoinAddress payoutAddress(strAddress);
 			if(!foundRefundPayment)
@@ -2611,16 +2611,16 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 		}
 	}
 	if(!foundRefundPayment)
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4102 - " + _("Expected refund amount not found"));	
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4599 - " + _("Expected refund amount not found"));	
 
 
 	// get buyer's private key for signing
 	CKeyID keyID;
 	if (!buyerAddress.GetKeyID(keyID))
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4141 - " + _("Buyer address does not refer to a key"));
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4600 - " + _("Buyer address does not refer to a key"));
 	CKey vchSecret;
 	if (!pwalletMain->GetKey(keyID, vchSecret))
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4142 - " + _("Private key for buyer address is not known"));
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4601 - " + _("Private key for buyer address is not known"));
 	string strPrivateKey = CSyscoinSecret(vchSecret).ToString();
     // buyer signs it
 	UniValue arraySignParams(UniValue::VARR);
@@ -2643,10 +2643,10 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 	}
 	catch (UniValue& objError)
 	{
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4143 - " + _("Could not sign escrow transaction: ") + find_value(objError, "message").get_str());
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4602 - " + _("Could not sign escrow transaction: ") + find_value(objError, "message").get_str());
 	}
 	if (!res.isObject())
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4144 - " + _("Could not sign escrow transaction: Invalid response from signrawtransaction"));
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4603 - " + _("Could not sign escrow transaction: Invalid response from signrawtransaction"));
 	
 	const UniValue& o = res.get_obj();
 	string hex_str = "";
@@ -2660,7 +2660,7 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 		bComplete = complete_value.get_bool();
 
 	if(!bComplete)
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4145 - " + _("Could not sign escrow transaction. It is showing as incomplete, you may not allowed to complete this request at this time"));
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4604 - " + _("Could not sign escrow transaction. It is showing as incomplete, you may not allowed to complete this request at this time"));
 
 	CTransaction rawTx;
 	DecodeHexTx(rawTx,hex_str);
@@ -2690,7 +2690,7 @@ UniValue escrowcompleterefund(const UniValue& params, bool fHelp) {
 	CEscrow escrow;
     if (!GetTxOfEscrow( vchEscrow, 
 		escrow, tx))
-        throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4116 - " + _("Could not find a escrow with this key"));
+        throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4605 - " + _("Could not find a escrow with this key"));
 
 	bool btcPayment = false;
 	if (!escrow.escrowInputTx.empty())
@@ -2698,17 +2698,17 @@ UniValue escrowcompleterefund(const UniValue& params, bool fHelp) {
 
 	const CWalletTx *wtxIn = pwalletMain->GetWalletTx(tx.GetHash());
 	if (wtxIn == NULL)
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4118 - " + _("This escrow is not in your wallet"));
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4606 - " + _("This escrow is not in your wallet"));
     // unserialize escrow from txn
     CEscrow theEscrow;
     if(!theEscrow.UnserializeFromTx(tx))
-        throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4119 - " + _("Cannot unserialize escrow from transaction"));
+        throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4607 - " + _("Cannot unserialize escrow from transaction"));
 	vector<CEscrow> vtxPos;
 	if (!pescrowdb->ReadEscrow(vchEscrow, vtxPos) || vtxPos.empty())
-		  throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4120 - " + _("Failed to read from escrow DB"));
+		  throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4608 - " + _("Failed to read from escrow DB"));
     CTransaction fundingTx;
 	if (!GetSyscoinTransaction(vtxPos.front().nHeight, vtxPos.front().txHash, fundingTx, Params().GetConsensus()))
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4121 - " + _("Failed to find escrow transaction"));
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4609 - " + _("Failed to find escrow transaction"));
 
 	CAliasIndex sellerAlias, buyerAlias, arbiterAlias, resellerAlias;
 	vector<CAliasIndex> aliasVtxPos;
@@ -2745,14 +2745,14 @@ UniValue escrowcompleterefund(const UniValue& params, bool fHelp) {
 	
 	CKeyID keyID;
 	if (!buyerAddress.GetKeyID(keyID))
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4129 - " + _("Buyer address does not refer to a key"));
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4610 - " + _("Buyer address does not refer to a key"));
 	CKey vchSecret;
 	if (!pwalletMain->GetKey(keyID, vchSecret))
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4130 - " + _("Buyer private keys not known"));
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4611 - " + _("Buyer private keys not known"));
 	strPrivateKey = CSyscoinSecret(vchSecret).ToString();
 	wtxAliasIn = pwalletMain->GetWalletTx(buyeraliastx.GetHash());
 	if (wtxAliasIn == NULL)
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR ERRCODE: 4131 - This alias is not in your wallet");
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR ERRCODE: 4612 - This alias is not in your wallet");
 	CScript scriptPubKeyOrig;
 	scriptPubKeyOrig= GetScriptForDestination(buyerKey.GetID());
 	
@@ -2818,7 +2818,7 @@ UniValue escrowcompleterefund(const UniValue& params, bool fHelp) {
 			throw runtime_error(find_value(objError, "message").get_str());
 		}
 		if (!returnRes.isStr())
-			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4146 - " + _("Could not send escrow transaction: Invalid response from sendrawtransaction"));
+			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4613 - " + _("Could not send escrow transaction: Invalid response from sendrawtransaction"));
 	}
 
 	return ret;
@@ -2847,7 +2847,7 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
 			nRatingPrimary = boost::lexical_cast<int>(params[2].get_str());
 
 		} catch (std::exception &e) {
-			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4147 - " + _("Invalid primary rating value"));
+			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4614 - " + _("Invalid primary rating value"));
 		}
 	}
 	if(params.size() > 3)
@@ -2858,7 +2858,7 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
 			nRatingSecondary = boost::lexical_cast<int>(params[4].get_str());
 
 		} catch (std::exception &e) {
-			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4148 - " + _("Invalid secondary rating value"));
+			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4615 - " + _("Invalid secondary rating value"));
 		}
 	}
     // this is a syscoin transaction
@@ -2871,7 +2871,7 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
 	CEscrow escrow;
     if (!GetTxOfEscrow( vchEscrow, 
 		escrow, tx))
-        throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4149 - " + _("Could not find a escrow with this key"));
+        throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4616 - " + _("Could not find a escrow with this key"));
 
 	CAliasIndex arbiterAliasLatest, buyerAliasLatest, sellerAliasLatest;
 	CTransaction arbiteraliastx, selleraliastx, buyeraliastx;
@@ -2894,13 +2894,13 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
 	{
 		CKeyID keyID;
 		if (!buyerAddress.GetKeyID(keyID))
-			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4150 - " + _("Buyer address does not refer to a key"));
+			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4617 - " + _("Buyer address does not refer to a key"));
 		CKey vchSecret;
 		if (!pwalletMain->GetKey(keyID, vchSecret))
-			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4151 - " + _("Private key for buyer address is not known"));
+			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4618 - " + _("Private key for buyer address is not known"));
 		wtxAliasIn = pwalletMain->GetWalletTx(buyeraliastx.GetHash());
 		if (wtxAliasIn == NULL)
-			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR ERRCODE: 4152 - " + _("Buyer alias is not in your wallet"));
+			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR ERRCODE: 4619 - " + _("Buyer alias is not in your wallet"));
 
 		CScript scriptPubKeyAliasOrig= GetScriptForDestination(buyerKey.GetID());
 		scriptPubKeyAlias = CScript() << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << buyerAliasLatest.vchAlias << buyerAliasLatest.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
@@ -2917,13 +2917,13 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
 	{
 		CKeyID keyID;
 		if (!sellerAddress.GetKeyID(keyID))
-			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4153 - " + _("Seller address does not refer to a key"));
+			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4620 - " + _("Seller address does not refer to a key"));
 		CKey vchSecret;
 		if (!pwalletMain->GetKey(keyID, vchSecret))
-			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4154 - " + _("Private key for seller address is not known"));
+			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4621 - " + _("Private key for seller address is not known"));
 		wtxAliasIn = pwalletMain->GetWalletTx(selleraliastx.GetHash());
 		if (wtxAliasIn == NULL)
-			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR ERRCODE: 4155 - " + _("Seller alias is not in your wallet"));
+			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR ERRCODE: 4622 - " + _("Seller alias is not in your wallet"));
 
 		CScript scriptPubKeyAliasOrig = GetScriptForDestination(sellerKey.GetID());
 		scriptPubKeyAlias = CScript() << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << sellerAliasLatest.vchAlias << sellerAliasLatest.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
@@ -2940,13 +2940,13 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
 	{
 		CKeyID keyID;
 		if (!arbiterAddress.GetKeyID(keyID))
-			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4156 - " + _("Arbiter address does not refer to a key"));
+			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4623 - " + _("Arbiter address does not refer to a key"));
 		CKey vchSecret;
 		if (!pwalletMain->GetKey(keyID, vchSecret))
-			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4157 - " + _("Private key for arbiter address is not known"));
+			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4624 - " + _("Private key for arbiter address is not known"));
 		wtxAliasIn = pwalletMain->GetWalletTx(arbiteraliastx.GetHash());
 		if (wtxAliasIn == NULL)
-			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR ERRCODE: 4158 - " + _("Seller alias is not in your wallet"));
+			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR ERRCODE: 4625 - " + _("Seller alias is not in your wallet"));
 
 		CScript scriptPubKeyAliasOrig = GetScriptForDestination(arbiterKey.GetID());
 		scriptPubKeyAlias  = CScript() << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << arbiterAliasLatest.vchAlias << arbiterAliasLatest.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
@@ -3007,7 +3007,7 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
 	}
 	else
 	{
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4159 - " + _("You must be either the arbiter, buyer or seller to leave feedback on this escrow"));
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4626 - " + _("You must be either the arbiter, buyer or seller to leave feedback on this escrow"));
 	}
 	const vector<unsigned char> &data = escrow.Serialize();
     uint256 hash = Hash(data.begin(), data.end());
