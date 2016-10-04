@@ -2886,7 +2886,7 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 	if(alias.nRatingCountAsSeller > 0)
 		rating = roundf(alias.nRatingAsSeller/(float)alias.nRatingCountAsSeller);
 	oOffer.push_back(Pair("alias_rating",(int)rating));
-	oOffer.push_back(Pair("alias_rating_count",alias.nRatingCountAsSeller));
+	oOffer.push_back(Pair("alias_rating_count"(int),alias.nRatingCountAsSeller));
 	oOffer.push_back(Pair("geolocation", stringFromVch(theOffer.vchGeoLocation)));
 	oOffer.push_back(Pair("offers_sold", (int)theOffer.nSold));
 	
@@ -3434,7 +3434,7 @@ UniValue offerlist(const UniValue& params, bool fHelp) {
 			if(theAlias.nRatingCountAsSeller > 0)
 				rating = roundf(theAlias.nRatingAsSeller/(float)theAlias.nRatingCountAsSeller);
 			oName.push_back(Pair("alias_rating",(int)rating));
-			oName.push_back(Pair("alias_rating_count",theAlias.nRatingCountAsSeller));
+			oName.push_back(Pair("alias_rating_count",(int)theAlias.nRatingCountAsSeller));
 			oName.push_back(Pair("expires_in", expires_in));
 			oName.push_back(Pair("expires_on", expired_block));
 			oName.push_back(Pair("expired", expired));
@@ -3528,7 +3528,7 @@ UniValue offerhistory(const UniValue& params, bool fHelp) {
 			if(!vtxAliasPos.empty() && vtxAliasPos.back().nRatingCountAsSeller > 0)
 				rating = roundf(vtxAliasPos.back().nRatingAsSeller/(float)vtxAliasPos.back().nRatingCountAsSeller);
 			oOffer.push_back(Pair("alias_rating",(int)rating));
-			oOffer.push_back(Pair("alias_rating_count",vtxAliasPos.back().nRatingCountAsSeller));
+			oOffer.push_back(Pair("alias_rating_count",(int)vtxAliasPos.back().nRatingCountAsSeller));
 			oOffer.push_back(Pair("expires_in", expires_in));
 			oOffer.push_back(Pair("expires_on", expired_block));
 			oOffer.push_back(Pair("expired", expired));
@@ -3621,7 +3621,7 @@ UniValue offerfilter(const UniValue& params, bool fHelp) {
 		if(!vtxAliasPos.empty() && vtxAliasPos.back().nRatingCountAsSeller > 0)
 			rating = roundf(vtxAliasPos.back().nRatingAsSeller/(float)vtxAliasPos.back().nRatingCountAsSeller);
 		oOffer.push_back(Pair("alias_rating",(int)rating));
-		oOffer.push_back(Pair("alias_rating_count",vtxAliasPos.back().nRatingCountAsSeller));
+		oOffer.push_back(Pair("alias_rating_count",(int)vtxAliasPos.back().nRatingCountAsSeller));
 		oOffer.push_back(Pair("geolocation", stringFromVch(txOffer.vchGeoLocation)));
 		oOffer.push_back(Pair("expires_in", expires_in));
 		oOffer.push_back(Pair("expires_on", expired_block));
