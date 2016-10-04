@@ -288,8 +288,12 @@ public:
 			nDiscount = 0;
 		// nMarkup is a percentage, commission minus discount
 		char nMarkup = nCommission - nDiscount;
-		int lMarkup = 1/ (nMarkup/100.0);
-		price += price/lMarkup;
+		if(nMarkup != 0)
+		{
+			int lMarkup = 1/ (nMarkup/100.0);
+			CAmount priceMarkup = price/lMarkup;
+			price += priceMarkup;
+		}
 		return price;
 	}
 
