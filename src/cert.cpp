@@ -6,6 +6,7 @@
 #include "util.h"
 #include "random.h"
 #include "base58.h"
+#include "core_io.h"
 #include "rpc/server.h"
 #include "wallet/wallet.h"
 #include "chainparams.h"
@@ -18,7 +19,7 @@
 #include <boost/thread.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 using namespace std;
-extern void SendMoneySyscoin(const vector<CRecipient> &vecSend, CAmount nValue, bool fSubtractFeeFromAmount, CWalletTx& wtxNew, const CWalletTx* wtxInOffer=NULL, const CWalletTx* wtxInCert=NULL, const CWalletTx* wtxInAlias=NULL, const CWalletTx* wtxInEscrow=NULL, bool syscoinTx=true);
+extern void SendMoneySyscoin(const vector<CRecipient> &vecSend, CAmount nValue, bool fSubtractFeeFromAmount, CWalletTx& wtxNew, const CWalletTx* wtxInOffer=NULL, const CWalletTx* wtxInCert=NULL, const CWalletTx* wtxInAlias=NULL, const CWalletTx* wtxInEscrow=NULL, bool syscoinMultiSigTx=false);
 bool EncryptMessage(const vector<unsigned char> &vchPubKey, const vector<unsigned char> &vchMessage, string &strCipherText)
 {
 	CMessageCrypter crypter;
@@ -723,6 +724,7 @@ UniValue certnew(const UniValue& params, bool fHelp) {
     CScript scriptPubKeyOrig;
 	CPubKey aliasKey(theAlias.vchPubKey);
 	scriptPubKeyOrig = GetScriptForDestination(aliasKey.GetID());
+
     CScript scriptPubKey;
 
     
@@ -759,6 +761,8 @@ UniValue certnew(const UniValue& params, bool fHelp) {
     scriptPubKey << CScript::EncodeOP_N(OP_CERT_ACTIVATE) << vchCert << vchHashCert << OP_2DROP << OP_DROP;
     scriptPubKey += scriptPubKeyOrig;
 	CScript scriptPubKeyAlias;
+	if(theAlias.multiSigInfo.nRequiredSigs > 1)
+		scriptPubKeyOrig = CScript(theAlias.multiSigInfo.vchRedeemScript.begin(), theAlias.multiSigInfo.vchRedeemScript.end());
 	scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << theAlias.vchAlias << theAlias.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
 	scriptPubKeyAlias += scriptPubKeyOrig;
 
@@ -780,10 +784,40 @@ UniValue certnew(const UniValue& params, bool fHelp) {
 	const CWalletTx * wtxInOffer=NULL;
 	const CWalletTx * wtxInEscrow=NULL;
 	const CWalletTx * wtxInCert=NULL;
-	SendMoneySyscoin(vecSend, recipient.nAmount+fee.nAmount+aliasRecipient.nAmount, false, wtx, wtxInOffer, wtxInCert, wtxAliasIn, wtxInEscrow);
+	SendMoneySyscoin(vecSend, recipient.nAmount+fee.nAmount+aliasRecipient.nAmount, false, wtx, wtxInOffer, wtxInCert, wtxAliasIn, wtxInEscrow, theAlias.multiSigInfo.nRequiredSigs > 1);
 	UniValue res(UniValue::VARR);
-	res.push_back(wtx.GetHash().GetHex());
-	res.push_back(stringFromVch(vchCert));
+	if(theAlias.multiSigInfo.nRequiredSigs > 1)
+	{
+		UniValue signParams(UniValue::VARR);
+		signParams.push_back(EncodeHexTx(wtx));
+		const UniValue &resSign = tableRPC.execute("syscoinsignrawtransaction", signParams);
+		const UniValue& so = resSign.get_obj();
+		string hex_str = "";
+
+		const UniValue& hex_value = find_value(so, "hex");
+		if (hex_value.isStr())
+			hex_str = hex_value.get_str();
+		const UniValue& complete_value = find_value(so, "complete");
+		bool bComplete = false;
+		if (complete_value.isBool())
+			bComplete = complete_value.get_bool();
+		if(bComplete)
+		{
+			res.push_back(wtx.GetHash().GetHex());
+			res.push_back(stringFromVch(vchCert));
+		}
+		else
+		{
+			res.push_back(hex_str);
+			res.push_back(stringFromVch(vchCert));
+			res.push_back("false");
+		}
+	}
+	else
+	{
+		res.push_back(wtx.GetHash().GetHex());
+		res.push_back(stringFromVch(vchCert));
+	}
 	return res;
 }
 
@@ -852,6 +886,7 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
 	theCert.ClearCert();
 	CPubKey currentKey(theAlias.vchPubKey);
 	scriptPubKeyOrig = GetScriptForDestination(currentKey.GetID());
+
     // create CERTUPDATE txn keys
     CScript scriptPubKey;
 	// if we want to make data private, encrypt it
@@ -888,6 +923,8 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
 	CreateRecipient(scriptPubKey, recipient);
 	vecSend.push_back(recipient);
 	CScript scriptPubKeyAlias;
+	if(theAlias.multiSigInfo.nRequiredSigs > 1)
+		scriptPubKeyOrig = CScript(theAlias.multiSigInfo.vchRedeemScript.begin(), theAlias.multiSigInfo.vchRedeemScript.end());
 	scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << vchAlias << theAlias.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
 	scriptPubKeyAlias += scriptPubKeyOrig;
 	CRecipient aliasRecipient;
@@ -901,9 +938,35 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
 	vecSend.push_back(fee);
 	const CWalletTx * wtxInOffer=NULL;
 	const CWalletTx * wtxInEscrow=NULL;
-	SendMoneySyscoin(vecSend, recipient.nAmount+aliasRecipient.nAmount+fee.nAmount, false, wtx, wtxInOffer, wtxIn, wtxAliasIn, wtxInEscrow);	
+	SendMoneySyscoin(vecSend, recipient.nAmount+aliasRecipient.nAmount+fee.nAmount, false, wtx, wtxInOffer, wtxIn, wtxAliasIn, wtxInEscrow, theAlias.multiSigInfo.nRequiredSigs > 1);	
  	UniValue res(UniValue::VARR);
-	res.push_back(wtx.GetHash().GetHex());
+	if(theAlias.multiSigInfo.nRequiredSigs > 1)
+	{
+		UniValue signParams(UniValue::VARR);
+		signParams.push_back(EncodeHexTx(wtx));
+		const UniValue &resSign = tableRPC.execute("syscoinsignrawtransaction", signParams);
+		const UniValue& so = resSign.get_obj();
+		string hex_str = "";
+
+		const UniValue& hex_value = find_value(so, "hex");
+		if (hex_value.isStr())
+			hex_str = hex_value.get_str();
+		const UniValue& complete_value = find_value(so, "complete");
+		bool bComplete = false;
+		if (complete_value.isBool())
+			bComplete = complete_value.get_bool();
+		if(bComplete)
+			res.push_back(wtx.GetHash().GetHex());
+		else
+		{
+			res.push_back(hex_str);
+			res.push_back("false");
+		}
+	}
+	else
+	{
+		res.push_back(wtx.GetHash().GetHex());
+	}
 	return res;
 }
 
@@ -985,6 +1048,8 @@ UniValue certtransfer(const UniValue& params, bool fHelp) {
 	theCert.ClearCert();
     scriptPubKeyOrig= GetScriptForDestination(xferKey.GetID());
 	scriptPubKeyFromOrig= GetScriptForDestination(fromKey.GetID());
+	if(fromAlias.multiSigInfo.nRequiredSigs > 1)
+		scriptPubKeyFromOrig = CScript(fromAlias.multiSigInfo.vchRedeemScript.begin(), fromAlias.multiSigInfo.vchRedeemScript.end());
     CScript scriptPubKey;
 	theCert.nHeight = chainActive.Tip()->nHeight;
 	theCert.vchAlias = fromAlias.vchAlias;
@@ -1018,10 +1083,36 @@ UniValue certtransfer(const UniValue& params, bool fHelp) {
 	vecSend.push_back(fee);
 	const CWalletTx * wtxInOffer=NULL;
 	const CWalletTx * wtxInEscrow=NULL;
-	SendMoneySyscoin(vecSend, recipient.nAmount+aliasRecipient.nAmount+fee.nAmount, false, wtx, wtxInOffer, wtxIn, wtxAliasIn, wtxInEscrow);
+	SendMoneySyscoin(vecSend, recipient.nAmount+aliasRecipient.nAmount+fee.nAmount, false, wtx, wtxInOffer, wtxIn, wtxAliasIn, wtxInEscrow, fromAlias.multiSigInfo.nRequiredSigs > 1);
 
 	UniValue res(UniValue::VARR);
-	res.push_back(wtx.GetHash().GetHex());
+	if(fromAlias.multiSigInfo.nRequiredSigs > 1)
+	{
+		UniValue signParams(UniValue::VARR);
+		signParams.push_back(EncodeHexTx(wtx));
+		const UniValue &resSign = tableRPC.execute("syscoinsignrawtransaction", signParams);
+		const UniValue& so = resSign.get_obj();
+		string hex_str = "";
+
+		const UniValue& hex_value = find_value(so, "hex");
+		if (hex_value.isStr())
+			hex_str = hex_value.get_str();
+		const UniValue& complete_value = find_value(so, "complete");
+		bool bComplete = false;
+		if (complete_value.isBool())
+			bComplete = complete_value.get_bool();
+		if(bComplete)
+			res.push_back(wtx.GetHash().GetHex());
+		else
+		{
+			res.push_back(hex_str);
+			res.push_back("false");
+		}
+	}
+	else
+	{
+		res.push_back(wtx.GetHash().GetHex());
+	}
 	return res;
 }
 

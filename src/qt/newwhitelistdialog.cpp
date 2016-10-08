@@ -54,7 +54,23 @@ bool NewWhitelistDialog::saveCurrentRow()
 
 	try {
         UniValue result = tableRPC.execute(strMethod, params);
-
+		const UniValue& resArray = result.get_array();
+		if(resArray.size() > 1)
+		{
+			const UniValue& complete_value = resArray[1];
+			bool bComplete = false;
+			if (complete_value.isStr())
+				bComplete = complete_value.get_str() == "true";
+			if(!bComplete)
+			{
+				string hex_str = resArray[0].get_str();
+				GUIUtil::setClipboard(QString::fromStdString(hex_str));
+				QMessageBox::critical(this, windowTitle(),
+					tr("This transaction requires more signatures. Transaction hex <b>%1</b> has been copied to your clipboard for your reference. Please provide it to a signee that hasn't yet signed.").arg(QString::fromStdString(hex_str)),
+						QMessageBox::Ok, QMessageBox::Ok);
+				return false;
+			}
+		}
 		entry = ui->aliasEdit->text();
 
 		QMessageBox::information(this, windowTitle(),

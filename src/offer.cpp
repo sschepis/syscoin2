@@ -8,6 +8,7 @@
 #include "util.h"
 #include "random.h"
 #include "base58.h"
+#include "core_io.h"
 #include "rpc/server.h"
 #include "wallet/wallet.h"
 #include "consensus/validation.h"
@@ -19,8 +20,7 @@
 #include <boost/thread.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 using namespace std;
-extern void SendMoney(const CTxDestination &address, CAmount nValue, bool fSubtractFeeFromAmount, CWalletTx& wtxNew);
-extern void SendMoneySyscoin(const vector<CRecipient> &vecSend, CAmount nValue, bool fSubtractFeeFromAmount, CWalletTx& wtxNew, const CWalletTx* wtxInOffer=NULL, const CWalletTx* wtxInCert=NULL, const CWalletTx* wtxInAlias=NULL, const CWalletTx* wtxInEscrow=NULL, bool syscoinTx=true);
+extern void SendMoneySyscoin(const vector<CRecipient> &vecSend, CAmount nValue, bool fSubtractFeeFromAmount, CWalletTx& wtxNew, const CWalletTx* wtxInOffer=NULL, const CWalletTx* wtxInCert=NULL, const CWalletTx* wtxInAlias=NULL, const CWalletTx* wtxInEscrow=NULL, bool syscoinMultiSigTx=false);
 bool DisconnectAlias(const CBlockIndex *pindex, const CTransaction &tx, int op, vector<vector<unsigned char> > &vvchArgs );
 bool DisconnectOffer(const CBlockIndex *pindex, const CTransaction &tx, int op, vector<vector<unsigned char> > &vvchArgs );
 bool DisconnectCertificate(const CBlockIndex *pindex, const CTransaction &tx, int op, vector<vector<unsigned char> > &vvchArgs );
@@ -1024,7 +1024,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						theOffer.sTitle = linkOffer.sTitle;
 						theOffer.safeSearch = linkOffer.safeSearch;
 						theOffer.paymentOptions = linkOffer.paymentOptions;
-						linkOffer.offerLinks.push_back(vvchArgs[0]);
+						linkOffer.offerLinks.push_back(stringFromVch(vvchArgs[0]));
 						linkOffer.PutToOfferList(offerVtxPos);
 						// write parent offer
 				
@@ -1208,7 +1208,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				}
 				
 				// make sure that linked offer exists in root offerlinks (offers that are linked to the root offer)
-				else if(std::find(linkOffer.offerLinks.begin(), linkOffer.offerLinks.end(), vvchArgs[0]) == linkOffer.offerLinks.end())
+				else if(std::find(linkOffer.offerLinks.begin(), linkOffer.offerLinks.end(), stringFromVch(vvchArgs[0])) == linkOffer.offerLinks.end())
 				{
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1101 - " + _("This offer does not exist in the root offerLinks table");
 					return true;
@@ -1313,6 +1313,8 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					}
 					CPubKey aliasLinkPubKey(linkAlias.vchPubKey);
 					CSyscoinAddress aliaslinkaddy(aliasLinkPubKey.GetID());
+					// if multisig this will get multisig address instead of alias owner for payment purposes
+					aliaslinkaddy = CSyscoinAddress(aliaslinkaddy.ToString());
 					linkDest = aliaslinkaddy.Get();
 					if(!(linkDest == payDest))
 					{
@@ -1321,6 +1323,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					}
 					CPubKey aliasPubKey(alias.vchPubKey);
 					CSyscoinAddress aliasaddy(aliasPubKey.GetID());
+					aliasaddy = CSyscoinAddress(aliasaddy.ToString());
 					aliasDest = aliasaddy.Get();
 					if(!(aliasDest == commissionDest))
 					{
@@ -1337,6 +1340,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					}	
 					CPubKey aliasPubKey(alias.vchPubKey);
 					CSyscoinAddress aliasaddy(aliasPubKey.GetID());
+					aliasaddy = CSyscoinAddress(aliasaddy.ToString());
 					aliasDest = aliasaddy.Get();
 					if(!(aliasDest == payDest))
 					{
@@ -1353,6 +1357,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			}	
 			CPubKey aliasPubKey(alias.vchPubKey);
 			CSyscoinAddress aliasaddy(aliasPubKey.GetID());
+			aliasaddy = CSyscoinAddress(aliasaddy.ToString());
 			aliasDest = aliasaddy.Get();
 			if(!(aliasDest == dest))
 			{
@@ -1438,7 +1443,8 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				for(unsigned int i=0;i<theOffer.offerLinks.size();i++) {
 					CTransaction txOffer;
 					vector<COffer> myVtxPos;
-					if (GetTxAndVtxOfOffer( theOffer.offerLinks[i], linkOffer, txOffer, myVtxPos))
+					const vector<unsigned char> &vchOfferLink = vchFromString(theOffer.offerLinks[i]);
+					if (GetTxAndVtxOfOffer( vchOfferLink, linkOffer, txOffer, myVtxPos))
 					{
 
 						linkOffer.nQty = theOffer.nQty;	
@@ -1453,7 +1459,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						linkOffer.PutToOfferList(myVtxPos);
 						// write offer
 					
-						if (!dontaddtodb && !pofferdb->WriteOffer(theOffer.offerLinks[i], myVtxPos))
+						if (!dontaddtodb && !pofferdb->WriteOffer(vchOfferLink, myVtxPos))
 						{
 							errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1122 - " + _("Failed to write to offer link to DB");		
 							return error(errorMessage.c_str());		
@@ -1501,13 +1507,14 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						// go through the linked offers, if any, and update the linked offer qty based on the this qty
 						for(unsigned int i=0;i<myLinkOffer.offerLinks.size();i++) {
 							vector<COffer> myVtxPos;	
-							if (pofferdb->ExistsOffer(myLinkOffer.offerLinks[i]) && myLinkOffer.offerLinks[i] != theOffer.vchOffer) {
-								if (pofferdb->ReadOffer(myLinkOffer.offerLinks[i], myVtxPos))
+							const vector<unsigned char> &vchOfferLink = vchFromString(myLinkOffer.offerLinks[i]);
+							if (pofferdb->ExistsOffer(vchOfferLink) && vchOfferLink != theOffer.vchOffer) {
+								if (pofferdb->ReadOffer(vchOfferLink, myVtxPos))
 								{
 									COffer offerLink = myVtxPos.back();					
 									offerLink.nQty = nQty;	
 									offerLink.PutToOfferList(myVtxPos);
-									if (!dontaddtodb && !pofferdb->WriteOffer(myLinkOffer.offerLinks[i], myVtxPos))
+									if (!dontaddtodb && !pofferdb->WriteOffer(vchOfferLink, myVtxPos))
 									{
 										errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1126 - " + _("Failed to write to offer link to DB");		
 										return error(errorMessage.c_str());
@@ -1520,13 +1527,14 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				// go through the linked offers, if any, and update the linked offer qty based on the this qty
 				for(unsigned int i=0;i<theOffer.offerLinks.size();i++) {
 					vector<COffer> myVtxPos;	
-					if (pofferdb->ExistsOffer(theOffer.offerLinks[i])) {
-						if (pofferdb->ReadOffer(theOffer.offerLinks[i], myVtxPos))
+					const vector<unsigned char> &vchOfferLink = vchFromString(theOffer.offerLinks[i]);
+					if (pofferdb->ExistsOffer(vchOfferLink)) {
+						if (pofferdb->ReadOffer(vchOfferLink, myVtxPos))
 						{
 							COffer offerLink = myVtxPos.back();					
 							offerLink.nQty = nQty;	
 							offerLink.PutToOfferList(myVtxPos);
-							if (!dontaddtodb && !pofferdb->WriteOffer(theOffer.offerLinks[i], myVtxPos))
+							if (!dontaddtodb && !pofferdb->WriteOffer(vchOfferLink, myVtxPos))
 							{
 								errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1127 - " + _("Failed to write to offer link to DB");		
 								return error(errorMessage.c_str());
@@ -1680,6 +1688,8 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 	scriptPubKey << CScript::EncodeOP_N(OP_OFFER_ACTIVATE) << vchOffer << vchHashOffer << OP_2DROP << OP_DROP;
 	scriptPubKey += scriptPubKeyOrig;
 	CScript scriptPubKeyAlias;
+	if(alias.multiSigInfo.nRequiredSigs > 1)
+		scriptPubKeyOrig = CScript(alias.multiSigInfo.vchRedeemScript.begin(), alias.multiSigInfo.vchRedeemScript.end());
 	scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << alias.vchAlias << alias.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
 	scriptPubKeyAlias += scriptPubKeyOrig;				
 			
@@ -1699,10 +1709,41 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 	const CWalletTx * wtxInOffer=NULL;
 	const CWalletTx * wtxInCert=NULL;
 	const CWalletTx * wtxInEscrow=NULL;
-	SendMoneySyscoin(vecSend, recipient.nAmount+fee.nAmount+aliasRecipient.nAmount, false, wtx, wtxInOffer, wtxInCert, wtxAliasIn, wtxInEscrow);
+	SendMoneySyscoin(vecSend, recipient.nAmount+fee.nAmount+aliasRecipient.nAmount, false, wtx, wtxInOffer, wtxInCert, wtxAliasIn, wtxInEscrow, alias.multiSigInfo.nRequiredSigs > 1);
 	UniValue res(UniValue::VARR);
-	res.push_back(wtx.GetHash().GetHex());
-	res.push_back(stringFromVch(vchOffer));
+	if(alias.multiSigInfo.nRequiredSigs > 1)
+	{
+		UniValue signParams(UniValue::VARR);
+		signParams.push_back(EncodeHexTx(wtx));
+		const UniValue &resSign = tableRPC.execute("syscoinsignrawtransaction", signParams);
+		const UniValue& so = resSign.get_obj();
+		string hex_str = "";
+
+		const UniValue& hex_value = find_value(so, "hex");
+		if (hex_value.isStr())
+			hex_str = hex_value.get_str();
+		const UniValue& complete_value = find_value(so, "complete");
+		bool bComplete = false;
+		if (complete_value.isBool())
+			bComplete = complete_value.get_bool();
+		if(bComplete)
+		{
+			res.push_back(wtx.GetHash().GetHex());
+			res.push_back(stringFromVch(vchOffer));
+		}
+		else
+		{
+			res.push_back(hex_str);
+			res.push_back(stringFromVch(vchOffer));
+			res.push_back("false");
+		}
+	}
+	else
+	{
+		res.push_back(wtx.GetHash().GetHex());
+		res.push_back(stringFromVch(vchOffer));
+	}
+
 	return res;
 }
 
@@ -1790,6 +1831,8 @@ UniValue offerlink(const UniValue& params, bool fHelp) {
 	scriptPubKey << CScript::EncodeOP_N(OP_OFFER_ACTIVATE) << vchOffer << vchHashOffer << OP_2DROP << OP_DROP;
 	scriptPubKey += scriptPubKeyOrig;
 	CScript scriptPubKeyAlias;
+	if(alias.multiSigInfo.nRequiredSigs > 1)
+		scriptPubKeyOrig = CScript(alias.multiSigInfo.vchRedeemScript.begin(), alias.multiSigInfo.vchRedeemScript.end());
 	scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << alias.vchAlias << alias.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
 	scriptPubKeyAlias += scriptPubKeyOrig;
 
@@ -1813,11 +1856,41 @@ UniValue offerlink(const UniValue& params, bool fHelp) {
 	const CWalletTx * wtxInCert=NULL;
 	const CWalletTx * wtxInOffer=NULL;
 	const CWalletTx * wtxInEscrow=NULL;
-	SendMoneySyscoin(vecSend, recipient.nAmount+fee.nAmount+aliasRecipient.nAmount, false, wtx, wtxInOffer, wtxInCert, wtxAliasIn, wtxInEscrow);
+	SendMoneySyscoin(vecSend, recipient.nAmount+fee.nAmount+aliasRecipient.nAmount, false, wtx, wtxInOffer, wtxInCert, wtxAliasIn, wtxInEscrow, alias.multiSigInfo.nRequiredSigs > 1);
 
 	UniValue res(UniValue::VARR);
-	res.push_back(wtx.GetHash().GetHex());
-	res.push_back(stringFromVch(vchOffer));
+	if(alias.multiSigInfo.nRequiredSigs > 1)
+	{
+		UniValue signParams(UniValue::VARR);
+		signParams.push_back(EncodeHexTx(wtx));
+		const UniValue &resSign = tableRPC.execute("syscoinsignrawtransaction", signParams);
+		const UniValue& so = resSign.get_obj();
+		string hex_str = "";
+
+		const UniValue& hex_value = find_value(so, "hex");
+		if (hex_value.isStr())
+			hex_str = hex_value.get_str();
+		const UniValue& complete_value = find_value(so, "complete");
+		bool bComplete = false;
+		if (complete_value.isBool())
+			bComplete = complete_value.get_bool();
+		if(bComplete)
+		{
+			res.push_back(wtx.GetHash().GetHex());
+			res.push_back(stringFromVch(vchOffer));
+		}
+		else
+		{
+			res.push_back(hex_str);
+			res.push_back(stringFromVch(vchOffer));
+			res.push_back("false");
+		}
+	}
+	else
+	{
+		res.push_back(wtx.GetHash().GetHex());
+		res.push_back(stringFromVch(vchOffer));
+	}
 	return res;
 }
 
@@ -1896,6 +1969,8 @@ UniValue offeraddwhitelist(const UniValue& params, bool fHelp) {
 	scriptPubKey << CScript::EncodeOP_N(OP_OFFER_UPDATE) << vchOffer << vchHashOffer << OP_2DROP << OP_DROP;
 	scriptPubKey += scriptPubKeyOrig;
 	CScript scriptPubKeyAlias;
+	if(theAlias.multiSigInfo.nRequiredSigs > 1)
+		scriptPubKeyOrig = CScript(theAlias.multiSigInfo.vchRedeemScript.begin(), theAlias.multiSigInfo.vchRedeemScript.end());
 	scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << theAlias.vchAlias << theAlias.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
 	scriptPubKeyAlias += scriptPubKeyOrig;
 
@@ -1914,10 +1989,36 @@ UniValue offeraddwhitelist(const UniValue& params, bool fHelp) {
 	vecSend.push_back(fee);
 	const CWalletTx * wtxInCert=NULL;
 	const CWalletTx * wtxInEscrow=NULL;
-	SendMoneySyscoin(vecSend, recipient.nAmount+fee.nAmount+aliasRecipient.nAmount, false, wtx, wtxIn, wtxInCert, wtxAliasIn, wtxInEscrow);
+	SendMoneySyscoin(vecSend, recipient.nAmount+fee.nAmount+aliasRecipient.nAmount, false, wtx, wtxIn, wtxInCert, wtxAliasIn, wtxInEscrow, theAlias.multiSigInfo.nRequiredSigs > 1);
 
 	UniValue res(UniValue::VARR);
-	res.push_back(wtx.GetHash().GetHex());
+	if(theAlias.multiSigInfo.nRequiredSigs > 1)
+	{
+		UniValue signParams(UniValue::VARR);
+		signParams.push_back(EncodeHexTx(wtx));
+		const UniValue &resSign = tableRPC.execute("syscoinsignrawtransaction", signParams);
+		const UniValue& so = resSign.get_obj();
+		string hex_str = "";
+
+		const UniValue& hex_value = find_value(so, "hex");
+		if (hex_value.isStr())
+			hex_str = hex_value.get_str();
+		const UniValue& complete_value = find_value(so, "complete");
+		bool bComplete = false;
+		if (complete_value.isBool())
+			bComplete = complete_value.get_bool();
+		if(bComplete)
+		{
+			res.push_back(wtx.GetHash().GetHex());
+		}
+		else
+		{
+			res.push_back(hex_str);
+			res.push_back("false");
+		}
+	}
+	else
+		res.push_back(wtx.GetHash().GetHex());
 	return res;
 }
 UniValue offerremovewhitelist(const UniValue& params, bool fHelp) {
@@ -1980,6 +2081,8 @@ UniValue offerremovewhitelist(const UniValue& params, bool fHelp) {
 	scriptPubKey << CScript::EncodeOP_N(OP_OFFER_UPDATE) << vchOffer << vchHashOffer << OP_2DROP << OP_DROP;
 	scriptPubKey += scriptPubKeyOrig;
 	CScript scriptPubKeyAlias;
+	if(theAlias.multiSigInfo.nRequiredSigs > 1)
+		scriptPubKeyOrig = CScript(theAlias.multiSigInfo.vchRedeemScript.begin(), theAlias.multiSigInfo.vchRedeemScript.end());
 	scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << theAlias.vchAlias << theAlias.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
 	scriptPubKeyAlias += scriptPubKeyOrig;
 
@@ -1998,10 +2101,36 @@ UniValue offerremovewhitelist(const UniValue& params, bool fHelp) {
 	vecSend.push_back(fee);
 	const CWalletTx * wtxInEscrow=NULL;
 	const CWalletTx * wtxInCert=NULL;
-	SendMoneySyscoin(vecSend, recipient.nAmount+fee.nAmount+aliasRecipient.nAmount, false, wtx, wtxIn, wtxInCert, wtxAliasIn, wtxInEscrow);
+	SendMoneySyscoin(vecSend, recipient.nAmount+fee.nAmount+aliasRecipient.nAmount, false, wtx, wtxIn, wtxInCert, wtxAliasIn, wtxInEscrow, theAlias.multiSigInfo.nRequiredSigs > 1);
 
 	UniValue res(UniValue::VARR);
-	res.push_back(wtx.GetHash().GetHex());
+	if(theAlias.multiSigInfo.nRequiredSigs > 1)
+	{
+		UniValue signParams(UniValue::VARR);
+		signParams.push_back(EncodeHexTx(wtx));
+		const UniValue &resSign = tableRPC.execute("syscoinsignrawtransaction", signParams);
+		const UniValue& so = resSign.get_obj();
+		string hex_str = "";
+
+		const UniValue& hex_value = find_value(so, "hex");
+		if (hex_value.isStr())
+			hex_str = hex_value.get_str();
+		const UniValue& complete_value = find_value(so, "complete");
+		bool bComplete = false;
+		if (complete_value.isBool())
+			bComplete = complete_value.get_bool();
+		if(bComplete)
+		{
+			res.push_back(wtx.GetHash().GetHex());
+		}
+		else
+		{
+			res.push_back(hex_str);
+			res.push_back("false");
+		}
+	}
+	else
+		res.push_back(wtx.GetHash().GetHex());
 	return res;
 }
 UniValue offerclearwhitelist(const UniValue& params, bool fHelp) {
@@ -2061,6 +2190,8 @@ UniValue offerclearwhitelist(const UniValue& params, bool fHelp) {
 	scriptPubKey << CScript::EncodeOP_N(OP_OFFER_UPDATE) << vchOffer << vchHashOffer << OP_2DROP << OP_DROP;
 	scriptPubKey += scriptPubKeyOrig;
 	CScript scriptPubKeyAlias;
+	if(theAlias.multiSigInfo.nRequiredSigs > 1)
+		scriptPubKeyOrig = CScript(theAlias.multiSigInfo.vchRedeemScript.begin(), theAlias.multiSigInfo.vchRedeemScript.end());
 	scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << theAlias.vchAlias << theAlias.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
 	scriptPubKeyAlias += scriptPubKeyOrig;
 
@@ -2079,10 +2210,36 @@ UniValue offerclearwhitelist(const UniValue& params, bool fHelp) {
 	vecSend.push_back(fee);
 	const CWalletTx * wtxInCert=NULL;
 	const CWalletTx * wtxInEscrow=NULL;
-	SendMoneySyscoin(vecSend, recipient.nAmount+fee.nAmount+aliasRecipient.nAmount, false, wtx, wtxIn, wtxInCert, wtxAliasIn, wtxInEscrow);
+	SendMoneySyscoin(vecSend, recipient.nAmount+fee.nAmount+aliasRecipient.nAmount, false, wtx, wtxIn, wtxInCert, wtxAliasIn, wtxInEscrow, theAlias.multiSigInfo.nRequiredSigs > 1);
 
 	UniValue res(UniValue::VARR);
-	res.push_back(wtx.GetHash().GetHex());
+	if(theAlias.multiSigInfo.nRequiredSigs > 1)
+	{
+		UniValue signParams(UniValue::VARR);
+		signParams.push_back(EncodeHexTx(wtx));
+		const UniValue &resSign = tableRPC.execute("syscoinsignrawtransaction", signParams);
+		const UniValue& so = resSign.get_obj();
+		string hex_str = "";
+
+		const UniValue& hex_value = find_value(so, "hex");
+		if (hex_value.isStr())
+			hex_str = hex_value.get_str();
+		const UniValue& complete_value = find_value(so, "complete");
+		bool bComplete = false;
+		if (complete_value.isBool())
+			bComplete = complete_value.get_bool();
+		if(bComplete)
+		{
+			res.push_back(wtx.GetHash().GetHex());
+		}
+		else
+		{
+			res.push_back(hex_str);
+			res.push_back("false");
+		}
+	}
+	else
+		res.push_back(wtx.GetHash().GetHex());
 	return res;
 }
 
@@ -2279,8 +2436,11 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	CRecipient recipient;
 	CreateRecipient(scriptPubKey, recipient);
 	vecSend.push_back(recipient);
-
+	if(alias.multiSigInfo.nRequiredSigs > 1)
+		scriptPubKeyOrig = CScript(alias.multiSigInfo.vchRedeemScript.begin(), alias.multiSigInfo.vchRedeemScript.end());
 	CScript scriptPubKeyAlias;
+	if(alias.multiSigInfo.nRequiredSigs > 1)
+		scriptPubKeyOrig = CScript(alias.multiSigInfo.vchRedeemScript.begin(), alias.multiSigInfo.vchRedeemScript.end());
 	scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << alias.vchAlias << alias.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
 	scriptPubKeyAlias += scriptPubKeyOrig;
 	CRecipient aliasRecipient;
@@ -2295,9 +2455,35 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	vecSend.push_back(fee);
 	const CWalletTx * wtxInEscrow=NULL;
 	const CWalletTx * wtxInCert=NULL;
-	SendMoneySyscoin(vecSend, recipient.nAmount+aliasRecipient.nAmount+fee.nAmount, false, wtx, wtxIn, wtxInCert, wtxAliasIn, wtxInEscrow);
+	SendMoneySyscoin(vecSend, recipient.nAmount+aliasRecipient.nAmount+fee.nAmount, false, wtx, wtxIn, wtxInCert, wtxAliasIn, wtxInEscrow, alias.multiSigInfo.nRequiredSigs > 1);
 	UniValue res(UniValue::VARR);
-	res.push_back(wtx.GetHash().GetHex());
+	if(alias.multiSigInfo.nRequiredSigs > 1)
+	{
+		UniValue signParams(UniValue::VARR);
+		signParams.push_back(EncodeHexTx(wtx));
+		const UniValue &resSign = tableRPC.execute("syscoinsignrawtransaction", signParams);
+		const UniValue& so = resSign.get_obj();
+		string hex_str = "";
+
+		const UniValue& hex_value = find_value(so, "hex");
+		if (hex_value.isStr())
+			hex_str = hex_value.get_str();
+		const UniValue& complete_value = find_value(so, "complete");
+		bool bComplete = false;
+		if (complete_value.isBool())
+			bComplete = complete_value.get_bool();
+		if(bComplete)
+		{
+			res.push_back(wtx.GetHash().GetHex());
+		}
+		else
+		{
+			res.push_back(hex_str);
+			res.push_back("false");
+		}
+	}
+	else
+		res.push_back(wtx.GetHash().GetHex());
 	return res;
 }
 UniValue offeraccept(const UniValue& params, bool fHelp) {
@@ -2373,6 +2559,8 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 			wtxAliasIn = pwalletMain->GetWalletTx(buyeraliastx.GetHash());		
 			CPubKey currentKey(buyerAlias.vchPubKey);
 			scriptPubKeyAliasOrig = GetScriptForDestination(currentKey.GetID());
+			if(buyerAlias.multiSigInfo.nRequiredSigs > 1)
+				scriptPubKeyAliasOrig = CScript(buyerAlias.multiSigInfo.vchRedeemScript.begin(), buyerAlias.multiSigInfo.vchRedeemScript.end());
 			scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << buyerAlias.vchAlias  << buyerAlias.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
 			scriptPubKeyAlias += scriptPubKeyAliasOrig;
 		}
@@ -2444,18 +2632,23 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 
     CScript scriptPayment, scriptPubKeyCommission, scriptPaymentCommission;
 	CPubKey currentKey(theAlias.vchPubKey);
+	CSyscoinAddress currentAddress(currentKey.GetID());
+	currentAddress = CSyscoinAddress(currentAddress.ToString());
+
 	CPubKey linkedOfferKey(theLinkedAlias.vchPubKey);
+	CSyscoinAddress linkAddress(linkedOfferKey.GetID());
+	linkAddress = CSyscoinAddress(linkAddress.ToString());
 	scriptPubKeyAccept << CScript::EncodeOP_N(OP_OFFER_ACCEPT) << vchOffer << vchAccept << vchFromString("0") << vchHashOffer << OP_2DROP << OP_2DROP << OP_DROP;
 	if(!copyOffer.vchLinkOffer.empty())
 	{
-		scriptPayment = GetScriptForDestination(linkedOfferKey.GetID());
-		scriptPaymentCommission = GetScriptForDestination(currentKey.GetID());
+		scriptPayment = GetScriptForDestination(linkAddress.Get());
+		scriptPaymentCommission = GetScriptForDestination(currentAddress.Get());
 	}
 	else
 	{
-		scriptPayment = GetScriptForDestination(currentKey.GetID());
+		scriptPayment = GetScriptForDestination(currentAddress.Get());
 	}
-	scriptPubKeyAccept += GetScriptForDestination(currentKey.GetID());
+	scriptPubKeyAccept += GetScriptForDestination(currentAddress.Get());
 	scriptPubKeyPayment += scriptPayment;
 	scriptPubKeyCommission += scriptPaymentCommission;
 
@@ -2501,12 +2694,42 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	const CWalletTx * wtxInOffer=NULL;
 
 	// if making a purchase and we are using an alias from the whitelist of the offer, we may need to prove that we own that alias so in that case we attach an input from the alias
-	// if purchasing an escrow, we adjust the height to figure out pricing of the accept so we may also attach escrow inputs to the tx
-	SendMoneySyscoin(vecSend, acceptRecipient.nAmount+acceptCommissionRecipient.nAmount+paymentRecipient.nAmount+fee.nAmount+aliasRecipient.nAmount, false, wtx, wtxInOffer, wtxInCert, wtxAliasIn, wtxInEscrow, true);
+	SendMoneySyscoin(vecSend, acceptRecipient.nAmount+acceptCommissionRecipient.nAmount+paymentRecipient.nAmount+fee.nAmount+aliasRecipient.nAmount, false, wtx, wtxInOffer, wtxInCert, wtxAliasIn, wtxInEscrow, wtxAliasIn != NULL && theAlias.multiSigInfo.nRequiredSigs > 1);
 	
 	UniValue res(UniValue::VARR);
-	res.push_back(wtx.GetHash().GetHex());
-	res.push_back(stringFromVch(vchAccept));
+	if(wtxAliasIn != NULL && theAlias.multiSigInfo.nRequiredSigs > 1)
+	{
+		UniValue signParams(UniValue::VARR);
+		signParams.push_back(EncodeHexTx(wtx));
+		const UniValue &resSign = tableRPC.execute("syscoinsignrawtransaction", signParams);
+		const UniValue& so = resSign.get_obj();
+		string hex_str = "";
+
+		const UniValue& hex_value = find_value(so, "hex");
+		if (hex_value.isStr())
+			hex_str = hex_value.get_str();
+		const UniValue& complete_value = find_value(so, "complete");
+		bool bComplete = false;
+		if (complete_value.isBool())
+			bComplete = complete_value.get_bool();
+		if(bComplete)
+		{
+			res.push_back(wtx.GetHash().GetHex());
+			res.push_back(stringFromVch(vchAccept));
+		}
+		else
+		{
+			res.push_back(hex_str);
+			res.push_back(stringFromVch(vchAccept));
+			res.push_back("false");
+		}
+	}
+	else
+	{
+		res.push_back(wtx.GetHash().GetHex());
+		res.push_back(stringFromVch(vchAccept));
+	}
+
 	return res;
 }
 
@@ -2662,6 +2885,7 @@ UniValue offeracceptfeedback(const UniValue& params, bool fHelp) {
 	CScript scriptPubKeyAlias;
 	CScript scriptPubKey,scriptPubKeyOrig;
 	vector<unsigned char> vchLinkAlias;
+	CAliasIndex theAlias;
 	bool foundBuyerKey = false;
 	bool foundSellerKey = false;
 	try
@@ -2673,6 +2897,7 @@ UniValue offeracceptfeedback(const UniValue& params, bool fHelp) {
 		if (!pwalletMain->GetKey(keyID, vchSecret))
 			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1547 - " + _("Private key for buyer address is not known"));
 		vchLinkAlias = buyerAlias.vchAlias;
+		theAlias = buyerAlias;
 		foundBuyerKey = true;
 	}
 	catch(...)
@@ -2689,6 +2914,7 @@ UniValue offeracceptfeedback(const UniValue& params, bool fHelp) {
 		if (!pwalletMain->GetKey(keyID, vchSecret))
 			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1549 - " + _("Private key for seller address is not known"));
 		vchLinkAlias = sellerAlias.vchAlias;
+		theAlias = sellerAlias;
 		foundSellerKey = true;
 		foundBuyerKey = false;
 	}
@@ -2734,6 +2960,8 @@ UniValue offeracceptfeedback(const UniValue& params, bool fHelp) {
 			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1551 - " + _("Seller alias is not in your wallet"));
 
 		scriptPubKeyOrig= GetScriptForDestination(sellerKey.GetID());
+		if(sellerAlias.multiSigInfo.nRequiredSigs > 1)
+			scriptPubKeyOrig = CScript(sellerAlias.multiSigInfo.vchRedeemScript.begin(), sellerAlias.multiSigInfo.vchRedeemScript.end());
 		scriptPubKeyAlias = CScript() <<  CScript::EncodeOP_N(OP_ALIAS_UPDATE) << sellerAlias.vchAlias << sellerAlias.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
 		scriptPubKeyAlias += scriptPubKeyOrig;
 		scriptPubKeyOrig= GetScriptForDestination(buyerKey.GetID());
@@ -2770,10 +2998,36 @@ UniValue offeracceptfeedback(const UniValue& params, bool fHelp) {
 	const CWalletTx * wtxInEscrow=NULL;
 	const CWalletTx * wtxInCert=NULL;
 	const CWalletTx * wtxIn=NULL;
-	SendMoneySyscoin(vecSend, recipient.nAmount+recipientAlias.nAmount+fee.nAmount, false, wtx, wtxIn, wtxInCert, wtxAliasIn, wtxInEscrow);
-	UniValue ret(UniValue::VARR);
-	ret.push_back(wtx.GetHash().GetHex());
-	return ret;
+	SendMoneySyscoin(vecSend, recipient.nAmount+recipientAlias.nAmount+fee.nAmount, false, wtx, wtxIn, wtxInCert, wtxAliasIn, wtxInEscrow, theAlias.multiSigInfo.nRequiredSigs > 1);
+	UniValue res(UniValue::VARR);
+	if(theAlias.multiSigInfo.nRequiredSigs > 1)
+	{
+		UniValue signParams(UniValue::VARR);
+		signParams.push_back(EncodeHexTx(wtx));
+		const UniValue &resSign = tableRPC.execute("syscoinsignrawtransaction", signParams);
+		const UniValue& so = resSign.get_obj();
+		string hex_str = "";
+
+		const UniValue& hex_value = find_value(so, "hex");
+		if (hex_value.isStr())
+			hex_str = hex_value.get_str();
+		const UniValue& complete_value = find_value(so, "complete");
+		bool bComplete = false;
+		if (complete_value.isBool())
+			bComplete = complete_value.get_bool();
+		if(bComplete)
+		{
+			res.push_back(wtx.GetHash().GetHex());
+		}
+		else
+		{
+			res.push_back(hex_str);
+			res.push_back("false");
+		}
+	}
+	else
+		res.push_back(wtx.GetHash().GetHex());
+	return res;
 }
 UniValue offerinfo(const UniValue& params, bool fHelp) {
 	if (fHelp || 1 != params.size())
@@ -2880,6 +3134,7 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 	CSyscoinAddress address(PubKey.GetID());
 	if(!address.IsValid())
 		throw runtime_error("Invalid alias address");
+	address = CSyscoinAddress(address.ToString());
 	oOffer.push_back(Pair("address", address.ToString()));
 
 	float rating = 0;

@@ -16,7 +16,6 @@ class CCoinsViewCache;
 class CCoins;
 class CBlock;
 struct CRecipient;
-class CSyscoinAddress;
 static const unsigned int MAX_GUID_LENGTH = 70;
 static const unsigned int MAX_NAME_LENGTH = 255;
 static const unsigned int MAX_VALUE_LENGTH = 1023;
@@ -29,6 +28,46 @@ static const unsigned int SYSCOIN_FORK1 = 50000;
 
 
 bool IsSys21Fork(const uint64_t& nHeight);
+class CMultiSigAliasInfo {
+public:
+	std::vector<std::string> vchAliases;
+	unsigned char nRequiredSigs;
+	std::vector<unsigned char> vchRedeemScript;
+	CMultiSigAliasInfo() {
+        SetNull();
+    }
+
+	ADD_SERIALIZE_METHODS;
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+		READWRITE(vchAliases);
+		READWRITE(nRequiredSigs);
+		READWRITE(vchRedeemScript);
+	}
+
+    inline friend bool operator==(const CMultiSigAliasInfo &a, const CMultiSigAliasInfo &b) {
+        return (
+		a.vchAliases == b.vchAliases
+        && a.nRequiredSigs == b.nRequiredSigs
+		&& a.vchRedeemScript == b.vchRedeemScript
+        );
+    }
+
+    inline CMultiSigAliasInfo operator=(const CMultiSigAliasInfo &b) {
+		vchAliases = b.vchAliases;
+        nRequiredSigs = b.nRequiredSigs;
+		vchRedeemScript = b.vchRedeemScript;
+        return *this;
+    }
+
+    inline friend bool operator!=(const CMultiSigAliasInfo &a, const CMultiSigAliasInfo &b) {
+        return !(a == b);
+    }
+
+    inline void SetNull() { vchRedeemScript.clear(); vchAliases.clear(); nRequiredSigs = 0;}
+    inline bool IsNull() const { return (vchRedeemScript.empty() && vchAliases.empty() && nRequiredSigs == 0); }
+
+};
 class CAliasIndex {
 public:
 	 std::vector<unsigned char> vchAlias;
@@ -39,6 +78,7 @@ public:
 	std::vector<unsigned char> vchPrivateValue;
 	std::vector<unsigned char> vchPrivateKey;
 	std::vector<unsigned char> vchPubKey;
+	CMultiSigAliasInfo multiSigInfo;
 	unsigned char safetyLevel;
 	unsigned char nRenewal;
 	int nRatingAsBuyer;
@@ -61,6 +101,7 @@ public:
 		vchPrivateKey.clear();
 		vchPrivateValue.clear();
 		vchGUID.clear();
+		multiSigInfo.SetNull();
 	}
     bool GetAliasFromList(std::vector<CAliasIndex> &aliasList) {
         if(aliasList.size() == 0) return false;
@@ -97,6 +138,7 @@ public:
 		READWRITE(safetyLevel);
 		READWRITE(nRenewal);
 		READWRITE(safeSearch);
+		READWRITE(multiSigInfo);
 		READWRITE(VARINT(nRatingAsBuyer));
 		READWRITE(VARINT(nRatingCountAsBuyer));
 		READWRITE(VARINT(nRatingAsSeller));
@@ -105,7 +147,7 @@ public:
 		READWRITE(VARINT(nRatingCountAsArbiter));
 	}
     friend bool operator==(const CAliasIndex &a, const CAliasIndex &b) {
-		return (a.vchPrivateKey == b.vchPrivateKey && a.nRenewal == b.nRenewal && a.vchGUID == b.vchGUID && a.vchAlias == b.vchAlias && a.nRatingCountAsArbiter == b.nRatingCountAsArbiter && a.nRatingAsArbiter == b.nRatingAsArbiter && a.nRatingCountAsSeller == b.nRatingCountAsSeller && a.nRatingAsSeller == b.nRatingAsSeller && a.nRatingCountAsBuyer == b.nRatingCountAsBuyer && a.nRatingAsBuyer == b.nRatingAsBuyer && a.safetyLevel == b.safetyLevel && a.safeSearch == b.safeSearch && a.nHeight == b.nHeight && a.txHash == b.txHash && a.vchPublicValue == b.vchPublicValue && a.vchPrivateValue == b.vchPrivateValue && a.vchPubKey == b.vchPubKey);
+		return (a.multiSigInfo == b.multiSigInfo && a.vchPrivateKey == b.vchPrivateKey && a.nRenewal == b.nRenewal && a.vchGUID == b.vchGUID && a.vchAlias == b.vchAlias && a.nRatingCountAsArbiter == b.nRatingCountAsArbiter && a.nRatingAsArbiter == b.nRatingAsArbiter && a.nRatingCountAsSeller == b.nRatingCountAsSeller && a.nRatingAsSeller == b.nRatingAsSeller && a.nRatingCountAsBuyer == b.nRatingCountAsBuyer && a.nRatingAsBuyer == b.nRatingAsBuyer && a.safetyLevel == b.safetyLevel && a.safeSearch == b.safeSearch && a.nHeight == b.nHeight && a.txHash == b.txHash && a.vchPublicValue == b.vchPublicValue && a.vchPrivateValue == b.vchPrivateValue && a.vchPubKey == b.vchPubKey);
     }
 
     friend bool operator!=(const CAliasIndex &a, const CAliasIndex &b) {
@@ -123,6 +165,7 @@ public:
         vchPubKey = b.vchPubKey;
 		safetyLevel = b.safetyLevel;
 		safeSearch = b.safeSearch;
+		multiSigInfo = b.multiSigInfo;
 		nRatingAsBuyer = b.nRatingAsBuyer;
 		nRatingCountAsBuyer = b.nRatingCountAsBuyer;
 		nRatingAsSeller = b.nRatingAsSeller;
@@ -131,8 +174,8 @@ public:
 		nRatingCountAsArbiter = b.nRatingCountAsArbiter;
         return *this;
     }   
-    void SetNull() {vchPrivateKey.clear(); nRenewal = 0; vchGUID.clear(); vchAlias.clear(); nRatingCountAsBuyer = 0; nRatingAsBuyer = 0; nRatingCountAsSeller = 0; nRatingAsSeller = 0; nRatingCountAsArbiter = 0; nRatingAsArbiter = 0; safetyLevel = 0; safeSearch = true; txHash.SetNull(); nHeight = 0; vchPublicValue.clear(); vchPrivateValue.clear(); vchPubKey.clear(); }
-    bool IsNull() const { return (vchPrivateKey.empty() && nRenewal == 0 && vchGUID.empty() && vchAlias.empty() && nRatingCountAsBuyer == 0 && nRatingAsBuyer == 0 && nRatingCountAsArbiter == 0 && nRatingAsArbiter == 0 && nRatingCountAsSeller == 0 && nRatingAsSeller == 0 && safetyLevel == 0 && safeSearch && nHeight == 0 && txHash.IsNull() && vchPublicValue.empty() && vchPrivateValue.empty() && vchPubKey.empty()); }
+    void SetNull() {multiSigInfo.SetNull(); vchPrivateKey.clear(); nRenewal = 0; vchGUID.clear(); vchAlias.clear(); nRatingCountAsBuyer = 0; nRatingAsBuyer = 0; nRatingCountAsSeller = 0; nRatingAsSeller = 0; nRatingCountAsArbiter = 0; nRatingAsArbiter = 0; safetyLevel = 0; safeSearch = true; txHash.SetNull(); nHeight = 0; vchPublicValue.clear(); vchPrivateValue.clear(); vchPubKey.clear(); }
+    bool IsNull() const { return (multiSigInfo.IsNull() && vchPrivateKey.empty() && nRenewal == 0 && vchGUID.empty() && vchAlias.empty() && nRatingCountAsBuyer == 0 && nRatingAsBuyer == 0 && nRatingCountAsArbiter == 0 && nRatingAsArbiter == 0 && nRatingCountAsSeller == 0 && nRatingAsSeller == 0 && safetyLevel == 0 && safeSearch && nHeight == 0 && txHash.IsNull() && vchPublicValue.empty() && vchPrivateValue.empty() && vchPubKey.empty()); }
 	bool UnserializeFromTx(const CTransaction &tx);
 	bool UnserializeFromData(const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash);
 	const std::vector<unsigned char> Serialize();
@@ -205,7 +248,7 @@ bool DecodeAndParseSyscoinTx(const CTransaction& tx, int& op, int& nOut, std::ve
 bool DecodeAliasScript(const CScript& script, int& op,
 		std::vector<std::vector<unsigned char> > &vvch);
 void GetAddressFromAlias(const std::string& strAlias, std::string& strAddress, unsigned char& safetyLevel, bool& safeSearch, int64_t& nHeight);
-void GetAliasFromAddress(const std::string& strAddress, std::string& strAlias, unsigned char& safetyLevel, bool& safeSearch, int64_t& nHeight);
+void GetAliasFromAddress(std::string& strAddress, std::string& strAlias, unsigned char& safetyLevel, bool& safeSearch, int64_t& nHeight);
 CAmount convertCurrencyCodeToSyscoin(const std::vector<unsigned char> &vchAliasPeg, const std::vector<unsigned char> &vchCurrencyCode, const double &nPrice, const unsigned int &nHeight, int &precision);
 int getFeePerByte(const std::vector<unsigned char> &vchAliasPeg, const std::vector<unsigned char> &vchCurrencyCode, const unsigned int &nHeight, int &precision);
 float getEscrowFee(const std::vector<unsigned char> &vchAliasPeg, const std::vector<unsigned char> &vchCurrencyCode, const unsigned int &nHeight, int &precision);

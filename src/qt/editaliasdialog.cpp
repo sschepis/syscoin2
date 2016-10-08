@@ -7,6 +7,7 @@
 #include "syscoingui.h"
 #include "ui_interface.h"
 #include <QDataWidgetMapper>
+#include <QInputDialog>
 #include <QMessageBox>
 #include "rpc/server.h"
 using namespace std;
@@ -32,13 +33,20 @@ EditAliasDialog::EditAliasDialog(Mode mode, QWidget *parent) :
 	ui->expiryDisclaimer->setText(tr("<font color='blue'>Set the length of time to keep your alias from expiring. The longer you wish to keep it alive the more fees you will pay to create or update this alias. The formula for the fee is 0.2 SYS * years * years.</font>"));
     ui->privateDisclaimer->setText(tr("<font color='blue'>This is to private profile information which is encrypted and only available to you. This is useful for when sending notes to a merchant through the payment screen so you don't have to type it out everytime.</font>"));
 	ui->publicDisclaimer->setText(tr("<font color='blue'>This is public profile information that anyone on the network can see. Fill this in with things you would like others to know about you.</font>"));
+	ui->multisigTitle->setText(tr("<font color='blue'>Set up your multisig alias here with the required number of signatures and the aliases that are capable of signing when this alias is updated. You may also sign a raw alias transaction below if you have been given one by a signee to complete a multisig transaction on this alias</font>"));
+	connect(ui->rawTxBox,SIGNAL(clicked(bool)),SLOT(onSendRawTxChecked(bool)));
+	connect(ui->reqSigsEdit, SIGNAL(textChanged(const QString &)), this, SLOT(reqSigsChanged()));
+	ui->rawTxEdit->setEnabled(false);
+	ui->reqSigsEdit->setValidator( new QIntValidator(0, 50, this) );
 	switch(mode)
     {
     case NewDataAlias:
         setWindowTitle(tr("New Data Alias"));
+		ui->rawTxBox->setEnabled(false);
         break;
     case NewAlias:
         setWindowTitle(tr("New Alias"));
+		ui->rawTxBox->setEnabled(false);
         break;
     case EditDataAlias:
         setWindowTitle(tr("Edit Data Alias"));
@@ -58,6 +66,11 @@ EditAliasDialog::EditAliasDialog(Mode mode, QWidget *parent) :
 		ui->transferEdit->setVisible(true);
 		ui->transferLabel->setVisible(true);
 		ui->transferDisclaimer->setVisible(true);
+		ui->rawTxBox->setEnabled(false);
+		ui->reqSigsEdit->setEnabled(false);
+		ui->multisigList->setEnabled(false);
+		ui->addButton->setEnabled(false);
+		ui->deleteButton->setEnabled(false);
 		ui->tabWidget->setCurrentIndex(1);
         break;
     }
@@ -69,9 +82,66 @@ EditAliasDialog::~EditAliasDialog()
 {
     delete ui;
 }
+void EditAliasDialog::onSendRawTxChecked(bool toggled)
+{
+	if(ui->rawTxBox->isChecked())
+	{
+		ui->nameEdit->setEnabled(false);
+		ui->safeSearchEdit->setEnabled(false);
+		ui->privateEdit->setEnabled(false);
+		ui->transferEdit->setEnabled(false);
+		ui->transferLabel->setEnabled(false);
+		ui->transferDisclaimer->setEnabled(false);
+		ui->reqSigsEdit->setEnabled(false);
+		ui->multisigList->setEnabled(false);
+		ui->addButton->setEnabled(false);
+		ui->deleteButton->setEnabled(false);
+		ui->expiryEdit->setEnabled(false);
+		ui->rawTxEdit->setEnabled(true);	
+	}
+	else
+	{
+		ui->nameEdit->setEnabled(true);
+		ui->safeSearchEdit->setEnabled(true);
+		ui->privateEdit->setEnabled(true);
+		ui->transferEdit->setEnabled(true);
+		ui->transferLabel->setEnabled(true);
+		ui->transferDisclaimer->setEnabled(true);
+		ui->reqSigsEdit->setEnabled(true);
+		ui->multisigList->setEnabled(true);
+		ui->addButton->setEnabled(true);
+		ui->deleteButton->setEnabled(true);
+		ui->expiryEdit->setEnabled(true);
+		ui->rawTxEdit->setEnabled(false);	
+	}
+}
+
 void EditAliasDialog::on_cancelButton_clicked()
 {
     reject();
+}
+void EditAliasDialog::on_addButton_clicked()
+{
+	
+    bool ok;
+    QString text = QInputDialog::getText(this, tr("Enter an alias"),
+                                         tr("Alias:"), QLineEdit::Normal,
+                                         "", &ok);
+    if (ok && !text.isEmpty())
+        ui->multisigList->addItem(text);
+
+	ui->multisigDisclaimer->setText(tr("<font color='blue'>This is a <b>%1</b> of <b>%2</b> multisig alias</font>").arg(ui->reqSigsEdit->text()).arg(QString::number(ui->multisigList->count())));
+}
+void EditAliasDialog::on_deleteButton_clicked()
+{
+    QModelIndexList selected = ui->multisigList->selectionModel()->selectedIndexes();    
+	for (int i = selected.count() - 1; i > -1; --i)
+		ui->multisigList->model()->removeRow(selected.at(i).row());
+	ui->multisigDisclaimer->setText(tr("<font color='blue'>This is a <b>%1</b> of <b>%2</b> multisig alias</font>").arg(ui->reqSigsEdit->text()).arg(QString::number(ui->multisigList->count())));
+}
+void EditAliasDialog::reqSigsChanged()
+{
+	ui->multisigDisclaimer->setText(tr("<font color='blue'>This is a <b>%1</b> of <b>%2</b> multisig alias</font>").arg(ui->reqSigsEdit->text()).arg(QString::number(ui->multisigList->count())));
 }
 void EditAliasDialog::on_okButton_clicked()
 {
@@ -109,7 +179,58 @@ void EditAliasDialog::loadRow(int row)
 
 bool EditAliasDialog::saveCurrentRow()
 {
+	UniValue params(UniValue::VARR);
+	UniValue arraySendParams(UniValue::VARR);
+	string strMethod;
+	if(ui->rawTxBox->isChecked())
+	{
+		strMethod = string("syscoinsignrawtransaction");
+		params.push_back(ui->rawTxEdit->toPlainText().toStdString());
 
+		try {
+            UniValue result = tableRPC.execute(strMethod, params);
+			const UniValue& so = result.get_obj();
+			string hex_str = "";
+
+			const UniValue& hex_value = find_value(so, "hex");
+			if (hex_value.isStr())
+				hex_str = hex_value.get_str();
+			const UniValue& complete_value = find_value(so, "complete");
+			bool bComplete = false;
+			if (complete_value.isStr())
+				bComplete = complete_value.get_str() == "true";
+			
+			if(bComplete)
+			{
+				QMessageBox::information(this, windowTitle(),
+					tr("Transaction was completed successfully!"),
+						QMessageBox::Ok, QMessageBox::Ok);
+			}
+			else
+			{
+				GUIUtil::setClipboard(QString::fromStdString(hex_str));
+				QMessageBox::critical(this, windowTitle(),
+					tr("This transaction requires more signatures. Transaction hex <b>%1</b> has been copied to your clipboard for your reference. Please provide it to a signee that hasn't yet signed.").arg(QString::fromStdString(hex_str)),
+						QMessageBox::Ok, QMessageBox::Ok);
+			}
+
+			return true;
+		}
+		catch (UniValue& objError)
+		{
+			string strError = find_value(objError, "message").get_str();
+			QMessageBox::critical(this, windowTitle(),
+			tr("Error creating updating multisig alias: \"%1\"").arg(QString::fromStdString(strError)),
+				QMessageBox::Ok, QMessageBox::Ok);
+		}
+		catch(std::exception& e)
+		{
+			QMessageBox::critical(this, windowTitle(),
+				tr("General exception creating sending raw alias update transaction"),
+				QMessageBox::Ok, QMessageBox::Ok);
+		}	
+		return false;
+	}
     if(!model || !walletModel) return false;
     WalletModel::UnlockContext ctx(walletModel->requestUnlock());
     if(!ctx.isValid())
@@ -117,8 +238,6 @@ bool EditAliasDialog::saveCurrentRow()
 		model->editStatus = AliasTableModel::WALLET_UNLOCK_FAILURE;
         return false;
     }
-	UniValue params(UniValue::VARR);
-	string strMethod;
     switch(mode)
     {
     case NewDataAlias:
@@ -136,6 +255,17 @@ bool EditAliasDialog::saveCurrentRow()
 		params.push_back(ui->privateEdit->toPlainText().toStdString());
 		params.push_back(ui->safeSearchEdit->currentText().toStdString());
 		params.push_back(ui->expiryEdit->itemData(ui->expiryEdit->currentIndex()).toString().toStdString());
+		if(ui->multisigList->count() > 0)
+		{
+			params.push_back(ui->reqSigsEdit->text().toStdString());
+			for(int i = 0; i < ui->multisigList->count(); ++i)
+			{
+				QString str = ui->multisigList->item(i)->text();
+				arraySendParams.push_back(str.toStdString());
+			}
+			params.push_back(arraySendParams);
+		}
+
 		try {
             UniValue result = tableRPC.execute(strMethod, params);
 			if (result.type() != UniValue::VNULL)
@@ -172,6 +302,16 @@ bool EditAliasDialog::saveCurrentRow()
 			params.push_back(ui->safeSearchEdit->currentText().toStdString());	
 			params.push_back("");
 			params.push_back(ui->expiryEdit->itemData(ui->expiryEdit->currentIndex()).toString().toStdString());
+			if(ui->multisigList->count() > 0)
+			{
+				params.push_back(QString::number(ui->multisigList->count()).toStdString());
+				for(int i = 0; i < ui->multisigList->count(); ++i)
+				{
+					QString str = ui->multisigList->item(i)->text();
+					arraySendParams.push_back(str.toStdString());
+				}
+				params.push_back(arraySendParams);
+			}
 			try {
 				UniValue result = tableRPC.execute(strMethod, params);
 				if (result.type() != UniValue::VNULL)
@@ -180,6 +320,24 @@ bool EditAliasDialog::saveCurrentRow()
 					alias = ui->nameEdit->toPlainText() + ui->aliasEdit->text();
 						
 				}
+				const UniValue& resArray = result.get_array();
+				if(resArray.size() > 1)
+				{
+					const UniValue& complete_value = resArray[1];
+					bool bComplete = false;
+					if (complete_value.isStr())
+						bComplete = complete_value.get_str() == "true";
+					if(!bComplete)
+					{
+						string hex_str = resArray[0].get_str();
+						GUIUtil::setClipboard(QString::fromStdString(hex_str));
+						QMessageBox::critical(this, windowTitle(),
+							tr("This transaction requires more signatures. Transaction hex <b>%1</b> has been copied to your clipboard for your reference. Please provide it to a signee that hasn't yet signed.").arg(QString::fromStdString(hex_str)),
+								QMessageBox::Ok, QMessageBox::Ok);
+						return false;
+					}
+				}
+
 			}
 			catch (UniValue& objError)
 			{
@@ -215,6 +373,23 @@ bool EditAliasDialog::saveCurrentRow()
 
 					alias = ui->nameEdit->toPlainText() + ui->aliasEdit->text()+ui->transferEdit->text();
 						
+				}
+				const UniValue& resArray = result.get_array();
+				if(resArray.size() > 1)
+				{
+					const UniValue& complete_value = resArray[1];
+					bool bComplete = false;
+					if (complete_value.isStr())
+						bComplete = complete_value.get_str() == "true";
+					if(!bComplete)
+					{
+						string hex_str = resArray[0].get_str();
+						GUIUtil::setClipboard(QString::fromStdString(hex_str));
+						QMessageBox::critical(this, windowTitle(),
+							tr("This transaction requires more signatures. Transaction hex <b>%1</b> has been copied to your clipboard for your reference. Please provide it to a signee that hasn't yet signed.").arg(QString::fromStdString(hex_str)),
+								QMessageBox::Ok, QMessageBox::Ok);
+						return false;
+					}
 				}
 			}
 			catch (UniValue& objError)

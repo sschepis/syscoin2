@@ -40,7 +40,10 @@ public Q_SLOTS:
     void accept();
 	void on_okButton_clicked();
 	void on_cancelButton_clicked();
-
+	void on_addButton_clicked();
+	void on_deleteButton_clicked();
+	void onSendRawTxChecked(bool toggled);
+	void reqSigsChanged();
 private:
     bool saveCurrentRow();
 

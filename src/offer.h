@@ -216,7 +216,7 @@ public:
 	std::vector<unsigned char> vchCert;
 	std::vector<unsigned char> vchAliasPeg;
 	COfferLinkWhitelist linkWhitelist;
-	std::vector<std::vector<unsigned char> > offerLinks;
+	std::vector<std::string> offerLinks;
 	bool bPrivate;
 	unsigned char paymentOptions;
 	unsigned char safetyLevel;

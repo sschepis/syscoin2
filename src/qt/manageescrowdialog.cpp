@@ -297,6 +297,23 @@ void ManageEscrowDialog::onLeaveFeedback()
 	params.push_back(ui->secondaryRating->cleanText().toStdString());
 	try {
 		UniValue result = tableRPC.execute(strMethod, params);
+		const UniValue& resArray = result.get_array();
+		if(resArray.size() > 1)
+		{
+			const UniValue& complete_value = resArray[1];
+			bool bComplete = false;
+			if (complete_value.isStr())
+				bComplete = complete_value.get_str() == "true";
+			if(!bComplete)
+			{
+				string hex_str = resArray[0].get_str();
+				GUIUtil::setClipboard(QString::fromStdString(hex_str));
+				QMessageBox::critical(this, windowTitle(),
+					tr("This transaction requires more signatures. Transaction hex <b>%1</b> has been copied to your clipboard for your reference. Please provide it to a signee that hasn't yet signed.").arg(QString::fromStdString(hex_str)),
+						QMessageBox::Ok, QMessageBox::Ok);
+				return;
+			}
+		}
 		QMessageBox::information(this, windowTitle(),
 		tr("Thank you for your feedback!"),
 			QMessageBox::Ok, QMessageBox::Ok);
@@ -334,6 +351,23 @@ bool ManageEscrowDialog::CompleteEscrowRelease()
 		}
 		else
 		{
+			const UniValue& resArray = result.get_array();
+			if(resArray.size() > 1)
+			{
+				const UniValue& complete_value = resArray[1];
+				bool bComplete = false;
+				if (complete_value.isStr())
+					bComplete = complete_value.get_str() == "true";
+				if(!bComplete)
+				{
+					string hex_str = resArray[0].get_str();
+					GUIUtil::setClipboard(QString::fromStdString(hex_str));
+					QMessageBox::critical(this, windowTitle(),
+						tr("This transaction requires more signatures. Transaction hex <b>%1</b> has been copied to your clipboard for your reference. Please provide it to a signee that hasn't yet signed.").arg(QString::fromStdString(hex_str)),
+							QMessageBox::Ok, QMessageBox::Ok);
+					return false;
+				}
+			}
 			QMessageBox::information(this, windowTitle(),
 			tr("Escrow release completed successfully! "),
 				QMessageBox::Ok, QMessageBox::Ok);
@@ -373,6 +407,23 @@ bool ManageEscrowDialog::CompleteEscrowRefund()
 		}
 		else
 		{
+			const UniValue& resArray = result.get_array();
+			if(resArray.size() > 1)
+			{
+				const UniValue& complete_value = resArray[1];
+				bool bComplete = false;
+				if (complete_value.isStr())
+					bComplete = complete_value.get_str() == "true";
+				if(!bComplete)
+				{
+					string hex_str = resArray[0].get_str();
+					GUIUtil::setClipboard(QString::fromStdString(hex_str));
+					QMessageBox::critical(this, windowTitle(),
+						tr("This transaction requires more signatures. Transaction hex <b>%1</b> has been copied to your clipboard for your reference. Please provide it to a signee that hasn't yet signed.").arg(QString::fromStdString(hex_str)),
+							QMessageBox::Ok, QMessageBox::Ok);
+					return false;
+				}
+			}
 			QMessageBox::information(this, windowTitle(),
 			tr("Escrow refund completed successfully!"),
 				QMessageBox::Ok, QMessageBox::Ok);
@@ -484,7 +535,7 @@ void ManageEscrowDialog::slotConfirmedFinishedCheck(QNetworkReply * reply){
 		ui->btcButton->setText(m_buttontext);
 		GUIUtil::setClipboard(m_redeemTxId);
         QMessageBox::critical(this, windowTitle(),
-            tr("Could find escrow payment on the Bitcoin blockchain, please ensure that the payment transaction ID <b>%1</b> has been confirmed on the network. Payment ID has been copied to your clipboard for your reference.").arg(m_redeemTxId),
+            tr("Could not find escrow payment on the Bitcoin blockchain, please ensure that the payment transaction ID <b>%1</b> has been confirmed on the network. Payment ID has been copied to your clipboard for your reference.").arg(m_redeemTxId),
                 QMessageBox::Ok, QMessageBox::Ok);
 		reply->deleteLater();
 		return;
@@ -624,6 +675,23 @@ void ManageEscrowDialog::on_releaseButton_clicked()
 		}
 		else
 		{
+			const UniValue& resArray = result.get_array();
+			if(resArray.size() > 1)
+			{
+				const UniValue& complete_value = resArray[1];
+				bool bComplete = false;
+				if (complete_value.isStr())
+					bComplete = complete_value.get_str() == "true";
+				if(!bComplete)
+				{
+					string hex_str = resArray[0].get_str();
+					GUIUtil::setClipboard(QString::fromStdString(hex_str));
+					QMessageBox::critical(this, windowTitle(),
+						tr("This transaction requires more signatures. Transaction hex <b>%1</b> has been copied to your clipboard for your reference. Please provide it to a signee that hasn't yet signed.").arg(QString::fromStdString(hex_str)),
+							QMessageBox::Ok, QMessageBox::Ok);
+					return;
+				}
+			}
 			QMessageBox::information(this, windowTitle(),
 			tr("Escrow released successfully!"),
 				QMessageBox::Ok, QMessageBox::Ok);
@@ -690,6 +758,23 @@ void ManageEscrowDialog::on_refundButton_clicked()
 		}
 		else
 		{
+			const UniValue& resArray = result.get_array();
+			if(resArray.size() > 1)
+			{
+				const UniValue& complete_value = resArray[1];
+				bool bComplete = false;
+				if (complete_value.isStr())
+					bComplete = complete_value.get_str() == "true";
+				if(!bComplete)
+				{
+					string hex_str = resArray[0].get_str();
+					GUIUtil::setClipboard(QString::fromStdString(hex_str));
+					QMessageBox::critical(this, windowTitle(),
+						tr("This transaction requires more signatures. Transaction hex <b>%1</b> has been copied to your clipboard for your reference. Please provide it to a signee that hasn't yet signed.").arg(QString::fromStdString(hex_str)),
+							QMessageBox::Ok, QMessageBox::Ok);
+					return;
+				}
+			}
 			QMessageBox::information(this, windowTitle(),
 			tr("Escrow refunded successfully!"),
 				QMessageBox::Ok, QMessageBox::Ok);

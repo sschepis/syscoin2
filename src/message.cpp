@@ -6,6 +6,7 @@
 #include "util.h"
 #include "random.h"
 #include "base58.h"
+#include "core_io.h"
 #include "rpc/server.h"
 #include "wallet/wallet.h"
 #include "chainparams.h"
@@ -15,7 +16,7 @@
 #include <boost/thread.hpp>
 #include <boost/algorithm/string/case_conv.hpp>
 using namespace std;
-extern void SendMoneySyscoin(const vector<CRecipient> &vecSend, CAmount nValue, bool fSubtractFeeFromAmount, CWalletTx& wtxNew, const CWalletTx* wtxInOffer=NULL, const CWalletTx* wtxInCert=NULL, const CWalletTx* wtxInAlias=NULL, const CWalletTx* wtxInEscrow=NULL, bool syscoinTx=true);
+extern void SendMoneySyscoin(const vector<CRecipient> &vecSend, CAmount nValue, bool fSubtractFeeFromAmount, CWalletTx& wtxNew, const CWalletTx* wtxInOffer=NULL, const CWalletTx* wtxInCert=NULL, const CWalletTx* wtxInAlias=NULL, const CWalletTx* wtxInEscrow=NULL, bool syscoinMultiSigTx=false);
 void PutToMessageList(std::vector<CMessage> &messageList, CMessage& index) {
 	int i = messageList.size() - 1;
 	BOOST_REVERSE_FOREACH(CMessage &o, messageList) {
@@ -457,6 +458,8 @@ UniValue messagenew(const UniValue& params, bool fHelp) {
 
 	CPubKey FromPubKey = CPubKey(aliasFrom.vchPubKey);
 	scriptPubKeyAliasOrig = GetScriptForDestination(FromPubKey.GetID());
+	if(aliasFrom.multiSigInfo.nRequiredSigs > 1)
+		scriptPubKeyAliasOrig = CScript(aliasFrom.multiSigInfo.vchRedeemScript.begin(), aliasFrom.multiSigInfo.vchRedeemScript.end());
 	scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << aliasFrom.vchAlias <<  aliasFrom.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
 	scriptPubKeyAlias += scriptPubKeyAliasOrig;		
 
@@ -518,10 +521,40 @@ UniValue messagenew(const UniValue& params, bool fHelp) {
 	const CWalletTx * wtxInOffer=NULL;
 	const CWalletTx * wtxInEscrow=NULL;
 	const CWalletTx * wtxInCert=NULL;
-	SendMoneySyscoin(vecSend, recipient.nAmount+fee.nAmount, false, wtx, wtxInOffer, wtxInCert, wtxAliasIn, wtxInEscrow);
+	SendMoneySyscoin(vecSend, recipient.nAmount+fee.nAmount, false, wtx, wtxInOffer, wtxInCert, wtxAliasIn, wtxInEscrow, aliasFrom.multiSigInfo.nRequiredSigs > 1);
 	UniValue res(UniValue::VARR);
-	res.push_back(wtx.GetHash().GetHex());
-	res.push_back(stringFromVch(vchMessage));
+	if(aliasFrom.multiSigInfo.nRequiredSigs > 1)
+	{
+		UniValue signParams(UniValue::VARR);
+		signParams.push_back(EncodeHexTx(wtx));
+		const UniValue &resSign = tableRPC.execute("syscoinsignrawtransaction", signParams);
+		const UniValue& so = resSign.get_obj();
+		string hex_str = "";
+
+		const UniValue& hex_value = find_value(so, "hex");
+		if (hex_value.isStr())
+			hex_str = hex_value.get_str();
+		const UniValue& complete_value = find_value(so, "complete");
+		bool bComplete = false;
+		if (complete_value.isBool())
+			bComplete = complete_value.get_bool();
+		if(bComplete)
+		{
+			res.push_back(wtx.GetHash().GetHex());
+			res.push_back(stringFromVch(vchMessage));
+		}
+		else
+		{
+			res.push_back(hex_str);
+			res.push_back(stringFromVch(vchMessage));
+			res.push_back("false");
+		}
+	}
+	else
+	{
+		res.push_back(wtx.GetHash().GetHex());
+		res.push_back(stringFromVch(vchMessage));
+	}
 	return res;
 }
 

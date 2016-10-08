@@ -387,7 +387,7 @@ UniValue getaddressesbyaccount(const UniValue& params, bool fHelp)
     return ret;
 }
 // SYSCOIN: Send service transactions
-void SendMoneySyscoin(const vector<CRecipient> &vecSend, CAmount nValue, bool fSubtractFeeFromAmount, CWalletTx& wtxNew, const CWalletTx* wtxOfferIn=NULL,  const CWalletTx* wtxCertIn=NULL, const CWalletTx* wtxAliasIn=NULL, const CWalletTx* wtxEscrowIn=NULL, bool syscoinTx=true)
+void SendMoneySyscoin(const vector<CRecipient> &vecSend, CAmount nValue, bool fSubtractFeeFromAmount, CWalletTx& wtxNew, const CWalletTx* wtxOfferIn=NULL,  const CWalletTx* wtxCertIn=NULL, const CWalletTx* wtxAliasIn=NULL, const CWalletTx* wtxEscrowIn=NULL, bool syscoinMultiSigTx=false)
 {
     CAmount curBalance = pwalletMain->GetBalance();
 
@@ -403,7 +403,7 @@ void SendMoneySyscoin(const vector<CRecipient> &vecSend, CAmount nValue, bool fS
     CAmount nFeeRequired;
     std::string strError;
     int nChangePosRet = -1;
-    if (!pwalletMain->CreateTransaction(vecSend, wtxNew, reservekey, nFeeRequired, nChangePosRet, strError, NULL, true, wtxOfferIn, wtxCertIn, wtxAliasIn, wtxEscrowIn, syscoinTx)) {
+    if (!pwalletMain->CreateTransaction(vecSend, wtxNew, reservekey, nFeeRequired, nChangePosRet, strError, NULL, !syscoinMultiSigTx, wtxOfferIn, wtxCertIn, wtxAliasIn, wtxEscrowIn, true)) {
         if (!fSubtractFeeFromAmount && nValue + nFeeRequired > pwalletMain->GetBalance())
             strError = strprintf("Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds!", FormatMoney(nFeeRequired));
         throw runtime_error(strError);
@@ -461,7 +461,7 @@ void SendMoneySyscoin(const vector<CRecipient> &vecSend, CAmount nValue, bool fS
 			throw runtime_error(errorMessage.c_str());
 	}
 	
-    if (!pwalletMain->CommitTransaction(wtxNew, reservekey, g_connman.get()))
+    if (!syscoinMultiSigTx && !pwalletMain->CommitTransaction(wtxNew, reservekey, g_connman.get()))
         throw runtime_error("SYSCOIN_RPC_ERROR ERRCODE: 9000 - " + _("The Syscoin input (alias, certificate, offer, escrow) you are trying to use for this transaction is invalid or not confirmed yet! Please wait a block and try again..."));
 }
 static void SendMoney(const CTxDestination &address, CAmount nValue, bool fSubtractFeeFromAmount, CWalletTx& wtxNew)
@@ -2729,6 +2729,8 @@ extern UniValue aliashistory(const UniValue& params, bool fHelp);
 extern UniValue aliasfilter(const UniValue& params, bool fHelp);
 extern UniValue generatepublickey(const UniValue& params, bool fHelp);
 extern UniValue importalias(const UniValue& params, bool fHelp);
+extern UniValue syscoinsignrawtransaction(const UniValue& params, bool fHelp);
+
 
 extern UniValue offernew(const UniValue& params, bool fHelp);
 extern UniValue offerupdate(const UniValue& params, bool fHelp);
@@ -2833,6 +2835,7 @@ static const CRPCCommand commands[] =
     { "wallet", "aliasfilter",       &aliasfilter,       false },
 	{ "wallet", "generatepublickey", &generatepublickey, false },
 	{ "wallet", "importalias",		 &importalias,	false },
+	{ "wallet", "syscoinsignrawtransaction",		 &syscoinsignrawtransaction,	false },
 
     // use the blockchain as a distributed marketplace
     { "wallet", "offernew",             &offernew,             false },

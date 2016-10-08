@@ -160,6 +160,23 @@ void OfferAcceptDialog::acceptOffer()
             result = tableRPC.execute(strMethod, params);
 			if (result.type() != UniValue::VNULL)
 			{
+				const UniValue& resArray = result.get_array();
+				if(resArray.size() > 2)
+				{
+					const UniValue& complete_value = resArray[2];
+					bool bComplete = false;
+					if (complete_value.isStr())
+						bComplete = complete_value.get_str() == "true";
+					if(!bComplete)
+					{
+						string hex_str = resArray[0].get_str();
+						GUIUtil::setClipboard(QString::fromStdString(hex_str));
+						QMessageBox::critical(this, windowTitle(),
+							tr("This transaction requires more signatures. Transaction hex <b>%1</b> has been copied to your clipboard for your reference. Please provide it to a signee that hasn't yet signed.").arg(QString::fromStdString(hex_str)),
+								QMessageBox::Ok, QMessageBox::Ok);
+						return;
+					}
+				}
 				const UniValue &arr = result.get_array();
 				string strResult = arr[0].get_str();
 				QString offerAcceptTXID = QString::fromStdString(strResult);
@@ -228,6 +245,23 @@ void OfferAcceptDialog::acceptEscrow()
             result = tableRPC.execute(strMethod, params);
 			if (result.type() != UniValue::VNULL)
 			{
+				const UniValue& resArray = result.get_array();
+				if(resArray.size() > 2)
+				{
+					const UniValue& complete_value = resArray[2];
+					bool bComplete = false;
+					if (complete_value.isStr())
+						bComplete = complete_value.get_str() == "true";
+					if(!bComplete)
+					{
+						string hex_str = resArray[0].get_str();
+						GUIUtil::setClipboard(QString::fromStdString(hex_str));
+						QMessageBox::critical(this, windowTitle(),
+							tr("This transaction requires more signatures. Transaction hex <b>%1</b> has been copied to your clipboard for your reference. Please provide it to a signee that hasn't yet signed.").arg(QString::fromStdString(hex_str)),
+								QMessageBox::Ok, QMessageBox::Ok);
+						return;
+					}
+				}
 				const UniValue &arr = result.get_array();
 				string strResult = arr[0].get_str();
 				QString escrowTXID = QString::fromStdString(strResult);

@@ -168,7 +168,7 @@
      </widget>
      <widget class="QWidget" name="tab_advanced">
       <attribute name="title">
-       <string>Advanced</string>
+       <string>Miscellaneous</string>
       </attribute>
       <layout class="QFormLayout" name="formLayout_2">
        <property name="fieldGrowthPolicy">

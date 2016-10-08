@@ -95,8 +95,13 @@ isminetype IsMine(const CKeyStore &keystore, const CScript& scriptPubKey)
         // them) enable spend-out-from-under-you attacks, especially
         // in shared-wallet situations.
         vector<valtype> keys(vSolutions.begin()+1, vSolutions.begin()+vSolutions.size()-1);
-        if (HaveKeys(keys, keystore) == keys.size())
+		//SYSCOIN 
+        unsigned int nNumKeysFound = HaveKeys(keys, keystore);
+		if (nNumKeysFound == keys.size())
             return ISMINE_SPENDABLE;
+		else if(nNumKeysFound > 0)
+			return ISMINE_WATCH_SOLVABLE;		
+
         break;
     }
     }
