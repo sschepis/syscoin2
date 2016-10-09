@@ -29,7 +29,7 @@ void SignRawTxDialog::setRawTxEdit()
 
 	try {
         UniValue result = tableRPC.execute(strMethod, params);
-		ui->rawTxDecodeEdit->setPlainText(result.get_str());
+		ui->rawTxDecodeEdit->setPlainText(QString::fromStdString(result.get_str()));
 	}
 	catch (UniValue& objError)
 	{
@@ -48,7 +48,7 @@ void SignRawTxDialog::setRawSysTxEdit()
 
 	try {
         UniValue result = tableRPC.execute(strMethod, params);
-		ui->rawSysTxDecodeEdit->setPlainText(result.get_str());
+		ui->rawSysTxDecodeEdit->setPlainText(QString::fromStdString(result.get_str()));
 	}
 	catch (UniValue& objError)
 	{
