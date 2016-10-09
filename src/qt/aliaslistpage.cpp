@@ -43,12 +43,14 @@ AliasListPage::AliasListPage(const PlatformStyle *platformStyle, QWidget *parent
 		ui->messageButton->setIcon(QIcon());
 		ui->copyAlias->setIcon(QIcon());
 		ui->searchAlias->setIcon(QIcon());
+		ui->signMultisigButton->setIcon(QIcon());
 	}
 	else
 	{
 		ui->messageButton->setIcon(platformStyle->SingleColorIcon(":/icons/" + theme + "/outmail"));
 		ui->copyAlias->setIcon(platformStyle->SingleColorIcon(":/icons/" + theme + "/editcopy"));
 		ui->searchAlias->setIcon(platformStyle->SingleColorIcon(":/icons/" + theme + "/search"));
+		ui->signMultisigButton->setIcon(platformStyle->SingleColorIcon(":/icons/" + theme + "/key"));
 	}
 
     ui->labelExplanation->setText(tr("Search for Syscoin Aliases. Select Safe Search from wallet options if you wish to omit potentially offensive Aliases(On by default)"));

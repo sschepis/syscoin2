@@ -43,7 +43,7 @@ MyAliasListPage::MyAliasListPage(const PlatformStyle *platformStyle, QWidget *pa
 		ui->newPubKey->setIcon(QIcon());
 		ui->whitelistButton->setIcon(QIcon());
 		ui->importButton->setIcon(QIcon());
-
+		ui->signMultisigButton->setIcon(QIcon());
 	}
 	else
 	{
@@ -56,6 +56,7 @@ MyAliasListPage::MyAliasListPage(const PlatformStyle *platformStyle, QWidget *pa
 		ui->newPubKey->setIcon(platformStyle->SingleColorIcon(":/icons/" + theme + "/add"));
 		ui->whitelistButton->setIcon(platformStyle->SingleColorIcon(":/icons/" + theme + "/address-book"));
 		ui->importButton->setIcon(platformStyle->SingleColorIcon(":/icons/" + theme + "/add"));
+		ui->signMultisigButton->setIcon(platformStyle->SingleColorIcon(":/icons/" + theme + "/key"));
 		
 	}
 
