@@ -36,7 +36,7 @@ public:
 	void showEvent ( QShowEvent * event );
 public Q_SLOTS:
     void done(int retval);
-
+	void on_signMultisigButton_clicked();
 private:
 	ClientModel* clientModel;
 	WalletModel *walletModel;

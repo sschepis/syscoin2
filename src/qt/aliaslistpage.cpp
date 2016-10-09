@@ -17,6 +17,7 @@
 #include <QClipboard>
 #include <QMessageBox>
 #include <QKeyEvent>
+#include <QInputDialog>
 #include <QMenu>
 #include "main.h"
 #include "rpc/server.h"
