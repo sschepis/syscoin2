@@ -1783,9 +1783,9 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	return res;
 }
 UniValue aliasupdate(const UniValue& params, bool fHelp) {
-	if (fHelp || 2 > params.size() || 6 < params.size())
+	if (fHelp || 2 > params.size() || 8 < params.size())
 		throw runtime_error(
-		"aliasupdate <aliasname> <public value> [private value=''] [safesearch=Yes] [toalias_pubkey=''] [expire=1]\n"
+		"aliasupdate <aliasname> <public value> [private value=''] [safesearch=Yes] [toalias_pubkey=''] [expire=1] [nrequired=0] [\"alias\",...]\n"
 						"Update and possibly transfer an alias.\n"
 						"<aliasname> alias name.\n"
 						"<public value> alias public profile data, 1023 chars max.\n"
@@ -1793,6 +1793,12 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 						"<safesearch> is this alias safe to search. Defaults to Yes, No for not safe and to hide in GUI search queries\n"
 						"<toalias_pubkey> receiver syscoin alias pub key, if transferring alias.\n"
 						"<expire> Number of years before expiry. It affects the fees you pay, the cheapest being 1 year. The more years you specify the more fees you pay. Max is 5 years, Min is 1 year. Defaults to 1 year.\n"	
+						"<nrequired> For multisig aliases only. The number of required signatures out of the n aliases for a multisig alias update.\n"
+						"<aliases>     For multisig aliases only. A json array of aliases which are used to sign on an update to this alias.\n"
+						"     [\n"
+						"       \"alias\"    Existing syscoin alias name\n"
+						"       ,...\n"
+						"     ]\n"							
 						+ HelpRequiringPassphrase());
 
 	vector<unsigned char> vchAlias = vchFromString(params[0].get_str());
@@ -1824,6 +1830,12 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 	{
 		nRenewal = boost::lexical_cast<int>(params[5].get_str());
 	}
+    int nMultiSig = 1;
+	if(params.size() >= 7)
+		nMultiSig = boost::lexical_cast<int>(params[6].get_str());
+    UniValue aliasNames;
+	if(params.size() >= 8)
+		aliasNames = params[7].get_array();
 	EnsureWalletIsUnlocked();
 	CTransaction tx;
 	CAliasIndex theAlias;
@@ -1869,6 +1881,55 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 		}
 		vchPrivateValue = vchFromString(strCipherText);
 	}
+	CPubKey currentKey(vchPubKeyByte);
+	CMultiSigAliasInfo multiSigInfo;
+	multiSigInfo.nRequiredSigs = nMultiSig;
+	multiSigInfo.vchAliases.push_back(stringFromVch(theAlias.vchAlias));
+	if(nMultiSig > 1)
+	{
+		UniValue arrayParams(UniValue::VARR);
+		UniValue arrayOfKeys(UniValue::VARR);
+
+		// standard m of n multisig
+		arrayParams.push_back(nMultiSig);
+		arrayOfKeys.push_back(HexStr(vchPubKey));
+		for(int i =0;i<aliasNames.size();i++)
+		{
+			CAliasIndex multiSigAlias;
+			CTransaction txMultiSigAlias;
+			if (!GetTxOfAlias( vchFromString(aliasNames[i].get_str()), multiSigAlias, txMultiSigAlias, true))
+				throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 4515 - " + _("Could not find multisig alias with the name: ") + aliasNames[i].get_str());
+			arrayOfKeys.push_back(HexStr(multiSigAlias.vchPubKey));
+			multiSigInfo.vchAliases.push_back(stringFromVch(multiSigAlias.vchAlias));
+
+		}
+
+		arrayParams.push_back(arrayOfKeys);
+		UniValue resCreate;
+		vector<unsigned char> redeemScript;
+		try
+		{
+			resCreate = tableRPC.execute("createmultisig", arrayParams);
+		}
+		catch (UniValue& objError)
+		{
+			throw runtime_error(find_value(objError, "message").get_str());
+		}
+		if (!resCreate.isObject())
+			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 4507 - " + _("Could not create escrow transaction: Invalid response from createescrow"));
+		const UniValue &o = resCreate.get_obj();
+		const UniValue& redeemScript_value = find_value(o, "redeemScript");
+		if (redeemScript_value.isStr())
+		{
+			redeemScript = ParseHex(redeemScript_value.get_str());
+			multiSigInfo.vchRedeemScript = redeemScript;
+		}
+		else
+			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 4524 - " + _("Could not create escrow transaction: could not find redeem script in response"));
+		scriptPubKeyOrig = CScript(redeemScript.begin(), redeemScript.end());
+	}	
+	else
+		scriptPubKeyOrig = GetScriptForDestination(currentKey.GetID());
 
 	CAliasIndex copyAlias = theAlias;
 	theAlias.ClearAlias();
@@ -1877,16 +1938,15 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 		theAlias.vchPublicValue = vchPublicValue;
 	if(copyAlias.vchPrivateValue != vchPrivateValue)
 		theAlias.vchPrivateValue = vchPrivateValue;
+	if(copyAlias.multiSigInfo != multiSigInfo)
+		theAlias.multiSigInfo = multiSigInfo;
 	
 	theAlias.vchPubKey = vchPubKeyByte;
 	theAlias.vchPrivateKey = vchPrivateKey;
 	theAlias.nRenewal = nRenewal;
 	theAlias.safeSearch = strSafeSearch == "Yes"? true: false;
-	CPubKey currentKey(vchPubKeyByte);
-	scriptPubKeyOrig = GetScriptForDestination(currentKey.GetID());
-	if(copyAlias.multiSigInfo.nRequiredSigs > 1)
-		scriptPubKeyOrig = CScript(copyAlias.multiSigInfo.vchRedeemScript.begin(), copyAlias.multiSigInfo.vchRedeemScript.end());
 	
+
 	
 	const vector<unsigned char> &data = theAlias.Serialize();
     uint256 hash = Hash(data.begin(), data.end());
@@ -2330,7 +2390,6 @@ UniValue aliasinfo(const UniValue& params, bool fHelp) {
 		}
 		msInfo.push_back(Pair("reqsigners", msAliases));
 		oName.push_back(Pair("multisiginfo", msInfo));
-		oName.push_back(Pair("multisiginfo", msInfo));
 		oShowResult = oName;
 	}
 	return oShowResult;
@@ -2438,7 +2497,6 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 				msAliases.push_back(txPos2.multiSigInfo.vchAliases[i]);
 			}
 			msInfo.push_back(Pair("reqsigners", msAliases));
-			oName.push_back(Pair("multisiginfo", msInfo));
 			oName.push_back(Pair("multisiginfo", msInfo));
 			oRes.push_back(oName);
 		}
@@ -2611,7 +2669,6 @@ UniValue aliasfilter(const UniValue& params, bool fHelp) {
 			msAliases.push_back(alias.multiSigInfo.vchAliases[i]);
 		}
 		msInfo.push_back(Pair("reqsigners", msAliases));
-		oName.push_back(Pair("multisiginfo", msInfo));
 		oName.push_back(Pair("multisiginfo", msInfo));
 		
 		oRes.push_back(oName);

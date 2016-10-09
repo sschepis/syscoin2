@@ -32,6 +32,7 @@ public:
 
     void setModel(WalletModel*,AliasTableModel *model);
     void loadRow(int row);
+	void loadAliasMultsigDetails();
 
     QString getAlias() const;
     void setAlias(const QString &alias);
@@ -42,7 +43,6 @@ public Q_SLOTS:
 	void on_cancelButton_clicked();
 	void on_addButton_clicked();
 	void on_deleteButton_clicked();
-	void onSendRawTxChecked(bool toggled);
 	void reqSigsChanged();
 private:
     bool saveCurrentRow();
