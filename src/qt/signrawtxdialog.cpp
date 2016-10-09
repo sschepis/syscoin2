@@ -25,7 +25,7 @@ void SignRawTxDialog::setRawTxEdit()
 	UniValue arraySendParams(UniValue::VARR);
 	string strMethod;
 	strMethod = string("decoderawtransaction");
-	params.push_back(ui->rawTxEdit->toText().toStdString());
+	params.push_back(ui->rawTxEdit->text().toStdString());
 
 	try {
         UniValue result = tableRPC.execute(strMethod, params);
@@ -47,7 +47,7 @@ void SignRawTxDialog::setRawSysTxEdit()
 	UniValue arraySendParams(UniValue::VARR);
 	string strMethod;
 	strMethod = string("decodesysrawtransaction");
-	params.push_back(ui->rawTxEdit->toText().toStdString());
+	params.push_back(ui->rawTxEdit->text().toStdString());
 
 	try {
         UniValue result = tableRPC.execute(strMethod, params);
