@@ -33,9 +33,11 @@ void SignRawTxDialog::setRawTxEdit()
 	}
 	catch (UniValue& objError)
 	{
+		ui->rawTxDecodeEdit->setPlainText(tr("Error creating decoding raw transaction: \"%1\"").arg(QString::fromStdString(strError)));
 	}
 	catch(std::exception& e)
 	{
+		ui->rawTxDecodeEdit->setPlainText(tr("General exception decoding raw transaction"));
 	}	
 }
 void SignRawTxDialog::setRawSysTxEdit()
@@ -52,9 +54,11 @@ void SignRawTxDialog::setRawSysTxEdit()
 	}
 	catch (UniValue& objError)
 	{
+		ui->rawTxDecodeEdit->setPlainText(tr("Error creating decoding raw transaction: \"%1\"").arg(QString::fromStdString(strError)));
 	}
 	catch(std::exception& e)
 	{
+		ui->rawTxDecodeEdit->setPlainText(tr("General exception decoding raw transaction"));
 	}	
 }
 void SignRawTxDialog::rawTxChanged()
