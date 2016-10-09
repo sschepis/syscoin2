@@ -19,7 +19,9 @@ public:
 
     explicit SignRawTxDialog();
     ~SignRawTxDialog();
-
+private:
+	bool saveCurrentRow();
+	Ui::SignRawTxDialog *ui;
 
 public Q_SLOTS:
     void accept();
