@@ -25,7 +25,7 @@ void SignRawTxDialog::setRawTxEdit()
 	UniValue arraySendParams(UniValue::VARR);
 	string strMethod;
 	strMethod = string("decoderawtransaction");
-	params.push_back(ui->rawTxEdit->toPlainText().toStdString());
+	params.push_back(ui->rawTxEdit->toText().toStdString());
 
 	try {
         UniValue result = tableRPC.execute(strMethod, params);
@@ -34,11 +34,11 @@ void SignRawTxDialog::setRawTxEdit()
 	catch (UniValue& objError)
 	{
 		string strError = find_value(objError, "message").get_str();
-		ui->rawTxDecodeEdit->setPlainText(tr("Error creating decoding raw transaction: \"%1\"").arg(QString::fromStdString(strError)));
+		ui->rawTxDecodeEdit->setText(tr("Error creating decoding raw transaction: \"%1\"").arg(QString::fromStdString(strError)));
 	}
 	catch(std::exception& e)
 	{
-		ui->rawTxDecodeEdit->setPlainText(tr("General exception decoding raw transaction"));
+		ui->rawTxDecodeEdit->setText(tr("General exception decoding raw transaction"));
 	}	
 }
 void SignRawTxDialog::setRawSysTxEdit()
@@ -47,7 +47,7 @@ void SignRawTxDialog::setRawSysTxEdit()
 	UniValue arraySendParams(UniValue::VARR);
 	string strMethod;
 	strMethod = string("decodesysrawtransaction");
-	params.push_back(ui->rawTxEdit->toPlainText().toStdString());
+	params.push_back(ui->rawTxEdit->toText().toStdString());
 
 	try {
         UniValue result = tableRPC.execute(strMethod, params);
@@ -56,11 +56,11 @@ void SignRawTxDialog::setRawSysTxEdit()
 	catch (UniValue& objError)
 	{
 		string strError = find_value(objError, "message").get_str();
-		ui->rawTxDecodeEdit->setPlainText(tr("Error creating decoding raw transaction: \"%1\"").arg(QString::fromStdString(strError)));
+		ui->rawTxDecodeEdit->setText(tr("Error creating decoding raw transaction: \"%1\"").arg(QString::fromStdString(strError)));
 	}
 	catch(std::exception& e)
 	{
-		ui->rawTxDecodeEdit->setPlainText(tr("General exception decoding raw transaction"));
+		ui->rawTxDecodeEdit->setText(tr("General exception decoding raw transaction"));
 	}	
 }
 void SignRawTxDialog::rawTxChanged()
