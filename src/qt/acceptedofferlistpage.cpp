@@ -54,7 +54,6 @@ AcceptedOfferListPage::AcceptedOfferListPage(const PlatformStyle *platformStyle,
 	ui->detailButton->setIcon(QIcon());
 #endif
 
-	ui->buttonBox->setVisible(false);
 
     ui->labelExplanation->setText(tr("These are offers you have purchased. Offer operations take 2-5 minutes to become active. Right click on an offer to view more info such as the message you sent to the seller, quantity, date, etc."));
 	

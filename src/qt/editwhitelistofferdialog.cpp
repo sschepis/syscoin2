@@ -64,7 +64,7 @@ EditWhitelistOfferDialog::EditWhitelistOfferDialog(const PlatformStyle *platform
 	offerPrivate = idx->data(OfferTableModel::PrivateRole).toString();
 	offerCurrency = idx->data(OfferTableModel::CurrencyRole).toString();
 	
-	ui->buttonBox->setVisible(false);
+
 	ui->removeAllButton->setEnabled(false);
     ui->labelExplanation->setText(tr("These are the affiliates for your offer. Affiliate operations take 2-5 minutes to become active. You may specify discount levels for each affiliate or control who may resell your offer if you are in Exclusive Resell Mode. If Exclusive Resell Mode is off anyone can resell your offers, although discounts will still be applied if they own an alias that you've added to your affiliate list. Click the button at the bottom of this dialog to toggle the exclusive mode."));
 	
@@ -85,8 +85,6 @@ EditWhitelistOfferDialog::EditWhitelistOfferDialog(const PlatformStyle *platform
 
     connect(ui->tableView, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(contextualMenu(QPoint)));
 
-    // Pass through accept action from button box
-    connect(ui->buttonBox, SIGNAL(accepted()), this, SLOT(accept()));
 	
 }
 

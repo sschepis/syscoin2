@@ -50,8 +50,6 @@ MyOfferListPage::MyOfferListPage(const PlatformStyle *platformStyle, QWidget *pa
 		
 	}
 
-	ui->buttonBox->setVisible(false);
-
     ui->labelExplanation->setText(tr("These are your registered Syscoin Offers. Offer operations (create, update) take 2-5 minutes to become active."));
 	
 	
@@ -81,8 +79,7 @@ MyOfferListPage::MyOfferListPage(const PlatformStyle *platformStyle, QWidget *pa
 	connect(ui->soldOutCheck,SIGNAL(clicked(bool)),SLOT(onToggleShowSoldOut(bool)));
 	connect(ui->showDigitalOffers,SIGNAL(clicked(bool)),SLOT(onToggleShowDigitalOffers(bool)));
 
-    // Pass through accept action from button box
-    connect(ui->buttonBox, SIGNAL(accepted()), this, SLOT(accept()));
+
 	offerWhitelistTableModel = 0;
 }
 

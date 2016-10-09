@@ -46,7 +46,6 @@ MyWhitelistOfferDialog::MyWhitelistOfferDialog(const PlatformStyle *platformStyl
 	}
 
 	
-	ui->buttonBox->setVisible(false);
     ui->labelExplanation->setText(tr("You are an affiliate for these offers. Affiliate operations take 2-5 minutes to become active. The owner of the offer may add you as to his affiliate list and your affiliate entry will show up here."));
 	
     // Context menu actions
@@ -60,8 +59,6 @@ MyWhitelistOfferDialog::MyWhitelistOfferDialog(const PlatformStyle *platformStyl
 
     connect(ui->tableView, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(contextualMenu(QPoint)));
 
-    // Pass through accept action from button box
-    connect(ui->buttonBox, SIGNAL(accepted()), this, SLOT(accept()));
 	on_refreshButton_clicked();
 	
 }
