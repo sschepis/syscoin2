@@ -1002,9 +1002,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					theAlias.nRatingCountAsArbiter= dbAlias.nRatingCountAsArbiter;
 					theAlias.vchGUID = dbAlias.vchGUID;
 					theAlias.vchAlias = dbAlias.vchAlias;
-					if(theAlias.multiSigInfo.IsNull())
-						theAlias.multiSigInfo = dbAlias.multiSigInfo;
-					else
+					if(!theAlias.multiSigInfo.IsNull())
 					{
 						if(theAlias.multiSigInfo.vchAliases.size() > 50 || theAlias.multiSigInfo.nRequiredSigs > 50)
 						{
@@ -1937,9 +1935,8 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 		theAlias.vchPublicValue = vchPublicValue;
 	if(copyAlias.vchPrivateValue != vchPrivateValue)
 		theAlias.vchPrivateValue = vchPrivateValue;
-	if(copyAlias.multiSigInfo != multiSigInfo)
-		theAlias.multiSigInfo = multiSigInfo;
-	
+
+	theAlias.multiSigInfo = multiSigInfo;
 	theAlias.vchPubKey = vchPubKeyByte;
 	theAlias.vchPrivateKey = vchPrivateKey;
 	theAlias.nRenewal = nRenewal;
