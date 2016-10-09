@@ -17,7 +17,7 @@ class SignRawTxDialog : public QDialog
 
 public:
 
-    explicit SignRawTxDialog();
+    explicit SignRawTxDialog(QWidget *parent = 0);
     ~SignRawTxDialog();
 private:
 	bool saveCurrentRow();

@@ -11,7 +11,8 @@
 using namespace std;
 
 extern CRPCTable tableRPC;
-SignRawTxDialog::SignRawTxDialog() :
+SignRawTxDialog::SignRawTxDialog(rawTxEdit) :
+	QDialog(parent),
     ui(new Ui::SignRawTxDialog)
 {
 	ui->rawtxDisclaimer->setText(tr("<font color='blue'>Sign a raw syscoin transaction and send it to the network if it is complete with all required signatures. Enter the raw hex encoded transaction below.</font>")); 
@@ -29,7 +30,7 @@ bool SignRawTxDialog::saveCurrentRow()
 	UniValue arraySendParams(UniValue::VARR);
 	string strMethod;
 	strMethod = string("syscoinsignrawtransaction");
-	params.push_back(text.toStdString());
+	params.push_back(ui->rawTxEdit->toPlainText().toStdString());
 
 	try {
         UniValue result = tableRPC.execute(strMethod, params);
