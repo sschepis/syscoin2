@@ -88,7 +88,7 @@ void EditAliasDialog::loadAliasMultsigDetails()
 		if (result.type() == UniValue::VOBJ)
 		{
 	
-			const UniValue& multisigValue = find_value(o, "multisiginfo");
+			const UniValue& multisigValue = find_value(result, "multisiginfo");
 			if (multisigValue.type() == UniValue::VOBJ)
 			{
 				const UniValue& reqsigsValue = find_value(multisigValue.get_obj(), "reqsigs");
