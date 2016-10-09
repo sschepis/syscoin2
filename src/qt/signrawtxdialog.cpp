@@ -33,6 +33,7 @@ void SignRawTxDialog::setRawTxEdit()
 	}
 	catch (UniValue& objError)
 	{
+		string strError = find_value(objError, "message").get_str();
 		ui->rawTxDecodeEdit->setPlainText(tr("Error creating decoding raw transaction: \"%1\"").arg(QString::fromStdString(strError)));
 	}
 	catch(std::exception& e)
@@ -54,6 +55,7 @@ void SignRawTxDialog::setRawSysTxEdit()
 	}
 	catch (UniValue& objError)
 	{
+		string strError = find_value(objError, "message").get_str();
 		ui->rawTxDecodeEdit->setPlainText(tr("Error creating decoding raw transaction: \"%1\"").arg(QString::fromStdString(strError)));
 	}
 	catch(std::exception& e)
