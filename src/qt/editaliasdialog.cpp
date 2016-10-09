@@ -117,7 +117,7 @@ void EditAliasDialog::loadAliasMultsigDetails()
 	}  
 	if(ui->multisigList->count() > 0)
 	{
-		if(mode == NewAlias || node == NewDataAlias)
+		if(mode == NewAlias || mode == NewDataAlias)
 			ui->multisigDisclaimer->setText(tr("<font color='blue'>This is a <b>%1</b> of <b>%2</b> multisig alias (<b>%3</b> is assumed to also be a signer)/font>").arg(ui->reqSigsEdit->text()).arg(QString::number(ui->multisigList->count()+1)).arg(ui->aliasEdit->text()));
 		else
 			ui->multisigDisclaimer->setText(tr("<font color='blue'>This is a <b>%1</b> of <b>%2</b> multisig alias</font>").arg(ui->reqSigsEdit->text()).arg(QString::number(ui->multisigList->count())));
@@ -140,7 +140,7 @@ void EditAliasDialog::on_addButton_clicked()
 	}
 	if(ui->multisigList->count() > 0)
 	{
-		if(mode == NewAlias || node == NewDataAlias)
+		if(mode == NewAlias || mode == NewDataAlias)
 			ui->multisigDisclaimer->setText(tr("<font color='blue'>This is a <b>%1</b> of <b>%2</b> multisig alias (<b>%3</b> is assumed to also be a signer)/font>").arg(ui->reqSigsEdit->text()).arg(QString::number(ui->multisigList->count()+1)).arg(ui->aliasEdit->text()));
 		else
 			ui->multisigDisclaimer->setText(tr("<font color='blue'>This is a <b>%1</b> of <b>%2</b> multisig alias</font>").arg(ui->reqSigsEdit->text()).arg(QString::number(ui->multisigList->count())));
@@ -154,7 +154,7 @@ void EditAliasDialog::on_deleteButton_clicked()
 
 	if(ui->multisigList->count() > 0)
 	{
-		if(mode == NewAlias || node == NewDataAlias)
+		if(mode == NewAlias || mode == NewDataAlias)
 			ui->multisigDisclaimer->setText(tr("<font color='blue'>This is a <b>%1</b> of <b>%2</b> multisig alias (<b>%3</b> is assumed to also be a signer)/font>").arg(ui->reqSigsEdit->text()).arg(QString::number(ui->multisigList->count()+1)).arg(ui->aliasEdit->text()));
 		else
 			ui->multisigDisclaimer->setText(tr("<font color='blue'>This is a <b>%1</b> of <b>%2</b> multisig alias</font>").arg(ui->reqSigsEdit->text()).arg(QString::number(ui->multisigList->count())));
@@ -164,7 +164,7 @@ void EditAliasDialog::reqSigsChanged()
 {
 	if(ui->multisigList->count() > 0)
 	{
-		if(mode == NewAlias || node == NewDataAlias)
+		if(mode == NewAlias || mode == NewDataAlias)
 			ui->multisigDisclaimer->setText(tr("<font color='blue'>This is a <b>%1</b> of <b>%2</b> multisig alias (<b>%3</b> is assumed to also be a signer)/font>").arg(ui->reqSigsEdit->text()).arg(QString::number(ui->multisigList->count()+1)).arg(ui->aliasEdit->text()));
 		else
 			ui->multisigDisclaimer->setText(tr("<font color='blue'>This is a <b>%1</b> of <b>%2</b> multisig alias</font>").arg(ui->reqSigsEdit->text()).arg(QString::number(ui->multisigList->count())));
