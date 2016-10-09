@@ -16,9 +16,52 @@ SignRawTxDialog::SignRawTxDialog(QWidget* parent) :
     ui(new Ui::SignRawTxDialog)
 {
 	ui->setupUi(this);
-	ui->rawtxDisclaimer->setText(tr("<font color='blue'>Sign a raw syscoin transaction and send it to the network if it is complete with all required signatures. Enter the raw hex encoded transaction below.</font>")); 
+	ui->rawTxDisclaimer->setText(tr("<font color='blue'>Sign a raw syscoin transaction and send it to the network if it is complete with all required signatures. Enter the raw hex encoded transaction below.</font>")); 
+	connect(ui->rawTxEdit, SIGNAL(textChanged(QString)), this, SLOT(rawTxChanged()));
 }
+void SignRawTxDialog::setRawTxEdit()
+{
+	UniValue params(UniValue::VARR);
+	UniValue arraySendParams(UniValue::VARR);
+	string strMethod;
+	strMethod = string("decoderawtransaction");
+	params.push_back(ui->rawTxEdit->toPlainText().toStdString());
 
+	try {
+        UniValue result = tableRPC.execute(strMethod, params);
+		ui->rawTxDecodeEdit->setText(result.get_str());
+	}
+	catch (UniValue& objError)
+	{
+	}
+	catch(std::exception& e)
+	{
+	}	
+}
+void SignRawTxDialog::setRawSysTxEdit()
+{
+	UniValue params(UniValue::VARR);
+	UniValue arraySendParams(UniValue::VARR);
+	string strMethod;
+	strMethod = string("decodesysrawtransaction");
+	params.push_back(ui->rawTxEdit->toPlainText().toStdString());
+
+	try {
+        UniValue result = tableRPC.execute(strMethod, params);
+		ui->rawSysTxDecodeEdit->setText(result.get_str());
+	}
+	catch (UniValue& objError)
+	{
+	}
+	catch(std::exception& e)
+	{
+	}	
+}
+void SignRawTxDialog::rawTxChanged()
+{
+	setRawTxEdit();
+	//setRawSysTxEdit();
+}
 SignRawTxDialog::~SignRawTxDialog()
 {
     delete ui;

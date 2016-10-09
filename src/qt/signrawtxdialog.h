@@ -20,9 +20,12 @@ public:
 private:
 	bool saveCurrentRow();
 	Ui::SignRawTxDialog *ui;
+	void setRawTxEdit();
+	void setRawSysTxEdit();
 
 public Q_SLOTS:
     void accept();
+	void rawTxChanged();
 };
 
 #endif // SIGNRAWTXDIALOG_H

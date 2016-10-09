@@ -36,6 +36,7 @@ EditAliasDialog::EditAliasDialog(Mode mode, QWidget *parent) :
 	ui->reqsigsDisclaimer->setText(tr("<font color='blue'>The number of required signatures ensures that not one person can control this alias and anything service that this alias uses (certificates, messages, offers).</font>"));
 	ui->multisigTitle->setText(tr("<font color='blue'>Set up your multisig alias here with the required number of signatures and the aliases that are capable of signing when this alias is updated. A user from this list can request an update to the alias and the other signers must sign the raw multisig transaction using the <b>Sign Multisig Tx</b> button in order for the alias to complete the update. Services that use this alias require alias updates prior to updating those services which allows all services to benefit from alias multisig technology.</font>"));
 	ui->reqSigsEdit->setValidator( new QIntValidator(0, 50, this) );
+	connect(ui->reqSigsEdit, SIGNAL(textChanged(QString)), this, SLOT(reqSigsChanged()));
 	switch(mode)
     {
     case NewDataAlias:
@@ -76,6 +77,13 @@ EditAliasDialog::EditAliasDialog(Mode mode, QWidget *parent) :
 EditAliasDialog::~EditAliasDialog()
 {
     delete ui;
+}
+void EditAliasDialog::reqSigsChanged()
+{
+	if(ui->multisigList->count() > 0)
+	{
+		ui->multisigDisclaimer->setText(tr("<font color='blue'>This is a <b>%1</b> of <b>%2</b> multisig alias (<b>%3</b> is assumed to also be a signer)</font>").arg(ui->reqSigsEdit->text()).arg(QString::number(ui->multisigList->count()+1)).arg(ui->aliasEdit->text()));
+	}
 }
 void EditAliasDialog::loadAliasMultsigDetails()
 {
@@ -151,13 +159,7 @@ void EditAliasDialog::on_deleteButton_clicked()
 		ui->multisigDisclaimer->setText(tr("<font color='blue'>This is a <b>%1</b> of <b>%2</b> multisig alias (<b>%3</b> is assumed to also be a signer)</font>").arg(ui->reqSigsEdit->text()).arg(QString::number(ui->multisigList->count()+1)).arg(ui->aliasEdit->text()));
 	}
 }
-void EditAliasDialog::reqSigsChanged()
-{
-	if(ui->multisigList->count() > 0)
-	{
-		ui->multisigDisclaimer->setText(tr("<font color='blue'>This is a <b>%1</b> of <b>%2</b> multisig alias (<b>%3</b> is assumed to also be a signer)</font>").arg(ui->reqSigsEdit->text()).arg(QString::number(ui->multisigList->count()+1)).arg(ui->aliasEdit->text()));
-	}
-}
+
 void EditAliasDialog::on_okButton_clicked()
 {
     mapper->submit();
