@@ -1892,7 +1892,7 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 
 		// standard m of n multisig
 		arrayParams.push_back(nMultiSig);
-		arrayOfKeys.push_back(HexStr(vchPubKey));
+		arrayOfKeys.push_back(HexStr(theAlias.vchPubKey));
 		for(int i =0;i<aliasNames.size();i++)
 		{
 			CAliasIndex multiSigAlias;
