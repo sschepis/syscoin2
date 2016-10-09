@@ -1311,19 +1311,16 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1111 - " + _("Cannot extract destination from output script");
 						return true;
 					}
-					CPubKey aliasLinkPubKey(linkAlias.vchPubKey);
-					CSyscoinAddress aliaslinkaddy(aliasLinkPubKey.GetID());
-					// if multisig this will get multisig address instead of alias owner for payment purposes
-					aliaslinkaddy = CSyscoinAddress(aliaslinkaddy.ToString());
+					CSyscoinAddress aliaslinkaddy;
+					linkAlias.GetAddress(&aliaslinkaddy);
 					linkDest = aliaslinkaddy.Get();
 					if(!(linkDest == payDest))
 					{
 						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1112 - " + _("Payment destination does not match merchant address");
 						return true;
 					}
-					CPubKey aliasPubKey(alias.vchPubKey);
-					CSyscoinAddress aliasaddy(aliasPubKey.GetID());
-					aliasaddy = CSyscoinAddress(aliasaddy.ToString());
+					CSyscoinAddress aliasaddy;
+					alias.GetAddress(&aliasaddy);
 					aliasDest = aliasaddy.Get();
 					if(!(aliasDest == commissionDest))
 					{
@@ -1338,9 +1335,8 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1114 - " + _("Cannot extract destination from output script");
 						return true;
 					}	
-					CPubKey aliasPubKey(alias.vchPubKey);
-					CSyscoinAddress aliasaddy(aliasPubKey.GetID());
-					aliasaddy = CSyscoinAddress(aliasaddy.ToString());
+					CSyscoinAddress aliasaddy;
+					alias.GetAddress(&aliasaddy);
 					aliasDest = aliasaddy.Get();
 					if(!(aliasDest == payDest))
 					{
@@ -1355,9 +1351,8 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1116 - " + _("Cannot extract destination from output script");
 				return true;
 			}	
-			CPubKey aliasPubKey(alias.vchPubKey);
-			CSyscoinAddress aliasaddy(aliasPubKey.GetID());
-			aliasaddy = CSyscoinAddress(aliasaddy.ToString());
+			CSyscoinAddress aliasaddy;
+			alias.GetAddress(&aliasaddy);
 			aliasDest = aliasaddy.Get();
 			if(!(aliasDest == dest))
 			{
@@ -2632,12 +2627,12 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 
     CScript scriptPayment, scriptPubKeyCommission, scriptPaymentCommission;
 	CPubKey currentKey(theAlias.vchPubKey);
-	CSyscoinAddress currentAddress(currentKey.GetID());
-	currentAddress = CSyscoinAddress(currentAddress.ToString());
+	CSyscoinAddress currentAddress;
+	theAlias.GetAddress(&currentAddress);
 
-	CPubKey linkedOfferKey(theLinkedAlias.vchPubKey);
-	CSyscoinAddress linkAddress(linkedOfferKey.GetID());
-	linkAddress = CSyscoinAddress(linkAddress.ToString());
+
+	CSyscoinAddress linkAddress;
+	theLinkedAlias.GetAddress(&linkAddress);
 	scriptPubKeyAccept << CScript::EncodeOP_N(OP_OFFER_ACCEPT) << vchOffer << vchAccept << vchFromString("0") << vchHashOffer << OP_2DROP << OP_2DROP << OP_DROP;
 	if(!copyOffer.vchLinkOffer.empty())
 	{
@@ -3130,11 +3125,10 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 	oOffer.push_back(Pair("alias_peg", stringFromVch(theOffer.vchAliasPeg)));
 	oOffer.push_back(Pair("description", stringFromVch(theOffer.sDescription)));
 	oOffer.push_back(Pair("alias", stringFromVch(theOffer.vchAlias)));
-	CPubKey PubKey(alias.vchPubKey);
-	CSyscoinAddress address(PubKey.GetID());
+	CSyscoinAddress address;
+	alias.GetAddress(&address);
 	if(!address.IsValid())
 		throw runtime_error("Invalid alias address");
-	address = CSyscoinAddress(address.ToString());
 	oOffer.push_back(Pair("address", address.ToString()));
 
 	float rating = 0;

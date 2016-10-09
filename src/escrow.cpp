@@ -1506,7 +1506,8 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 		arbiterAlias.GetAliasFromList(aliasVtxPos);
 		arbiterKey = CPubKey(arbiterAlias.vchPubKey);
 		arbiterAddress = CSyscoinAddress(arbiterKey.GetID());
-		arbiterAddressPayment = CSyscoinAddress(arbiterAddress.ToString());
+		arbiterAlias.GetAddress(&arbiterAddressPayment);
+
 	}
 
 	aliasVtxPos.clear();
@@ -1517,7 +1518,7 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 		buyerAlias.GetAliasFromList(aliasVtxPos);
 		buyerKey = CPubKey(buyerAlias.vchPubKey);
 		buyerAddress = CSyscoinAddress(buyerKey.GetID());
-		buyerAddressPayment = CSyscoinAddress(buyerAddress.ToString());
+		buyerAlias.GetAddress(&buyerAddressPayment);
 	}
 	aliasVtxPos.clear();
 	CPubKey sellerKey;
@@ -1527,7 +1528,7 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 		sellerAlias.GetAliasFromList(aliasVtxPos);
 		sellerKey = CPubKey(sellerAlias.vchPubKey);
 		sellerAddress = CSyscoinAddress(sellerKey.GetID());
-		sellerAddressPayment = CSyscoinAddress(sellerAddress.ToString());
+		sellerAlias.GetAddress(&sellerAddressPayment);
 	}
 
 	const CWalletTx *wtxAliasIn = NULL;
@@ -1565,7 +1566,7 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 			resellerAlias.GetAliasFromList(aliasVtxPos);
 			CPubKey resellerKey = CPubKey(resellerAlias.vchPubKey);
 			resellerAddress = CSyscoinAddress(resellerKey.GetID());
-			resellerAddressPayment = CSyscoinAddress(resellerAddress.ToString());
+			resellerAlias.GetAddress(&resellerAddressPayment);
 		}
 
 		linkOffer.linkWhitelist.GetLinkEntryByHash(theOffer.vchAlias, foundEntry);
@@ -1830,7 +1831,7 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 		sellerAlias.GetAliasFromList(aliasVtxPos);
 		sellerKey = CPubKey(sellerAlias.vchPubKey);
 		sellerAddress = CSyscoinAddress(sellerKey.GetID());
-		sellerAddressPayment = CSyscoinAddress(sellerAddress.ToString());
+		sellerAlias.GetAddress(&sellerAddressPayment);
 	}
 	if(GetTxAndVtxOfAlias(escrow.vchBuyerAlias, buyerAlias, buyeraliastx, aliasVtxPos, isExpired, true))
 	{
@@ -1838,7 +1839,7 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 		buyerAlias.GetAliasFromList(aliasVtxPos);
 		buyerKey = CPubKey(buyerAlias.vchPubKey);
 		buyerAddress = CSyscoinAddress(buyerKey.GetID());
-		buyerAddressPayment = CSyscoinAddress(buyerAddress.ToString());
+		buyerAlias.GetAddress(&buyerAddressPayment);
 	}
 	if(GetTxAndVtxOfAlias(escrow.vchArbiterAlias, arbiterAlias, arbiteraliastx, aliasVtxPos, isExpired, true))
 	{
@@ -1846,7 +1847,7 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 		arbiterAlias.GetAliasFromList(aliasVtxPos);
 		arbiterKey = CPubKey(arbiterAlias.vchPubKey);
 		arbiterAddress = CSyscoinAddress(arbiterKey.GetID());
-		arbiterAddressPayment = CSyscoinAddress(arbiterAddress.ToString());
+		arbiterAlias.GetAddress(&arbiterAddressPayment);
 	}
     CTransaction fundingTx;
 	if (!GetSyscoinTransaction(vtxPos.front().nHeight,vtxPos.front().txHash, fundingTx, Params().GetConsensus()))
@@ -1896,7 +1897,7 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 			resellerAlias.GetAliasFromList(aliasVtxPos);
 			resellerKey = CPubKey(resellerAlias.vchPubKey);
 			resellerAddress = CSyscoinAddress(resellerKey.GetID());
-			resellerAddressPayment = CSyscoinAddress(resellerAddress.ToString());
+			resellerAlias.GetAddress(&resellerAddressPayment);
 		}
 
 		linkOffer.linkWhitelist.GetLinkEntryByHash(theOffer.vchAlias, foundEntry);
@@ -2304,7 +2305,7 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 		arbiterAlias.GetAliasFromList(aliasVtxPos);
 		arbiterKey = CPubKey(arbiterAlias.vchPubKey);
 		arbiterAddress = CSyscoinAddress(arbiterKey.GetID());
-		arbiterAddressPayment = CSyscoinAddress(arbiterAddress.ToString());
+		arbiterAlias.GetAddress(&arbiterAddressPayment);
 	}
 
 	aliasVtxPos.clear();
@@ -2315,7 +2316,7 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 		buyerAlias.GetAliasFromList(aliasVtxPos);
 		buyerKey = CPubKey(buyerAlias.vchPubKey);
 		buyerAddress = CSyscoinAddress(buyerKey.GetID());
-		buyerAddressPayment = CSyscoinAddress(buyerAddress.ToString());
+		buyerAlias.GetAddress(&buyerAddressPayment);
 	}
 	aliasVtxPos.clear();
 	CPubKey sellerKey;
@@ -2325,7 +2326,7 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 		sellerAlias.GetAliasFromList(aliasVtxPos);
 		sellerKey = CPubKey(sellerAlias.vchPubKey);
 		sellerAddress = CSyscoinAddress(sellerKey.GetID());
-		sellerAddressPayment = CSyscoinAddress(sellerAddress.ToString());
+		sellerAlias.GetAddress(&sellerAddressPayment);
 	}
 
 	int nOutMultiSig = 0;
@@ -2598,7 +2599,7 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 		buyerAlias.GetAliasFromList(aliasVtxPos);
 		buyerKey = CPubKey(buyerAlias.vchPubKey);
 		buyerAddress = CSyscoinAddress(buyerKey.GetID());
-		buyerAddressPayment = CSyscoinAddress(buyerAddress.ToString());
+		buyerAlias.GetAddress(&buyerAddressPayment);
 	}
 	aliasVtxPos.clear();
 	CPubKey sellerKey;

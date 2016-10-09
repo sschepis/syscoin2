@@ -1242,6 +1242,19 @@ const vector<unsigned char> CAliasIndex::Serialize() {
     return vchData;
 
 }
+void CAliasIndex::GetAddress(CSyscoinAddress* address)
+{
+	if(!address)
+		return;
+	CPubKey aliasPubKey(vchPubKey);
+	address[0] = CSyscoinAddress(aliasPubKey.GetID());
+	if(multiSigInfo.vchAliases.size() > 0)
+	{
+		CScript inner = CScript(multiSigInfo.vchRedeemScript.begin(), multiSigInfo.vchRedeemScript.end());
+		CScriptID innerID(inner);
+		address[0] = CSyscoinAddress(innerID);
+	}
+}
 bool CAliasDB::ScanNames(const std::vector<unsigned char>& vchAlias, const string& strRegexp, bool safeSearch, 
 		unsigned int nMax,
 		vector<pair<vector<unsigned char>, CAliasIndex> >& nameScan) {
@@ -1388,13 +1401,6 @@ void GetAddressFromAlias(const std::string& strAlias, std::string& strAddress, u
 		safetyLevel = alias.safetyLevel;
 		safeSearch = alias.safeSearch;
 		nExpireHeight = alias.nHeight + alias.nRenewal*GetAliasExpirationDepth();
-		if(alias.multiSigInfo.vchAliases.size() > 0)
-		{
-			CScript inner = CScript(alias.multiSigInfo.vchRedeemScript.begin(), alias.multiSigInfo.vchRedeemScript.end());
-			CScriptID innerID(inner);
-			CSyscoinAddress address(innerID);
-			strAddress = address.ToString();
-		}
 	}
 	catch(...)
 	{
@@ -1426,13 +1432,6 @@ void GetAliasFromAddress(std::string& strAddress, std::string& strAlias, unsigne
 		safetyLevel = alias.safetyLevel;
 		safeSearch = alias.safeSearch;
 		nExpireHeight = alias.nHeight + alias.nRenewal*GetAliasExpirationDepth();
-		if(alias.multiSigInfo.vchAliases.size() > 0)
-		{
-			CScript inner = CScript(alias.multiSigInfo.vchRedeemScript.begin(), alias.multiSigInfo.vchRedeemScript.end());
-			CScriptID innerID(inner);
-			CSyscoinAddress address(innerID);
-			strAddress = address.ToString();
-		}
 	}
 	catch(...)
 	{
@@ -2339,9 +2338,8 @@ UniValue aliasinfo(const UniValue& params, bool fHelp) {
 		oName.push_back(Pair("privatekey", strPrivateKey));
 
 		oName.push_back(Pair("txid", alias.txHash.GetHex()));
-		CPubKey PubKey(alias.vchPubKey);
-		CSyscoinAddress address(PubKey.GetID());
-		address = CSyscoinAddress(address.ToString());
+		CSyscoinAddress address;
+		alias.GetAddress(&address);
 		if(!address.IsValid())
 			throw runtime_error("Invalid alias address");
 		oName.push_back(Pair("address", address.ToString()));
@@ -2453,9 +2451,8 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 			oName.push_back(Pair("privatekey", strPrivateKey));
 
 			oName.push_back(Pair("txid", tx.GetHash().GetHex()));
-			CPubKey PubKey(txPos2.vchPubKey);
-			CSyscoinAddress address(PubKey.GetID());
-			address = CSyscoinAddress(address.ToString());
+			CSyscoinAddress address;
+			txPos2.GetAddress(&address);
 			oName.push_back(Pair("address", address.ToString()));
             oName.push_back(Pair("lastupdate_height", nHeight));
 			float ratingAsBuyer = 0;

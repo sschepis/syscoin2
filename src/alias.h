@@ -15,6 +15,7 @@ class CReserveKey;
 class CCoinsViewCache;
 class CCoins;
 class CBlock;
+class CSyscoinAddress;
 struct CRecipient;
 static const unsigned int MAX_GUID_LENGTH = 70;
 static const unsigned int MAX_NAME_LENGTH = 255;
@@ -95,6 +96,7 @@ public:
         SetNull();
         UnserializeFromTx(tx);
     }
+	void GetAddress(CSyscoinAddress* address);
 	void ClearAlias()
 	{
 		vchPublicValue.clear();
