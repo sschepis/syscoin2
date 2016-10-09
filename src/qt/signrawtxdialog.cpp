@@ -11,7 +11,7 @@
 using namespace std;
 
 extern CRPCTable tableRPC;
-SignRawTxDialog::SignRawTxDialog(rawTxEdit) :
+SignRawTxDialog::SignRawTxDialog(QWidget* parent) :
 	QDialog(parent),
     ui(new Ui::SignRawTxDialog)
 {
