@@ -164,8 +164,6 @@ void AliasListPage::on_signMultisigButton_clicked()
 					tr("This transaction requires more signatures. Transaction hex <b>%1</b> has been copied to your clipboard for your reference. Please provide it to a signee that hasn't yet signed.").arg(QString::fromStdString(hex_str)),
 						QMessageBox::Ok, QMessageBox::Ok);
 			}
-
-			return true;
 		}
 		catch (UniValue& objError)
 		{
@@ -180,8 +178,6 @@ void AliasListPage::on_signMultisigButton_clicked()
 				tr("General exception creating sending raw alias update transaction"),
 				QMessageBox::Ok, QMessageBox::Ok);
 		}	
-		return false;
-
 	}
 }
 void AliasListPage::on_messageButton_clicked()
