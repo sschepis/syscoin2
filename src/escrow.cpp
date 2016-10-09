@@ -1276,7 +1276,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 			{
 				wtxAliasIn = pwalletMain->GetWalletTx(buyeraliastx.GetHash());		
 				scriptPubKeyAliasOrig = GetScriptForDestination(buyerKey.GetID());
-				if(buyeralias.multiSigInfo.nRequiredSigs > 1)
+				if(buyeralias.multiSigInfo.vchAliases.size() > 0)
 					scriptPubKeyAliasOrig = CScript(buyeralias.multiSigInfo.vchRedeemScript.begin(), buyeralias.multiSigInfo.vchRedeemScript.end());
 				scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << buyeralias.vchAlias  << buyeralias.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
 				scriptPubKeyAlias += scriptPubKeyAliasOrig;
@@ -1416,9 +1416,9 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	const CWalletTx * wtxInCert=NULL;
 	const CWalletTx * wtxInOffer=NULL;
 	const CWalletTx * wtxInEscrow=NULL;
-	SendMoneySyscoin(vecSend,recipientBuyer.nAmount+recipientArbiter.nAmount+recipientSeller.nAmount+aliasRecipient.nAmount+recipientEscrow.nAmount+fee.nAmount, false, wtx, wtxInOffer, wtxInCert, wtxAliasIn, wtxInEscrow, wtxAliasIn != NULL && buyeralias.multiSigInfo.nRequiredSigs > 1);
+	SendMoneySyscoin(vecSend,recipientBuyer.nAmount+recipientArbiter.nAmount+recipientSeller.nAmount+aliasRecipient.nAmount+recipientEscrow.nAmount+fee.nAmount, false, wtx, wtxInOffer, wtxInCert, wtxAliasIn, wtxInEscrow, wtxAliasIn != NULL && buyeralias.multiSigInfo.vchAliases.size() > 0);
 	UniValue res(UniValue::VARR);
-	if(wtxAliasIn != NULL && buyeralias.multiSigInfo.nRequiredSigs > 1)
+	if(wtxAliasIn != NULL && buyeralias.multiSigInfo.vchAliases.size() > 0)
 	{
 		UniValue signParams(UniValue::VARR);
 		signParams.push_back(EncodeHexTx(wtx));
@@ -1625,7 +1625,7 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR ERRCODE: 4534 - This alias is not in your wallet");
 		CScript scriptPubKeyOrig;
 		scriptPubKeyOrig= GetScriptForDestination(arbiterKey.GetID());
-		if(arbiterAlias.multiSigInfo.nRequiredSigs > 1)
+		if(arbiterAlias.multiSigInfo.vchAliases.size() > 0)
 			scriptPubKeyOrig = CScript(arbiterAlias.multiSigInfo.vchRedeemScript.begin(), arbiterAlias.multiSigInfo.vchRedeemScript.end());				
 		scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << arbiterAlias.vchAlias << arbiterAlias.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
 		scriptPubKeyAlias += scriptPubKeyOrig;
@@ -1648,7 +1648,7 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR ERRCODE: 4537 - This alias is not in your wallet");
 		CScript scriptPubKeyOrig;
 		scriptPubKeyOrig= GetScriptForDestination(buyerKey.GetID());
-		if(buyerAlias.multiSigInfo.nRequiredSigs > 1)
+		if(buyerAlias.multiSigInfo.vchAliases.size() > 0)
 			scriptPubKeyOrig = CScript(buyerAlias.multiSigInfo.vchRedeemScript.begin(), buyerAlias.multiSigInfo.vchRedeemScript.end());			
 		scriptPubKeyAlias = CScript() << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << buyerAlias.vchAlias << buyerAlias.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
 		scriptPubKeyAlias += scriptPubKeyOrig;
@@ -1765,9 +1765,9 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 
 	const CWalletTx * wtxInOffer=NULL;
 	const CWalletTx * wtxInCert=NULL;
-	SendMoneySyscoin(vecSend, recipientSeller.nAmount+recipientArbiter.nAmount+fee.nAmount+aliasRecipient.nAmount, false, wtx, wtxInOffer, wtxInCert, wtxAliasIn, wtxIn, theAlias.multiSigInfo.nRequiredSigs > 1);
+	SendMoneySyscoin(vecSend, recipientSeller.nAmount+recipientArbiter.nAmount+fee.nAmount+aliasRecipient.nAmount, false, wtx, wtxInOffer, wtxInCert, wtxAliasIn, wtxIn, theAlias.multiSigInfo.vchAliases.size() > 0);
 	UniValue res(UniValue::VARR);
-	if(theAlias.multiSigInfo.nRequiredSigs > 1)
+	if(theAlias.multiSigInfo.vchAliases.size() > 0)
 	{
 		UniValue signParams(UniValue::VARR);
 		signParams.push_back(EncodeHexTx(wtx));
@@ -2156,7 +2156,7 @@ UniValue escrowcompleterelease(const UniValue& params, bool fHelp) {
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR ERRCODE: 4568 - This alias is not in your wallet");
 	CScript scriptPubKeyOrig;
 	scriptPubKeyOrig= GetScriptForDestination(sellerKey.GetID());
-	if(sellerAlias.multiSigInfo.nRequiredSigs > 1)
+	if(sellerAlias.multiSigInfo.vchAliases.size() > 0)
 		scriptPubKeyOrig = CScript(sellerAlias.multiSigInfo.vchRedeemScript.begin(), sellerAlias.multiSigInfo.vchRedeemScript.end());		
 	scriptPubKeyAlias = CScript() << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << sellerAlias.vchAlias << sellerAlias.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
 	scriptPubKeyAlias += scriptPubKeyOrig;
@@ -2201,9 +2201,9 @@ UniValue escrowcompleterelease(const UniValue& params, bool fHelp) {
 	vecSend.push_back(fee);
 	const CWalletTx * wtxInOffer=NULL;
 	const CWalletTx * wtxInCert=NULL;
-	SendMoneySyscoin(vecSend, recipientBuyer.nAmount+recipientSeller.nAmount+recipientArbiter.nAmount+fee.nAmount+aliasRecipient.nAmount, false, wtx, wtxInOffer, wtxInCert, wtxAliasIn, wtxIn, sellerAlias.multiSigInfo.nRequiredSigs > 1);
+	SendMoneySyscoin(vecSend, recipientBuyer.nAmount+recipientSeller.nAmount+recipientArbiter.nAmount+fee.nAmount+aliasRecipient.nAmount, false, wtx, wtxInOffer, wtxInCert, wtxAliasIn, wtxIn, sellerAlias.multiSigInfo.vchAliases.size() > 0);
 	UniValue res(UniValue::VARR);
-	if(sellerAlias.multiSigInfo.nRequiredSigs > 1)
+	if(sellerAlias.multiSigInfo.vchAliases.size() > 0)
 	{
 		UniValue signParams(UniValue::VARR);
 		signParams.push_back(stringFromVch(sellerAlias.vchAlias));
@@ -2404,7 +2404,7 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR ERRCODE: 4579 - This alias is not in your wallet");
 		CScript scriptPubKeyOrig;
 		scriptPubKeyOrig= GetScriptForDestination(arbiterKey.GetID());
-		if(arbiterAlias.multiSigInfo.nRequiredSigs > 1)
+		if(arbiterAlias.multiSigInfo.vchAliases.size() > 0)
 			scriptPubKeyOrig = CScript(arbiterAlias.multiSigInfo.vchRedeemScript.begin(), arbiterAlias.multiSigInfo.vchRedeemScript.end());		
 		scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << arbiterAlias.vchAlias << arbiterAlias.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
 		scriptPubKeyAlias += scriptPubKeyOrig;
@@ -2427,7 +2427,7 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR ERRCODE: 4582 - This alias is not in your wallet");
 		CScript scriptPubKeyOrig;
 		scriptPubKeyOrig= GetScriptForDestination(sellerKey.GetID());
-		if(sellerAlias.multiSigInfo.nRequiredSigs > 1)
+		if(sellerAlias.multiSigInfo.vchAliases.size() > 0)
 			scriptPubKeyOrig = CScript(sellerAlias.multiSigInfo.vchRedeemScript.begin(), sellerAlias.multiSigInfo.vchRedeemScript.end());		
 		scriptPubKeyAlias = CScript() << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << sellerAlias.vchAlias << sellerAlias.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
 		scriptPubKeyAlias += scriptPubKeyOrig;
@@ -2523,9 +2523,9 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 
 	const CWalletTx * wtxInOffer=NULL;
 	const CWalletTx * wtxInCert=NULL;
-	SendMoneySyscoin(vecSend, recipientBuyer.nAmount+recipientArbiter.nAmount+fee.nAmount+aliasRecipient.nAmount, false, wtx, wtxInOffer, wtxInCert, wtxAliasIn, wtxIn, theAlias.multiSigInfo.nRequiredSigs > 1);
+	SendMoneySyscoin(vecSend, recipientBuyer.nAmount+recipientArbiter.nAmount+fee.nAmount+aliasRecipient.nAmount, false, wtx, wtxInOffer, wtxInCert, wtxAliasIn, wtxIn, theAlias.multiSigInfo.vchAliases.size() > 0);
 	UniValue res(UniValue::VARR);
-	if(theAlias.multiSigInfo.nRequiredSigs > 1)
+	if(theAlias.multiSigInfo.vchAliases.size() > 0)
 	{
 		UniValue signParams(UniValue::VARR);
 		signParams.push_back(stringFromVch(theAlias.vchAlias));
@@ -2854,7 +2854,7 @@ UniValue escrowcompleterefund(const UniValue& params, bool fHelp) {
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR ERRCODE: 4612 - This alias is not in your wallet");
 	CScript scriptPubKeyOrig;
 	scriptPubKeyOrig= GetScriptForDestination(buyerKey.GetID());
-	if(buyerAlias.multiSigInfo.nRequiredSigs > 1)
+	if(buyerAlias.multiSigInfo.vchAliases.size() > 0)
 		scriptPubKeyOrig = CScript(buyerAlias.multiSigInfo.vchRedeemScript.begin(), buyerAlias.multiSigInfo.vchRedeemScript.end());	
 	scriptPubKeyAlias = CScript() << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << buyerAlias.vchAlias << buyerAlias.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
 	scriptPubKeyAlias += scriptPubKeyOrig;
@@ -2899,9 +2899,9 @@ UniValue escrowcompleterefund(const UniValue& params, bool fHelp) {
 	vecSend.push_back(fee);
 	const CWalletTx * wtxInOffer=NULL;
 	const CWalletTx * wtxInCert=NULL;
-	SendMoneySyscoin(vecSend, recipientBuyer.nAmount+recipientSeller.nAmount+recipientArbiter.nAmount+fee.nAmount+aliasRecipient.nAmount, false, wtx, wtxInOffer, wtxInCert, wtxAliasIn, wtxIn, buyerAlias.multiSigInfo.nRequiredSigs > 1);
+	SendMoneySyscoin(vecSend, recipientBuyer.nAmount+recipientSeller.nAmount+recipientArbiter.nAmount+fee.nAmount+aliasRecipient.nAmount, false, wtx, wtxInOffer, wtxInCert, wtxAliasIn, wtxIn, buyerAlias.multiSigInfo.vchAliases.size() > 0);
 	UniValue res(UniValue::VARR);
-	if(buyerAlias.multiSigInfo.nRequiredSigs > 1)
+	if(buyerAlias.multiSigInfo.vchAliases.size() > 0)
 	{
 		UniValue signParams(UniValue::VARR);
 		signParams.push_back(EncodeHexTx(wtx));
@@ -3031,7 +3031,7 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
 			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR ERRCODE: 4619 - " + _("Buyer alias is not in your wallet"));
 
 		CScript scriptPubKeyAliasOrig= GetScriptForDestination(buyerKey.GetID());
-		if(buyerAliasLatest.multiSigInfo.nRequiredSigs > 1)
+		if(buyerAliasLatest.multiSigInfo.vchAliases.size() > 0)
 			scriptPubKeyAliasOrig = CScript(buyerAliasLatest.multiSigInfo.vchRedeemScript.begin(), buyerAliasLatest.multiSigInfo.vchRedeemScript.end());
 		scriptPubKeyAlias = CScript() << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << buyerAliasLatest.vchAlias << buyerAliasLatest.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
 		scriptPubKeyAlias += scriptPubKeyAliasOrig;
@@ -3057,7 +3057,7 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
 			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR ERRCODE: 4622 - " + _("Seller alias is not in your wallet"));
 
 		CScript scriptPubKeyAliasOrig = GetScriptForDestination(sellerKey.GetID());
-		if(sellerAliasLatest.multiSigInfo.nRequiredSigs > 1)
+		if(sellerAliasLatest.multiSigInfo.vchAliases.size() > 0)
 			scriptPubKeyAliasOrig = CScript(sellerAliasLatest.multiSigInfo.vchRedeemScript.begin(), sellerAliasLatest.multiSigInfo.vchRedeemScript.end());
 		scriptPubKeyAlias = CScript() << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << sellerAliasLatest.vchAlias << sellerAliasLatest.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
 		scriptPubKeyAlias += scriptPubKeyAliasOrig;
@@ -3083,7 +3083,7 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
 			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR ERRCODE: 4625 - " + _("Seller alias is not in your wallet"));
 
 		CScript scriptPubKeyAliasOrig = GetScriptForDestination(arbiterKey.GetID());
-		if(arbiterAliasLatest.multiSigInfo.nRequiredSigs > 1)
+		if(arbiterAliasLatest.multiSigInfo.vchAliases.size() > 0)
 			scriptPubKeyAliasOrig = CScript(arbiterAliasLatest.multiSigInfo.vchRedeemScript.begin(), arbiterAliasLatest.multiSigInfo.vchRedeemScript.end());
 		scriptPubKeyAlias  = CScript() << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << arbiterAliasLatest.vchAlias << arbiterAliasLatest.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
 		scriptPubKeyAlias += scriptPubKeyAliasOrig;
@@ -3196,9 +3196,9 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
 	const CWalletTx * wtxIn=NULL;
 	const CWalletTx * wtxInOffer=NULL;
 	const CWalletTx * wtxInCert=NULL;
-	SendMoneySyscoin(vecSend, recipientBuyer.nAmount+recipientSeller.nAmount+recipientArbiter.nAmount+fee.nAmount+aliasRecipient.nAmount, false, wtx, wtxInOffer, wtxInCert, wtxAliasIn, wtxIn, theAlias.multiSigInfo.nRequiredSigs > 1);
+	SendMoneySyscoin(vecSend, recipientBuyer.nAmount+recipientSeller.nAmount+recipientArbiter.nAmount+fee.nAmount+aliasRecipient.nAmount, false, wtx, wtxInOffer, wtxInCert, wtxAliasIn, wtxIn, theAlias.multiSigInfo.vchAliases.size() > 0);
 	UniValue res(UniValue::VARR);
-	if(theAlias.multiSigInfo.nRequiredSigs > 1)
+	if(theAlias.multiSigInfo.vchAliases.size() > 0)
 	{
 		UniValue signParams(UniValue::VARR);
 		signParams.push_back(EncodeHexTx(wtx));

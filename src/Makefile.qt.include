@@ -110,6 +110,7 @@ QT_FORMS_UI = \
   qt/forms/aliaslistpage.ui \
   qt/forms/editaliasdialog.ui \
   qt/forms/newmessagedialog.ui \
+  qt/forms/signrawtxdialog.ui \
   qt/forms/manageescrowdialog.ui \
   qt/forms/offerfeedbackdialog.ui \
   qt/forms/messageinfodialog.ui \
@@ -196,6 +197,7 @@ QT_MOC_CPP = \
   qt/moc_messagetablemodel.cpp \
   qt/moc_editaliasdialog.cpp \
   qt/moc_newmessagedialog.cpp \
+  qt/moc_signrawtxdialog.cpp \
   qt/moc_manageescrowdialog.cpp \
   qt/moc_offerfeedbackdialog.cpp \
   qt/moc_messageinfodialog.cpp \
@@ -318,6 +320,7 @@ SYSCOIN_QT_H = \
   qt/messagetablemodel.h \
   qt/editaliasdialog.h \
   qt/newmessagedialog.h \
+  qt/signrawtxdialog.h \
   qt/manageescrowdialog.h \
   qt/offerfeedbackdialog.h \
   qt/messageinfodialog.h \
@@ -628,6 +631,7 @@ SYSCOIN_QT_CPP += \
   qt/messagetablemodel.cpp \
   qt/editaliasdialog.cpp \
   qt/newmessagedialog.cpp \
+  qt/signrawtxdialog.cpp \
   qt/manageescrowdialog.cpp \
   qt/offerfeedbackdialog.cpp \
   qt/messageinfodialog.cpp \

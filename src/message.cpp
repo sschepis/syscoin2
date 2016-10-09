@@ -458,7 +458,7 @@ UniValue messagenew(const UniValue& params, bool fHelp) {
 
 	CPubKey FromPubKey = CPubKey(aliasFrom.vchPubKey);
 	scriptPubKeyAliasOrig = GetScriptForDestination(FromPubKey.GetID());
-	if(aliasFrom.multiSigInfo.nRequiredSigs > 1)
+	if(aliasFrom.multiSigInfo.vchAliases.size() > 0)
 		scriptPubKeyAliasOrig = CScript(aliasFrom.multiSigInfo.vchRedeemScript.begin(), aliasFrom.multiSigInfo.vchRedeemScript.end());
 	scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << aliasFrom.vchAlias <<  aliasFrom.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
 	scriptPubKeyAlias += scriptPubKeyAliasOrig;		
@@ -521,9 +521,9 @@ UniValue messagenew(const UniValue& params, bool fHelp) {
 	const CWalletTx * wtxInOffer=NULL;
 	const CWalletTx * wtxInEscrow=NULL;
 	const CWalletTx * wtxInCert=NULL;
-	SendMoneySyscoin(vecSend, recipient.nAmount+fee.nAmount, false, wtx, wtxInOffer, wtxInCert, wtxAliasIn, wtxInEscrow, aliasFrom.multiSigInfo.nRequiredSigs > 1);
+	SendMoneySyscoin(vecSend, recipient.nAmount+fee.nAmount, false, wtx, wtxInOffer, wtxInCert, wtxAliasIn, wtxInEscrow, aliasFrom.multiSigInfo.vchAliases.size() > 0);
 	UniValue res(UniValue::VARR);
-	if(aliasFrom.multiSigInfo.nRequiredSigs > 1)
+	if(aliasFrom.multiSigInfo.vchAliases.size() > 0)
 	{
 		UniValue signParams(UniValue::VARR);
 		signParams.push_back(EncodeHexTx(wtx));

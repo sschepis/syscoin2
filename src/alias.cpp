@@ -1088,7 +1088,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			theAlias.nRatingCountAsSeller = 0;
 			theAlias.nRatingAsArbiter = 0;
 			theAlias.nRatingCountAsArbiter = 0;
-			if(theAlias.multiSigInfo.nRequiredSigs > 1)
+			if(theAlias.multiSigInfo.vchAliases.size() > 0)
 			{
 				if(theAlias.multiSigInfo.vchAliases.size() > 50 || theAlias.multiSigInfo.nRequiredSigs > 50)
 				{
@@ -1390,7 +1390,7 @@ void GetAddressFromAlias(const std::string& strAlias, std::string& strAddress, u
 		safetyLevel = alias.safetyLevel;
 		safeSearch = alias.safeSearch;
 		nExpireHeight = alias.nHeight + alias.nRenewal*GetAliasExpirationDepth();
-		if(alias.multiSigInfo.nRequiredSigs > 1)
+		if(alias.multiSigInfo.vchAliases.size() > 0)
 		{
 			CScript inner = CScript(alias.multiSigInfo.vchRedeemScript.begin(), alias.multiSigInfo.vchRedeemScript.end());
 			CScriptID innerID(inner);
@@ -1428,7 +1428,7 @@ void GetAliasFromAddress(std::string& strAddress, std::string& strAlias, unsigne
 		safetyLevel = alias.safetyLevel;
 		safeSearch = alias.safeSearch;
 		nExpireHeight = alias.nHeight + alias.nRenewal*GetAliasExpirationDepth();
-		if(alias.multiSigInfo.nRequiredSigs > 1)
+		if(alias.multiSigInfo.vchAliases.size() > 0)
 		{
 			CScript inner = CScript(alias.multiSigInfo.vchRedeemScript.begin(), alias.multiSigInfo.vchRedeemScript.end());
 			CScriptID innerID(inner);
@@ -1678,10 +1678,9 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	std::vector<unsigned char> vchPubKey(defaultKey.begin(), defaultKey.end());
 	
 	CMultiSigAliasInfo multiSigInfo;
-	multiSigInfo.nRequiredSigs = nMultiSig;
-	multiSigInfo.vchAliases.push_back(stringFromVch(vchAlias));
-	if(nMultiSig > 1)
+	if(aliasNames.size() > 0)
 	{
+		multiSigInfo.nRequiredSigs = nMultiSig;
 		UniValue arrayParams(UniValue::VARR);
 		UniValue arrayOfKeys(UniValue::VARR);
 
@@ -1883,10 +1882,10 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 	}
 	CPubKey currentKey(vchPubKeyByte);
 	CMultiSigAliasInfo multiSigInfo;
-	multiSigInfo.nRequiredSigs = nMultiSig;
-	multiSigInfo.vchAliases.push_back(stringFromVch(theAlias.vchAlias));
-	if(nMultiSig > 1)
+	
+	if(aliasNames.size() > 0)
 	{
+		multiSigInfo.nRequiredSigs = nMultiSig;
 		UniValue arrayParams(UniValue::VARR);
 		UniValue arrayOfKeys(UniValue::VARR);
 
@@ -1973,9 +1972,9 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 	const CWalletTx * wtxInOffer=NULL;
 	const CWalletTx * wtxInCert=NULL;
 	const CWalletTx * wtxInEscrow=NULL;
-	SendMoneySyscoin(vecSend, recipient.nAmount+fee.nAmount, false, wtx, wtxInOffer, wtxInCert, wtxIn, wtxInEscrow, copyAlias.multiSigInfo.nRequiredSigs > 1);
+	SendMoneySyscoin(vecSend, recipient.nAmount+fee.nAmount, false, wtx, wtxInOffer, wtxInCert, wtxIn, wtxInEscrow, copyAlias.multiSigInfo.vchAliases.size() > 0);
 	UniValue res(UniValue::VARR);
-	if(copyAlias.multiSigInfo.nRequiredSigs > 1)
+	if(copyAlias.multiSigInfo.vchAliases.size() > 0)
 	{
 		UniValue signParams(UniValue::VARR);
 		signParams.push_back(EncodeHexTx(wtx));

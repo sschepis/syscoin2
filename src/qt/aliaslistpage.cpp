@@ -10,6 +10,7 @@
 #include "syscoingui.h"
 #include "editaliasdialog.h"
 #include "newmessagedialog.h"
+#include "signrawtxdialog.h"
 #include "csvmodelwriter.h"
 #include "guiutil.h"
 #include "ui_interface.h"
@@ -126,60 +127,8 @@ void AliasListPage::setOptionsModel(OptionsModel *optionsModel)
 }
 void AliasListPage::on_signMultisigButton_clicked()
 {
-   
-    bool ok;
-    QString text = QInputDialog::getText(this, tr("Send Raw Syscoin Transaction"),
-                                         tr("Raw Transaction (hex):"), QLineEdit::Normal,
-                                         "", &ok);
-    if (ok && !text.isEmpty())
-	{
-		UniValue params(UniValue::VARR);
-		UniValue arraySendParams(UniValue::VARR);
-		string strMethod;
-		strMethod = string("syscoinsignrawtransaction");
-		params.push_back(text.toStdString());
-
-		try {
-            UniValue result = tableRPC.execute(strMethod, params);
-			const UniValue& so = result.get_obj();
-			string hex_str = "";
-
-			const UniValue& hex_value = find_value(so, "hex");
-			if (hex_value.isStr())
-				hex_str = hex_value.get_str();
-			const UniValue& complete_value = find_value(so, "complete");
-			bool bComplete = false;
-			if (complete_value.isStr())
-				bComplete = complete_value.get_str() == "true";
-			
-			if(bComplete)
-			{
-				QMessageBox::information(this, windowTitle(),
-					tr("Transaction was completed successfully!"),
-						QMessageBox::Ok, QMessageBox::Ok);
-			}
-			else
-			{
-				GUIUtil::setClipboard(QString::fromStdString(hex_str));
-				QMessageBox::information(this, windowTitle(),
-					tr("This transaction requires more signatures. Transaction hex <b>%1</b> has been copied to your clipboard for your reference. Please provide it to a signee that hasn't yet signed.").arg(QString::fromStdString(hex_str)),
-						QMessageBox::Ok, QMessageBox::Ok);
-			}
-		}
-		catch (UniValue& objError)
-		{
-			string strError = find_value(objError, "message").get_str();
-			QMessageBox::critical(this, windowTitle(),
-			tr("Error creating updating multisig alias: \"%1\"").arg(QString::fromStdString(strError)),
-				QMessageBox::Ok, QMessageBox::Ok);
-		}
-		catch(std::exception& e)
-		{
-			QMessageBox::critical(this, windowTitle(),
-				tr("General exception creating sending raw alias update transaction"),
-				QMessageBox::Ok, QMessageBox::Ok);
-		}	
-	}
+	SignRawTxDialog dlg;   
+	dlg.exec();
 }
 void AliasListPage::on_messageButton_clicked()
 {
