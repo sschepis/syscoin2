@@ -2017,21 +2017,29 @@ UniValue syscoindecoderawtransaction(const UniValue& params, bool fHelp) {
 	vector<vector<unsigned char> > vvch;
 	int op;
 	bool foundSys = false;
+	bool sendCoin = false;
+	UniValue output(UniValue::VOBJ);
 	for (unsigned int i = 0; i < rawTx.vout.size(); i++) {
-		if(IsSyscoinScript(rawTx.vout[i].scriptPubKey, op, vvch))
+		int tmpOp;
+		vector<vector<unsigned char> > tmpvvch;	
+		if(!foundSys && IsSyscoinScript(rawTx.vout[i].scriptPubKey, op, vvch))
 		{
 			foundSys = true;
-			break;
 		}
+		else if(!IsSyscoinDataOutput(rawTx.vout[i]) && !IsSyscoinScript(rawTx.vout[i].scriptPubKey, tmpOp, tmpvvch))
+		{
+			if(!pwalletMain->IsMine(rawTx.vout[i]))
+				sendCoin = true;
+		}
+
 	}
 	if(!foundSys)
 		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 4539 - " + _("Could not find syscoin service output in this transaction"));
+	if(sendCoin)
+		output.push_back(Pair("warning", _("Warning: This transaction sends coins to an address or alias you do not own"));
 	
-	UniValue res(UniValue::VOBJ);
-	UniValue output(UniValue::VOBJ);
 	SysTxToJSON(op, vchData, vchHash, output);
-	res.push_back(Pair("systx", output));
-	return res;
+	return output;
 }
 void SysTxToJSON(const int op, const vector<unsigned char> &vchData, const vector<unsigned char> &vchHash, UniValue &entry)
 {

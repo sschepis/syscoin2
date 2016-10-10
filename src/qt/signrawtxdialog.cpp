@@ -59,6 +59,10 @@ void SignRawTxDialog::setRawSysTxEdit()
 
 	try {
         UniValue result = tableRPC.execute(strMethod, params);
+		const UniValue& warningValue = find_value(result.get_obj, "warning");
+		if(warningValue.isStr())
+			ui->decodeWarning->setText(tr("<font color='red'>%1</font>").arg(QString::fromStdString(warningValue.get_str())));
+
 		QString jsonString = QString::fromStdString(result.write());
 		QJsonDocument doc = QJsonDocument::fromJson(jsonString.toUtf8());
 		QString formattedJsonString = doc.toJson(QJsonDocument::Indented);
