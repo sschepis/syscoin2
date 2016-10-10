@@ -1358,19 +1358,15 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				}
 			}	
 			// check that the script for the offer update is sent to the correct destination
-			CSyscoinAddress destaddy;
 			if (!ExtractDestination(tx.vout[nOut].scriptPubKey, dest)) 
 			{
-				CScriptID innerID(tx.vout[nOut].scriptPubKey);
-				destaddy = CSyscoinAddress(innerID);
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1116 - " + _("Cannot extract destination from output script");
+				return true;
 			}	
-			else
-			{
-				destaddy = CSyscoinAddress(dest);
-			}
 			CSyscoinAddress aliasaddy;
 			alias.GetAddress(&aliasaddy);
-			if(aliasaddy.ToString() != destaddy.ToString())
+			aliasDest = aliasaddy.Get();
+			if(!(aliasDest == dest))
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1117 - " + _("Payment destination does not match merchant address");
 				return true;
