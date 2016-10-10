@@ -2081,7 +2081,7 @@ void AliasTxToJSON(const int op, const vector<unsigned char> &vchData, const vec
 		strPrivateValue = strDecrypted;		
 
 	string privateValue = noDifferentStr;
-	if(alias.vchPrivateValue != dbAlias.vchPrivateValue)
+	if(!alias.vchPrivateValue.empty() && alias.vchPrivateValue != dbAlias.vchPrivateValue)
 		privateValue = strPrivateValue;
 
 	entry.push_back(Pair("privatevalue", strPrivateValue));
@@ -2117,6 +2117,11 @@ void AliasTxToJSON(const int op, const vector<unsigned char> &vchData, const vec
 
 	entry.push_back(Pair("safesearch", safeSearchValue));
 
+	string expireValue = noDifferentStr;
+	if(alias.nRenewal != dbAlias.nRenewal)
+		expireValue = strprintf("%d", alias.nRenewal);
+
+	entry.push_back(Pair("expiry", expireValue));
 
 	string safetyLevelValue = noDifferentStr;
 	if(alias.safetyLevel != dbAlias.safetyLevel)
