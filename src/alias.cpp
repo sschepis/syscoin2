@@ -2004,7 +2004,7 @@ UniValue syscoindecoderawtransaction(const UniValue& params, bool fHelp) {
 				"<hexstring> The transaction hex string.\n");
 	string hexstring = params[0].get_str();
 	CTransaction rawTx;
-	DecodeHexTx(rawTx,hex_str);
+	DecodeHexTx(rawTx,hexstring);
 	if(rawTx.IsNull())
 	{
 		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 4539 - " + _("Could not decode transaction"));
