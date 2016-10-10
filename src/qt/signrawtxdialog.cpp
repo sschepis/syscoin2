@@ -6,6 +6,7 @@
 #include "syscoingui.h"
 #include "ui_interface.h"
 #include <QMessageBox>
+#include <QJsonDocument>
 #include "rpc/server.h"
 #include <QSettings>
 using namespace std;
@@ -31,7 +32,12 @@ void SignRawTxDialog::setRawTxEdit()
 
 	try {
         UniValue result = tableRPC.execute(strMethod, params);
-		ui->rawTxDecodeEdit->setPlainText(QString::fromStdString(result.write()));
+		QString jsonString = QString::fromStdString(result.write());
+		QJsonDocument doc = QJsonDocument::fromJson(jsonString.toUtf8());
+		QString formattedJsonString = doc.toJson(QJsonDocument::Indented);
+
+		ui->rawSysTxDecodeEdit->setPlainText(formattedJsonString);
+
 	}
 	catch (UniValue& objError)
 	{
@@ -53,7 +59,11 @@ void SignRawTxDialog::setRawSysTxEdit()
 
 	try {
         UniValue result = tableRPC.execute(strMethod, params);
-		ui->rawSysTxDecodeEdit->setPlainText(QString::fromStdString(result.write()));
+		QString jsonString = QString::fromStdString(result.write());
+		QJsonDocument doc = QJsonDocument::fromJson(jsonString.toUtf8());
+		QString formattedJsonString = doc.toJson(QJsonDocument::Indented);
+
+		ui->rawSysTxDecodeEdit->setPlainText(formattedJsonString);
 	}
 	catch (UniValue& objError)
 	{
