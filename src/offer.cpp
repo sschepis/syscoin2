@@ -1361,7 +1361,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			CSyscoinAddress destaddy;
 			if (!ExtractDestination(tx.vout[nOut].scriptPubKey, dest)) 
 			{
-				CScriptID innerID(tx.vout[nOutPayment].scriptPubKey);
+				CScriptID innerID(tx.vout[nOut].scriptPubKey);
 				destaddy = CSyscoinAddress(innerID);
 			}	
 			else
