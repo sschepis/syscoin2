@@ -2028,7 +2028,7 @@ UniValue syscoindecoderawtransaction(const UniValue& params, bool fHelp) {
 		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 4539 - " + _("Could not find syscoin service output in this transaction"));
 	
 	UniValue output;
-	SysTxToJSON(op, vchData, output);
+	SysTxToJSON(op, vchData, vchHash, output);
 	return output;
 }
 void SysTxToJSON(const int op, const vector<unsigned char> &vchData, const vector<unsigned char> &vchHash, UniValue &entry)
@@ -2054,6 +2054,7 @@ void AliasTxToJSON(const int op, const vector<unsigned char> &vchData, const vec
 		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 4539 - " + _("Alias hash mismatch when decoding syscoin transaction"));
 	bool isExpired = false;
 	vector<CAliasIndex> aliasVtxPos;
+	CTransaction aliastx;
 	CAliasIndex dbAlias;
 	if(GetTxAndVtxOfAlias(alias.vchAlias, dbAlias, aliastx, aliasVtxPos, isExpired, true))
 	{
@@ -2061,10 +2062,9 @@ void AliasTxToJSON(const int op, const vector<unsigned char> &vchData, const vec
 		dbAlias.GetAliasFromList(aliasVtxPos);
 	}
 	string noDifferentStr = _("<No Difference Detected>");
-	UniValue oName(UniValue::VOBJ);
 
 	entry.push_back(Pair("txtype", opName));
-	entry.push_back(Pair("name", stringFromVch(vchAlias)));
+	entry.push_back(Pair("name", stringFromVch(alias.vchAlias)));
 
 	string publicValue = noDifferentStr;
 	if(alias.vchPublicValue != dbAlias.vchPublicValue)
