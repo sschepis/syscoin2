@@ -2625,25 +2625,30 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
  	vector<unsigned char> vchHash = CScriptNum(hash.GetCheapHash()).getvch();
     vector<unsigned char> vchHashOffer = vchFromValue(HexStr(vchHash));
 
-    CScript scriptPayment, scriptPubKeyCommission, scriptPaymentCommission;
+    CScript scriptPayment, scriptPubKeyCommission, scriptPubKeyOrig, scriptPubLinkKeyOrig, scriptPaymentCommission;
 	CPubKey currentKey(theAlias.vchPubKey);
-	CSyscoinAddress currentAddress;
-	theAlias.GetAddress(&currentAddress);
+	CSyscoinAddress currentAddress(currentKey.GetID());
+	scriptPubKeyOrig = 	 GetScriptForDestination(currentAddress.Get());
+	if(theAlias.multiSigInfo.vchAliases.size() > 0)
+		scriptPubKeyOrig = CScript(theAlias.multiSigInfo.vchRedeemScript.begin(), theAlias.multiSigInfo.vchRedeemScript.end());
 
+	CPubKey currentLinkKey(theLinkedAlias.vchPubKey);
+	CSyscoinAddress linkAddress(currentLinkKey.GetID());
+	scriptPubLinkKeyOrig = GetScriptForDestination(linkAddress.Get());
+	if(theLinkedAlias.multiSigInfo.vchAliases.size() > 0)
+		scriptPubLinkKeyOrig = CScript(theLinkedAlias.multiSigInfo.vchRedeemScript.begin(), theLinkedAlias.multiSigInfo.vchRedeemScript.end());
 
-	CSyscoinAddress linkAddress;
-	theLinkedAlias.GetAddress(&linkAddress);
 	scriptPubKeyAccept << CScript::EncodeOP_N(OP_OFFER_ACCEPT) << vchOffer << vchAccept << vchFromString("0") << vchHashOffer << OP_2DROP << OP_2DROP << OP_DROP;
 	if(!copyOffer.vchLinkOffer.empty())
 	{
-		scriptPayment = GetScriptForDestination(linkAddress.Get());
-		scriptPaymentCommission = GetScriptForDestination(currentAddress.Get());
+		scriptPayment = scriptPubLinkKeyOrig;
+		scriptPaymentCommission = scriptPubKeyOrig;
 	}
 	else
 	{
-		scriptPayment = GetScriptForDestination(currentAddress.Get());
+		scriptPayment = scriptPubKeyOrig;
 	}
-	scriptPubKeyAccept += GetScriptForDestination(currentAddress.Get());
+	scriptPubKeyAccept += scriptPubKeyOrig;
 	scriptPubKeyPayment += scriptPayment;
 	scriptPubKeyCommission += scriptPaymentCommission;
 
