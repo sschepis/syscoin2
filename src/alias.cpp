@@ -2030,7 +2030,7 @@ UniValue syscoindecoderawtransaction(const UniValue& params, bool fHelp) {
 	UniValue res(UniValue::VOBJ);
 	UniValue output(UniValue::VOBJ);
 	SysTxToJSON(op, vchData, vchHash, output);
-	res.push_back(output);
+	res.push_back(Pair("systx", output));
 	return res;
 }
 void SysTxToJSON(const int op, const vector<unsigned char> &vchData, const vector<unsigned char> &vchHash, UniValue &entry)
