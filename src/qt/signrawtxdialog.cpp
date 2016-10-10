@@ -17,7 +17,7 @@ SignRawTxDialog::SignRawTxDialog(QWidget* parent) :
 {
 	ui->setupUi(this);
 	ui->rawTxDisclaimer->setText(tr("<font color='blue'>Sign a raw syscoin transaction and send it to the network if it is complete with all required signatures. Enter the raw hex encoded transaction below.</font>")); 
-	connect(ui->rawTxEdit, SIGNAL(textChanged(QString)), this, SLOT(rawTxChanged()));
+	connect(ui->rawTxEdit, SIGNAL(textChanged()), this, SLOT(rawTxChanged()));
 }
 void SignRawTxDialog::setRawTxEdit()
 {
