@@ -1363,8 +1363,8 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1116 - " + _("Cannot extract destination from output script");
 				return true;
 			}	
-			CSyscoinAddress aliasaddy;
-			alias.GetAddress(&aliasaddy);
+			CPubKey pubKey(alias.vchPubKey);
+			CSyscoinAddress aliasaddy(pubKey.GetID());
 			aliasDest = aliasaddy.Get();
 			if(!(aliasDest == dest))
 			{
