@@ -67,7 +67,7 @@ void SignRawTxDialog::setRawSysTxEdit()
 		QJsonDocument doc = QJsonDocument::fromJson(jsonString.toUtf8());
 		QString formattedJsonString = doc.toJson(QJsonDocument::Indented);
 
-		ui->rawSysTxDecodeEdit->setHtml(formattedJsonString);
+		ui->rawSysTxDecodeEdit->setPlainText(formattedJsonString);
 		ui->decodeSysTxDisclaimer->setText(tr("<font color='blue'>The area below is to display syscoin specific information regarding this transaction.</font>"));
 	}
 	catch (UniValue& objError)
@@ -110,9 +110,9 @@ bool SignRawTxDialog::saveCurrentRow()
 			hex_str = hex_value.get_str();
 		const UniValue& complete_value = find_value(so, "complete");
 		bool bComplete = false;
-		if (complete_value.isStr())
-			bComplete = complete_value.get_str() == "true";
-		
+		if (complete_value.isBool())
+			bComplete = complete_value.get_bool();
+
 		if(bComplete)
 		{
 			QMessageBox::information(this, windowTitle(),

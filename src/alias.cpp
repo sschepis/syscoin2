@@ -2090,7 +2090,7 @@ void AliasTxToJSON(const int op, const vector<unsigned char> &vchData, const vec
 
 	string privateValue = noDifferentStr;
 	if(!alias.vchPrivateValue.empty() && alias.vchPrivateValue != dbAlias.vchPrivateValue)
-		privateValue = "<font color='red'>" + strPrivateValue + "</font>";
+		privateValue = strPrivateValue;
 
 	entry.push_back(Pair("privatevalue", strPrivateValue));
 
