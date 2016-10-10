@@ -2027,9 +2027,11 @@ UniValue syscoindecoderawtransaction(const UniValue& params, bool fHelp) {
 	if(!foundSys)
 		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 4539 - " + _("Could not find syscoin service output in this transaction"));
 	
+	UniValue res(UniValue::VOBJ);
 	UniValue output(UniValue::VOBJ);
 	SysTxToJSON(op, vchData, vchHash, output);
-	return output;
+	res.push_back(output);
+	return res;
 }
 void SysTxToJSON(const int op, const vector<unsigned char> &vchData, const vector<unsigned char> &vchHash, UniValue &entry)
 {
@@ -2067,7 +2069,7 @@ void AliasTxToJSON(const int op, const vector<unsigned char> &vchData, const vec
 	entry.push_back(Pair("name", stringFromVch(alias.vchAlias)));
 
 	string publicValue = noDifferentStr;
-	if(alias.vchPublicValue != dbAlias.vchPublicValue)
+	if(!alias.vchPublicValue .empty() && alias.vchPublicValue != dbAlias.vchPublicValue)
 		publicValue = stringFromVch(alias.vchPublicValue);
 	entry.push_back(Pair("value", publicValue));
 
@@ -2092,7 +2094,7 @@ void AliasTxToJSON(const int op, const vector<unsigned char> &vchData, const vec
 		strPrivateKey = strDecryptedKey;	
 
 	string privateKeyValue = noDifferentStr;
-	if(alias.vchPrivateKey != dbAlias.vchPrivateKey)
+	if(!alias.vchPrivateKey.empty() && alias.vchPrivateKey != dbAlias.vchPrivateKey)
 		privateKeyValue = strPrivateKey;
 
 	entry.push_back(Pair("privatekey", privateKeyValue));
