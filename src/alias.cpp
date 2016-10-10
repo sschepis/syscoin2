@@ -2094,7 +2094,7 @@ void AliasTxToJSON(const int op, const vector<unsigned char> &vchData, const vec
 		strPrivateKey = strDecryptedKey;	
 
 	string privateKeyValue = noDifferentStr;
-	if(!alias.vchPrivateKey.empty() && alias.vchPrivateKey != dbAlias.vchPrivateKey)
+	if(alias.vchPrivateKey != dbAlias.vchPrivateKey)
 		privateKeyValue = strPrivateKey;
 
 	entry.push_back(Pair("privatekey", privateKeyValue));
