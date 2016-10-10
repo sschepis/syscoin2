@@ -2509,7 +2509,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 
 	// this is a syscoin txn
 	CWalletTx wtx;
-	CScript scriptPubKeyOrig, scriptPubKeyAliasOrig;
+	CScript scriptPubKeyAliasOrig;
 	vector<unsigned char> vchAccept = vchFromString(GenerateSyscoinGuid());
 
 	// create OFFERACCEPT txn keys
