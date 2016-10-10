@@ -59,7 +59,7 @@ void SignRawTxDialog::setRawSysTxEdit()
 
 	try {
         UniValue result = tableRPC.execute(strMethod, params);
-		const UniValue& warningValue = find_value(result.get_obj, "warning");
+		const UniValue& warningValue = find_value(result.get_obj(), "warning");
 		if(warningValue.isStr())
 			ui->decodeWarning->setText(tr("<font color='red'>%1</font>").arg(QString::fromStdString(warningValue.get_str())));
 
