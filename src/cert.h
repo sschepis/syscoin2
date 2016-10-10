@@ -19,6 +19,7 @@ bool IsCertOp(int op);
 int IndexOfCertOutput(const CTransaction& tx);
 bool EncryptMessage(const std::vector<unsigned char> &vchPublicKey, const std::vector<unsigned char> &vchMessage, std::string &strCipherText);
 bool DecryptMessage(const std::vector<unsigned char> &vchPublicKey, const std::vector<unsigned char> &vchCipherText, std::string &strMessage);
+void CertTxToJSON(const int op, const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash, UniValue &entry);
 std::string certFromOp(int op);
 int GetCertExpirationDepth();
 CScript RemoveCertScriptPrefix(const CScript& scriptIn);

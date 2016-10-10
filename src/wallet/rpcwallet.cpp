@@ -2730,7 +2730,7 @@ extern UniValue aliasfilter(const UniValue& params, bool fHelp);
 extern UniValue generatepublickey(const UniValue& params, bool fHelp);
 extern UniValue importalias(const UniValue& params, bool fHelp);
 extern UniValue syscoinsignrawtransaction(const UniValue& params, bool fHelp);
-
+extern UniValue syscoindecoderawtransaction(const UniValue& params, bool fHelp);
 
 extern UniValue offernew(const UniValue& params, bool fHelp);
 extern UniValue offerupdate(const UniValue& params, bool fHelp);
@@ -2836,6 +2836,7 @@ static const CRPCCommand commands[] =
 	{ "wallet", "generatepublickey", &generatepublickey, false },
 	{ "wallet", "importalias",		 &importalias,	false },
 	{ "wallet", "syscoinsignrawtransaction",		 &syscoinsignrawtransaction,	false },
+	{ "wallet", "syscoindecoderawtransaction",		 &syscoindecoderawtransaction,	false },
 
     // use the blockchain as a distributed marketplace
     { "wallet", "offernew",             &offernew,             false },

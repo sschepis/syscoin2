@@ -36,7 +36,7 @@ void SignRawTxDialog::setRawTxEdit()
 		QJsonDocument doc = QJsonDocument::fromJson(jsonString.toUtf8());
 		QString formattedJsonString = doc.toJson(QJsonDocument::Indented);
 
-		ui->rawSysTxDecodeEdit->setPlainText(formattedJsonString);
+		ui->rawTxDecodeEdit->setPlainText(formattedJsonString);
 
 	}
 	catch (UniValue& objError)
@@ -54,7 +54,7 @@ void SignRawTxDialog::setRawSysTxEdit()
 	UniValue params(UniValue::VARR);
 	UniValue arraySendParams(UniValue::VARR);
 	string strMethod;
-	strMethod = string("decodesysrawtransaction");
+	strMethod = string("syscoindecoderawtransaction");
 	params.push_back(ui->rawTxEdit->toPlainText().toStdString());
 
 	try {
@@ -64,21 +64,23 @@ void SignRawTxDialog::setRawSysTxEdit()
 		QString formattedJsonString = doc.toJson(QJsonDocument::Indented);
 
 		ui->rawSysTxDecodeEdit->setPlainText(formattedJsonString);
+		ui->decodeSysTxDisclaimer->setText(tr("<font color='blue'>The area below is to display syscoin specific information regarding this transaction.</font>"));
 	}
 	catch (UniValue& objError)
 	{
 		string strError = find_value(objError, "message").get_str();
-		ui->rawTxDecodeEdit->setText(tr("Error creating decoding raw transaction: \"%1\"").arg(QString::fromStdString(strError)));
+		ui->rawTxDecodeEdit->setText(tr("Error creating decoding raw syscoin transaction: \"%1\"").arg(QString::fromStdString(strError)));
 	}
 	catch(std::exception& e)
 	{
-		ui->rawTxDecodeEdit->setText(tr("General exception decoding raw transaction"));
+		ui->rawTxDecodeEdit->setText(tr("General exception decoding raw syscoin transaction"));
 	}	
 }
 void SignRawTxDialog::rawTxChanged()
 {
+	ui->decodeSysTxDisclaimer->setText(tr("<font color='blue'>The area below is to display syscoin specific information regarding this transaction. Currently there is nothing to display.</font>"));
 	setRawTxEdit();
-	//setRawSysTxEdit();
+	setRawSysTxEdit();
 }
 SignRawTxDialog::~SignRawTxDialog()
 {
@@ -137,10 +139,14 @@ bool SignRawTxDialog::saveCurrentRow()
 	return true;
 }
 
-void SignRawTxDialog::accept()
+void SignRawTxDialog::on_okButton_clicked()
 {
 	bool saveState = saveCurrentRow();
     if(saveState)
 		QDialog::accept();
+}
+void SignRawTxDialog::on_cancelButton_clicked()
+{
+	 reject();
 }
 

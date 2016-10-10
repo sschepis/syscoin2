@@ -3913,3 +3913,6 @@ std::string COffer::GetPaymentOptionsString()
 	}
 	return "";
 }
+void OfferTxToJSON(const int op, const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash, UniValue &entry)
+{
+}

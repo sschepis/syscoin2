@@ -24,7 +24,8 @@ private:
 	void setRawSysTxEdit();
 
 public Q_SLOTS:
-    void accept();
+    void on_okButton_clicked();
+	void on_cancelButton_clicked();
 	void rawTxChanged();
 };
 

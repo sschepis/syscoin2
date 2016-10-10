@@ -17,7 +17,7 @@ bool DecodeEscrowScript(const CScript& script, int& op, std::vector<std::vector<
 bool IsEscrowOp(int op);
 int IndexOfEscrowOutput(const CTransaction& tx);
 int GetEscrowExpirationDepth();
-
+void EscrowTxToJSON(const int op, const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash, UniValue &entry);
 std::string escrowFromOp(int op);
 CScript RemoveEscrowScriptPrefix(const CScript& scriptIn);
 extern bool IsSys21Fork(const uint64_t& nHeight);

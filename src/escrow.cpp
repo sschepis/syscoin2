@@ -4011,3 +4011,6 @@ UniValue escrowfilter(const UniValue& params, bool fHelp) {
 
 	return oRes;
 }
+void EscrowTxToJSON(const int op, const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash, UniValue &entry)
+{
+}

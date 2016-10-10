@@ -1488,6 +1488,9 @@ UniValue certfilter(const UniValue& params, bool fHelp) {
 
 	return oRes;
 }
+void CertTxToJSON(const int op, const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash, UniValue &entry)
+{
+}
 
 
 

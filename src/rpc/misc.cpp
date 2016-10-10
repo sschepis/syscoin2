@@ -203,7 +203,7 @@ UniValue validateaddress(const UniValue& params, bool fHelp)
 		else
 			ret.push_back(Pair("address", currentAddress));
 		// SYSCOIN alias from address
-		v1addr = CSyscoinAddress(v1addr.ToString());
+		v1addr = CSyscoinAddress(currentAddress);
 		ret.push_back(Pair("alias", v1addr.aliasName));	
 
         CScript scriptPubKey = GetScriptForDestination(dest);

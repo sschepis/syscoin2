@@ -874,3 +874,7 @@ UniValue messagehistory(const UniValue& params, bool fHelp) {
 
 
 
+
+void MessageTxToJSON(const int op, const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash, UniValue &entry)
+{
+}

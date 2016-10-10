@@ -1997,6 +1997,153 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 		res.push_back(wtx.GetHash().GetHex());
 	return res;
 }
+UniValue syscoindecoderawtransaction(const UniValue& params, bool fHelp) {
+	if (fHelp || 1 != params.size())
+		throw runtime_error("syscoindecoderawtransaction <alias> <hexstring>\n"
+		"Decode raw syscoin transaction (serialized, hex-encoded) and display information pertaining to the service that is included in the transactiion data output(OP_RETURN)\n"
+				"<hexstring> The transaction hex string.\n");
+	string hexstring = params[0].get_str();
+	CTransaction rawTx;
+	DecodeHexTx(rawTx,hex_str);
+	if(rawTx.IsNull())
+	{
+		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 4539 - " + _("Could not decode transaction"));
+	}
+	vector<unsigned char> vchData;
+	int nOut;
+	vector<unsigned char> vchHash;
+	if(!GetSyscoinData(rawTx, vchData, vchHash, nOut))
+		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 4539 - " + _("Could not find syscoin service data in this transaction"));
+	vector<vector<unsigned char> > vvch;
+	int op;
+	bool foundSys = false;
+	for (unsigned int i = 0; i < rawTx.vout.size(); i++) {
+		if(IsSyscoinScript(rawTx.vout[i].scriptPubKey, op, vvch))
+		{
+			foundSys = true;
+			break;
+		}
+	}
+	if(!foundSys)
+		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 4539 - " + _("Could not find syscoin service output in this transaction"));
+	
+	UniValue output;
+	SysTxToJSON(op, vchData, output);
+	return output;
+}
+void SysTxToJSON(const int op, const vector<unsigned char> &vchData, const vector<unsigned char> &vchHash, UniValue &entry)
+{
+	if(IsAliasOp(op))
+		AliasTxToJSON(op, vchData, vchHash, entry);
+	else if(IsCertOp(op))
+		CertTxToJSON(op, vchData, vchHash, entry);
+	else if(IsMessageOp(op))
+		MessageTxToJSON(op,vchData, vchHash, entry);
+	else if(IsEscrowOp(op))
+		EscrowTxToJSON(op, vchData, vchHash, entry);
+	else if(IsOfferOp(op))
+		OfferTxToJSON(op, vchData, vchHash, entry);
+	else
+		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 4539 - " + _("Cannot determine type of syscoin transaction"));
+}
+void AliasTxToJSON(const int op, const vector<unsigned char> &vchData, const vector<unsigned char> &vchHash, UniValue &entry)
+{
+	string opName = aliasFromOp(op);
+	CAliasIndex alias;
+	if(!alias.UnserializeFromData(vchData, vchHash))
+		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 4539 - " + _("Alias hash mismatch when decoding syscoin transaction"));
+	bool isExpired = false;
+	vector<CAliasIndex> aliasVtxPos;
+	CAliasIndex dbAlias;
+	if(GetTxAndVtxOfAlias(alias.vchAlias, dbAlias, aliastx, aliasVtxPos, isExpired, true))
+	{
+		dbAlias.nHeight = alias.nHeight;
+		dbAlias.GetAliasFromList(aliasVtxPos);
+	}
+	string noDifferentStr = _("<No Difference Detected>");
+	UniValue oName(UniValue::VOBJ);
+
+	entry.push_back(Pair("txtype", opName));
+	entry.push_back(Pair("name", stringFromVch(vchAlias)));
+
+	string publicValue = noDifferentStr;
+	if(alias.vchPublicValue != dbAlias.vchPublicValue)
+		publicValue = stringFromVch(alias.vchPublicValue);
+	entry.push_back(Pair("value", publicValue));
+
+	string strPrivateValue = "";
+	if(!alias.vchPrivateValue.empty())
+		strPrivateValue = _("Encrypted for alias owner");
+	string strDecrypted = "";
+	if(DecryptMessage(alias.vchPubKey, alias.vchPrivateValue, strDecrypted))
+		strPrivateValue = strDecrypted;		
+
+	string privateValue = noDifferentStr;
+	if(alias.vchPrivateValue != dbAlias.vchPrivateValue)
+		privateValue = strPrivateValue;
+
+	entry.push_back(Pair("privatevalue", strPrivateValue));
+
+	string strPrivateKey = "";
+	if(!alias.vchPrivateKey.empty())
+		strPrivateKey = _("Encrypted for alias owner");
+	string strDecryptedKey = "";
+	if(DecryptMessage(alias.vchPubKey, alias.vchPrivateKey, strDecryptedKey))
+		strPrivateKey = strDecryptedKey;	
+
+	string privateKeyValue = noDifferentStr;
+	if(alias.vchPrivateKey != dbAlias.vchPrivateKey)
+		privateKeyValue = strPrivateKey;
+
+	entry.push_back(Pair("privatekey", privateKeyValue));
+
+	CSyscoinAddress address;
+	alias.GetAddress(&address);
+	CSyscoinAddress dbaddress;
+	dbAlias.GetAddress(&dbaddress);
+
+	string addressValue = noDifferentStr;
+	if(address.ToString() != dbaddress.ToString())
+		addressValue = address.ToString();
+
+	entry.push_back(Pair("address", addressValue));
+
+
+	string safeSearchValue = noDifferentStr;
+	if(alias.safeSearch != dbAlias.safeSearch)
+		safeSearchValue = alias.safeSearch? "Yes": "No";
+
+	entry.push_back(Pair("safesearch", safeSearchValue));
+
+
+	string safetyLevelValue = noDifferentStr;
+	if(alias.safetyLevel != dbAlias.safetyLevel)
+		safetyLevelValue = alias.safetyLevel;
+
+	entry.push_back(Pair("safetylevel", safetyLevelValue ));
+
+	UniValue msInfo(UniValue::VOBJ);
+
+	string reqsigsValue = noDifferentStr;
+	if(alias.multiSigInfo != dbAlias.multiSigInfo)
+	{
+		msInfo.push_back(Pair("reqsigs", (int)alias.multiSigInfo.nRequiredSigs));
+		UniValue msAliases(UniValue::VARR);
+		for(int i =0;i<alias.multiSigInfo.vchAliases.size();i++)
+		{
+			msAliases.push_back(alias.multiSigInfo.vchAliases[i]);
+		}
+		msInfo.push_back(Pair("reqsigners", msAliases));
+		
+	}
+	else
+	{
+		msInfo.push_back(Pair("reqsigs", noDifferentStr));
+		msInfo.push_back(Pair("reqsigners", noDifferentStr));
+	}
+	entry.push_back(Pair("multisiginfo", msInfo));
+
+}
 UniValue syscoinsignrawtransaction(const UniValue& params, bool fHelp) {
 	if (fHelp || 1 != params.size())
 		throw runtime_error("syscoinsignrawtransaction <alias> <hexstring>\n"
