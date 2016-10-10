@@ -17,6 +17,8 @@ SignRawTxDialog::SignRawTxDialog(QWidget* parent) :
 {
 	ui->setupUi(this);
 	ui->rawTxDisclaimer->setText(tr("<font color='blue'>Sign a raw syscoin transaction and send it to the network if it is complete with all required signatures. Enter the raw hex encoded transaction below.</font>")); 
+	ui->decodeTxDisclaimer->setText(tr("<font color='blue'>Once you enter a valid raw transaction in the general section this area will become populated with the raw transaction information including any syscoin related service information so you will know what the transaction is doing before signing and potentially sending it to the network.</font>"));
+	ui->decodeSysTxDisclaimer->setText(tr("<font color='blue'>The area below is to display syscoin specific information regarding this transaction. Currently there is nothing to display.</font>")); 
 	connect(ui->rawTxEdit, SIGNAL(textChanged()), this, SLOT(rawTxChanged()));
 }
 void SignRawTxDialog::setRawTxEdit()
@@ -29,7 +31,7 @@ void SignRawTxDialog::setRawTxEdit()
 
 	try {
         UniValue result = tableRPC.execute(strMethod, params);
-		ui->rawTxDecodeEdit->setPlainText(QString::fromStdString(result.get_obj().getValStr()));
+		ui->rawTxDecodeEdit->setPlainText(QString::fromStdString(result.write()));
 	}
 	catch (UniValue& objError)
 	{
@@ -51,7 +53,7 @@ void SignRawTxDialog::setRawSysTxEdit()
 
 	try {
         UniValue result = tableRPC.execute(strMethod, params);
-		ui->rawSysTxDecodeEdit->setPlainText(QString::fromStdString(result.get_obj().getValStr()));
+		ui->rawSysTxDecodeEdit->setPlainText(QString::fromStdString(result..write()));
 	}
 	catch (UniValue& objError)
 	{
