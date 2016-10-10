@@ -67,7 +67,7 @@ void SignRawTxDialog::setRawSysTxEdit()
 		QJsonDocument doc = QJsonDocument::fromJson(jsonString.toUtf8());
 		QString formattedJsonString = doc.toJson(QJsonDocument::Indented);
 
-		ui->rawSysTxDecodeEdit->setPlainText(formattedJsonString);
+		ui->rawSysTxDecodeEdit->setHtml(formattedJsonString);
 		ui->decodeSysTxDisclaimer->setText(tr("<font color='blue'>The area below is to display syscoin specific information regarding this transaction.</font>"));
 	}
 	catch (UniValue& objError)
