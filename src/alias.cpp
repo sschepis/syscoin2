@@ -2036,7 +2036,7 @@ UniValue syscoindecoderawtransaction(const UniValue& params, bool fHelp) {
 	if(!foundSys)
 		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 4539 - " + _("Could not find syscoin service output in this transaction"));
 	if(sendCoin)
-		output.push_back(Pair("warning", _("Warning: This transaction sends coins to an address or alias you do not own"));
+		output.push_back(Pair("warning", _("Warning: This transaction sends coins to an address or alias you do not own")));
 	
 	SysTxToJSON(op, vchData, vchHash, output);
 	return output;
