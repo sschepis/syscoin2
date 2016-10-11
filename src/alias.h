@@ -101,8 +101,8 @@ public:
         return !(a == b);
     }
 
-    inline void SetNull() { vchRedeemScript.clear(); vchAliases.SetNull(); nRequiredSigs = 0;}
-    inline bool IsNull() const { return (vchRedeemScript.empty() && vchAliases.IsNull() && nRequiredSigs == 0); }
+    inline void SetNull() { vchRedeemScript.clear(); vchAliases.clear(); nRequiredSigs = 0;}
+    inline bool IsNull() const { return (vchRedeemScript.empty() && vchAliases.empty() && nRequiredSigs == 0); }
 
 };
 class CAliasIndex {
