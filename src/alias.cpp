@@ -721,7 +721,7 @@ void updateBans(const vector<unsigned char> &banData)
 					CPubKey PubKey(aliasBan.vchPubKey);
 					CSyscoinAddress address(PubKey.GetID());
 					CSyscoinAddress multisigAddress;
-					theAlias.GetAddress(&multisigAddress);
+					aliasBan.GetAddress(&multisigAddress);
 					paliasdb->WriteAlias(vchGUID, vchFromString(address.ToString()), vchFromString(multisigAddress.ToString()), vtxAliasPos);
 					
 				}		
