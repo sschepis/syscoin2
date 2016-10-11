@@ -103,6 +103,7 @@ public:
  */
 class CSyscoinAddress : public CBase58Data {
 public:
+
 	// SYSCOIN
 	bool isAlias;
 	unsigned char safetyLevel;
