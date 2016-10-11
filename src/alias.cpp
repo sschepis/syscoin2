@@ -1376,7 +1376,7 @@ bool GetTxAndVtxOfAlias(const vector<unsigned char> &vchAlias,
 		return error("GetTxOfAlias() : could not read tx from disk");
 	return true;
 }
-void GetAddressFromAlias(const std::string& strAlias, std::string& strAddress, unsigned char& safetyLevel, bool& safeSearch, vector<unsigned char>& vchPubKey, int64_t& nExpireHeight) {
+void GetAddressFromAlias(const std::string& strAlias, std::string& strAddress, unsigned char& safetyLevel, bool& safeSearch, int64_t& nExpireHeight) {
 	try
 	{
 		string strLowerAlias = strAlias;
@@ -1400,7 +1400,6 @@ void GetAddressFromAlias(const std::string& strAlias, std::string& strAddress, u
 		strAddress = address.ToString();
 		safetyLevel = alias.safetyLevel;
 		safeSearch = alias.safeSearch;
-		vchPubKey = alias.vchPubKey;
 		nExpireHeight = alias.nHeight + alias.nRenewal*GetAliasExpirationDepth();
 	}
 	catch(...)
@@ -1410,7 +1409,7 @@ void GetAddressFromAlias(const std::string& strAlias, std::string& strAddress, u
 	}
 }
 
-void GetAliasFromAddress(std::string& strAddress, std::string& strAlias, unsigned char& safetyLevel, bool& safeSearch, vector<unsigned char>& vchPubKey, int64_t& nExpireHeight) {
+void GetAliasFromAddress(std::string& strAddress, std::string& strAlias, unsigned char& safetyLevel, bool& safeSearch, int64_t& nExpireHeight) {
 	try
 	{
 		const vector<unsigned char> &vchAddress = vchFromValue(strAddress);
@@ -1432,7 +1431,6 @@ void GetAliasFromAddress(std::string& strAddress, std::string& strAlias, unsigne
 		strAlias = stringFromVch(vchAlias);
 		safetyLevel = alias.safetyLevel;
 		safeSearch = alias.safeSearch;
-		vchPubKey = alias.vchPubKey;
 		nExpireHeight = alias.nHeight + alias.nRenewal*GetAliasExpirationDepth();
 	}
 	catch(...)

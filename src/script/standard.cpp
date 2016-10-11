@@ -13,10 +13,7 @@
 #include <boost/foreach.hpp>
 
 using namespace std;
-// SYSCOIN services
-#include "base58.h"
 extern void RemoveSyscoinScript(const CScript& scriptPubKeyIn, CScript& scriptPubKeyOut);
-extern CScript _createmultisig_redeemScript(const UniValue& params);
 typedef vector<unsigned char> valtype;
 
 bool fAcceptDatacarrier = DEFAULT_ACCEPT_DATACARRIER;
@@ -215,36 +212,12 @@ bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet)
 	// SYSCOIN
     else if (whichType == TX_MULTISIG)
     {
-		int nRequiredRet = vSolutions.front()[0];
-		UniValue paramKeys(UniValue::VARR);
-        for (unsigned int i = 1; i < vSolutions.size()-1; i++)
-        {
-            CPubKey pubKey(vSolutions[i]);
-            if (!pubKey.IsValid())
-                continue;
-
-            CTxDestination address = pubKey.GetID();
-			CSyscoinAddress sysAddress(address);
-			sysAddress = CSyscoinAddress(sysAddress.ToString());
-			if(sysAddress.isAlias)
-				paramKeys.push_back(HexStr(sysAddress.vchPubKey));
-			else
-				return false;
-        }
-
-        if (paramKeys.empty())
+        CPubKey pubKey(vSolutions[1]);
+        if (!pubKey.IsValid())
             return false;
-		UniValue params(UniValue::VARR);
-		params.push_back(nRequiredRet);
-		params.push_back(paramKeys);
-		CScript inner = _createmultisig_redeemScript(params);
-		CScriptID innerID(inner);
-		CSyscoinAddress addressRetSys = CSyscoinAddress(innerID);
-		if(addressRetSys.IsValid())
-		{
-			addressRet = addressRetSys.Get();
-			return true;
-		}
+
+        addressRet = pubKey.GetID();
+		return true;
     }
     return false;
 }

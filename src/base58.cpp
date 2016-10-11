@@ -15,9 +15,8 @@
 #include <boost/variant/apply_visitor.hpp>
 #include <boost/variant/static_visitor.hpp>
 // SYSCOIN use aliases as addresses
-extern void GetAddressFromAlias(const std::string& strAlias, std::string& strAddress, unsigned char& safetyLevel, bool& safeSearch,std::vector<unsigned char>& vchPubKey, int64_t& nHeight);
-extern void GetAliasFromAddress(std::string& strAddress, std::string& strAlias, unsigned char& safetyLevel, bool& safeSearch, std::vector<unsigned char>& vchPubKey, int64_t& nHeight);
-
+extern void GetAddressFromAlias(const std::string& strAlias, std::string& strAddress, unsigned char& safetyLevel, bool& safeSearch, int64_t& nHeight);
+extern void GetAliasFromAddress(std::string& strAddress, std::string& strAlias, unsigned char& safetyLevel, bool& safeSearch, int64_t& nHeight);
 /** All alphanumeric characters except for "0", "I", "O", and "l" */
 static const char* pszBase58 = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
 
@@ -230,7 +229,6 @@ public:
 // SYSCOIN aliases as addresses
 CSyscoinAddress::CSyscoinAddress() {
 	isAlias = false;
-	vchPubKey.clear();
 	aliasName = "";
 	safeSearch = false;
 	safetyLevel = 0;
@@ -240,7 +238,6 @@ CSyscoinAddress::CSyscoinAddress() {
 CSyscoinAddress::CSyscoinAddress(const CTxDestination &dest, bool oldSys) { 
 	isAlias = false;
 	safeSearch = false;
-	vchPubKey.clear();
 	safetyLevel = 0;
 	nExpireHeight = 0;
 	aliasName = "";
@@ -248,7 +245,6 @@ CSyscoinAddress::CSyscoinAddress(const CTxDestination &dest, bool oldSys) {
 }
 CSyscoinAddress::CSyscoinAddress(const std::string& strAddress) { 
 	isAlias = false;
-	vchPubKey.clear();
 	aliasName = "";
     SetString(strAddress);
 	// try to resolve alias address from alias name
@@ -257,7 +253,7 @@ CSyscoinAddress::CSyscoinAddress(const std::string& strAddress) {
 		try 
 		{
 			std::string strAliasAddress;
-			GetAddressFromAlias(strAddress, strAliasAddress, safetyLevel, safeSearch, vchPubKey, nExpireHeight);
+			GetAddressFromAlias(strAddress, strAliasAddress, safetyLevel, safeSearch, nExpireHeight);
 			SetString(strAliasAddress);
 			aliasName = strAddress;
 			isAlias = true;
@@ -273,7 +269,7 @@ CSyscoinAddress::CSyscoinAddress(const std::string& strAddress) {
 		{
 			std::string strAliasAddress = strAddress;
 			std::string strAlias;
-			GetAliasFromAddress(strAliasAddress, strAlias, safetyLevel, safeSearch, vchPubKey, nExpireHeight);
+			GetAliasFromAddress(strAliasAddress, strAlias, safetyLevel, safeSearch, nExpireHeight);
 			if(strAliasAddress != strAddress)
 				SetString(strAliasAddress);
 			aliasName = strAlias;
@@ -294,7 +290,7 @@ CSyscoinAddress::CSyscoinAddress(const char* pszAddress) {
 		try 
 		{
 			std::string strAliasAddress;
-			GetAddressFromAlias(std::string(pszAddress), strAliasAddress, safetyLevel, safeSearch, vchPubKey, nExpireHeight);
+			GetAddressFromAlias(std::string(pszAddress), strAliasAddress, safetyLevel, safeSearch, nExpireHeight);
 			SetString(strAliasAddress);
 			aliasName = std::string(pszAddress);
 			isAlias = true;
@@ -310,7 +306,7 @@ CSyscoinAddress::CSyscoinAddress(const char* pszAddress) {
 		{
 			std::string strAliasAddress = std::string(pszAddress);
 			std::string strAlias;
-			GetAliasFromAddress(strAliasAddress, strAlias, safetyLevel, safeSearch, vchPubKey, nExpireHeight);
+			GetAliasFromAddress(strAliasAddress, strAlias, safetyLevel, safeSearch, nExpireHeight);
 			if(strAliasAddress != std::string(pszAddress))
 				SetString(strAliasAddress);
 			aliasName = strAlias;
