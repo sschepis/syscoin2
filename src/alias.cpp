@@ -799,6 +799,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	vector<unsigned char> vchData;
 	vector<unsigned char> vchAlias;
 	vector<unsigned char> vchHash;
+	CSyscoinAddress multisigAddress;
 	int nDataOut;
 	if(GetSyscoinData(tx, vchData, vchHash, nDataOut) && !theAlias.UnserializeFromData(vchData, vchHash))
 	{
@@ -1116,6 +1117,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					theAlias.multiSigInfo.SetNull();
 					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5020 - " + _("Could not extract destination address from transaction");
 				}
+				multisigAddress = CSyscoinAddress(dest);
 			}
 		}
 		theAlias.nHeight = nHeight;
@@ -1123,8 +1125,6 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		PutToAliasList(vtxPos, theAlias);
 		CPubKey PubKey(theAlias.vchPubKey);
 		CSyscoinAddress address(PubKey.GetID());
-		CSyscoinAddress multisigAddress;
-		theAlias.GetAddress(&multisigAddress);
 		if (!dontaddtodb && !paliasdb->WriteAlias(vchAlias, vchFromString(address.ToString()), vchFromString(multisigAddress.ToString()), vtxPos))
 		{
 			errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5025 - " + _("Failed to write to alias DB");
