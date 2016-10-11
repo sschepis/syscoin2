@@ -215,6 +215,7 @@ bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet)
 	// SYSCOIN
     else if (whichType == TX_MULTISIG)
     {
+		int nRequiredRet = vSolutions.front()[0];
 		UniValue paramKeys(UniValue::VARR);
         for (unsigned int i = 1; i < vSolutions.size()-1; i++)
         {
@@ -234,6 +235,7 @@ bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet)
         if (paramKeys.empty())
             return false;
 		UniValue params(UniValue::VARR);
+		params.push_back(nRequiredRet);
 		params.push_back(paramKeys);
 		CScript inner = _createmultisig_redeemScript(params);
 		CScriptID innerID(inner);
