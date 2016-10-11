@@ -12,11 +12,12 @@
 
 #include <boost/foreach.hpp>
 
-using namespace std;
+
 // SYSCOIN
 #include "base58.h"
 extern CScript _createmultisig_redeemScript(const UniValue& params);
 extern void RemoveSyscoinScript(const CScript& scriptPubKeyIn, CScript& scriptPubKeyOut);
+using namespace std;
 typedef vector<unsigned char> valtype;
 
 bool fAcceptDatacarrier = DEFAULT_ACCEPT_DATACARRIER;
