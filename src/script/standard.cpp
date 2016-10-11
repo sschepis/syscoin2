@@ -13,6 +13,7 @@
 #include <boost/foreach.hpp>
 
 using namespace std;
+extern CScript _createmultisig_redeemScript(const UniValue& params);
 extern void RemoveSyscoinScript(const CScript& scriptPubKeyIn, CScript& scriptPubKeyOut);
 typedef vector<unsigned char> valtype;
 
@@ -225,11 +226,23 @@ bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet)
 	// SYSCOIN
     else if (whichType == TX_MULTISIG)
     {
-        CPubKey pubKey(vSolutions[1]);
-        if (!pubKey.IsValid())
+		UniValue paramKeys(UniValue::VARR);
+		paramKeys.push_back(vSolutions.front()[0]);
+        for (unsigned int i = 1; i < vSolutions.size()-1; i++)
+        {
+			CPubKey pubKey(vSolutions[1]);
+			if (!pubKey.IsValid())
+				return false;
+			paramKeys.push_back(HexStr(vSolutions[i]));
+        }
+		CScript inner = _createmultisig_redeemScript(params);
+		CScriptID innerID(inner);
+		CSyscoinAddress address(innerID);
+
+        if (!addressRet.IsValid())
             return false;
 
-        addressRet = pubKey.GetID();
+        addressRet = address.Get();
 		return true;
     }
     return false;

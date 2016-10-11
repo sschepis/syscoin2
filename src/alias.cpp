@@ -1953,6 +1953,8 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 4507 - " + _("Could not create escrow transaction: Invalid response from createescrow"));
 		const UniValue &o = resCreate.get_obj();
 		const UniValue& redeemScript_value = find_value(o, "redeemScript");
+		const UniValue& address_value = find_value(o, "v2address");
+		
 		if (redeemScript_value.isStr())
 		{
 			redeemScript = ParseHex(redeemScript_value.get_str());
@@ -1960,7 +1962,13 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 		}
 		else
 			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 4524 - " + _("Could not create escrow transaction: could not find redeem script in response"));
-		scriptPubKeyOrig = CScript(redeemScript.begin(), redeemScript.end());
+		if (address_value.isStr())
+		{
+			CSyscoinAddress address = CSyscoinAddress(address_value.get_str());
+			scriptPubKeyOrig = GetScriptForDestination(address.Get());
+		}
+		else
+			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 4524 - " + _("Could not create escrow transaction: could not find v2address in response"));
 	}	
 	else
 		scriptPubKeyOrig = GetScriptForDestination(currentKey.GetID());
@@ -2184,7 +2192,7 @@ void AliasTxToJSON(const int op, const vector<unsigned char> &vchData, const vec
 		UniValue msAliases(UniValue::VARR);
 		for(int i =0;i<alias.multiSigInfo.vchAliases.size();i++)
 		{
-			msAliases.push_back(alias.multiSigInfo.vchAliases[i]);
+			msAliases.push_back(stringFromVch(alias.multiSigInfo.vchAliases[i].vchAlias));
 		}
 		msInfo.push_back(Pair("reqsigners", msAliases));
 		
@@ -2379,7 +2387,7 @@ UniValue aliaslist(const UniValue& params, bool fHelp) {
 			UniValue msAliases(UniValue::VARR);
 			for(int i =0;i<alias.multiSigInfo.vchAliases.size();i++)
 			{
-				msAliases.push_back(alias.multiSigInfo.vchAliases[i]);
+				msAliases.push_back(stringFromVch(alias.multiSigInfo.vchAliases[i].vchAlias));
 			}
 			msInfo.push_back(Pair("reqsigners", msAliases));
 			oName.push_back(Pair("multisiginfo", msInfo));
@@ -2580,7 +2588,7 @@ UniValue aliasinfo(const UniValue& params, bool fHelp) {
 		UniValue msAliases(UniValue::VARR);
 		for(int i =0;i<alias.multiSigInfo.vchAliases.size();i++)
 		{
-			msAliases.push_back(alias.multiSigInfo.vchAliases[i]);
+			msAliases.push_back(stringFromVch(alias.multiSigInfo.vchAliases[i].vchAlias));
 		}
 		msInfo.push_back(Pair("reqsigners", msAliases));
 		oName.push_back(Pair("multisiginfo", msInfo));
@@ -2859,7 +2867,7 @@ UniValue aliasfilter(const UniValue& params, bool fHelp) {
 		UniValue msAliases(UniValue::VARR);
 		for(int i =0;i<alias.multiSigInfo.vchAliases.size();i++)
 		{
-			msAliases.push_back(alias.multiSigInfo.vchAliases[i]);
+			msAliases.push_back(stringFromVch(alias.multiSigInfo.vchAliases[i].vchAlias));
 		}
 		msInfo.push_back(Pair("reqsigners", msAliases));
 		oName.push_back(Pair("multisiginfo", msInfo));
