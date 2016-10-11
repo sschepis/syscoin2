@@ -14,6 +14,7 @@
 
 using namespace std;
 // SYSCOIN services
+#include "base58.h"
 extern void RemoveSyscoinScript(const CScript& scriptPubKeyIn, CScript& scriptPubKeyOut);
 extern CScript _createmultisig_redeemScript(const UniValue& params);
 typedef vector<unsigned char> valtype;
