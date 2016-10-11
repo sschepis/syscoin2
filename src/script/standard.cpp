@@ -15,6 +15,7 @@
 using namespace std;
 // SYSCOIN services
 extern void RemoveSyscoinScript(const CScript& scriptPubKeyIn, CScript& scriptPubKeyOut);
+extern CScript _createmultisig_redeemScript(const UniValue& params);
 typedef vector<unsigned char> valtype;
 
 bool fAcceptDatacarrier = DEFAULT_ACCEPT_DATACARRIER;
@@ -210,7 +211,38 @@ bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet)
         addressRet = CScriptID(uint160(vSolutions[0]));
         return true;
     }
-    // Multisig txns have more than one address...
+	// SYSCOIN
+    else if (whichType == TX_MULTISIG)
+    {
+		UniValue paramKeys(UniValue::VARR);
+        for (unsigned int i = 1; i < vSolutions.size()-1; i++)
+        {
+            CPubKey pubKey(vSolutions[i]);
+            if (!pubKey.IsValid())
+                continue;
+
+            CTxDestination address = pubKey.GetID();
+			CSyscoinAddress sysAddress(address);
+			sysAddress = CSyscoinAddress(sysAddress.ToString());
+			if(sysAddress.isAlias)
+				paramKeys.push_back(HexStr(sysAddress.vchPubKey));
+			else
+				return false;
+        }
+
+        if (paramKeys.empty())
+            return false;
+		UniValue params(UniValue::VARR);
+		params.push_back(paramKeys);
+		CScript inner = _createmultisig_redeemScript(params);
+		CScriptID innerID(inner);
+		CSyscoinAddress addressRetSys = CSyscoinAddress(innerID);
+		if(addressRetSys.IsValid())
+		{
+			addressRet = addressRetSys.Get();
+			return true;
+		}
+    }
     return false;
 }
 
