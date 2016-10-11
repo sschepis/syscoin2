@@ -51,7 +51,7 @@ public:
         );
     }
 
-    inline CMultiSigAliasInfo operator=(const CMultiSigAlias &b) {
+    inline CMultiSigAlias operator=(const CMultiSigAlias &b) {
 		vchPubKey = b.vchPubKey;
 		vchAlias = b.vchAlias;
         return *this;
