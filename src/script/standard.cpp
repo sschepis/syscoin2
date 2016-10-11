@@ -74,7 +74,8 @@ bool Solver(const CScript& scriptPubKeyIn, txnouttype& typeRet, vector<vector<un
         vector<unsigned char> hashBytes(scriptPubKey.begin()+2, scriptPubKey.begin()+22);
         vSolutionsRet.push_back(hashBytes);
 		// SYSCOIN if multisig
-		CSyscoinAddress syscoinAddress(CScriptID(uint160(hashBytes)));
+		CScriptID innerID(uint160(hashBytes));
+		CSyscoinAddress syscoinAddress(innerID);
 		syscoinAddress = CSyscoinAddress(syscoinAddress.ToString());
 		if(syscoinAddress.nRequiredSigs > 1 && syscoinAddress.vchPubKeys.size() >= syscoinAddress.nRequiredSigs)
 		{
