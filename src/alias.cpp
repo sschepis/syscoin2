@@ -2695,7 +2695,7 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 			UniValue msAliases(UniValue::VARR);
 			for(int i =0;i<txPos2.multiSigInfo.vchAliases.size();i++)
 			{
-				msAliases.push_back(stringFromVch(txPos2.multiSigInfo.vchAliases[i]));
+				msAliases.push_back(stringFromVch(txPos2.multiSigInfo.vchAliases[i].vchAlias));
 			}
 			msInfo.push_back(Pair("reqsigners", msAliases));
 			oName.push_back(Pair("multisiginfo", msInfo));
