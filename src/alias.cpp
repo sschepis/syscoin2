@@ -1410,7 +1410,7 @@ void GetAddressFromAlias(const std::string& strAlias, std::string& strAddress, u
 		safetyLevel = alias.safetyLevel;
 		safeSearch = alias.safeSearch;
 		nExpireHeight = alias.nHeight + alias.nRenewal*GetAliasExpirationDepth();
-		nRequired = 1;
+		nRequiredSigs = 1;
 		if(alias.multiSigInfo.vchAliases.size() > 0)
 		{
 			nRequiredSigs = alias.multiSigInfo.nRequiredSigs;
@@ -1452,7 +1452,7 @@ void GetAliasFromAddress(std::string& strAddress, std::string& strAlias, unsigne
 		safetyLevel = alias.safetyLevel;
 		safeSearch = alias.safeSearch;
 		nExpireHeight = alias.nHeight + alias.nRenewal*GetAliasExpirationDepth();
-		nRequired = 1;
+		nRequiredSigs = 1;
 		if(alias.multiSigInfo.vchAliases.size() > 0)
 		{
 			nRequiredSigs = alias.multiSigInfo.nRequiredSigs;
