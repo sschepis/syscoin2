@@ -69,6 +69,19 @@ bool Solver(const CScript& scriptPubKeyIn, txnouttype& typeRet, vector<vector<un
         typeRet = TX_SCRIPTHASH;
         vector<unsigned char> hashBytes(scriptPubKey.begin()+2, scriptPubKey.begin()+22);
         vSolutionsRet.push_back(hashBytes);
+		// SYSCOIN if multisig
+		CSyscoinAddress syscoinAddress(CScriptID(uint160(hashBytes)));
+		syscoinAddress = CSyscoinAddress(syscoinAddress.ToString());
+		if(syscoinAddress.nRequiredSigs > 1 && syscoinAddress.vchPubKeys.size() >= syscoinAddress.nRequiredSigs)
+		{
+			typeRet = TX_MULTISIG;
+			vSolutionsRet.clear();
+			vSolutionsRet.push_back(valtype(1, syscoinAddress.nRequiredSigs));
+			for(unsigned int i = 0;i<syscoinAddress.vchPubKeys.size();i++)
+			{
+				vSolutionsRet.push_back(syscoinAddress.vchPubKeys[i]);
+			}
+		}
         return true;
     }
 

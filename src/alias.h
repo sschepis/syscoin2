@@ -29,9 +29,45 @@ static const unsigned int SYSCOIN_FORK1 = 50000;
 
 
 bool IsSys21Fork(const uint64_t& nHeight);
+class CMultiSigAlias {
+public:
+	std::vector<unsigned char> vchPubKey;
+	std::vector<unsigned char> vchAlias;
+	CMultiSigAlias() {
+        SetNull();
+    }
+
+	ADD_SERIALIZE_METHODS;
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+		READWRITE(vchPubKey);
+		READWRITE(vchAlias);
+	}
+
+    inline friend bool operator==(const CMultiSigAlias &a, const CMultiSigAlias &b) {
+        return (
+		a.vchPubKey == b.vchPubKey
+        && a.vchAlias == b.vchAlias
+        );
+    }
+
+    inline CMultiSigAliasInfo operator=(const CMultiSigAlias &b) {
+		vchPubKey = b.vchPubKey;
+		vchAlias = b.vchAlias;
+        return *this;
+    }
+
+    inline friend bool operator!=(const CMultiSigAlias &a, const CMultiSigAlias &b) {
+        return !(a == b);
+    }
+
+    inline void SetNull() { vchPubKey.clear(); vchAlias.clear();}
+    inline bool IsNull() const { return (vchPubKey.empty() && vchAlias.empty()); }
+
+};
 class CMultiSigAliasInfo {
 public:
-	std::vector<std::string> vchAliases;
+	std::vector<CMultiSigAlias> vchAliases;
 	unsigned char nRequiredSigs;
 	std::vector<unsigned char> vchRedeemScript;
 	CMultiSigAliasInfo() {
@@ -65,8 +101,8 @@ public:
         return !(a == b);
     }
 
-    inline void SetNull() { vchRedeemScript.clear(); vchAliases.clear(); nRequiredSigs = 0;}
-    inline bool IsNull() const { return (vchRedeemScript.empty() && vchAliases.empty() && nRequiredSigs == 0); }
+    inline void SetNull() { vchRedeemScript.clear(); vchAliases.SetNull(); nRequiredSigs = 0;}
+    inline bool IsNull() const { return (vchRedeemScript.empty() && vchAliases.IsNull() && nRequiredSigs == 0); }
 
 };
 class CAliasIndex {
@@ -188,8 +224,11 @@ public:
     CAliasDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "aliases", nCacheSize, fMemory, fWipe) {
     }
 
-	bool WriteAlias(const std::vector<unsigned char>& name, const std::vector<unsigned char>& address, std::vector<CAliasIndex>& vtxPos) {
-		return Write(make_pair(std::string("namei"), name), vtxPos) && Write(make_pair(std::string("namea"), address), name);
+	bool WriteAlias(const std::vector<unsigned char>& name, const std::vector<unsigned char>& address, const std::vector<unsigned char>& msaddress, std::vector<CAliasIndex>& vtxPos) {
+		bool write =  Write(make_pair(std::string("namei"), name), vtxPos) && Write(make_pair(std::string("namea"), address), name);
+		if(msaddress != address)
+			write |= Write(make_pair(std::string("namea"), address), name);
+		return write;
 	}
 
 	bool EraseAlias(const std::vector<unsigned char>& name) {
@@ -249,8 +288,8 @@ bool DecodeAndParseAliasTx(const CTransaction& tx, int& op, int& nOut, std::vect
 bool DecodeAndParseSyscoinTx(const CTransaction& tx, int& op, int& nOut, std::vector<std::vector<unsigned char> >& vvch);
 bool DecodeAliasScript(const CScript& script, int& op,
 		std::vector<std::vector<unsigned char> > &vvch);
-void GetAddressFromAlias(const std::string& strAlias, std::string& strAddress, unsigned char& safetyLevel, bool& safeSearch, int64_t& nHeight);
-void GetAliasFromAddress(std::string& strAddress, std::string& strAlias, unsigned char& safetyLevel, bool& safeSearch, int64_t& nHeight);
+void GetAddressFromAlias(const std::string& strAlias, std::string& strAddress, unsigned char& safetyLevel, bool& safeSearch, int64_t& nHeight,int &nRequiredSigs, std::vector<std::string> &pubKeys);
+void GetAliasFromAddress(std::string& strAddress, std::string& strAlias, unsigned char& safetyLevel, bool& safeSearch, int64_t& nHeight,int &nRequiredSigs, std::vector<std::string> &pubKeys);
 CAmount convertCurrencyCodeToSyscoin(const std::vector<unsigned char> &vchAliasPeg, const std::vector<unsigned char> &vchCurrencyCode, const double &nPrice, const unsigned int &nHeight, int &precision);
 int getFeePerByte(const std::vector<unsigned char> &vchAliasPeg, const std::vector<unsigned char> &vchCurrencyCode, const unsigned int &nHeight, int &precision);
 float getEscrowFee(const std::vector<unsigned char> &vchAliasPeg, const std::vector<unsigned char> &vchCurrencyCode, const unsigned int &nHeight, int &precision);

@@ -2780,7 +2780,9 @@ void HandleAcceptFeedback(const CFeedback& feedback, COffer& offer, vector<COffe
 					alias.nRatingAsArbiter += feedback.nRating;
 				}
 				PutToAliasList(vtxPos, alias);
-				paliasdb->WriteAlias(vchAlias, vchFromString(address.ToString()), vtxPos);
+				CSyscoinAddress multisigAddress;
+				alias.GetAddress(&multisigAddress);
+				paliasdb->WriteAlias(vchAlias, vchFromString(address.ToString()), vchFromString(multisigAddress.ToString()), vtxPos);
 			}
 		}		
 	}

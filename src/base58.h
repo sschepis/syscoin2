@@ -109,7 +109,8 @@ public:
 	int64_t nExpireHeight;
 	bool safeSearch;
 	std::string aliasName;
-	std::vector<unsigned char> vchPubKey;
+	std::vector<std::string> vchPubKeys;
+	int nRequiredSigs;
 
     bool Set(const CKeyID &id, bool oldSys = false);
     bool Set(const CScriptID &id);

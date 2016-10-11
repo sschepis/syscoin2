@@ -2467,8 +2467,9 @@ bool DisconnectAlias(const CBlockIndex *pindex, const CTransaction &tx, int op, 
 	
 	CPubKey PubKey(foundAlias.vchPubKey);
 	CSyscoinAddress address(PubKey.GetID());
-
-	if(!paliasdb->WriteAlias(vvchArgs[0], vchFromString(address.ToString()), vtxPos))
+	CSyscoinAddress multisigAddress;
+	foundAlias.GetAddress(&multisigAddress);
+	if(!paliasdb->WriteAlias(vvchArgs[0], vchFromString(address.ToString()), vchFromString(multisigAddress.ToString()), vtxPos))
 		return error("DisconnectBlock() : failed to write to alias DB");
 
 

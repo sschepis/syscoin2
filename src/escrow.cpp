@@ -1053,7 +1053,9 @@ void HandleEscrowFeedback(const CEscrow& serializedEscrow, CEscrow& dbEscrow, ve
 
 
 					PutToAliasList(vtxPos, alias);
-					paliasdb->WriteAlias(vchAlias, vchFromString(address.ToString()), vtxPos);
+					CSyscoinAddress multisigAddress;
+					alias.GetAddress(&multisigAddress);
+					paliasdb->WriteAlias(vchAlias, vchFromString(address.ToString()), vchFromString(multisigAddress.ToString()), vtxPos);
 				}
 			}
 				
