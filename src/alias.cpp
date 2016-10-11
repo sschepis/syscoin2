@@ -1011,10 +1011,6 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 							theAlias.multiSigInfo.SetNull();
 							errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5020 - " + _("Alias multisig too big, reduce the number of signatures required for this alias and try again");
 						}
-						UniValue params(UniValue::VARR);
-						UniValue paramKeys(UniValue::VARR);
-						params.push_back(theAlias.multiSigInfo.nRequiredSigs);
-						paramKeys.push_back(HexStr(theAlias.vchPubKey));
 						std::vector<std::string> vchValidAliases; 
 						for(int i =0;i<theAlias.multiSigInfo.vchAliases.size();i++)
 						{
@@ -1025,7 +1021,6 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 							if(theAlias.multiSigInfo.vchAliases[i].vchPubKey != multiSigAlias.vchPubKey)
 								continue;
 							vchValidAliases.push_back(stringFromVch(multiSigAlias.vchAlias));
-							paramKeys.push_back(HexStr(multiSigAlias.vchPubKey));
 
 						}	
 						if(theAlias.multiSigInfo.nRequiredSigs > vchValidAliases.size())
@@ -1033,14 +1028,14 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 							theAlias.multiSigInfo.SetNull();
 							errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5020 - " + _("Cannot update multisig alias because required signatures is greator than the amount of valid aliases in the multisig required signature alias list");
 						}
-						params.push_back(paramKeys);
-						CScript inner = _createmultisig_redeemScript(params);
-						CScript redeemScript = CScript(theAlias.multiSigInfo.vchRedeemScript.begin(), theAlias.multiSigInfo.vchRedeemScript.end());
-						if(redeemScript != inner)
+						// use extractdestination instead which now supports txmultisig
+						CTxDestination dest;
+						if (!ExtractDestination(tx.vout[nOut].scriptPubKey, dest)) 
 						{
 							theAlias.multiSigInfo.SetNull();
-							errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5020 - " + _("Redeem script generated does not match the one provided");
+							errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5020 - " + _("Could not extract destination address from transaction");
 						}
+						
 					}
 				}
 				// if transfer
@@ -1098,10 +1093,6 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5020 - " + _("Alias multisig too big, reduce the number of signatures required for this alias and try again");
 				}
 				std::vector<string> vchValidAliases; 
-				UniValue params(UniValue::VARR);
-				UniValue paramKeys(UniValue::VARR);
-				params.push_back(theAlias.multiSigInfo.nRequiredSigs);
-				paramKeys.push_back(HexStr(theAlias.vchPubKey));
 				for(int i =0;i<theAlias.multiSigInfo.vchAliases.size();i++)
 				{
 					CAliasIndex multiSigAlias;
@@ -1111,7 +1102,6 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					if(theAlias.multiSigInfo.vchAliases[i].vchPubKey != multiSigAlias.vchPubKey)
 						continue;
 					vchValidAliases.push_back(stringFromVch(multiSigAlias.vchAlias));
-					paramKeys.push_back(HexStr(multiSigAlias.vchPubKey));
 
 				}	
 				if(theAlias.multiSigInfo.nRequiredSigs > vchValidAliases.size())
@@ -1119,13 +1109,12 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					theAlias.multiSigInfo.SetNull();
 					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5020 - " + _("Cannot update multisig alias because required signatures is greator than the amount of valid aliases in the multisig required signature alias list");
 				}
-				params.push_back(paramKeys);
-				CScript inner = _createmultisig_redeemScript(params);
-				CScript redeemScript = CScript(theAlias.multiSigInfo.vchRedeemScript.begin(), theAlias.multiSigInfo.vchRedeemScript.end());
-				if(redeemScript != inner)
+				// use extractdestination instead which now supports txmultisig
+				CTxDestination dest;
+				if (!ExtractDestination(tx.vout[nOut].scriptPubKey, dest)) 
 				{
 					theAlias.multiSigInfo.SetNull();
-					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5020 - " + _("Redeem script generated does not match the one provided");
+					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5020 - " + _("Could not extract destination address from transaction");
 				}
 			}
 		}
