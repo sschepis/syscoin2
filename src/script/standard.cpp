@@ -82,7 +82,7 @@ bool Solver(const CScript& scriptPubKeyIn, txnouttype& typeRet, vector<vector<un
 			vSolutionsRet.push_back(valtype(1, syscoinAddress.nRequiredSigs));
 			for(unsigned int i = 0;i<syscoinAddress.vchPubKeys.size();i++)
 			{
-				vSolutionsRet.push_back(syscoinAddress.vchPubKeys[i]);
+				vSolutionsRet.push_back(vchFromString(syscoinAddress.vchPubKeys[i]));
 			}
 		}
         return true;
