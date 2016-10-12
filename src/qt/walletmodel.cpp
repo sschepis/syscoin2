@@ -311,21 +311,28 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
 			try
 			{
 				result = tableRPC.execute("aliasinfo", params);
-				const UniValue &o = result.get_obj();
-				const UniValue& redeem_value = find_value(o, "redeemscript");
-				if (redeem_value.isStr())
+				if (result.type() == UniValue::VOBJ)
 				{
-                    vector<unsigned char> vchRedeemScript(ParseHexV(redeem_value, "redeemScript"));
-					if(!vchRedeemScript.empty())
+			
+					const UniValue& multisigValue = find_value(result, "multisiginfo");
+					if (multisigValue.type() == UniValue::VOBJ)
 					{
-						isMultisig = true;
-						redeemScript = CScript(vchRedeemScript.begin(), vchRedeemScript.end());
+						const UniValue& redeem_value = find_value(multisigValue.get_obj(), "redeemscript");
+						if (redeem_value.isStr())
+						{
+							vector<unsigned char> vchRedeemScript(ParseHexV(redeem_value, "redeemScript"));
+							if(!vchRedeemScript.empty())
+							{
+								redeemScript = CScript(vchRedeemScript.begin(), vchRedeemScript.end());
+								isMultisig = true;
+							}
+						}
 					}
 				}
 			}
 			catch (UniValue& objError)
 			{
-				
+				isMultisig = false;
 			}
 		
 			CSyscoinAddress address = CSyscoinAddress(rcp.address.toStdString());

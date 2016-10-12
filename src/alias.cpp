@@ -2518,8 +2518,9 @@ UniValue aliasinfo(const UniValue& params, bool fHelp) {
 			msAliases.push_back(stringFromVch(alias.multiSigInfo.vchAliases[i].vchAlias));
 		}
 		msInfo.push_back(Pair("reqsigners", msAliases));
+		msInfo.push_back(Pair("redeemscript", HexStr(alias.multiSigInfo.vchRedeemScript)));
 		oName.push_back(Pair("multisiginfo", msInfo));
-		oName.push_back(Pair("redeemscript", HexStr(alias.multiSigInfo.vchRedeemScript)));
+		
 		oShowResult = oName;
 	}
 	return oShowResult;
