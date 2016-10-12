@@ -27,6 +27,7 @@
 
 #include <boost/foreach.hpp>
 // SYSCOIN
+#include "guiutil.h"
 #include "aliastablemodel.h"
 #include "messagetablemodel.h"
 #include "escrowtablemodel.h"
@@ -265,7 +266,8 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
     {
         if (rcp.fSubtractFeeFromAmount)
             fSubtractFeeFromAmount = true;
-
+		// SYSCOIN
+		string strAddress = rcp.address.toStdString();
         if (rcp.paymentRequest.IsInitialized())
         {   // PaymentRequest...
             CAmount subtotal = 0;
@@ -301,7 +303,6 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
             ++nAddresses;
 
 			// SYSCOIN
-			string strAddress = rcp.address.toStdString();
 			UniValue params(UniValue::VARR);
 			params.push_back(strAddress);
 			UniValue result;
@@ -352,11 +353,37 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
 
         CWalletTx *newTx = transaction.getTransaction();
         CReserveKey *keyChange = transaction.getPossibleKeyChange();
-        bool fCreated = wallet->CreateTransaction(vecSend, *newTx, *keyChange, nFeeRequired, nChangePosRet, strFailReason, coinControl);
+		// SYSCOIN
+		bool multiSigPayment = strAddress != rcp.address.toStdString();
+        bool fCreated = wallet->CreateTransaction(vecSend, *newTx, *keyChange, nFeeRequired, nChangePosRet, strFailReason, coinControl, multiSigPayment);
         transaction.setTransactionFee(nFeeRequired);
         if (fSubtractFeeFromAmount && fCreated)
             transaction.reassignAmounts(nChangePosRet);
+		// SYSCOIN
+		if(multiSigPayment)
+		{
+			UniValue signParams(UniValue::VARR);
+			signParams.push_back(EncodeHexTx(*newTx));
+			const UniValue &resSign = tableRPC.execute("syscoinsignrawtransaction", signParams);
+			const UniValue& so = resSign.get_obj();
+			string hex_str = "";
 
+			const UniValue& hex_value = find_value(so, "hex");
+			if (hex_value.isStr())
+				hex_str = hex_value.get_str();
+			const UniValue& complete_value = find_value(so, "complete");
+			bool bComplete = false;
+			if (complete_value.isBool())
+				bComplete = complete_value.get_bool();
+			if(!bComplete)
+			{
+				GUIUtil::setClipboard(QString::fromStdString(hex_str));
+				Q_EMIT message(tr("Send Coins"), tr("This transaction requires more signatures. Transaction hex <b>%1</b> has been copied to your clipboard for your reference. Please provide it to a signee that hasn't yet signed.").arg(QString::fromStdString(hex_str)),
+							 CClientUIInterface::MSG_INFORMATION);
+				return SendCoinsReturn(OK);
+			}
+		}
+		
         if(!fCreated)
         {
             if(!fSubtractFeeFromAmount && (total + nFeeRequired) > nBalance)
