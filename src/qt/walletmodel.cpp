@@ -300,7 +300,31 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
             setAddress.insert(rcp.address);
             ++nAddresses;
 
-            CScript scriptPubKey = GetScriptForDestination(CSyscoinAddress(rcp.address.toStdString()).Get());
+			// SYSCOIN
+			string strAddress = rcp.address.toStdString();
+			if(address.isAlias)
+			{
+				UniValue params(UniValue::VARR);
+				params.push_back(rcp.address.toStdString());
+				UniValue result;
+				try
+				{
+					result = tableRPC.execute("aliasinfo", params);
+					const UniValue &o = result.get_obj();
+					const UniValue& address_value = find_value(o, "address");
+					if (address_value.isStr())
+					{
+						strAddress = address_value.get_str();
+					}
+				}
+				catch (UniValue& objError)
+				{
+					
+				}
+			}
+			CSyscoinAddress address = CSyscoinAddress(strAddress);
+            CScript scriptPubKey = GetScriptForDestination(address.Get());
+
             CRecipient recipient = {scriptPubKey, rcp.amount, rcp.fSubtractFeeFromAmount};
             vecSend.push_back(recipient);
 
