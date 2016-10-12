@@ -1012,7 +1012,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 							theAlias.multiSigInfo.SetNull();
 							errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5020 - " + _("Alias multisig too big, reduce the number of signatures required for this alias and try again");
 						}
-						std::vector<std::string> vchValidAliases; 
+						std::vector<unsigned char> vchValidAliases; 
 						std::vector<CPubKey> pubkeys; 
 						CPubKey pubkey(theAlias.vchPubKey);
 						pubkeys.push_back(pubkey);
@@ -1020,10 +1020,10 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						{
 							CAliasIndex multiSigAlias;
 							CTransaction txMultiSigAlias;
-							if (!GetTxOfAlias(vchFromString(theAlias.multiSigInfo.vchAliases[i]), multiSigAlias, txMultiSigAlias))
+							if (!GetTxOfAlias(theAlias.multiSigInfo.vchAliases[i].vchAlias, multiSigAlias, txMultiSigAlias))
 								continue;
-			
-							vchValidAliases.push_back(stringFromVch(multiSigAlias.vchAlias));
+							theAlias.multiSigInfo.vchAliases[i].vchPubKey = multiSigAlias.vchPubKey;
+							vchValidAliases.push_back(multiSigAlias.vchAlias);
 							CPubKey pubkey(multiSigAlias.vchPubKey);
 							pubkeys.push_back(pubkey);
 
@@ -1098,7 +1098,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					theAlias.multiSigInfo.SetNull();
 					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5020 - " + _("Alias multisig too big, reduce the number of signatures required for this alias and try again");
 				}
-				std::vector<std::string> vchValidAliases; 
+				std::vector<unsigned char> vchValidAliases; 
 				std::vector<CPubKey> pubkeys; 
 				CPubKey pubkey(theAlias.vchPubKey);
 				pubkeys.push_back(pubkey);
@@ -1106,14 +1106,14 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				{
 					CAliasIndex multiSigAlias;
 					CTransaction txMultiSigAlias;
-					if (!GetTxOfAlias(vchFromString(theAlias.multiSigInfo.vchAliases[i]), multiSigAlias, txMultiSigAlias))
+					if (!GetTxOfAlias(theAlias.multiSigInfo.vchAliases[i].vchAlias, multiSigAlias, txMultiSigAlias))
 						continue;
-	
-					vchValidAliases.push_back(stringFromVch(multiSigAlias.vchAlias));
+					theAlias.multiSigInfo.vchAliases[i].vchPubKey = multiSigAlias.vchPubKey;
+					vchValidAliases.push_back(multiSigAlias.vchAlias);
 					CPubKey pubkey(multiSigAlias.vchPubKey);
 					pubkeys.push_back(pubkey);
 
-				}	
+				}
 				if(theAlias.multiSigInfo.nRequiredSigs > vchValidAliases.size())
 				{
 					theAlias.multiSigInfo.SetNull();
@@ -1384,7 +1384,7 @@ bool GetTxAndVtxOfAlias(const vector<unsigned char> &vchAlias,
 		return error("GetTxOfAlias() : could not read tx from disk");
 	return true;
 }
-void GetAddressFromAlias(const std::string& strAlias, std::string& strAddress, unsigned char& safetyLevel, bool& safeSearch, int64_t& nExpireHeight) {
+void GetAddressFromAlias(const std::string& strAlias, std::string& strAddress, unsigned char& safetyLevel, bool& safeSearch, int64_t& nExpireHeight, std::vector<unsigned char> &vchPubKeys) {
 	try
 	{
 		string strLowerAlias = strAlias;
@@ -1409,6 +1409,16 @@ void GetAddressFromAlias(const std::string& strAlias, std::string& strAddress, u
 		safetyLevel = alias.safetyLevel;
 		safeSearch = alias.safeSearch;
 		nExpireHeight = alias.nHeight + alias.nRenewal*GetAliasExpirationDepth();
+		vchPubKeys.clear();
+		vchPubKeys.push_back(alias.vchPubKey);
+		for(int i =0;i<alias.multiSigInfo.vchAliases.size();i++)
+		{
+			CAliasIndex multiSigAlias;
+			CTransaction txMultiSigAlias;
+			if (!GetTxOfAlias(alias.multiSigInfo.vchAliases[i].vchAlias, multiSigAlias, txMultiSigAlias, true))
+				continue;
+			vchPubKeys.push_back(multiSigAlias.vchPubKey);
+		}
 	}
 	catch(...)
 	{
@@ -1417,7 +1427,7 @@ void GetAddressFromAlias(const std::string& strAlias, std::string& strAddress, u
 	}
 }
 
-void GetAliasFromAddress(std::string& strAddress, std::string& strAlias, unsigned char& safetyLevel, bool& safeSearch, int64_t& nExpireHeight) {
+void GetAliasFromAddress(std::string& strAddress, std::string& strAlias, unsigned char& safetyLevel, bool& safeSearch, int64_t& nExpireHeight, std::vector<unsigned char> &vchPubKeys) {
 	try
 	{
 		const vector<unsigned char> &vchAddress = vchFromValue(strAddress);
@@ -1440,6 +1450,16 @@ void GetAliasFromAddress(std::string& strAddress, std::string& strAlias, unsigne
 		safetyLevel = alias.safetyLevel;
 		safeSearch = alias.safeSearch;
 		nExpireHeight = alias.nHeight + alias.nRenewal*GetAliasExpirationDepth();
+		vchPubKeys.clear();
+		vchPubKeys.push_back(alias.vchPubKey);
+		for(int i =0;i<alias.multiSigInfo.vchAliases.size();i++)
+		{
+			CAliasIndex multiSigAlias;
+			CTransaction txMultiSigAlias;
+			if (!GetTxOfAlias(alias.multiSigInfo.vchAliases[i].vchAlias, multiSigAlias, txMultiSigAlias, true))
+				continue;
+			vchPubKeys.push_back(multiSigAlias.vchPubKey);
+		}
 
 	}
 	catch(...)
@@ -1696,7 +1716,10 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 
 			CPubKey pubkey(multiSigAlias.vchPubKey);
 			pubkeys.push_back(pubkey);
-			multiSigInfo.vchAliases.push_back(aliasNames[i].get_str());
+			// don't need to set vchpubkey, checkaliasinputs will do that for me
+			CMultiSigAlias msAlias;
+			msAlias.vchAlias = multiSigAlias.vchAlias;
+			multiSigInfo.vchAliases.push_back(msAlias);
 		}	
 		scriptPubKeyOrig = GetScriptForMultisig(nMultiSig, pubkeys);
 		std::vector<unsigned char> vchRedeemScript(scriptPubKeyOrig.begin(), scriptPubKeyOrig.end());
@@ -1877,7 +1900,9 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 
 			CPubKey pubkey(multiSigAlias.vchPubKey);
 			pubkeys.push_back(pubkey);
-			multiSigInfo.vchAliases.push_back(aliasNames[i].get_str());
+			CMultiSigAlias msAlias;
+			msAlias.vchAlias = multiSigAlias.vchAlias;
+			multiSigInfo.vchAliases.push_back(msAlias);
 		}	
 		scriptPubKeyOrig = GetScriptForMultisig(nMultiSig, pubkeys);
 		std::vector<unsigned char> vchRedeemScript(scriptPubKeyOrig.begin(), scriptPubKeyOrig.end());
@@ -2105,7 +2130,7 @@ void AliasTxToJSON(const int op, const vector<unsigned char> &vchData, const vec
 		UniValue msAliases(UniValue::VARR);
 		for(int i =0;i<alias.multiSigInfo.vchAliases.size();i++)
 		{
-			msAliases.push_back(alias.multiSigInfo.vchAliases[i]);
+			msAliases.push_back(stringFromVch(alias.multiSigInfo.vchAliases[i].vchAlias));
 		}
 		msInfo.push_back(Pair("reqsigners", msAliases));
 		
@@ -2300,7 +2325,7 @@ UniValue aliaslist(const UniValue& params, bool fHelp) {
 			UniValue msAliases(UniValue::VARR);
 			for(int i =0;i<alias.multiSigInfo.vchAliases.size();i++)
 			{
-				msAliases.push_back(alias.multiSigInfo.vchAliases[i]);
+				msAliases.push_back(stringFromVch(alias.multiSigInfo.vchAliases[i].vchAlias));
 			}
 			msInfo.push_back(Pair("reqsigners", msAliases));
 			oName.push_back(Pair("multisiginfo", msInfo));
@@ -2501,7 +2526,7 @@ UniValue aliasinfo(const UniValue& params, bool fHelp) {
 		UniValue msAliases(UniValue::VARR);
 		for(int i =0;i<alias.multiSigInfo.vchAliases.size();i++)
 		{
-			msAliases.push_back(alias.multiSigInfo.vchAliases[i]);
+			msAliases.push_back(stringFromVch(alias.multiSigInfo.vchAliases[i].vchAlias));
 		}
 		msInfo.push_back(Pair("reqsigners", msAliases));
 		oName.push_back(Pair("multisiginfo", msInfo));
@@ -2608,7 +2633,7 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 			UniValue msAliases(UniValue::VARR);
 			for(int i =0;i<txPos2.multiSigInfo.vchAliases.size();i++)
 			{
-				msAliases.push_back(txPos2.multiSigInfo.vchAliases[i]);
+				msAliases.push_back(stringFromVch(txPos2.multiSigInfo.vchAliases[i].vchAlias));
 			}
 			msInfo.push_back(Pair("reqsigners", msAliases));
 			oName.push_back(Pair("multisiginfo", msInfo));
@@ -2780,7 +2805,7 @@ UniValue aliasfilter(const UniValue& params, bool fHelp) {
 		UniValue msAliases(UniValue::VARR);
 		for(int i =0;i<alias.multiSigInfo.vchAliases.size();i++)
 		{
-			msAliases.push_back(alias.multiSigInfo.vchAliases[i]);
+			msAliases.push_back(stringFromVch(alias.multiSigInfo.vchAliases[i].vchAlias));
 		}
 		msInfo.push_back(Pair("reqsigners", msAliases));
 		oName.push_back(Pair("multisiginfo", msInfo));

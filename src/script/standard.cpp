@@ -12,11 +12,9 @@
 
 #include <boost/foreach.hpp>
 
-
-// SYSCOIN
-#include "base58.h"
-extern void RemoveSyscoinScript(const CScript& scriptPubKeyIn, CScript& scriptPubKeyOut);
 using namespace std;
+// SYSCOIN services
+extern void RemoveSyscoinScript(const CScript& scriptPubKeyIn, CScript& scriptPubKeyOut);
 typedef vector<unsigned char> valtype;
 
 bool fAcceptDatacarrier = DEFAULT_ACCEPT_DATACARRIER;
@@ -212,6 +210,7 @@ bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet)
         addressRet = CScriptID(uint160(vSolutions[0]));
         return true;
     }
+    // Multisig txns have more than one address...
     return false;
 }
 
