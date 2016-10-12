@@ -69,7 +69,6 @@ public:
 class CMultiSigAliasInfo {
 public:
 	std::vector<CMultiSigAlias> vchAliases;
-	std::vector<std::string> vchAliases;
 	unsigned char nRequiredSigs;
 	std::vector<unsigned char> vchRedeemScript;
 	CMultiSigAliasInfo() {
