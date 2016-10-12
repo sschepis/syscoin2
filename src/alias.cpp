@@ -2519,7 +2519,7 @@ UniValue aliasinfo(const UniValue& params, bool fHelp) {
 		}
 		msInfo.push_back(Pair("reqsigners", msAliases));
 		oName.push_back(Pair("multisiginfo", msInfo));
-		oName.push_back(Pair("redeemscript", stringFromVch(alias.multiSigInfo.vchRedeemScript)));
+		oName.push_back(Pair("redeemscript", HexStr(alias.multiSigInfo.vchRedeemScript)));
 		oShowResult = oName;
 	}
 	return oShowResult;
