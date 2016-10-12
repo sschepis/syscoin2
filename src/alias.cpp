@@ -1012,7 +1012,6 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 							theAlias.multiSigInfo.SetNull();
 							errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5020 - " + _("Alias multisig too big, reduce the number of signatures required for this alias and try again");
 						}
-						std::vector<unsigned char> vchValidAliases; 
 						std::vector<CPubKey> pubkeys; 
 						CPubKey pubkey(theAlias.vchPubKey);
 						pubkeys.push_back(pubkey);
@@ -1023,15 +1022,14 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 							if (!GetTxOfAlias(theAlias.multiSigInfo.vchAliases[i].vchAlias, multiSigAlias, txMultiSigAlias))
 								continue;
 							theAlias.multiSigInfo.vchAliases[i].vchPubKey = multiSigAlias.vchPubKey;
-							vchValidAliases.push_back(multiSigAlias.vchAlias);
 							CPubKey pubkey(multiSigAlias.vchPubKey);
 							pubkeys.push_back(pubkey);
 
 						}	
-						if(theAlias.multiSigInfo.nRequiredSigs > vchValidAliases.size())
+						if(theAlias.multiSigInfo.nRequiredSigs > pubkeys.size())
 						{
 							theAlias.multiSigInfo.SetNull();
-							errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5020 - " + _("Cannot update multisig alias because required signatures is greator than the amount of valid aliases in the multisig required signature alias list");
+							errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5020 - " + _("Cannot update multisig alias because required signatures is greator than the amount of signatures provided");
 						}	
 						CScript inner = GetScriptForMultisig(theAlias.multiSigInfo.nRequiredSigs, pubkeys);
 						CScript redeemScript = CScript(theAlias.multiSigInfo.vchRedeemScript.begin(), theAlias.multiSigInfo.vchRedeemScript.end());
@@ -1098,7 +1096,6 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					theAlias.multiSigInfo.SetNull();
 					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5020 - " + _("Alias multisig too big, reduce the number of signatures required for this alias and try again");
 				}
-				std::vector<unsigned char> vchValidAliases; 
 				std::vector<CPubKey> pubkeys; 
 				CPubKey pubkey(theAlias.vchPubKey);
 				pubkeys.push_back(pubkey);
@@ -1109,15 +1106,15 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					if (!GetTxOfAlias(theAlias.multiSigInfo.vchAliases[i].vchAlias, multiSigAlias, txMultiSigAlias))
 						continue;
 					theAlias.multiSigInfo.vchAliases[i].vchPubKey = multiSigAlias.vchPubKey;
-					vchValidAliases.push_back(multiSigAlias.vchAlias);
+
 					CPubKey pubkey(multiSigAlias.vchPubKey);
 					pubkeys.push_back(pubkey);
 
 				}
-				if(theAlias.multiSigInfo.nRequiredSigs > vchValidAliases.size())
+				if(theAlias.multiSigInfo.nRequiredSigs > pubkeys.size())
 				{
 					theAlias.multiSigInfo.SetNull();
-					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5020 - " + _("Cannot update multisig alias because required signatures is greator than the amount of valid aliases in the multisig required signature alias list");
+					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5020 - " + _("Cannot update multisig alias because required signatures is greator than the amount of signatures provided");
 				}
 				CScript inner = GetScriptForMultisig(theAlias.multiSigInfo.nRequiredSigs, pubkeys);
 				CScript redeemScript = CScript(theAlias.multiSigInfo.vchRedeemScript.begin(), theAlias.multiSigInfo.vchRedeemScript.end());
