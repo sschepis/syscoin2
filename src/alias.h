@@ -196,7 +196,7 @@ public:
 			return false;
 		if(!Write(make_pair(std::string("namea"), address), name))
 			return false;
-		if(msaddress != address)
+		if(msaddress != address && !ExistsAddress(msaddress))
 		{
 			if(!Write(make_pair(std::string("namea"), msaddress), name))
 				return false;
