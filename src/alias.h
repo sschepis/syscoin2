@@ -228,9 +228,9 @@ public:
 		if(address.empty() || msaddress.empty())
 			return false;		
 		bool write =  Write(make_pair(std::string("namei"), name), vtxPos);
-		write |= Write(make_pair(std::string("namea"), address), name);
+		write = write && Write(make_pair(std::string("namea"), address), name);
 		if(msaddress != address)
-			write |= Write(make_pair(std::string("namea"), msaddress), name);
+			write = write && Write(make_pair(std::string("namea"), msaddress), name);
 		return write;
 	}
 
