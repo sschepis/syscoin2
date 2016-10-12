@@ -35,7 +35,7 @@ COfferDB *pofferdb = NULL;
 CCertDB *pcertdb = NULL;
 CEscrowDB *pescrowdb = NULL;
 CMessageDB *pmessagedb = NULL;
-extern CScript _createmultisig_redeemScript(const UniValue& params);
+extern CScript GetScriptForMultisig(int nRequired, const std::vector<CPubKey>& keys)
 extern void SendMoneySyscoin(const vector<CRecipient> &vecSend, CAmount nValue, bool fSubtractFeeFromAmount, CWalletTx& wtxNew, const CWalletTx* wtxInOffer=NULL, const CWalletTx* wtxInCert=NULL, const CWalletTx* wtxInAlias=NULL, const CWalletTx* wtxInEscrow=NULL, bool syscoinMultiSigTx=false);
 bool GetPreviousInput(const COutPoint * outpoint, int &op, vector<vector<unsigned char> > &vvchArgs)
 {
@@ -1381,7 +1381,7 @@ bool GetTxAndVtxOfAlias(const vector<unsigned char> &vchAlias,
 		return error("GetTxOfAlias() : could not read tx from disk");
 	return true;
 }
-void GetAddressFromAlias(const std::string& strAlias, std::string& strAddress, unsigned char& safetyLevel, bool& safeSearch, int64_t& nExpireHeight, int &nRequiredSigs, vector<std::string> &pubKeys) {
+void GetAddressFromAlias(const std::string& strAlias, std::string& strAddress, unsigned char& safetyLevel, bool& safeSearch, int64_t& nExpireHeight) {
 	try
 	{
 		string strLowerAlias = strAlias;
@@ -1406,17 +1406,6 @@ void GetAddressFromAlias(const std::string& strAlias, std::string& strAddress, u
 		safetyLevel = alias.safetyLevel;
 		safeSearch = alias.safeSearch;
 		nExpireHeight = alias.nHeight + alias.nRenewal*GetAliasExpirationDepth();
-		nRequiredSigs = 1;
-		if(alias.multiSigInfo.vchAliases.size() > 0)
-		{
-			nRequiredSigs = alias.multiSigInfo.nRequiredSigs;
-			for(int i =0;i<alias.multiSigInfo.vchAliases.size();i++)
-			{
-				pubKeys.push_back(stringFromVch(alias.multiSigInfo.vchAliases[i].vchPubKey));
-			}
-		}
-		else
-			pubKeys.push_back(stringFromVch(alias.vchPubKey));
 	}
 	catch(...)
 	{
@@ -1425,7 +1414,7 @@ void GetAddressFromAlias(const std::string& strAlias, std::string& strAddress, u
 	}
 }
 
-void GetAliasFromAddress(std::string& strAddress, std::string& strAlias, unsigned char& safetyLevel, bool& safeSearch, int64_t& nExpireHeight, int &nRequiredSigs, vector<std::string> &pubKeys) {
+void GetAliasFromAddress(std::string& strAddress, std::string& strAlias, unsigned char& safetyLevel, bool& safeSearch, int64_t& nExpireHeight) {
 	try
 	{
 		const vector<unsigned char> &vchAddress = vchFromValue(strAddress);
@@ -1448,17 +1437,6 @@ void GetAliasFromAddress(std::string& strAddress, std::string& strAlias, unsigne
 		safetyLevel = alias.safetyLevel;
 		safeSearch = alias.safeSearch;
 		nExpireHeight = alias.nHeight + alias.nRenewal*GetAliasExpirationDepth();
-		nRequiredSigs = 1;
-		if(alias.multiSigInfo.vchAliases.size() > 0)
-		{
-			nRequiredSigs = alias.multiSigInfo.nRequiredSigs;
-			for(int i =0;i<alias.multiSigInfo.vchAliases.size();i++)
-			{
-				pubKeys.push_back(stringFromVch(alias.multiSigInfo.vchAliases[i].vchPubKey));
-			}
-		}
-		else
-			pubKeys.push_back(stringFromVch(alias.vchPubKey));
 
 	}
 	catch(...)
