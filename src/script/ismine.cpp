@@ -14,7 +14,8 @@
 #include <boost/foreach.hpp>
 
 using namespace std;
-
+// SYSCOIN
+#include "base58.h"
 typedef vector<unsigned char> valtype;
 
 unsigned int HaveKeys(const vector<valtype>& pubkeys, const CKeyStore& keystore)
