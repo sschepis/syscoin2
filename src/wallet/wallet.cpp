@@ -3563,9 +3563,10 @@ bool CWallet::InitLoadWallet()
         LogPrintf("mapWallet.size() = %u\n",       walletInstance->mapWallet.size());
         LogPrintf("mapAddressBook.size() = %u\n",  walletInstance->mapAddressBook.size());
     }
+	        LogPrintf("ReacceptWalletTransactions start\n");
     // Add wallet transactions that aren't already in a block to mapTransactions
     walletInstance->ReacceptWalletTransactions();
-
+  LogPrintf("ReacceptWalletTransactions end\n");
     pwalletMain = walletInstance;
 
     return true;
@@ -3634,7 +3635,6 @@ bool CWallet::ParameterInteraction()
     bSpendZeroConfChange = GetBoolArg("-spendzeroconfchange", DEFAULT_SPEND_ZEROCONF_CHANGE);
     fSendFreeTransactions = GetBoolArg("-sendfreetransactions", DEFAULT_SEND_FREE_TRANSACTIONS);
     fWalletRbf = GetBoolArg("-walletrbf", DEFAULT_WALLET_RBF);
-
     return true;
 }
 
