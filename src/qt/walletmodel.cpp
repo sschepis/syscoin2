@@ -392,7 +392,7 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
 			}
 			catch (UniValue& objError)
 			{
-				Q_EMIT message(tr("Send Coins"), tr("Could not sign multisig transaction: ") + find_value(objError, "message").get_str(),
+				Q_EMIT message(tr("Send Coins"), tr("Could not sign multisig transaction: %1").arg(QString::fromStdString(find_value(objError, "message").get_str())),
 					CClientUIInterface::MSG_ERROR);
 				return InvalidMultisig;
 			}	
@@ -418,6 +418,12 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
 				GUIUtil::setClipboard(QString::fromStdString(hex_str));
 				Q_EMIT message(tr("Send Coins"), tr("This transaction requires more signatures. Transaction hex <b>%1</b> has been copied to your clipboard for your reference. Please provide it to a signee that hasn't yet signed.").arg(QString::fromStdString(hex_str)),
 							 CClientUIInterface::MSG_INFORMATION);
+				return InvalidMultisig;
+			}
+			if (!DecodeHexTx(*newTx, hex_str))
+			{
+				Q_EMIT message(tr("Send Coins"), tr("Could not decode signed raw multisig transaction"),
+					CClientUIInterface::MSG_ERROR);	
 				return InvalidMultisig;
 			}
 			return SendCoinsReturn(OK);
