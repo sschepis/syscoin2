@@ -396,6 +396,11 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
 					CClientUIInterface::MSG_ERROR);
 				return InvalidMultisig;
 			}	
+			catch (const std::exception& e) {
+				Q_EMIT message(tr("Send Coins"), QString("%1").arg(QString::fromStdString(e.what())),
+					CClientUIInterface::MSG_ERROR);
+				return InvalidMultisig;
+			}
 			if (!resSign.isObject())
 			{
 				Q_EMIT message(tr("Send Coins"), tr("Could not sign multisig transaction: Invalid response from syscoinsignrawtransaction"),
