@@ -1409,10 +1409,12 @@ void GetAddressFromAlias(const std::string& strAlias, std::string& strAddress, u
 		vchPubKeys.clear();
 		vchPubKeys.push_back(stringFromVch(alias.vchPubKey));
 		vtxPos.clear();
-		for(int i =0;i<alias.multiSigInfo.vchAliases.size();i++)
+		for(unsigned int i =0;i<alias.multiSigInfo.vchAliases.size();i++)
 		{
-			if ((paliasdb && !paliasdb->ReadAlias(alias.multiSigInfo.vchAliases[i].vchAlias, vtxPos)) || vtxPos.empty())
-				throw runtime_error("failed to read from alias DB");
+			if (paliasdb && !paliasdb->ReadAlias(alias.multiSigInfo.vchAliases[i].vchAlias, vtxPos))
+				continue;
+			if(vtxPos.empty())
+				continue;
 			vchPubKeys.push_back(stringFromVch(vtxPos.back().vchPubKey));
 		}
 	}
@@ -1449,10 +1451,12 @@ void GetAliasFromAddress(std::string& strAddress, std::string& strAlias, unsigne
 		vchPubKeys.clear();
 		vchPubKeys.push_back(stringFromVch(alias.vchPubKey));
 		vtxPos.clear();
-		for(int i =0;i<alias.multiSigInfo.vchAliases.size();i++)
+		for(unsigned int i =0;i<alias.multiSigInfo.vchAliases.size();i++)
 		{
-			if ((paliasdb && !paliasdb->ReadAlias(alias.multiSigInfo.vchAliases[i].vchAlias, vtxPos)) || vtxPos.empty())
-				throw runtime_error("failed to read from alias DB");
+			if (paliasdb && !paliasdb->ReadAlias(alias.multiSigInfo.vchAliases[i].vchAlias, vtxPos))
+				continue;
+			if(vtxPos.empty())
+				continue;
 			vchPubKeys.push_back(stringFromVch(vtxPos.back().vchPubKey));
 		}
 
