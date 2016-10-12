@@ -69,7 +69,7 @@ isminetype IsMine(const CKeyStore &keystore, const CScript& scriptPubKey)
         CScript subscript;
         if (keystore.GetCScript(scriptID, subscript)) {
             isminetype ret = IsMine(keystore, subscript);
-           // if (ret == ISMINE_SPENDABLE)
+            if (ret == ISMINE_SPENDABLE)
                 return ret;
         }
 		// SYSCOIN if multisig
