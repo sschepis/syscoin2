@@ -248,6 +248,8 @@ bool WalletModel::validateAddress(const QString &address)
 
 WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransaction &transaction, const CCoinControl *coinControl)
 {
+	// SYSCOIN
+	bool isMultisig = false;
     CAmount total = 0;
     bool fSubtractFeeFromAmount = false;
     QList<SendCoinsRecipient> recipients = transaction.getRecipients();
@@ -266,8 +268,6 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
     {
         if (rcp.fSubtractFeeFromAmount)
             fSubtractFeeFromAmount = true;
-		// SYSCOIN
-		string strAddress = rcp.address.toStdString();
         if (rcp.paymentRequest.IsInitialized())
         {   // PaymentRequest...
             CAmount subtotal = 0;
@@ -303,6 +303,7 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
             ++nAddresses;
 
 			// SYSCOIN
+			string strAddress = rcp.address.toStdString();
 			UniValue params(UniValue::VARR);
 			params.push_back(strAddress);
 			UniValue result;
@@ -314,6 +315,8 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
 				if (address_value.isStr())
 				{
 					strAddress = address_value.get_str();
+					if(strAddress != rcp.address.toStdString())
+						isMultisig = true;
 				}
 			}
 			catch (UniValue& objError)
@@ -354,8 +357,7 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
         CWalletTx *newTx = transaction.getTransaction();
         CReserveKey *keyChange = transaction.getPossibleKeyChange();
 		// SYSCOIN
-		bool multiSigPayment = strAddress != rcp.address.toStdString();
-        bool fCreated = wallet->CreateTransaction(vecSend, *newTx, *keyChange, nFeeRequired, nChangePosRet, strFailReason, coinControl, multiSigPayment);
+        bool fCreated = wallet->CreateTransaction(vecSend, *newTx, *keyChange, nFeeRequired, nChangePosRet, strFailReason, coinControl, isMultisig);
         transaction.setTransactionFee(nFeeRequired);
         if (fSubtractFeeFromAmount && fCreated)
             transaction.reassignAmounts(nChangePosRet);
@@ -378,7 +380,7 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
             return AbsurdFee;
 
 		// SYSCOIN
-		if(multiSigPayment)
+		if(isMultisig)
 		{
 			UniValue signParams(UniValue::VARR);
 			signParams.push_back(EncodeHexTx(*newTx));
