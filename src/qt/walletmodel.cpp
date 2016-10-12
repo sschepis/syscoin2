@@ -302,26 +302,24 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
 
 			// SYSCOIN
 			string strAddress = rcp.address.toStdString();
-			if(address.isAlias)
+			UniValue params(UniValue::VARR);
+			params.push_back(strAddress);
+			UniValue result;
+			try
 			{
-				UniValue params(UniValue::VARR);
-				params.push_back(rcp.address.toStdString());
-				UniValue result;
-				try
+				result = tableRPC.execute("aliasinfo", params);
+				const UniValue &o = result.get_obj();
+				const UniValue& address_value = find_value(o, "address");
+				if (address_value.isStr())
 				{
-					result = tableRPC.execute("aliasinfo", params);
-					const UniValue &o = result.get_obj();
-					const UniValue& address_value = find_value(o, "address");
-					if (address_value.isStr())
-					{
-						strAddress = address_value.get_str();
-					}
-				}
-				catch (UniValue& objError)
-				{
-					
+					strAddress = address_value.get_str();
 				}
 			}
+			catch (UniValue& objError)
+			{
+				
+			}
+		
 			CSyscoinAddress address = CSyscoinAddress(strAddress);
             CScript scriptPubKey = GetScriptForDestination(address.Get());
 
