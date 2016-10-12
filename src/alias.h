@@ -225,11 +225,10 @@ public:
     }
 
 	bool WriteAlias(const std::vector<unsigned char>& name, const std::vector<unsigned char>& address, const std::vector<unsigned char>& msaddress, std::vector<CAliasIndex>& vtxPos) {
+		if(address.empty() || msaddress.empty())
+			return false;		
 		bool write =  Write(make_pair(std::string("namei"), name), vtxPos);
-		if(!address.empty())
-			write |= Write(make_pair(std::string("namea"), address), name);
-		if(!msaddress.empty() && msaddress != address)
-			write |= Write(make_pair(std::string("namea"), msaddress), name);
+		write |= Write(make_pair(std::string("namea"), address), name) | Write(make_pair(std::string("namea"), msaddress), name);
 		return write;
 	}
 
