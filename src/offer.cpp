@@ -2641,8 +2641,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	CSyscoinAddress currentAddress;
 	CPubKey currentKey(theAlias.vchPubKey);
 	theAlias.GetAddress(&currentAddress);
-	CSyscoinAddress currentAddress(currentKey.GetID());
-	scriptPubKeyOrig = 	 GetScriptForDestination(currentAddress.Get());
+	scriptPubKeyOrig = GetScriptForDestination(currentAddress.Get());
 
 	CSyscoinAddress linkAddress;
 	theLinkedAlias.GetAddress(&linkAddress);
