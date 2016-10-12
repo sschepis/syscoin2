@@ -99,7 +99,7 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 		vector<CAliasIndex> vtxPos;
 		// we only prune things that we have in our db and that we can verify the last tx is expired
 		// nHeight is set to the height at which data is pruned, if the tip is newer than nHeight it won't send data to other nodes
-		if (paliasdb->ReadAlias(alias.vchAlias, vtxPos))
+		if (paliasdb->ReadAlias(alias.vchAlias, vtxPos) && !vtxPos.empty())
 		{	
 			uint64_t nLastHeight = vtxPos.back().nHeight;
 			// if we are renewing alias then prune based on nHeight of tx
@@ -119,7 +119,7 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 	else if(offer.UnserializeFromData(vchData, vchHash))
 	{
 		vector<COffer> vtxPos;
-		if (pofferdb->ReadOffer(offer.vchOffer, vtxPos))
+		if (pofferdb->ReadOffer(offer.vchOffer, vtxPos) && !vtxPos.empty())
 		{
 			uint64_t nLastHeight =  vtxPos.back().nHeight;
 			// if alises of offer is not expired then don't prune the offer yet
@@ -138,7 +138,7 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 	else if(cert.UnserializeFromData(vchData, vchHash))
 	{
 		vector<CCert> vtxPos;
-		if (pcertdb->ReadCert(cert.vchCert, vtxPos))
+		if (pcertdb->ReadCert(cert.vchCert, vtxPos) && !vtxPos.empty())
 		{
 			uint64_t nLastHeight = vtxPos.back().nHeight;
 			nHeight = vtxPos.back().nHeight + GetCertExpirationDepth();
@@ -153,7 +153,7 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 	else if(escrow.UnserializeFromData(vchData, vchHash))
 	{
 		vector<CEscrow> vtxPos;
-		if (pescrowdb->ReadEscrow(escrow.vchEscrow, vtxPos))
+		if (pescrowdb->ReadEscrow(escrow.vchEscrow, vtxPos) && !vtxPos.empty())
 		{
 			uint64_t nLastHeight = vtxPos.back().nHeight;
 			if(vtxPos.back().op != OP_ESCROW_COMPLETE)
@@ -187,7 +187,7 @@ bool IsInSys21Fork(CScript& scriptPubKey, uint64_t &nHeight)
 	else if(message.UnserializeFromData(vchData, vchHash))
 	{
 		vector<CMessage> vtxPos;
-		if (pmessagedb->ReadMessage(message.vchMessage, vtxPos))
+		if (pmessagedb->ReadMessage(message.vchMessage, vtxPos) && !vtxPos.empty())
 		{
 			uint64_t nLastHeight = vtxPos.back().nHeight;
 			nHeight = vtxPos.back().nHeight + GetMessageExpirationDepth();
