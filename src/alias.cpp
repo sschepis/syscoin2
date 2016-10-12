@@ -1410,7 +1410,7 @@ void GetAddressFromAlias(const std::string& strAlias, std::string& strAddress, u
 		safeSearch = alias.safeSearch;
 		nExpireHeight = alias.nHeight + alias.nRenewal*GetAliasExpirationDepth();
 		vchPubKeys.clear();
-		vchPubKeys.push_back(alias.vchPubKey);
+		vchPubKeys.push_back(stringFromVch(alias.vchPubKey));
 		for(int i =0;i<alias.multiSigInfo.vchAliases.size();i++)
 		{
 			CAliasIndex multiSigAlias;
@@ -1451,7 +1451,7 @@ void GetAliasFromAddress(std::string& strAddress, std::string& strAlias, unsigne
 		safeSearch = alias.safeSearch;
 		nExpireHeight = alias.nHeight + alias.nRenewal*GetAliasExpirationDepth();
 		vchPubKeys.clear();
-		vchPubKeys.push_back(alias.vchPubKey);
+		vchPubKeys.push_back(stringFromVch(alias.vchPubKey));
 		for(int i =0;i<alias.multiSigInfo.vchAliases.size();i++)
 		{
 			CAliasIndex multiSigAlias;
