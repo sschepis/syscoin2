@@ -1036,6 +1036,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 							theAlias.multiSigInfo.SetNull();
 							errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5020 - " + _("Could not extract destination address from transaction");
 						}
+						multisigAddress = CSyscoinAddress(dest);
 						
 					}
 				}
