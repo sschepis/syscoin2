@@ -76,12 +76,12 @@ isminetype IsMine(const CKeyStore &keystore, const CScript& scriptPubKey)
 		vector<valtype> keys;
 		CSyscoinAddress syscoinAddress(scriptID);
 		syscoinAddress = CSyscoinAddress(syscoinAddress.ToString());
-		for(unsigned int i = 0;i<syscoinAddress.vchPubKeys.size();i++)
+		if(syscoinAddress.vchPubKeys.size() > 1)
 		{
-			keys.push_back(vchFromString(syscoinAddress.vchPubKeys[i]));
-		}
-		if(keys.size() > 1)
-		{
+			for(unsigned int i = 0;i<syscoinAddress.vchPubKeys.size();i++)
+			{
+				keys.push_back(vchFromString(syscoinAddress.vchPubKeys[i]));
+			}
 			unsigned int nNumKeysFound = HaveKeys(keys, keystore);
 			if (nNumKeysFound == keys.size())
 				return ISMINE_SPENDABLE;
