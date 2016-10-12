@@ -194,7 +194,7 @@ public:
 			return false;		
 		if(!Write(make_pair(std::string("namei"), name), vtxPos))
 			return false;
-		if(!Write(make_pair(std::string("namea"), address), name))
+		if(!ExistsAddress(address) && !Write(make_pair(std::string("namea"), address), name))
 			return false;
 		if(msaddress != address && !ExistsAddress(msaddress))
 		{
