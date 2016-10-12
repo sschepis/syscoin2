@@ -2177,7 +2177,7 @@ UniValue syscoinsignrawtransaction(const UniValue& params, bool fHelp) {
 			throw runtime_error(find_value(objError, "message").get_str());
 		}
 		if (!returnRes.isStr())
-			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 4613 - " + _("Could not send escrow transaction: Invalid response from sendrawtransaction"));
+			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 4613 - " + _("Could not send raw transaction: Invalid response from sendrawtransaction"));
 	}
 	return res;
 }

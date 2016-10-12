@@ -124,6 +124,7 @@ public:
         AbsurdFee,
         PaymentRequestExpired,
 		// SYSCOIN
+		OKMultisig,
 		InvalidMultisig
     };
 

@@ -41,7 +41,6 @@ extern bool DecodeAndParseCertTx(const CTransaction& tx, int& op, int& nOut, vec
 extern bool DecodeAndParseMessageTx(const CTransaction& tx, int& op, int& nOut, vector<vector<unsigned char> >& vvch);
 extern bool DecodeAndParseEscrowTx(const CTransaction& tx, int& op, int& nOut, vector<vector<unsigned char> >& vvch);
 extern std::string EncodeHexTx(const CTransaction& tx);
-extern bool DecodeHexTx(CTransaction& tx, const std::string& strHexTx, bool fTryNoWitness = false);
 WalletModel::WalletModel(const PlatformStyle *platformStyle, CWallet *_wallet, OptionsModel *_optionsModel, QObject *parent) :
     QObject(parent), wallet(_wallet), optionsModel(_optionsModel), addressTableModel(0),
 	// SYSCOIN
@@ -389,17 +388,17 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
 			signParams.push_back(EncodeHexTx(*newTx));
 			try
 			{
-				resSign = tableRPC.execute("signrawtransaction", signParams);
+				resSign = tableRPC.execute("syscoinsignrawtransaction", signParams);
 			}
 			catch (UniValue& objError)
 			{
-				Q_EMIT message(tr("Send Coins"), tr("Could not sign multisig transaction: %1").arg(QString::fromStdString(find_value(objError, "message").get_str())),
+				Q_EMIT message(tr("Send Coins"), QString("%1").arg(QString::fromStdString(find_value(objError, "message").get_str())),
 					CClientUIInterface::MSG_ERROR);
 				return InvalidMultisig;
 			}	
 			if (!resSign.isObject())
 			{
-				Q_EMIT message(tr("Send Coins"), tr("Could not sign multisig transaction: Invalid response from signrawtransaction"),
+				Q_EMIT message(tr("Send Coins"), tr("Could not sign multisig transaction: Invalid response from syscoinsignrawtransaction"),
 					CClientUIInterface::MSG_ERROR);
 				return InvalidMultisig;
 			}
@@ -421,13 +420,7 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
 							 CClientUIInterface::MSG_INFORMATION);
 				return InvalidMultisig;
 			}
-			if (!DecodeHexTx(*newTx, hex_str))
-			{
-				Q_EMIT message(tr("Send Coins"), tr("Could not decode signed raw multisig transaction"),
-					CClientUIInterface::MSG_ERROR);	
-				return InvalidMultisig;
-			}
-			return SendCoinsReturn(OK);
+			return SendCoinsReturn(OKMultisig);
 		}
     }
 
