@@ -396,7 +396,7 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
 					CClientUIInterface::MSG_ERROR);
 				return InvalidMultisig;
 			}	
-			if (!res.isObject())
+			if (!resSign.isObject())
 			{
 				Q_EMIT message(tr("Send Coins"), tr("Could not sign multisig transaction: Invalid response from signrawtransaction"),
 					CClientUIInterface::MSG_ERROR);
