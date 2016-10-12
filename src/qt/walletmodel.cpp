@@ -383,9 +383,26 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
 		// SYSCOIN
 		if(isMultisig)
 		{
+			UniValue resSign;
 			UniValue signParams(UniValue::VARR);
 			signParams.push_back(EncodeHexTx(*newTx));
-			const UniValue &resSign = tableRPC.execute("syscoinsignrawtransaction", signParams);
+			try
+			{
+				resSign = tableRPC.execute("signrawtransaction", arraySignParams);
+			}
+			catch (UniValue& objError)
+			{
+				Q_EMIT message(tr("Send Coins"), tr("Could not sign multisig transaction: ") + find_value(objError, "message").get_str(),
+					CClientUIInterface::MSG_ERROR);
+				return InvalidMultisig;
+			}	
+			if (!res.isObject())
+			{
+				Q_EMIT message(tr("Send Coins"), tr("Could not sign multisig transaction: Invalid response from signrawtransaction"),
+					CClientUIInterface::MSG_ERROR);
+				return InvalidMultisig;
+			}
+	
 			const UniValue& so = resSign.get_obj();
 			string hex_str = "";
 
@@ -401,7 +418,7 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
 				GUIUtil::setClipboard(QString::fromStdString(hex_str));
 				Q_EMIT message(tr("Send Coins"), tr("This transaction requires more signatures. Transaction hex <b>%1</b> has been copied to your clipboard for your reference. Please provide it to a signee that hasn't yet signed.").arg(QString::fromStdString(hex_str)),
 							 CClientUIInterface::MSG_INFORMATION);
-				return SendCoinsReturn(OK);
+				return InvalidMultisig;
 			}
 			return SendCoinsReturn(OK);
 		}

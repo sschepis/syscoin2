@@ -535,6 +535,8 @@ void SendCoinsDialog::processSendCoinsReturn(const WalletModel::SendCoinsReturn 
         break;
     // included to prevent a compiler warning.
     case WalletModel::OK:
+	// SYSCOIN
+	case WalletModel::InvalidMultisig:
     default:
         return;
     }
