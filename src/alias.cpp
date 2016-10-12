@@ -35,7 +35,7 @@ COfferDB *pofferdb = NULL;
 CCertDB *pcertdb = NULL;
 CEscrowDB *pescrowdb = NULL;
 CMessageDB *pmessagedb = NULL;
-extern CScript GetScriptForMultisig(int nRequired, const std::vector<CPubKey>& keys)
+extern CScript GetScriptForMultisig(int nRequired, const std::vector<CPubKey>& keys);
 extern void SendMoneySyscoin(const vector<CRecipient> &vecSend, CAmount nValue, bool fSubtractFeeFromAmount, CWalletTx& wtxNew, const CWalletTx* wtxInOffer=NULL, const CWalletTx* wtxInCert=NULL, const CWalletTx* wtxInAlias=NULL, const CWalletTx* wtxInEscrow=NULL, bool syscoinMultiSigTx=false);
 bool GetPreviousInput(const COutPoint * outpoint, int &op, vector<vector<unsigned char> > &vvchArgs)
 {
@@ -1026,6 +1026,11 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 							pubkeys.push_back(pubkey);
 
 						}	
+						if(theAlias.multiSigInfo.nRequiredSigs > vchValidAliases.size())
+						{
+							theAlias.multiSigInfo.SetNull();
+							errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5020 - " + _("Cannot update multisig alias because required signatures is greator than the amount of valid aliases in the multisig required signature alias list");
+						}	
 						CScript inner = GetScriptForMultisig(theAlias.multiSigInfo.nRequiredSigs, pubkeys);
 						CScript redeemScript = CScript(redeemScript.begin(), redeemScript.end());
 						if(redeemScript != inner)
@@ -1034,13 +1039,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 							errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5020 - " + _("Invalid redeem script provided in transaction");
 						}
 						CScriptID innerID(inner);
-						multisigAddress = CSyscoinAddress(innerID);
-
-						if(theAlias.multiSigInfo.nRequiredSigs > vchValidAliases.size())
-						{
-							theAlias.multiSigInfo.SetNull();
-							errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5020 - " + _("Cannot update multisig alias because required signatures is greator than the amount of valid aliases in the multisig required signature alias list");
-						}						
+						multisigAddress = CSyscoinAddress(innerID);					
 					}
 				}
 				// if transfer
@@ -1111,6 +1110,11 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					pubkeys.push_back(pubkey);
 
 				}	
+				if(theAlias.multiSigInfo.nRequiredSigs > vchValidAliases.size())
+				{
+					theAlias.multiSigInfo.SetNull();
+					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5020 - " + _("Cannot update multisig alias because required signatures is greator than the amount of valid aliases in the multisig required signature alias list");
+				}
 				CScript inner = GetScriptForMultisig(theAlias.multiSigInfo.nRequiredSigs, pubkeys);
 				CScript redeemScript = CScript(redeemScript.begin(), redeemScript.end());
 				if(redeemScript != inner)
@@ -1120,11 +1124,6 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				}
 				CScriptID innerID(inner);
 				multisigAddress = CSyscoinAddress(innerID);
-				if(theAlias.multiSigInfo.nRequiredSigs > vchValidAliases.size())
-				{
-					theAlias.multiSigInfo.SetNull();
-					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5020 - " + _("Cannot update multisig alias because required signatures is greator than the amount of valid aliases in the multisig required signature alias list");
-				}
 			}
 		}
 		theAlias.nHeight = nHeight;
