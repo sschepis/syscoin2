@@ -304,6 +304,7 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
             ++nAddresses;
 
 			// SYSCOIN
+			CScript redeemScript;
 			string strAddress = rcp.address.toStdString();
 			UniValue params(UniValue::VARR);
 			params.push_back(strAddress);
@@ -313,11 +314,19 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
 				result = tableRPC.execute("aliasinfo", params);
 				const UniValue &o = result.get_obj();
 				const UniValue& address_value = find_value(o, "address");
+				const UniValue& redeem_value = find_value(o, "redeemscript");
 				if (address_value.isStr())
 				{
 					strAddress = address_value.get_str();
-					if(strAddress != rcp.address.toStdString())
+				}
+				if (redeem_value.isStr())
+				{
+                    vector<unsigned char> vchRedeemScript(ParseHexV(redeem_value, "redeemScript"));
+					if(!vchRedeemScript.empty())
+					{
 						isMultisig = true;
+						redeemScript = CScript(vchRedeemScript.begin(), vchRedeemScript.end());
+					}
 				}
 			}
 			catch (UniValue& objError)
@@ -327,7 +336,11 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
 		
 			CSyscoinAddress address = CSyscoinAddress(strAddress);
             CScript scriptPubKey = GetScriptForDestination(address.Get());
-
+			// SYSCOIN
+			if(isMultisig)
+			{
+				CScript scriptPubKey = redeemScript;
+			}
             CRecipient recipient = {scriptPubKey, rcp.amount, rcp.fSubtractFeeFromAmount};
             vecSend.push_back(recipient);
 
