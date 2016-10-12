@@ -72,22 +72,6 @@ isminetype IsMine(const CKeyStore &keystore, const CScript& scriptPubKey)
             if (ret == ISMINE_SPENDABLE)
                 return ret;
         }
-		// SYSCOIN if multisig
-		vector<valtype> keys;
-		CSyscoinAddress syscoinAddress(scriptID);
-		syscoinAddress = CSyscoinAddress(syscoinAddress.ToString());
-		if(syscoinAddress.vchPubKeys.size() > 1)
-		{
-			for(unsigned int i = 0;i<syscoinAddress.vchPubKeys.size();i++)
-			{
-				keys.push_back(vchFromString(syscoinAddress.vchPubKeys[i]));
-			}
-			unsigned int nNumKeysFound = HaveKeys(keys, keystore);
-			if (nNumKeysFound == keys.size())
-				return ISMINE_SPENDABLE;
-			else if(nNumKeysFound > 0)
-				return ISMINE_WATCH_SOLVABLE;	
-		}
         break;
     }
     case TX_WITNESS_V0_SCRIPTHASH:
