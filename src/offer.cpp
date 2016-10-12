@@ -2638,15 +2638,17 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
     vector<unsigned char> vchHashOffer = vchFromValue(HexStr(vchHash));
 
     CScript scriptPayment, scriptPubKeyCommission, scriptPubKeyOrig, scriptPubLinkKeyOrig, scriptPaymentCommission;
-	CSyscoinAddress currentAddress;
 	CPubKey currentKey(theAlias.vchPubKey);
-	theAlias.GetAddress(&currentAddress);
-	scriptPubKeyOrig = GetScriptForDestination(currentAddress.Get());
+	CSyscoinAddress currentAddress(currentKey.GetID());
+	scriptPubKeyOrig = 	 GetScriptForDestination(currentAddress.Get());
+	if(theAlias.multiSigInfo.vchAliases.size() > 0)
+		scriptPubKeyOrig = CScript(theAlias.multiSigInfo.vchRedeemScript.begin(), theAlias.multiSigInfo.vchRedeemScript.end());
 
-	CSyscoinAddress linkAddress;
-	theLinkedAlias.GetAddress(&linkAddress);
+	CPubKey currentLinkKey(theLinkedAlias.vchPubKey);
+	CSyscoinAddress linkAddress(currentLinkKey.GetID());
 	scriptPubLinkKeyOrig = GetScriptForDestination(linkAddress.Get());
-
+	if(theLinkedAlias.multiSigInfo.vchAliases.size() > 0)
+		scriptPubLinkKeyOrig = CScript(theLinkedAlias.multiSigInfo.vchRedeemScript.begin(), theLinkedAlias.multiSigInfo.vchRedeemScript.end());
 	scriptPubKeyAccept << CScript::EncodeOP_N(OP_OFFER_ACCEPT) << vchOffer << vchAccept << vchFromString("0") << vchHashOffer << OP_2DROP << OP_2DROP << OP_DROP;
 	if(!copyOffer.vchLinkOffer.empty())
 	{
