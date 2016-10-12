@@ -388,7 +388,7 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
 			signParams.push_back(EncodeHexTx(*newTx));
 			try
 			{
-				resSign = tableRPC.execute("signrawtransaction", arraySignParams);
+				resSign = tableRPC.execute("signrawtransaction", signParams);
 			}
 			catch (UniValue& objError)
 			{
