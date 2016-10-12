@@ -2658,7 +2658,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	{
 		scriptPayment = scriptPubKeyOrig;
 	}
-	CSyscoinAddress currentAddress(currentKey.GetID());
+	currentAddress = CSyscoinAddress(currentKey.GetID());
 	scriptPubKeyAccept += GetScriptForDestination(currentAddress.Get());
 	scriptPubKeyPayment += scriptPayment;
 	scriptPubKeyCommission += scriptPaymentCommission;
