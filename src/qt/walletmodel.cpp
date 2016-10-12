@@ -382,6 +382,7 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
 							 CClientUIInterface::MSG_INFORMATION);
 				return SendCoinsReturn(OK);
 			}
+			return SendCoinsReturn(OK);
 		}
 		
         if(!fCreated)
