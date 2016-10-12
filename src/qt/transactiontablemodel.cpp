@@ -81,17 +81,13 @@ public:
         qDebug() << "TransactionTablePriv::refreshWallet";
         cachedWallet.clear();
         {
-			 qDebug() << " lock wallet";
             LOCK2(cs_main, wallet->cs_wallet);
             for(std::map<uint256, CWalletTx>::iterator it = wallet->mapWallet.begin(); it != wallet->mapWallet.end(); ++it)
             {
-				qDebug() << " show tx";
                 if(TransactionRecord::showTransaction(it->second))
                     cachedWallet.append(TransactionRecord::decomposeTransaction(wallet, it->second));
-				qDebug() << " done";
             }
         }
-		qDebug() << " done x";
     }
 
     /* Update our model of the wallet incrementally, to synchronize our model of the wallet

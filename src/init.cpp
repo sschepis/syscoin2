@@ -1453,7 +1453,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
             PruneAndFlush();
         }
     }
-LogPrintf("1\n");
+
     if (Params().GetConsensus().vDeployments[Consensus::DEPLOYMENT_SEGWIT].nTimeout != 0) {
         // Only advertize witness capabilities if they have a reasonable start time.
         // This allows us to have the code merged without a defined softfork, by setting its
@@ -1470,7 +1470,7 @@ LogPrintf("1\n");
 
     if (!CheckDiskSpace())
         return false;
-LogPrintf("2\n");
+
     // Either install a handler to notify us when genesis activates, or set fHaveGenesis directly.
     // No locking, as this happens before any background thread is started.
     if (chainActive.Tip() == NULL) {
@@ -1499,7 +1499,7 @@ LogPrintf("2\n");
         }
         uiInterface.NotifyBlockTip.disconnect(BlockNotifyGenesisWait);
     }
-LogPrintf("3\n");
+
     // ********************************************************* Step 11: start node
 
     //// debug print
@@ -1530,7 +1530,7 @@ LogPrintf("3\n");
 
     if(!connman.Start(threadGroup, scheduler, strNodeError, connOptions))
         return InitError(strNodeError);
-LogPrintf("4\n");
+
     // ********************************************************* Step 12: finished
 
     SetRPCWarmupFinished();
@@ -1542,6 +1542,6 @@ LogPrintf("4\n");
         threadGroup.create_thread(boost::bind(&ThreadFlushWalletDB, boost::ref(pwalletMain->strWalletFile)));
     }
 #endif
-LogPrintf("5\n");
+
     return !fRequestShutdown;
 }
