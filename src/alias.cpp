@@ -1408,14 +1408,9 @@ void GetAddressFromAlias(const std::string& strAlias, std::string& strAddress, u
 		nExpireHeight = alias.nHeight + alias.nRenewal*GetAliasExpirationDepth();
 		vchPubKeys.clear();
 		vchPubKeys.push_back(stringFromVch(alias.vchPubKey));
-		vtxPos.clear();
 		for(unsigned int i =0;i<alias.multiSigInfo.vchAliases.size();i++)
 		{
-			if (paliasdb && !paliasdb->ReadAlias(alias.multiSigInfo.vchAliases[i].vchAlias, vtxPos))
-				continue;
-			if(vtxPos.empty())
-				continue;
-			vchPubKeys.push_back(stringFromVch(vtxPos.back().vchPubKey));
+			vchPubKeys.push_back(stringFromVch(alias.multiSigInfo.vchAliases[i].vchPubKey));
 		}
 	}
 	catch(...)
@@ -1450,14 +1445,9 @@ void GetAliasFromAddress(std::string& strAddress, std::string& strAlias, unsigne
 		nExpireHeight = alias.nHeight + alias.nRenewal*GetAliasExpirationDepth();
 		vchPubKeys.clear();
 		vchPubKeys.push_back(stringFromVch(alias.vchPubKey));
-		vtxPos.clear();
 		for(unsigned int i =0;i<alias.multiSigInfo.vchAliases.size();i++)
 		{
-			if (paliasdb && !paliasdb->ReadAlias(alias.multiSigInfo.vchAliases[i].vchAlias, vtxPos))
-				continue;
-			if(vtxPos.empty())
-				continue;
-			vchPubKeys.push_back(stringFromVch(vtxPos.back().vchPubKey));
+			vchPubKeys.push_back(stringFromVch(alias.multiSigInfo.vchAliases[i].vchPubKey));
 		}
 
 	}
