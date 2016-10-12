@@ -1706,6 +1706,10 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 		// standard m of n multisig
 		arrayParams.push_back(nMultiSig);
 		arrayOfKeys.push_back(HexStr(vchPubKey));
+		CMultiSigAlias msAlias;
+		msAlias.vchPubKey = vchPubKey;
+		msAlias.vchAlias = vchAlias;
+		multiSigInfo.vchAliases.push_back(msAlias);
 		for(int i =0;i<aliasNames.size();i++)
 		{
 			CAliasIndex multiSigAlias;
@@ -1922,6 +1926,9 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 		// standard m of n multisig
 		arrayParams.push_back(nMultiSig);
 		arrayOfKeys.push_back(HexStr(theAlias.vchPubKey));
+		CMultiSigAlias msAlias;
+		msAlias.vchPubKey = theAlias.vchPubKey;
+		msAlias.vchAlias = theAlias.vchAlias;
 		for(int i =0;i<aliasNames.size();i++)
 		{
 			CAliasIndex multiSigAlias;

@@ -236,7 +236,7 @@ bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet)
 			CPubKey pubKey(vSolutions[i]);
 			if (!pubKey.IsValid())
 				return false;
-			pubkeys[i] = pubKey;
+			pubkeys[i-1] = pubKey;
         }
 		int nRequired = vSolutions.front()[0];
 		CScript inner = GetScriptForMultisig(nRequired, pubkeys);
