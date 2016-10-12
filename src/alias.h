@@ -29,45 +29,10 @@ static const unsigned int SYSCOIN_FORK1 = 50000;
 
 
 bool IsSys21Fork(const uint64_t& nHeight);
-class CMultiSigAlias {
-public:
-	std::vector<unsigned char> vchPubKey;
-	std::vector<unsigned char> vchAlias;
-	CMultiSigAlias() {
-        SetNull();
-    }
 
-	ADD_SERIALIZE_METHODS;
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-		READWRITE(vchPubKey);
-		READWRITE(vchAlias);
-	}
-
-    inline friend bool operator==(const CMultiSigAlias &a, const CMultiSigAlias &b) {
-        return (
-		a.vchPubKey == b.vchPubKey
-        && a.vchAlias == b.vchAlias
-        );
-    }
-
-    inline CMultiSigAlias operator=(const CMultiSigAlias &b) {
-		vchPubKey = b.vchPubKey;
-		vchAlias = b.vchAlias;
-        return *this;
-    }
-
-    inline friend bool operator!=(const CMultiSigAlias &a, const CMultiSigAlias &b) {
-        return !(a == b);
-    }
-
-    inline void SetNull() { vchPubKey.clear(); vchAlias.clear();}
-    inline bool IsNull() const { return (vchPubKey.empty() && vchAlias.empty()); }
-
-};
 class CMultiSigAliasInfo {
 public:
-	std::vector<CMultiSigAlias> vchAliases;
+	std::vector<std::string> vchAliases;
 	unsigned char nRequiredSigs;
 	std::vector<unsigned char> vchRedeemScript;
 	CMultiSigAliasInfo() {
@@ -227,11 +192,16 @@ public:
 	bool WriteAlias(const std::vector<unsigned char>& name, const std::vector<unsigned char>& address, const std::vector<unsigned char>& msaddress, std::vector<CAliasIndex>& vtxPos) {
 		if(address.empty() || msaddress.empty())
 			return false;		
-		bool write =  Write(make_pair(std::string("namei"), name), vtxPos);
-		write = write && Write(make_pair(std::string("namea"), address), name);
+		if(!Write(make_pair(std::string("namei"), name), vtxPos))
+			return false;
+		if(!Write(make_pair(std::string("namea"), address), name))
+			return false;
 		if(msaddress != address)
-			write = write && Write(make_pair(std::string("namea"), msaddress), name);
-		return write;
+		{
+			if(!Write(make_pair(std::string("namea"), msaddress), name))
+				return false;
+		}
+		return true;
 	}
 
 	bool EraseAlias(const std::vector<unsigned char>& name) {

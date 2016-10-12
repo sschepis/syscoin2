@@ -72,20 +72,6 @@ bool Solver(const CScript& scriptPubKeyIn, txnouttype& typeRet, vector<vector<un
         typeRet = TX_SCRIPTHASH;
         vector<unsigned char> hashBytes(scriptPubKey.begin()+2, scriptPubKey.begin()+22);
         vSolutionsRet.push_back(hashBytes);
-		// SYSCOIN if multisig
-		CScriptID scriptID = CScriptID(uint160(vSolutionsRet[0]));
-		CSyscoinAddress syscoinAddress(scriptID);
-		syscoinAddress = CSyscoinAddress(syscoinAddress.ToString());
-		if(syscoinAddress.nRequiredSigs > 1 && syscoinAddress.vchPubKeys.size() >= syscoinAddress.nRequiredSigs)
-		{
-			typeRet = TX_MULTISIG;
-			vSolutionsRet.clear();
-			vSolutionsRet.push_back(valtype(1, syscoinAddress.nRequiredSigs));
-			for(unsigned int i = 0;i<syscoinAddress.vchPubKeys.size();i++)
-			{
-				vSolutionsRet.push_back(vchFromString(syscoinAddress.vchPubKeys[i]));
-			}
-		}
         return true;
     }
 
@@ -225,29 +211,6 @@ bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet)
     {
         addressRet = CScriptID(uint160(vSolutions[0]));
         return true;
-    }
-	// SYSCOIN
-    else if (whichType == TX_MULTISIG)
-    {
-		std::vector<CPubKey> pubkeys;
-		pubkeys.resize(vSolutions.size()-1);
-        for (unsigned int i = 1; i < vSolutions.size()-1; i++)
-        {
-			CPubKey pubKey(vSolutions[i]);
-			if (!pubKey.IsValid())
-				return false;
-			pubkeys[i-1] = pubKey;
-        }
-		int nRequired = vSolutions.front()[0];
-		CScript inner = GetScriptForMultisig(nRequired, pubkeys);
-		CScriptID innerID(inner);
-		CSyscoinAddress address(innerID);
-
-        if (!address.IsValid())
-            return false;
-
-        addressRet = address.Get();
-		return true;
     }
     return false;
 }
