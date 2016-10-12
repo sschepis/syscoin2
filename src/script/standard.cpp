@@ -233,7 +233,7 @@ bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet)
 		pubkeys.resize(vSolutions.size()-1);
         for (unsigned int i = 1; i < vSolutions.size()-1; i++)
         {
-			CPubKey pubKey(vSolutions[1]);
+			CPubKey pubKey(vSolutions[i]);
 			if (!pubKey.IsValid())
 				return false;
 			pubkeys[i] = pubKey;
