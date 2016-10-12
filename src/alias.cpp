@@ -1735,6 +1735,8 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 4507 - " + _("Could not create escrow transaction: Invalid response from createescrow"));
 		const UniValue &o = resCreate.get_obj();
 		const UniValue& redeemScript_value = find_value(o, "redeemScript");
+		const UniValue& address_value = find_value(o, "v2address");
+		
 		if (redeemScript_value.isStr())
 		{
 			redeemScript = ParseHex(redeemScript_value.get_str());
@@ -1742,7 +1744,13 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 		}
 		else
 			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 4524 - " + _("Could not create escrow transaction: could not find redeem script in response"));
-		scriptPubKeyOrig = CScript(redeemScript.begin(), redeemScript.end());
+		if (address_value.isStr())
+		{
+			CSyscoinAddress address = CSyscoinAddress(address_value.get_str());
+			scriptPubKeyOrig = GetScriptForDestination(address.Get());
+		}
+		else
+			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 4524 - " + _("Could not create escrow transaction: could not find v2address in response"));
 	}	
 	else
 		scriptPubKeyOrig = GetScriptForDestination(defaultKey.GetID());
