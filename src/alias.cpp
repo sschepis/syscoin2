@@ -1408,13 +1408,12 @@ void GetAddressFromAlias(const std::string& strAlias, std::string& strAddress, u
 		nExpireHeight = alias.nHeight + alias.nRenewal*GetAliasExpirationDepth();
 		vchPubKeys.clear();
 		vchPubKeys.push_back(stringFromVch(alias.vchPubKey));
+		vtxPos.clear();
 		for(int i =0;i<alias.multiSigInfo.vchAliases.size();i++)
 		{
-			CAliasIndex multiSigAlias;
-			CTransaction txMultiSigAlias;
-			if (!GetTxOfAlias(alias.multiSigInfo.vchAliases[i].vchAlias, multiSigAlias, txMultiSigAlias, true))
-				continue;
-			vchPubKeys.push_back(stringFromVch(multiSigAlias.vchPubKey));
+			if ((paliasdb && !paliasdb->ReadAlias(alias.multiSigInfo.vchAliases[i].vchAlias, vtxPos)) || vtxPos.empty())
+				throw runtime_error("failed to read from alias DB");
+			vchPubKeys.push_back(stringFromVch(vtxPos.back().vchPubKey));
 		}
 	}
 	catch(...)
@@ -1449,13 +1448,12 @@ void GetAliasFromAddress(std::string& strAddress, std::string& strAlias, unsigne
 		nExpireHeight = alias.nHeight + alias.nRenewal*GetAliasExpirationDepth();
 		vchPubKeys.clear();
 		vchPubKeys.push_back(stringFromVch(alias.vchPubKey));
+		vtxPos.clear();
 		for(int i =0;i<alias.multiSigInfo.vchAliases.size();i++)
 		{
-			CAliasIndex multiSigAlias;
-			CTransaction txMultiSigAlias;
-			if (!GetTxOfAlias(alias.multiSigInfo.vchAliases[i].vchAlias, multiSigAlias, txMultiSigAlias, true))
-				continue;
-			vchPubKeys.push_back(stringFromVch(multiSigAlias.vchPubKey));
+			if ((paliasdb && !paliasdb->ReadAlias(alias.multiSigInfo.vchAliases[i].vchAlias, vtxPos)) || vtxPos.empty())
+				throw runtime_error("failed to read from alias DB");
+			vchPubKeys.push_back(stringFromVch(vtxPos.back().vchPubKey));
 		}
 
 	}
