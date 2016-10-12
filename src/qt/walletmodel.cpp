@@ -41,6 +41,7 @@ extern bool DecodeAndParseCertTx(const CTransaction& tx, int& op, int& nOut, vec
 extern bool DecodeAndParseMessageTx(const CTransaction& tx, int& op, int& nOut, vector<vector<unsigned char> >& vvch);
 extern bool DecodeAndParseEscrowTx(const CTransaction& tx, int& op, int& nOut, vector<vector<unsigned char> >& vvch);
 extern std::string EncodeHexTx(const CTransaction& tx);
+extern bool DecodeHexTx(CTransaction& tx, const std::string& strHexTx, bool fTryNoWitness = false);
 WalletModel::WalletModel(const PlatformStyle *platformStyle, CWallet *_wallet, OptionsModel *_optionsModel, QObject *parent) :
     QObject(parent), wallet(_wallet), optionsModel(_optionsModel), addressTableModel(0),
 	// SYSCOIN
