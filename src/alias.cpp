@@ -1014,6 +1014,8 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						}
 						std::vector<std::string> vchValidAliases; 
 						std::vector<CPubKey> pubkeys; 
+						CPubKey pubkey(theAlias.vchPubKey);
+						pubkeys.push_back(pubkey);
 						for(int i =0;i<theAlias.multiSigInfo.vchAliases.size();i++)
 						{
 							CAliasIndex multiSigAlias;
@@ -1098,6 +1100,8 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				}
 				std::vector<std::string> vchValidAliases; 
 				std::vector<CPubKey> pubkeys; 
+				CPubKey pubkey(theAlias.vchPubKey);
+				pubkeys.push_back(pubkey);
 				for(int i =0;i<theAlias.multiSigInfo.vchAliases.size();i++)
 				{
 					CAliasIndex multiSigAlias;
@@ -1677,60 +1681,33 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 		}
 	}
 	CScript scriptPubKeyOrig;
-	std::vector<unsigned char> vchPubKey(defaultKey.begin(), defaultKey.end());
-	
 	CMultiSigAliasInfo multiSigInfo;
 	if(aliasNames.size() > 0)
 	{
 		multiSigInfo.nRequiredSigs = nMultiSig;
-		UniValue arrayParams(UniValue::VARR);
-		UniValue arrayOfKeys(UniValue::VARR);
-
-		// standard m of n multisig
-		arrayParams.push_back(nMultiSig);
-		arrayOfKeys.push_back(HexStr(vchPubKey));
+		std::vector<CPubKey> pubkeys; 
+		pubkeys.push_back(defaultKey);
 		for(int i =0;i<aliasNames.size();i++)
 		{
 			CAliasIndex multiSigAlias;
 			CTransaction txMultiSigAlias;
 			if (!GetTxOfAlias( vchFromString(aliasNames[i].get_str()), multiSigAlias, txMultiSigAlias, true))
 				throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 4515 - " + _("Could not find multisig alias with the name: ") + aliasNames[i].get_str());
-			arrayOfKeys.push_back(HexStr(multiSigAlias.vchPubKey));
-			multiSigInfo.vchAliases.push_back(stringFromVch(multiSigAlias.vchAlias));
 
-		}
-
-		arrayParams.push_back(arrayOfKeys);
-		UniValue resCreate;
-		vector<unsigned char> redeemScript;
-		try
-		{
-			resCreate = tableRPC.execute("createmultisig", arrayParams);
-		}
-		catch (UniValue& objError)
-		{
-			throw runtime_error(find_value(objError, "message").get_str());
-		}
-		if (!resCreate.isObject())
-			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 4507 - " + _("Could not create escrow transaction: Invalid response from createescrow"));
-		const UniValue &o = resCreate.get_obj();
-		const UniValue& redeemScript_value = find_value(o, "redeemScript");
-		if (redeemScript_value.isStr())
-		{
-			redeemScript = ParseHex(redeemScript_value.get_str());
-			multiSigInfo.vchRedeemScript = redeemScript;
-			scriptPubKeyOrig = CScript(redeemScript.begin(), redeemScript.end());
-		}
-		else
-			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 4524 - " + _("Could not create escrow transaction: could not find redeem script in response"));
-
+			CPubKey pubkey(multiSigAlias.vchPubKey);
+			pubkeys.push_back(pubkey);
+			multiSigInfo.vchAliases.push_back(aliasNames[i].get_str());
+		}	
+		scriptPubKeyOrig = GetScriptForMultisig(nMultiSig, pubkeys);
+		std::vector<unsigned char> vchRedeemScript(scriptPubKeyOrig.begin(), scriptPubKeyOrig.end());
+		multiSigInfo.vchRedeemScript = vchRedeemScript;
 	}	
 	else
 		scriptPubKeyOrig = GetScriptForDestination(defaultKey.GetID());
 
 	
 
-
+	std::vector<unsigned char> vchPubKey(defaultKey.begin(), defaultKey.end());
 	if(vchPrivateValue.size() > 0)
 	{
 		string strCipherText;
@@ -1885,53 +1862,27 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 	}
 	CPubKey currentKey(vchPubKeyByte);
 	CMultiSigAliasInfo multiSigInfo;
-	
 	if(aliasNames.size() > 0)
 	{
 		multiSigInfo.nRequiredSigs = nMultiSig;
-		UniValue arrayParams(UniValue::VARR);
-		UniValue arrayOfKeys(UniValue::VARR);
-
-		// standard m of n multisig
-		arrayParams.push_back(nMultiSig);
-		arrayOfKeys.push_back(HexStr(theAlias.vchPubKey));
+		std::vector<CPubKey> pubkeys; 
+		CPubKey pubkey(theAlias.vchPubKey);
+		pubkeys.push_back(pubkey);
 		for(int i =0;i<aliasNames.size();i++)
 		{
 			CAliasIndex multiSigAlias;
 			CTransaction txMultiSigAlias;
 			if (!GetTxOfAlias( vchFromString(aliasNames[i].get_str()), multiSigAlias, txMultiSigAlias, true))
 				throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 4515 - " + _("Could not find multisig alias with the name: ") + aliasNames[i].get_str());
-			arrayOfKeys.push_back(HexStr(multiSigAlias.vchPubKey));
-			multiSigInfo.vchAliases.push_back(stringFromVch(multiSigAlias.vchAlias));
 
-		}
-
-		arrayParams.push_back(arrayOfKeys);
-		UniValue resCreate;
-		vector<unsigned char> redeemScript;
-		try
-		{
-			resCreate = tableRPC.execute("createmultisig", arrayParams);
-		}
-		catch (UniValue& objError)
-		{
-			throw runtime_error(find_value(objError, "message").get_str());
-		}
-		if (!resCreate.isObject())
-			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 4507 - " + _("Could not create escrow transaction: Invalid response from createescrow"));
-		const UniValue &o = resCreate.get_obj();
-		const UniValue& redeemScript_value = find_value(o, "redeemScript");
-		
-		if (redeemScript_value.isStr())
-		{
-			redeemScript = ParseHex(redeemScript_value.get_str());
-			multiSigInfo.vchRedeemScript = redeemScript;
-			scriptPubKeyOrig = CScript(redeemScript.begin(), redeemScript.end());
-		}
-		else
-			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 4524 - " + _("Could not create escrow transaction: could not find redeem script in response"));
-
-	}	
+			CPubKey pubkey(multiSigAlias.vchPubKey);
+			pubkeys.push_back(pubkey);
+			multiSigInfo.vchAliases.push_back(aliasNames[i].get_str());
+		}	
+		scriptPubKeyOrig = GetScriptForMultisig(nMultiSig, pubkeys);
+		std::vector<unsigned char> vchRedeemScript(scriptPubKeyOrig.begin(), scriptPubKeyOrig.end());
+		multiSigInfo.vchRedeemScript = vchRedeemScript;
+	}		
 	else
 		scriptPubKeyOrig = GetScriptForDestination(currentKey.GetID());
 
