@@ -276,13 +276,13 @@ bool ManageEscrowDialog::loadEscrow(const QString &escrow, QString &buyer, QStri
 QString ManageEscrowDialog::EscrowRoleTypeToString(const EscrowRoleType& escrowType)
 {
 	if(escrowType == Arbiter)
-		return tr("Arbiter");
+		return tr("arbiter");
 	else if(escrowType == Seller)
-		return tr("Seller");
+		return tr("seller");
 	else if(escrowType == Buyer)
-		return tr("Buyer");
+		return tr("buyer");
 	else
-		return tr("None");
+		return tr("none");
 }
 void ManageEscrowDialog::on_cancelButton_clicked()
 {
