@@ -319,7 +319,7 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
 						const UniValue& redeem_value = find_value(multisigValue.get_obj(), "redeemscript");
 						if (redeem_value.isStr())
 						{
-							vector<unsigned char> vchRedeemScript(ParseHexV(redeem_value, "redeemScript"));
+							vector<unsigned char> vchRedeemScript(ParseHex(redeem_value.get_str()));
 							if(!vchRedeemScript.empty())
 							{
 								redeemScript = CScript(vchRedeemScript.begin(), vchRedeemScript.end());
