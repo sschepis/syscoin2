@@ -31,7 +31,7 @@ public:
 	bool CompleteEscrowRelease();
 	bool loadEscrow(const QString &escrow, QString &buyer, QString &seller, QString &arbiter, QString &status, QString &offertitle, QString &total, QString &btctxid, QString &redeemtxid);
 	QString EscrowRoleTypeToString(const EscrowRoleType& escrowType);
-	ManageEscrowDialog::EscrowType findYourEscrowRoleFromAliases(const QString &buyer, const QString &seller, const QString &arbiter);
+	EscrowRoleType findYourEscrowRoleFromAliases(const QString &buyer, const QString &seller, const QString &arbiter);
 	EscrowRoleType escrowRoleType;
 public Q_SLOTS:
 	void on_releaseButton_clicked();
