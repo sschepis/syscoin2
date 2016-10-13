@@ -11,7 +11,7 @@ class QNetworkReply;
 QT_END_NAMESPACE
 /** Dialog for editing an address and associated information.
  */
- enum EscrowType {
+ enum EscrowRoleType {
     Buyer,
     Seller,
 	Arbiter,
@@ -30,9 +30,9 @@ public:
 	bool CompleteEscrowRefund();
 	bool CompleteEscrowRelease();
 	bool loadEscrow(const QString &escrow, QString &buyer, QString &seller, QString &arbiter, QString &status, QString &offertitle, QString &total, QString &btctxid, QString &redeemtxid);
-	QString EscrowRoleTypeToString(const EscrowType& escrowType);
+	QString EscrowRoleTypeToString(const EscrowRoleType& escrowType);
 	ManageEscrowDialog::EscrowType findYourEscrowRoleFromAliases(const QString &buyer, const QString &seller, const QString &arbiter);
-	EscrowType escrowRoleType;
+	EscrowRoleType escrowRoleType;
 public Q_SLOTS:
 	void on_releaseButton_clicked();
 	void on_btcButton_clicked();
