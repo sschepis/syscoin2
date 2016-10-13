@@ -41,6 +41,7 @@ extern bool DecodeAndParseCertTx(const CTransaction& tx, int& op, int& nOut, vec
 extern bool DecodeAndParseMessageTx(const CTransaction& tx, int& op, int& nOut, vector<vector<unsigned char> >& vvch);
 extern bool DecodeAndParseEscrowTx(const CTransaction& tx, int& op, int& nOut, vector<vector<unsigned char> >& vvch);
 extern std::string EncodeHexTx(const CTransaction& tx);
+extern bool DecodeHexTx(CTransaction& tx, const std::string& strHexTx, bool fTryNoWitness = false);
 WalletModel::WalletModel(const PlatformStyle *platformStyle, CWallet *_wallet, OptionsModel *_optionsModel, QObject *parent) :
     QObject(parent), wallet(_wallet), optionsModel(_optionsModel), addressTableModel(0),
 	// SYSCOIN
@@ -249,8 +250,6 @@ bool WalletModel::validateAddress(const QString &address)
 
 WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransaction &transaction, const CCoinControl *coinControl)
 {
-	// SYSCOIN
-	bool isMultisig = false;
     CAmount total = 0;
     bool fSubtractFeeFromAmount = false;
     QList<SendCoinsRecipient> recipients = transaction.getRecipients();
@@ -303,6 +302,9 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
             setAddress.insert(rcp.address);
             ++nAddresses;
 
+		
+			CSyscoinAddress address = CSyscoinAddress(rcp.address.toStdString());
+            CScript scriptPubKey = GetScriptForDestination(address.Get());
 			// SYSCOIN
 			CScript redeemScript;
 			UniValue params(UniValue::VARR);
@@ -322,8 +324,7 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
 							vector<unsigned char> vchRedeemScript(ParseHex(redeem_value.get_str()));
 							if(!vchRedeemScript.empty())
 							{
-								redeemScript = CScript(vchRedeemScript.begin(), vchRedeemScript.end());
-								isMultisig = true;
+								scriptPubKey = CScript(vchRedeemScript.begin(), vchRedeemScript.end());
 							}
 						}
 					}
@@ -331,15 +332,9 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
 			}
 			catch (UniValue& objError)
 			{
-				isMultisig = false;
 			}
-		
-			CSyscoinAddress address = CSyscoinAddress(rcp.address.toStdString());
-            CScript scriptPubKey = GetScriptForDestination(address.Get());
-			// SYSCOIN
-			if(isMultisig)
+			catch (const std::exception& e)
 			{
-				CScript scriptPubKey = redeemScript;
 			}
             CRecipient recipient = {scriptPubKey, rcp.amount, rcp.fSubtractFeeFromAmount};
             vecSend.push_back(recipient);
@@ -371,7 +366,7 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
         CWalletTx *newTx = transaction.getTransaction();
         CReserveKey *keyChange = transaction.getPossibleKeyChange();
 		// SYSCOIN
-        bool fCreated = wallet->CreateTransaction(vecSend, *newTx, *keyChange, nFeeRequired, nChangePosRet, strFailReason, coinControl, !isMultisig);
+        bool fCreated = wallet->CreateTransaction(vecSend, *newTx, *keyChange, nFeeRequired, nChangePosRet, strFailReason, coinControl, false);
         transaction.setTransactionFee(nFeeRequired);
         if (fSubtractFeeFromAmount && fCreated)
             transaction.reassignAmounts(nChangePosRet);
@@ -394,51 +389,53 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
             return AbsurdFee;
 
 		// SYSCOIN
-		if(isMultisig)
+		UniValue resSign;
+		UniValue signParams(UniValue::VARR);
+		signParams.push_back(EncodeHexTx(*newTx));
+		try
 		{
-			UniValue resSign;
-			UniValue signParams(UniValue::VARR);
-			signParams.push_back(EncodeHexTx(*newTx));
-			try
-			{
-				resSign = tableRPC.execute("syscoinsignrawtransaction", signParams);
-			}
-			catch (UniValue& objError)
-			{
-				Q_EMIT message(tr("Send Coins"), QString("%1").arg(QString::fromStdString(find_value(objError, "message").get_str())),
-					CClientUIInterface::MSG_ERROR);
-				return InvalidMultisig;
-			}	
-			catch (const std::exception& e) {
-				Q_EMIT message(tr("Send Coins"), QString("%1").arg(QString::fromStdString(e.what())),
-					CClientUIInterface::MSG_ERROR);
-				return InvalidMultisig;
-			}
-			if (!resSign.isObject())
-			{
-				Q_EMIT message(tr("Send Coins"), tr("Could not sign multisig transaction: Invalid response from syscoinsignrawtransaction"),
-					CClientUIInterface::MSG_ERROR);
-				return InvalidMultisig;
-			}
-	
-			const UniValue& so = resSign.get_obj();
-			string hex_str = "";
+			resSign = tableRPC.execute("signrawtransaction", signParams);
+		}
+		catch (UniValue& objError)
+		{
+			Q_EMIT message(tr("Send Coins"), QString("%1").arg(QString::fromStdString(find_value(objError, "message").get_str())),
+				CClientUIInterface::MSG_ERROR);
+			return InvalidMultisig;
+		}	
+		catch (const std::exception& e) {
+			Q_EMIT message(tr("Send Coins"), QString("%1").arg(QString::fromStdString(e.what())),
+				CClientUIInterface::MSG_ERROR);
+			return InvalidMultisig;
+		}
+		if (!resSign.isObject())
+		{
+			Q_EMIT message(tr("Send Coins"), tr("Could not sign multisig transaction: Invalid response from signrawtransaction"),
+				CClientUIInterface::MSG_ERROR);
+			return InvalidMultisig;
+		}
 
-			const UniValue& hex_value = find_value(so, "hex");
-			if (hex_value.isStr())
-				hex_str = hex_value.get_str();
-			const UniValue& complete_value = find_value(so, "complete");
-			bool bComplete = false;
-			if (complete_value.isBool())
-				bComplete = complete_value.get_bool();
-			if(!bComplete)
-			{
-				GUIUtil::setClipboard(QString::fromStdString(hex_str));
-				Q_EMIT message(tr("Send Coins"), tr("This transaction requires more signatures. Transaction hex <b>%1</b> has been copied to your clipboard for your reference. Please provide it to a signee that hasn't yet signed.").arg(QString::fromStdString(hex_str)),
-							 CClientUIInterface::MSG_INFORMATION);
-				return InvalidMultisig;
-			}
-			return SendCoinsReturn(OKMultisig);
+		const UniValue& so = resSign.get_obj();
+		string hex_str = "";
+
+		const UniValue& hex_value = find_value(so, "hex");
+		if (hex_value.isStr())
+			hex_str = hex_value.get_str();
+		const UniValue& complete_value = find_value(so, "complete");
+		bool bComplete = false;
+		if (complete_value.isBool())
+			bComplete = complete_value.get_bool();
+		if(!bComplete)
+		{
+			GUIUtil::setClipboard(QString::fromStdString(hex_str));
+			Q_EMIT message(tr("Send Coins"), tr("This transaction requires more signatures. Transaction hex <b>%1</b> has been copied to your clipboard for your reference. Please provide it to a signee that hasn't yet signed.").arg(QString::fromStdString(hex_str)),
+						 CClientUIInterface::MSG_INFORMATION);
+			return InvalidMultisig;
+		}
+		if(!DecodeHexTx(*newTx,hex_str))
+		{
+			Q_EMIT message(tr("Send Coins"), tr("Could not decode signed transaction!"),
+				CClientUIInterface::MSG_ERROR);
+			return InvalidMultisig;	
 		}
     }
 
