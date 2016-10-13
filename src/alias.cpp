@@ -1379,7 +1379,7 @@ bool GetTxAndVtxOfAlias(const vector<unsigned char> &vchAlias,
 		return error("GetTxOfAlias() : could not read tx from disk");
 	return true;
 }
-void GetAddressFromAlias(const std::string& strAlias, std::string& strAddress, unsigned char& safetyLevel, bool& safeSearch, int64_t& nExpireHeight, std::vector<std::string> &vchPubKeys) {
+void GetAddressFromAlias(const std::string& strAlias, std::string& strAddress, unsigned char& safetyLevel, bool& safeSearch, int64_t& nExpireHeight) {
 	try
 	{
 		string strLowerAlias = strAlias;
