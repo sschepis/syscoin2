@@ -1691,10 +1691,7 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 
 			CPubKey pubkey(multiSigAlias.vchPubKey);
 			pubkeys.push_back(pubkey);
-			// don't need to set vchpubkey, checkaliasinputs will do that for me
-			CMultiSigAlias msAlias;
-			msAlias.vchAlias = multiSigAlias.vchAlias;
-			multiSigInfo.vchAliases.push_back(msAlias);
+			multiSigInfo.vchAliases.push_back(aliasNames[i].get_str());
 		}	
 		scriptPubKeyOrig = GetScriptForMultisig(nMultiSig, pubkeys);
 		std::vector<unsigned char> vchRedeemScript(scriptPubKeyOrig.begin(), scriptPubKeyOrig.end());
@@ -1875,9 +1872,7 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 
 			CPubKey pubkey(multiSigAlias.vchPubKey);
 			pubkeys.push_back(pubkey);
-			CMultiSigAlias msAlias;
-			msAlias.vchAlias = multiSigAlias.vchAlias;
-			multiSigInfo.vchAliases.push_back(msAlias);
+			multiSigInfo.vchAliases.push_back(aliasNames[i].get_str());
 		}	
 		scriptPubKeyOrig = GetScriptForMultisig(nMultiSig, pubkeys);
 		std::vector<unsigned char> vchRedeemScript(scriptPubKeyOrig.begin(), scriptPubKeyOrig.end());
