@@ -97,22 +97,22 @@ CAmount WalletModel::getBalance(const CCoinControl *coinControl) const
 				nBalance += out.tx->vout[out.i].nValue;
 		}
 		// SYSCOIN
-        return nBalance+wallet->getWatchBalance();
+        return nBalance+this->getWatchBalance();
     }
 	// SYSCOIN
-    return wallet->GetBalance()+wallet->getWatchBalance;
+    return wallet->GetBalance()+this->getWatchBalance();
 }
 
 CAmount WalletModel::getUnconfirmedBalance() const
 {
 	// SYSCOIN
-    return wallet->GetUnconfirmedBalance()+wallet->getWatchUnconfirmedBalance();
+    return wallet->GetUnconfirmedBalance()+this->getWatchUnconfirmedBalance();
 }
 
 CAmount WalletModel::getImmatureBalance() const
 {
 	// SYSCOIN
-    return wallet->GetImmatureBalance()+wallet->getWatchImmatureBalance();
+    return wallet->GetImmatureBalance()+this->getWatchImmatureBalance();
 }
 
 bool WalletModel::haveWatchOnly() const
