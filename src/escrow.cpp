@@ -1623,7 +1623,7 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 		vchLinkAlias = arbiterAlias.vchAlias;
 		theAlias = arbiterAlias;
 	}
-	else if(role == "seller")
+	else if(role == "buyer")
 	{
 		wtxAliasIn = pwalletMain->GetWalletTx(buyeraliastx.GetHash());
 		if (wtxAliasIn == NULL)
