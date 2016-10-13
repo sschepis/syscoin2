@@ -1622,10 +1622,9 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 		scriptPubKeyAlias += scriptPubKeyOrig;
 		vchLinkAlias = arbiterAlias.vchAlias;
 		theAlias = arbiterAlias;
-		arbiterSigning = true;
 	}
 	else if(role == "seller")
-		arbiterSigning = false;
+	{
 		wtxAliasIn = pwalletMain->GetWalletTx(buyeraliastx.GetHash());
 		if (wtxAliasIn == NULL)
 			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR ERRCODE: 4537 - This alias is not in your wallet");
@@ -1637,7 +1636,6 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 		scriptPubKeyAlias += scriptPubKeyOrig;
 		vchLinkAlias = buyerAlias.vchAlias;
 		theAlias = buyerAlias;
-
 	}
 
 
