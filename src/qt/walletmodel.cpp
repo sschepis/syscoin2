@@ -93,25 +93,26 @@ CAmount WalletModel::getBalance(const CCoinControl *coinControl) const
         wallet->AvailableCoins(vCoins, true, coinControl);
         BOOST_FOREACH(const COutput& out, vCoins)
 		{
-			// SYSCOIN
-           // if(out.fSpendable)
-			nBalance += out.tx->vout[out.i].nValue;
+			if(out.fSpendable)
+				nBalance += out.tx->vout[out.i].nValue;
 		}
-
-        return nBalance;
+		// SYSCOIN
+        return nBalance+wallet->getWatchBalance();
     }
-
-    return wallet->GetBalance();
+	// SYSCOIN
+    return wallet->GetBalance()+wallet->getWatchBalance;
 }
 
 CAmount WalletModel::getUnconfirmedBalance() const
 {
-    return wallet->GetUnconfirmedBalance();
+	// SYSCOIN
+    return wallet->GetUnconfirmedBalance()+wallet->getWatchUnconfirmedBalance();
 }
 
 CAmount WalletModel::getImmatureBalance() const
 {
-    return wallet->GetImmatureBalance();
+	// SYSCOIN
+    return wallet->GetImmatureBalance()+wallet->getWatchImmatureBalance();
 }
 
 bool WalletModel::haveWatchOnly() const
