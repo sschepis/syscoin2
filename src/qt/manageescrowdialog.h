@@ -11,17 +11,17 @@ class QNetworkReply;
 QT_END_NAMESPACE
 /** Dialog for editing an address and associated information.
  */
+ enum EscrowType {
+    Buyer,
+    Seller,
+	Arbiter,
+	None
+};
 class ManageEscrowDialog : public QDialog
 {
     Q_OBJECT
 
 public:
-    enum EscrowType {
-        Buyer,
-        Seller,
-		Arbiter,
-		None
-    };
     explicit ManageEscrowDialog(WalletModel* model, const QString &escrow, QWidget *parent = 0);
     ~ManageEscrowDialog();
 	void SendRawTxBTC();
@@ -32,6 +32,7 @@ public:
 	bool loadEscrow(const QString &escrow, QString &buyer, QString &seller, QString &arbiter, QString &status, QString &offertitle, QString &total, QString &btctxid, QString &redeemtxid);
 	QString EscrowRoleTypeToString(const EscrowType& escrowType);
 	ManageEscrowDialog::EscrowType findYourEscrowRoleFromAliases(const QString &buyer, const QString &seller, const QString &arbiter);
+	EscrowType escrowRoleType;
 public Q_SLOTS:
 	void on_releaseButton_clicked();
 	void on_btcButton_clicked();
@@ -44,7 +45,6 @@ private:
 	WalletModel* walletModel;
     Ui::ManageEscrowDialog *ui;
 	QString escrow;
-	EscrowType escrowRoleType;
 	QString m_btctxid;
 	QString m_redeemTxId;
 	QString m_rawTx;
