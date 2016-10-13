@@ -199,7 +199,8 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
 					sub.idx = parts.size(); // sequence number
 					sub.credit = txout.nValue;
 					sub.involvesWatchAddress = mine & ISMINE_WATCH_ONLY;
-					if (ExtractDestination(txout.scriptPubKey, address) && IsMine(*wallet, address))
+					// SYSCOIN
+					if (ExtractDestination(txout.scriptPubKey, address) /*&& IsMine(*wallet, address)*/)
 					{
 							// Received by Syscoin Address
 							sub.type = TransactionRecord::RecvWithAddress;
