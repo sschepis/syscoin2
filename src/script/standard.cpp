@@ -222,7 +222,7 @@ bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet)
                 continue;
 			pubKeys.push_back(pubKey);
         }
-		CScript inner = GetScriptForMultisig(nRequired pubKeys);
+		CScript inner = GetScriptForMultisig(nRequired,pubKeys);
 		addressRet = CScriptID(inner);
         return true;
     }
