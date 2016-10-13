@@ -73,11 +73,11 @@ void SignRawTxDialog::setRawSysTxEdit()
 	catch (UniValue& objError)
 	{
 		string strError = find_value(objError, "message").get_str();
-		ui->decodeSysTxDisclaimer->setText(tr("Error creating decoding raw syscoin transaction: \"%1\"").arg(QString::fromStdString(strError)));
+		ui->rawSysTxDecodeEdit->setText(tr("Error creating decoding raw syscoin transaction: \"%1\"").arg(QString::fromStdString(strError)));
 	}
 	catch(std::exception& e)
 	{
-		ui->decodeSysTxDisclaimer->setText(tr("General exception decoding raw syscoin transaction"));
+		ui->rawSysTxDecodeEdit->setText(tr("General exception decoding raw syscoin transaction"));
 	}	
 }
 void SignRawTxDialog::rawTxChanged()
