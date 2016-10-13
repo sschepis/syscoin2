@@ -2116,7 +2116,7 @@ void AliasTxToJSON(const int op, const vector<unsigned char> &vchData, const vec
 
 }
 UniValue syscoinsignrawtransaction(const UniValue& params, bool fHelp) {
-	if (fHelp || 1 < params.size() || params.size() > 2)
+	if (fHelp || 1 > params.size() || params.size() > 2)
 		throw runtime_error("syscoinsignrawtransaction <hexstring> [doNotSend]\n"
 				"Sign inputs for raw transaction (serialized, hex-encoded) and sends them out to the network if signing is complete\n"
 				"<hexstring> The transaction hex string.\n"
