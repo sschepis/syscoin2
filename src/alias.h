@@ -29,46 +29,9 @@ static const unsigned int SYSCOIN_FORK1 = 50000;
 
 
 bool IsSys21Fork(const uint64_t& nHeight);
-
-class CMultiSigAlias {
-public:
-	std::vector<unsigned char> vchPubKey;
-	std::vector<unsigned char> vchAlias;
-	CMultiSigAlias() {
-        SetNull();
-    }
-
-	ADD_SERIALIZE_METHODS;
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-		READWRITE(vchPubKey);
-		READWRITE(vchAlias);
-	}
-
-    inline friend bool operator==(const CMultiSigAlias &a, const CMultiSigAlias &b) {
-        return (
-		a.vchPubKey == b.vchPubKey
-        && a.vchAlias == b.vchAlias
-        );
-    }
-
-    inline CMultiSigAlias operator=(const CMultiSigAlias &b) {
-		vchPubKey = b.vchPubKey;
-		vchAlias = b.vchAlias;
-        return *this;
-    }
-
-    inline friend bool operator!=(const CMultiSigAlias &a, const CMultiSigAlias &b) {
-        return !(a == b);
-    }
-
-    inline void SetNull() { vchPubKey.clear(); vchAlias.clear();}
-    inline bool IsNull() const { return (vchPubKey.empty() && vchAlias.empty()); }
-
-};
 class CMultiSigAliasInfo {
 public:
-	std::vector<CMultiSigAlias> vchAliases;
+	std::vector<std::string> vchAliases;
 	unsigned char nRequiredSigs;
 	std::vector<unsigned char> vchRedeemScript;
 	CMultiSigAliasInfo() {
@@ -297,8 +260,8 @@ bool DecodeAndParseAliasTx(const CTransaction& tx, int& op, int& nOut, std::vect
 bool DecodeAndParseSyscoinTx(const CTransaction& tx, int& op, int& nOut, std::vector<std::vector<unsigned char> >& vvch);
 bool DecodeAliasScript(const CScript& script, int& op,
 		std::vector<std::vector<unsigned char> > &vvch);
-void GetAddressFromAlias(const std::string& strAlias, std::string& strAddress, unsigned char& safetyLevel, bool& safeSearch, int64_t& nHeight, std::vector<std::string> &vchPubKeys);
-void GetAliasFromAddress(std::string& strAddress, std::string& strAlias, unsigned char& safetyLevel, bool& safeSearch, int64_t& nHeight, std::vector<std::string> &vchPubKeys);
+void GetAddressFromAlias(const std::string& strAlias, std::string& strAddress, unsigned char& safetyLevel, bool& safeSearch, int64_t& nHeight);
+void GetAliasFromAddress(std::string& strAddress, std::string& strAlias, unsigned char& safetyLevel, bool& safeSearch, int64_t& nHeight);
 CAmount convertCurrencyCodeToSyscoin(const std::vector<unsigned char> &vchAliasPeg, const std::vector<unsigned char> &vchCurrencyCode, const double &nPrice, const unsigned int &nHeight, int &precision);
 int getFeePerByte(const std::vector<unsigned char> &vchAliasPeg, const std::vector<unsigned char> &vchCurrencyCode, const unsigned int &nHeight, int &precision);
 float getEscrowFee(const std::vector<unsigned char> &vchAliasPeg, const std::vector<unsigned char> &vchCurrencyCode, const unsigned int &nHeight, int &precision);

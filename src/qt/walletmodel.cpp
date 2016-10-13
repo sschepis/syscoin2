@@ -313,8 +313,7 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
 				result = tableRPC.execute("aliasinfo", params);
 				if (result.type() == UniValue::VOBJ)
 				{
-			
-					const UniValue& multisigValue = find_value(result, "multisiginfo");
+					const UniValue& multisigValue = find_value(result.get_obj(), "multisiginfo");
 					if (multisigValue.type() == UniValue::VOBJ)
 					{
 						const UniValue& redeem_value = find_value(multisigValue.get_obj(), "redeemscript");

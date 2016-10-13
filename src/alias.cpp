@@ -1019,9 +1019,8 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						{
 							CAliasIndex multiSigAlias;
 							CTransaction txMultiSigAlias;
-							if (!GetTxOfAlias(theAlias.multiSigInfo.vchAliases[i].vchAlias, multiSigAlias, txMultiSigAlias))
+							if (!GetTxOfAlias(vchFromString(theAlias.multiSigInfo.vchAliases[i]), multiSigAlias, txMultiSigAlias))
 								continue;
-							theAlias.multiSigInfo.vchAliases[i].vchPubKey = multiSigAlias.vchPubKey;
 							CPubKey pubkey(multiSigAlias.vchPubKey);
 							pubkeys.push_back(pubkey);
 
@@ -1103,9 +1102,8 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				{
 					CAliasIndex multiSigAlias;
 					CTransaction txMultiSigAlias;
-					if (!GetTxOfAlias(theAlias.multiSigInfo.vchAliases[i].vchAlias, multiSigAlias, txMultiSigAlias))
+					if (!GetTxOfAlias(vchFromString(theAlias.multiSigInfo.vchAliases[i]), multiSigAlias, txMultiSigAlias))
 						continue;
-					theAlias.multiSigInfo.vchAliases[i].vchPubKey = multiSigAlias.vchPubKey;
 
 					CPubKey pubkey(multiSigAlias.vchPubKey);
 					pubkeys.push_back(pubkey);
@@ -1406,12 +1404,6 @@ void GetAddressFromAlias(const std::string& strAlias, std::string& strAddress, u
 		safetyLevel = alias.safetyLevel;
 		safeSearch = alias.safeSearch;
 		nExpireHeight = alias.nHeight + alias.nRenewal*GetAliasExpirationDepth();
-		vchPubKeys.clear();
-		vchPubKeys.push_back(stringFromVch(alias.vchPubKey));
-		for(unsigned int i =0;i<alias.multiSigInfo.vchAliases.size();i++)
-		{
-			vchPubKeys.push_back(stringFromVch(alias.multiSigInfo.vchAliases[i].vchPubKey));
-		}
 	}
 	catch(...)
 	{
@@ -1420,7 +1412,7 @@ void GetAddressFromAlias(const std::string& strAlias, std::string& strAddress, u
 	}
 }
 
-void GetAliasFromAddress(std::string& strAddress, std::string& strAlias, unsigned char& safetyLevel, bool& safeSearch, int64_t& nExpireHeight, std::vector<std::string> &vchPubKeys) {
+void GetAliasFromAddress(std::string& strAddress, std::string& strAlias, unsigned char& safetyLevel, bool& safeSearch, int64_t& nExpireHeight) {
 	try
 	{
 		const vector<unsigned char> &vchAddress = vchFromValue(strAddress);
@@ -1443,12 +1435,6 @@ void GetAliasFromAddress(std::string& strAddress, std::string& strAlias, unsigne
 		safetyLevel = alias.safetyLevel;
 		safeSearch = alias.safeSearch;
 		nExpireHeight = alias.nHeight + alias.nRenewal*GetAliasExpirationDepth();
-		vchPubKeys.clear();
-		vchPubKeys.push_back(stringFromVch(alias.vchPubKey));
-		for(unsigned int i =0;i<alias.multiSigInfo.vchAliases.size();i++)
-		{
-			vchPubKeys.push_back(stringFromVch(alias.multiSigInfo.vchAliases[i].vchPubKey));
-		}
 
 	}
 	catch(...)
@@ -2119,7 +2105,7 @@ void AliasTxToJSON(const int op, const vector<unsigned char> &vchData, const vec
 		UniValue msAliases(UniValue::VARR);
 		for(int i =0;i<alias.multiSigInfo.vchAliases.size();i++)
 		{
-			msAliases.push_back(stringFromVch(alias.multiSigInfo.vchAliases[i].vchAlias));
+			msAliases.push_back(alias.multiSigInfo.vchAliases[i]);
 		}
 		msInfo.push_back(Pair("reqsigners", msAliases));
 		
@@ -2314,7 +2300,7 @@ UniValue aliaslist(const UniValue& params, bool fHelp) {
 			UniValue msAliases(UniValue::VARR);
 			for(int i =0;i<alias.multiSigInfo.vchAliases.size();i++)
 			{
-				msAliases.push_back(stringFromVch(alias.multiSigInfo.vchAliases[i].vchAlias));
+				msAliases.push_back(alias.multiSigInfo.vchAliases[i]);
 			}
 			msInfo.push_back(Pair("reqsigners", msAliases));
 			oName.push_back(Pair("multisiginfo", msInfo));
@@ -2515,7 +2501,7 @@ UniValue aliasinfo(const UniValue& params, bool fHelp) {
 		UniValue msAliases(UniValue::VARR);
 		for(int i =0;i<alias.multiSigInfo.vchAliases.size();i++)
 		{
-			msAliases.push_back(stringFromVch(alias.multiSigInfo.vchAliases[i].vchAlias));
+			msAliases.push_back(alias.multiSigInfo.vchAliases[i]);
 		}
 		msInfo.push_back(Pair("reqsigners", msAliases));
 		msInfo.push_back(Pair("redeemscript", HexStr(alias.multiSigInfo.vchRedeemScript)));
@@ -2624,7 +2610,7 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 			UniValue msAliases(UniValue::VARR);
 			for(int i =0;i<txPos2.multiSigInfo.vchAliases.size();i++)
 			{
-				msAliases.push_back(stringFromVch(txPos2.multiSigInfo.vchAliases[i].vchAlias));
+				msAliases.push_back(txPos2.multiSigInfo.vchAliases[i]);
 			}
 			msInfo.push_back(Pair("reqsigners", msAliases));
 			oName.push_back(Pair("multisiginfo", msInfo));
@@ -2796,7 +2782,7 @@ UniValue aliasfilter(const UniValue& params, bool fHelp) {
 		UniValue msAliases(UniValue::VARR);
 		for(int i =0;i<alias.multiSigInfo.vchAliases.size();i++)
 		{
-			msAliases.push_back(stringFromVch(alias.multiSigInfo.vchAliases[i].vchAlias));
+			msAliases.push_back(alias.multiSigInfo.vchAliases[i]);
 		}
 		msInfo.push_back(Pair("reqsigners", msAliases));
 		oName.push_back(Pair("multisiginfo", msInfo));
