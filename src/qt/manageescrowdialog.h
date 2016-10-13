@@ -30,6 +30,7 @@ public:
 	bool CompleteEscrowRefund();
 	bool CompleteEscrowRelease();
 	bool loadEscrow(const QString &escrow, QString &buyer, QString &seller, QString &arbiter, QString &status, QString &offertitle, QString &total, QString &btctxid, QString &redeemtxid);
+	QString EscrowRoleTypeToString(const EscrowType& escrowType);
 	ManageEscrowDialog::EscrowType findYourEscrowRoleFromAliases(const QString &buyer, const QString &seller, const QString &arbiter);
 public Q_SLOTS:
 	void on_releaseButton_clicked();
@@ -43,6 +44,7 @@ private:
 	WalletModel* walletModel;
     Ui::ManageEscrowDialog *ui;
 	QString escrow;
+	EscrowType escrowRoleType;
 	QString m_btctxid;
 	QString m_redeemTxId;
 	QString m_rawTx;

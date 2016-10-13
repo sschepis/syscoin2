@@ -44,9 +44,9 @@ ManageEscrowDialog::ManageEscrowDialog(WalletModel* model, const QString &escrow
 		return;
 	}
 
-	EscrowType escrowType = findYourEscrowRoleFromAliases(buyer, seller, arbiter);
+	escrowRoleType = findYourEscrowRoleFromAliases(buyer, seller, arbiter);
 	ui->manageInfo->setText(tr("You are managing escrow ID: <b>%1</b> of an offer for <b>%2</b> totalling <b>%3</b>. The buyer is <b>%4</b>, merchant is <b>%5</b> and arbiter is <b>%6</b>").arg(escrow).arg(offertitle).arg(total).arg(buyer).arg(seller).arg(arbiter));
-	if(escrowType == None)
+	if(escrowRoleType == None)
 	{
 		ui->manageInfo2->setText(tr("You cannot manage this escrow because you do not own one of either the buyer, merchant or arbiter aliases."));
 		ui->releaseButton->setEnabled(false);
@@ -54,17 +54,17 @@ ManageEscrowDialog::ManageEscrowDialog(WalletModel* model, const QString &escrow
 	}
 	else if(status == "in escrow")
 	{
-		if(escrowType == Buyer)
+		if(escrowRoleType == Buyer)
 		{
 			ui->manageInfo2->setText(tr("You are the <b>buyer</b> of the offer held in escrow, you may release the coins to the merchant once you have confirmed that you have recieved the item as per the description of the offer."));
 			ui->refundButton->setEnabled(false);
 		}
-		else if(escrowType == Seller)
+		else if(escrowRoleType == Seller)
 		{
 			ui->manageInfo2->setText(tr("You are the <b>merchant</b> of the offer held in escrow, you may refund the coins back to the buyer."));
 			ui->releaseButton->setEnabled(false);
 		}
-		else if(escrowType == Arbiter)
+		else if(escrowRoleType == Arbiter)
 		{
 			ui->manageInfo2->setText(tr("You are the <b>arbiter</b> of the offer held in escrow, you may refund the coins back to the buyer if you have evidence that the merchant did not honour the agreement to ship the offer item. You may also release the coins to the merchant if the buyer has not released in a timely manor. You may use Syscoin messages to communicate with the buyer and merchant to ensure you have adequate proof for your decision."));
 		}
@@ -76,20 +76,20 @@ ManageEscrowDialog::ManageEscrowDialog(WalletModel* model, const QString &escrow
 		{
 			ui->btcButton->setVisible(true);
 		}
-		if(escrowType == Buyer)
+		if(escrowRoleType == Buyer)
 		{
 			ui->manageInfo2->setText(tr("You are the <b>buyer</b> of the offer held in escrow. The escrow has been released to the merchant. You may communicate with your arbiter or merchant via Syscoin messages. You may leave feedback after the money is claimed by the merchant."));
 			ui->refundButton->setEnabled(false);
 			ui->releaseButton->setEnabled(false);
 		}
-		else if(escrowType == Seller)
+		else if(escrowRoleType == Seller)
 		{
 			ui->manageInfo2->setText(tr("You are the <b>merchant</b> of the offer held in escrow. The payment of coins have been released to you, you may claim them now. After claiming, please return to this dialog and provide feedback for this escrow transaction."));
 			ui->releaseButton->setText(tr("Claim Payment"));
 			ui->refundButton->setEnabled(false);
 
 		}
-		else if(escrowType == Arbiter)
+		else if(escrowRoleType == Arbiter)
 		{
 			ui->manageInfo2->setText(tr("You are the <b>arbiter</b> of the offer held in escrow. The escrow has been released to the merchant. You may re-release this escrow if there are any problems claiming the coins by the merchant. If you were the one to release the coins you will recieve a commission as soon as the merchant claims his payment. You may leave feedback after the money is claimed by the merchant."));
 			releaseWarningStr = tr("Warning: Payment has already been released, are you sure you wish to re-release payment to the merchant?");
@@ -102,20 +102,20 @@ ManageEscrowDialog::ManageEscrowDialog(WalletModel* model, const QString &escrow
 		{
 			ui->btcButton->setVisible(true);
 		}
-		if(escrowType == Buyer)
+		if(escrowRoleType == Buyer)
 		{
 			ui->manageInfo2->setText(tr("You are the <b>buyer</b> of the offer held in escrow. The coins have been refunded back to you, you may claim them now. After claiming, please return to this dialog and provide feedback for this escrow transaction."));
 			ui->refundButton->setText(tr("Claim Refund"));
 			ui->releaseButton->setEnabled(false);
 		}
-		else if(escrowType == Seller)
+		else if(escrowRoleType == Seller)
 		{
 			ui->manageInfo2->setText(tr("You are the <b>merchant</b> of the offer held in escrow. The escrow has been refunded back to the buyer. You may leave feedback after the money is claimed by the buyer."));
 			ui->refundButton->setEnabled(false);
 			ui->releaseButton->setEnabled(false);
 
 		}
-		else if(escrowType == Arbiter)
+		else if(escrowRoleType == Arbiter)
 		{
 			ui->manageInfo2->setText(tr("You are the <b>arbiter</b> of the offer held in escrow. The escrow has been refunded back to the buyer. You may re-issue a refund if there are any problems claiming the coins by the buyer. If you were the one to refund the coins you will recieve a commission as soon as the buyer claims his refund. You may leave feedback after the money is claimed by the buyer."));
 			ui->releaseButton->setEnabled(false);
@@ -141,18 +141,18 @@ ManageEscrowDialog::ManageEscrowDialog(WalletModel* model, const QString &escrow
 		ui->secondaryFeedback->setVisible(true);
 		ui->releaseButton->setText(tr("Leave Feedback"));
 
-		if(escrowType == Buyer)
+		if(escrowRoleType == Buyer)
 		{
 			ui->primaryLabel->setText("Choose a rating for the merchant (1-5) or leave at 0 for no rating. Below please give feedback to the merchant.");
 			ui->secondaryLabel->setText("Choose a rating for the arbiter (1-5) or leave at 0 for no rating. Below please give feedback to the arbiter. Skip if escrow arbiter was not involved.");
 		}
-		else if(escrowType == Seller)
+		else if(escrowRoleType == Seller)
 		{
 			ui->primaryLabel->setText("Choose a rating for the buyer (1-5) or leave at 0 for no rating. Below please give feedback to the buyer.");
 			ui->secondaryLabel->setText("Choose a rating for the arbiter (1-5) or leave at 0 for no rating. Below please give feedback to the arbiter. Skip if escrow arbiter was not involved.");
 
 		}
-		else if(escrowType == Arbiter)
+		else if(escrowRoleType == Arbiter)
 		{
 			ui->primaryLabel->setText("Choose a rating for the buyer (1-5) or leave at 0 for no rating. Below please give feedback to the buyer.");
 			ui->secondaryLabel->setText("Choose a rating for the merchant (1-5) or leave at 0 for no rating. Below please give feedback to the merchant.");	
@@ -177,17 +177,17 @@ ManageEscrowDialog::ManageEscrowDialog(WalletModel* model, const QString &escrow
 		ui->secondaryRating->setVisible(true);
 		ui->secondaryFeedback->setVisible(true);
 		ui->releaseButton->setText(tr("Leave Feedback"));
-		if(escrowType == Buyer)
+		if(escrowRoleType == Buyer)
 		{
 			ui->primaryLabel->setText("Choose a rating for the merchant (1-5) or leave at 0 for no rating. Below please give feedback to the merchant.");
 			ui->secondaryLabel->setText("Choose a rating for the arbiter (1-5) or leave at 0 for no rating. Below please give feedback to the arbiter. Skip if escrow arbiter was not involved.");	
 		}
-		else if(escrowType == Seller)
+		else if(escrowRoleType == Seller)
 		{
 			ui->primaryLabel->setText("Choose a rating for the buyer (1-5) or leave at 0 for no rating. Below please give feedback to the buyer.");
 			ui->secondaryLabel->setText("Choose a rating for the arbiter (1-5) or leave at 0 for no rating. Below please give feedback to the arbiter. Skip if escrow arbiter was not involved.");
 		}
-		else if(escrowType == Arbiter)
+		else if(escrowRoleType == Arbiter)
 		{
 			ui->primaryLabel->setText("Choose a rating for the buyer (1-5) or leave at 0 for no rating. Below please give feedback to the buyer.");
 			ui->secondaryLabel->setText("Choose a rating for the merchant (1-5) or leave at 0 for no rating. Below please give feedback to the merchant.");	
@@ -273,6 +273,17 @@ bool ManageEscrowDialog::loadEscrow(const QString &escrow, QString &buyer, QStri
 	}
 	return false;
 }
+QString ManageEscrowDialog::EscrowRoleTypeToString(const EscrowType& escrowType)
+{
+	if(escrowType == Arbiter)
+		return tr("Arbiter");
+	else if(escrowType == Seller)
+		return tr("Seller");
+	else if(escrowType == Buyer)
+		return tr("Buyer");
+	else
+		return tr("None");
+}
 void ManageEscrowDialog::on_cancelButton_clicked()
 {
     reject();
@@ -291,6 +302,7 @@ void ManageEscrowDialog::onLeaveFeedback()
 	UniValue params(UniValue::VARR);
 	string strMethod = string("escrowfeedback");
 	params.push_back(escrow.toStdString());
+	params.push_back(EscrowRoleTypeToString(escrowRoleType).toStdString());
 	params.push_back(ui->primaryFeedback->toPlainText().toStdString());
 	params.push_back(ui->primaryRating->cleanText().toStdString());
 	params.push_back(ui->secondaryFeedback->toPlainText().toStdString());
@@ -646,13 +658,16 @@ void ManageEscrowDialog::on_releaseButton_clicked()
 			return;
 	}
 	UniValue params(UniValue::VARR);
+	params.push_back(escrow.toStdString());
 	string strMethod;
 	if(ui->releaseButton->text() == tr("Claim Payment"))
 		strMethod = string("escrowclaimrelease");
 	else
+	{
 		strMethod = string("escrowrelease");
-
-	params.push_back(escrow.toStdString());
+		params.push_back(EscrowRoleTypeToString(escrowRoleType).toStdString());
+	}
+	
 	try {
 		UniValue result = tableRPC.execute(strMethod, params);
 		const UniValue& retarray = result.get_array();
@@ -729,13 +744,16 @@ void ManageEscrowDialog::on_refundButton_clicked()
 			return;
 	}
 	UniValue params(UniValue::VARR);
+	params.push_back(escrow.toStdString());
 	string strMethod;
 	if(ui->refundButton->text() == tr("Claim Refund"))
 		strMethod = string("escrowclaimrefund");
 	else
+	{
 		strMethod = string("escrowrefund");
-
-	params.push_back(escrow.toStdString());
+		params.push_back(EscrowRoleTypeToString(escrowRoleType).toStdString());
+	}
+	
 	try {
 		UniValue result = tableRPC.execute(strMethod, params);
 		const UniValue& retarray = result.get_array();
@@ -795,7 +813,7 @@ void ManageEscrowDialog::on_refundButton_clicked()
 			QMessageBox::Ok, QMessageBox::Ok);
 	}
 }
-ManageEscrowDialog::EscrowType ManageEscrowDialog::findYourEscrowRoleFromAliases(const QString &buyer, const QString &seller, const QString &arbiter)
+ManageEscrowDialog::escrowRoleType ManageEscrowDialog::findYourEscrowRoleFromAliases(const QString &buyer, const QString &seller, const QString &arbiter)
 {
 	if(isYourAlias(buyer))
 		return Buyer;

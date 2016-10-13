@@ -2116,11 +2116,13 @@ void AliasTxToJSON(const int op, const vector<unsigned char> &vchData, const vec
 
 }
 UniValue syscoinsignrawtransaction(const UniValue& params, bool fHelp) {
-	if (fHelp || 1 != params.size())
-		throw runtime_error("syscoinsignrawtransaction <alias> <hexstring>\n"
-				"Sign inputs for alias update raw transaction (serialized, hex-encoded) and sends them out to the network if signing is complete\n"
-				"<hexstring> The transaction hex string.\n");
+	if (fHelp || 1 < params.size() || params.size() > 2)
+		throw runtime_error("syscoinsignrawtransaction <hexstring> [doNotSend]\n"
+				"Sign inputs for raw transaction (serialized, hex-encoded) and sends them out to the network if signing is complete\n"
+				"<hexstring> The transaction hex string.\n"
+				"<doNotSend>  Optional. Do not send to network even if transaction is complete.\n");
 	string hexstring = params[0].get_str();
+	string doNotSend = params.size() >= 2? params[1].get_str(): "0";
 	UniValue res;
 	UniValue arraySignParams(UniValue::VARR);
 	arraySignParams.push_back(hexstring);
@@ -2146,7 +2148,7 @@ UniValue syscoinsignrawtransaction(const UniValue& params, bool fHelp) {
 	if (complete_value.isBool())
 		bComplete = complete_value.get_bool();
 
-	if(bComplete)
+	if(bComplete && doNotSend != "1")
 	{
 		UniValue arraySendParams(UniValue::VARR);
 		arraySendParams.push_back(hex_str);
