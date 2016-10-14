@@ -1690,8 +1690,18 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	string createEscrowSpendingTx = resCreate.get_str();
 
 	// Buyer/Arbiter signs it
-	UniValue arraySignParams(UniValue::VARR);
-	arraySignParams.push_back(createEscrowSpendingTx);
+	string strEscrowScriptPubKey = HexStr(fundingTx.vout[nOutMultiSig].scriptPubKey.begin(), fundingTx.vout[nOutMultiSig].scriptPubKey.end());
+ 	UniValue arraySignParams(UniValue::VARR);
+ 	UniValue arraySignInputs(UniValue::VARR);
+ 
+ 	UniValue signUniValue(UniValue::VOBJ);
+ 	signUniValue.push_back(Pair("txid", fundingTx.GetHash().ToString()));
+ 	signUniValue.push_back(Pair("vout", nOutMultiSig));
+ 	signUniValue.push_back(Pair("scriptPubKey", strEscrowScriptPubKey));
+ 	signUniValue.push_back(Pair("redeemScript", HexStr(escrow.vchRedeemScript)));
+  	arraySignParams.push_back(createEscrowSpendingTx);
+ 	arraySignInputs.push_back(signUniValue);
+ 	arraySignParams.push_back(arraySignInputs);
 	UniValue resSign;
 	try
 	{
@@ -2035,11 +2045,29 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4555 - " + _("Expected commission to affiliate not found in escrow"));	
 
     // Seller signs it
-	UniValue arraySignParams(UniValue::VARR);
-	arraySignParams.push_back(HexStr(escrow.rawTx));
-	UniValue resSign = tableRPC.execute("signrawtransaction", arraySignParams);	
+	string strEscrowScriptPubKey = HexStr(fundingTx.vout[nOutMultiSig].scriptPubKey.begin(), fundingTx.vout[nOutMultiSig].scriptPubKey.end());
+ 	UniValue arraySignParams(UniValue::VARR);
+ 	UniValue arraySignInputs(UniValue::VARR);
+ 
+ 	UniValue signUniValue(UniValue::VOBJ);
+ 	signUniValue.push_back(Pair("txid", fundingTx.GetHash().ToString()));
+ 	signUniValue.push_back(Pair("vout", nOutMultiSig));
+ 	signUniValue.push_back(Pair("scriptPubKey", strEscrowScriptPubKey));
+ 	signUniValue.push_back(Pair("redeemScript", HexStr(escrow.vchRedeemScript)));
+  	arraySignParams.push_back(HexStr(escrow.rawTx));
+ 	arraySignInputs.push_back(signUniValue);
+ 	arraySignParams.push_back(arraySignInputs);
+	UniValue resSign;
+	try
+	{
+		resSign = tableRPC.execute("signrawtransaction", arraySignParams);	
+	}
+	catch (UniValue& objError)
+	{
+		throw runtime_error(find_value(objError, "message").get_str());
+	}	
 	if (!resSign.isObject())
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4559 - " + _("Could not sign escrow transaction: Invalid response from syscoinsignrawtransaction"));
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4559 - " + _("Could not sign escrow transaction: Invalid response from signrawtransaction"));
 	
 	const UniValue& o = resSign.get_obj();
 	string hex_str = "";
@@ -2421,8 +2449,19 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 	string createEscrowSpendingTx = resCreate.get_str();
 
 	// Buyer/Arbiter signs it
-	UniValue arraySignParams(UniValue::VARR);
-	arraySignParams.push_back(createEscrowSpendingTx);
+	string strEscrowScriptPubKey = HexStr(fundingTx.vout[nOutMultiSig].scriptPubKey.begin(), fundingTx.vout[nOutMultiSig].scriptPubKey.end());
+ 	UniValue arraySignParams(UniValue::VARR);
+ 	UniValue arraySignInputs(UniValue::VARR);
+ 
+ 	UniValue signUniValue(UniValue::VOBJ);
+ 	signUniValue.push_back(Pair("txid", fundingTx.GetHash().ToString()));
+ 	signUniValue.push_back(Pair("vout", nOutMultiSig));
+ 	signUniValue.push_back(Pair("scriptPubKey", strEscrowScriptPubKey));
+ 	signUniValue.push_back(Pair("redeemScript", HexStr(escrow.vchRedeemScript)));
+  	arraySignParams.push_back(createEscrowSpendingTx);
+ 	arraySignInputs.push_back(signUniValue);
+ 	arraySignParams.push_back(arraySignInputs);
+
 	UniValue resSign;
 	try
 	{
@@ -2708,9 +2747,19 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 	if(!foundRefundPayment)
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4599 - " + _("Expected refund amount not found"));	
 
-    // buyer signs it
-	UniValue arraySignParams(UniValue::VARR);
-	arraySignParams.push_back(HexStr(escrow.rawTx));
+    // Buyer signs it
+	string strEscrowScriptPubKey = HexStr(fundingTx.vout[nOutMultiSig].scriptPubKey.begin(), fundingTx.vout[nOutMultiSig].scriptPubKey.end());
+ 	UniValue arraySignParams(UniValue::VARR);
+ 	UniValue arraySignInputs(UniValue::VARR);
+ 
+ 	UniValue signUniValue(UniValue::VOBJ);
+ 	signUniValue.push_back(Pair("txid", fundingTx.GetHash().ToString()));
+ 	signUniValue.push_back(Pair("vout", nOutMultiSig));
+ 	signUniValue.push_back(Pair("scriptPubKey", strEscrowScriptPubKey));
+ 	signUniValue.push_back(Pair("redeemScript", HexStr(escrow.vchRedeemScript)));
+  	arraySignParams.push_back(HexStr(escrow.rawTx));
+ 	arraySignInputs.push_back(signUniValue);
+ 	arraySignParams.push_back(arraySignInputs);
 	UniValue resSign;
 	try
 	{
