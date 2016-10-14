@@ -1493,7 +1493,7 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	}
 
 	CAliasIndex sellerAlias, sellerAliasLatest, buyerAlias, buyerAliasLatest, arbiterAlias, arbiterAliasLatest, resellerAlias, resellerAliasLatest;
-	vector<CAliasIndex> aliasVtxPosBuyer, aliasVtxPosSeller, aliasVtxPosArbiter;
+	vector<CAliasIndex> aliasVtxPos;
 	CTransaction selleraliastx, buyeraliastx, arbiteraliastx, reselleraliastx;
 	bool isExpired;
 	CSyscoinAddress arbiterAddress, sellerAddress, buyerAddress, resellerAddress, arbiterAddressPayment, buyerAddressPayment, sellerAddressPayment, resellerAddressPayment;
