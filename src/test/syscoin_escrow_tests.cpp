@@ -82,17 +82,17 @@ BOOST_AUTO_TEST_CASE (generate_escrowrefund_invalid)
 	// try to claim refund even if not refunded
 	BOOST_CHECK_THROW(CallRPC("node2", "escrowclaimrefund " + guid), runtime_error);
 	// buyer cant refund to himself
-	BOOST_CHECK_THROW(CallRPC("node1", "escrowrefund buyer " + guid), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "escrowrefund " + guid + " buyer"), runtime_error);
 	EscrowRefund("node2", "seller", guid);
 	// cant refund already refunded escrow
-	BOOST_CHECK_THROW(CallRPC("node2", "escrowrefund seller " + guid), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node2", "escrowrefund " + guid + " seller"), runtime_error);
 	// noone other than buyer can claim refund
 	BOOST_CHECK_THROW(CallRPC("node3", "escrowclaimrefund " + guid), runtime_error);
 	BOOST_CHECK_THROW(CallRPC("node2", "escrowclaimrefund " + guid), runtime_error);
 	EscrowClaimRefund("node1", guid);
 	// cant inititate another refund after claimed already
-	BOOST_CHECK_THROW(CallRPC("node2", "escrowrefund seller " + guid), runtime_error);
-	BOOST_CHECK_THROW(CallRPC("node1", "escrowrefund buyer " + guid), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node2", "escrowrefund " + guid + " seller"), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "escrowrefund " + guid + " buyer"), runtime_error);
 }
 BOOST_AUTO_TEST_CASE (generate_escrowrelease_invalid)
 {
@@ -106,16 +106,16 @@ BOOST_AUTO_TEST_CASE (generate_escrowrelease_invalid)
 	// try to claim release even if not released
 	BOOST_CHECK_THROW(CallRPC("node2", "escrowclaimrelease " + guid), runtime_error);
 	// seller cant release buyers funds
-	BOOST_CHECK_THROW(CallRPC("node2", "escrowrelease seller " + guid), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node2", "escrowrelease " + guid + " seller"), runtime_error);
 	EscrowRelease("node1", "buyer", guid);
 	// cant release already released escrow
-	BOOST_CHECK_THROW(CallRPC("node1", "escrowrelease buyer " + guid), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "escrowrelease " + guid + " buyer"), runtime_error);
 	// noone other than seller can claim release
 	BOOST_CHECK_THROW(CallRPC("node3", "escrowclaimrelease " + guid), runtime_error);
 	BOOST_CHECK_THROW(CallRPC("node1", "escrowclaimrelease " + guid), runtime_error);
 	EscrowClaimRelease("node2", guid);
 	// cant inititate another release after claimed already
-	BOOST_CHECK_THROW(CallRPC("node1", "escrowrelease buyer " + guid), runtime_error);
+	BOOST_CHECK_THROW(CallRPC("node1", "escrowrelease " + guid + " buyer"), runtime_error);
 }
 BOOST_AUTO_TEST_CASE (generate_escrowrelease_arbiter)
 {
@@ -301,7 +301,7 @@ BOOST_AUTO_TEST_CASE (generate_escrowpruning)
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 5"));
 	MilliSleep(2500);
 	BOOST_CHECK_NO_THROW(CallRPC("node2", "generate 5"));	
-	BOOST_CHECK_NO_THROW(CallRPC("node2", "escrowrelease buyer " + guid1));
+	BOOST_CHECK_NO_THROW(CallRPC("node2", "escrowrelease " + guid1 + " buyer"));
 	MilliSleep(1000);
 	BOOST_CHECK_NO_THROW(CallRPC("node2", "generate 5"));
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "offerupdate sysrates.peg selleraliasprune " + offerguid + " category title 100 0.05 description"));
