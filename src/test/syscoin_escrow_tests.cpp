@@ -227,7 +227,7 @@ BOOST_AUTO_TEST_CASE (generate_escrow_linked_release)
 	BOOST_CHECK_NO_THROW(r = CallRPC("node3", "escrowclaimrelease " + guid));
 	UniValue resArray = r.get_array();
 	string strRawTx = resArray[0].get_str();
-	BOOST_CHECK_THROW(CallRPC("node3", "escrowcompleterelease " + guid + " " + strRawTx, runtime_error));
+	BOOST_CHECK_THROW(CallRPC("node3", "escrowcompleterelease " + guid + " " + strRawTx), runtime_error);
 
 	AliasUpdate("node1", "buyeralias2", "changeddata1", "priv");
 	AliasUpdate("node2", "selleralias22", "changeddata1", "priv");
