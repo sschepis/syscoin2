@@ -2661,7 +2661,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	vector<CRecipient> vecSend;
 
 
-	CRecipient acceptRecipient, acceptCommissionRecipient;
+	CRecipient acceptRecipient;
 	CreateRecipient(scriptPubKeyAccept, acceptRecipient);
 	CRecipient paymentRecipient = {scriptPubKeyPayment, nTotalValue, false};
 	CRecipient paymentCommissionRecipient = {scriptPubKeyCommission, nTotalCommission, false};
@@ -2697,7 +2697,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	const CWalletTx * wtxInOffer=NULL;
 
 	// if making a purchase and we are using an alias from the whitelist of the offer, we may need to prove that we own that alias so in that case we attach an input from the alias
-	SendMoneySyscoin(vecSend, acceptRecipient.nAmount+acceptCommissionRecipient.nAmount+paymentRecipient.nAmount+fee.nAmount+aliasRecipient.nAmount, false, wtx, wtxInOffer, wtxInCert, wtxAliasIn, wtxInEscrow, wtxAliasIn != NULL && theAlias.multiSigInfo.vchAliases.size() > 0);
+	SendMoneySyscoin(vecSend, acceptRecipient.nAmount+paymentRecipient.nAmount+fee.nAmount+aliasRecipient.nAmount, false, wtx, wtxInOffer, wtxInCert, wtxAliasIn, wtxInEscrow, wtxAliasIn != NULL && theAlias.multiSigInfo.vchAliases.size() > 0);
 	
 	UniValue res(UniValue::VARR);
 	if(wtxAliasIn != NULL && theAlias.multiSigInfo.vchAliases.size() > 0)
