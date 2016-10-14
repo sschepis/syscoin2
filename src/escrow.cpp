@@ -2024,14 +2024,6 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 	if (hex_value.isStr())
 		hex_str = hex_value.get_str();
 
-	const UniValue& complete_value = find_value(o, "complete");
-	bool bComplete = false;
-	if (complete_value.isBool())
-		bComplete = complete_value.get_bool();
-
-	if(!bComplete)
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4560 - " + _("Could not sign escrow transaction. It is showing as incomplete, you may not allowed to complete this request at this time"));
-
 	CTransaction rawTx;
 	DecodeHexTx(rawTx,hex_str);
 	ret.push_back(hex_str);
@@ -2690,14 +2682,6 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 	const UniValue& hex_value = find_value(o, "hex");
 	if (hex_value.isStr())
 		hex_str = hex_value.get_str();
-	const UniValue& complete_value = find_value(o, "complete");
-	bool bComplete = false;
-	if (complete_value.isBool())
-		bComplete = complete_value.get_bool();
-
-	if(!bComplete)
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4604 - " + _("Could not sign escrow transaction. It is showing as incomplete, you may not allowed to complete this request at this time"));
-
 	CTransaction rawTx;
 	DecodeHexTx(rawTx,hex_str);
 	UniValue ret(UniValue::VARR);

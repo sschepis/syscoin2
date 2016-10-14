@@ -243,7 +243,7 @@ void EditWhitelistOfferDialog::on_removeButton_clicked()
 				string hex_str = resArray[0].get_str();
 				GUIUtil::setClipboard(QString::fromStdString(hex_str));
 				QMessageBox::information(this, windowTitle(),
-					tr("This transaction requires more signatures. Transaction hex <b>%1</b> has been copied to your clipboard for your reference. Please provide it to a signee that hasn't yet signed.").arg(QString::fromStdString(hex_str)),
+					tr("This transaction requires more signatures. Transaction hex has been copied to your clipboard for your reference. Please provide it to a signee that has not yet signed."),
 						QMessageBox::Ok, QMessageBox::Ok);
 				return;
 			}
@@ -298,7 +298,7 @@ void EditWhitelistOfferDialog::on_removeAllButton_clicked()
 				string hex_str = resArray[0].get_str();
 				GUIUtil::setClipboard(QString::fromStdString(hex_str));
 				QMessageBox::information(this, windowTitle(),
-					tr("This transaction requires more signatures. Transaction hex <b>%1</b> has been copied to your clipboard for your reference. Please provide it to a signee that hasn't yet signed.").arg(QString::fromStdString(hex_str)),
+					tr("This transaction requires more signatures. Transaction hex has been copied to your clipboard for your reference. Please provide it to a signee that has not yet signed."),
 						QMessageBox::Ok, QMessageBox::Ok);
 				return;
 			}
