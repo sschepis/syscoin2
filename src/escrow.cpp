@@ -2836,7 +2836,7 @@ UniValue escrowcompleterefund(const UniValue& params, bool fHelp) {
 	vecSend.push_back(fee);
 	const CWalletTx * wtxInOffer=NULL;
 	const CWalletTx * wtxInCert=NULL;
-	SendMoneySyscoin(vecSend, recipientBuyer.nAmount+recipientSeller.nAmount+recipientArbiter.nAmount+fee.nAmount+aliasRecipient.nAmount, false, wtx, wtxInOffer, wtxInCert, wtxAliasIn, wtxIn, true;
+	SendMoneySyscoin(vecSend, recipientBuyer.nAmount+recipientSeller.nAmount+recipientArbiter.nAmount+fee.nAmount+aliasRecipient.nAmount, false, wtx, wtxInOffer, wtxInCert, wtxAliasIn, wtxIn, true);
 	UniValue returnRes;
 	UniValue sendParams(UniValue::VARR);
 	sendParams.push_back(rawTx);		
