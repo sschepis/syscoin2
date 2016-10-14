@@ -945,7 +945,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				// Check GUID
 				if (vvchPrevArgs.size() <= 1 || vvchPrevArgs[1] != vvchArgs[1])
 				{
-					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5011 - " + _("Alias Guid input mismatch");
+					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5016 - " + _("Alias Guid input mismatch");
 					return error(errorMessage.c_str());
 				}
 				break;
@@ -1028,14 +1028,14 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						if(theAlias.multiSigInfo.nRequiredSigs > pubkeys.size())
 						{
 							theAlias.multiSigInfo.SetNull();
-							errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5020 - " + _("Cannot update multisig alias because required signatures is greator than the amount of signatures provided");
+							errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5021 - " + _("Cannot update multisig alias because required signatures is greator than the amount of signatures provided");
 						}	
 						CScript inner = GetScriptForMultisig(theAlias.multiSigInfo.nRequiredSigs, pubkeys);
 						CScript redeemScript = CScript(theAlias.multiSigInfo.vchRedeemScript.begin(), theAlias.multiSigInfo.vchRedeemScript.end());
 						if(redeemScript != inner)
 						{
 							theAlias.multiSigInfo.SetNull();
-							errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5020 - " + _("Invalid redeem script provided in transaction");
+							errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5022 - " + _("Invalid redeem script provided in transaction");
 						}
 						CScriptID innerID(inner);
 						multisigAddress = CSyscoinAddress(innerID);					
@@ -1052,17 +1052,17 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					if (paliasdb->ExistsAddress(vchFromString(myAddress.ToString())))
 					{
 						theAlias.vchPubKey = dbAlias.vchPubKey;
-						errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5020 - " + _("Cannot transfer an alias that points to another alias");
+						errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5023 - " + _("Cannot transfer an alias that points to another alias");
 					}
 					if(theAlias.vchPrivateKey.empty())
 					{
 						theAlias.vchPubKey = dbAlias.vchPubKey;
-						errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5021 - " + _("Private key cannot be empty on transfer");
+						errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5024 - " + _("Private key cannot be empty on transfer");
 					}	
 					else if(theAlias.vchPrivateKey == dbAlias.vchPrivateKey)
 					{
 						theAlias.vchPubKey = dbAlias.vchPubKey;
-						errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5022 - " + _("Private key must change on transfer");
+						errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5025 - " + _("Private key must change on transfer");
 					}
 					
 				}
@@ -1071,7 +1071,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			}
 			else
 			{
-				errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5023 -" + _(" Alias not found when trying to update");
+				errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5026 -" + _(" Alias not found when trying to update");
 				return true;
 			}
 		}
@@ -1079,7 +1079,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		{
 			if(!isExpired && !vtxPos.empty())
 			{
-				errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5024 - " + _("Trying to renew an alias that isn't expired");
+				errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5027 - " + _("Trying to renew an alias that isn't expired");
 				return true;
 			}
 			theAlias.nRatingAsBuyer = 0;
@@ -1093,7 +1093,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				if(theAlias.multiSigInfo.vchAliases.size() > 5 || theAlias.multiSigInfo.nRequiredSigs > 5)
 				{
 					theAlias.multiSigInfo.SetNull();
-					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5020 - " + _("Alias multisig too big, reduce the number of signatures required for this alias and try again");
+					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5028 - " + _("Alias multisig too big, reduce the number of signatures required for this alias and try again");
 				}
 				std::vector<CPubKey> pubkeys; 
 				CPubKey pubkey(theAlias.vchPubKey);
@@ -1112,14 +1112,14 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				if(theAlias.multiSigInfo.nRequiredSigs > pubkeys.size())
 				{
 					theAlias.multiSigInfo.SetNull();
-					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5020 - " + _("Cannot update multisig alias because required signatures is greator than the amount of signatures provided");
+					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5029 - " + _("Cannot update multisig alias because required signatures is greator than the amount of signatures provided");
 				}
 				CScript inner = GetScriptForMultisig(theAlias.multiSigInfo.nRequiredSigs, pubkeys);
 				CScript redeemScript = CScript(theAlias.multiSigInfo.vchRedeemScript.begin(), theAlias.multiSigInfo.vchRedeemScript.end());
 				if(redeemScript != inner)
 				{
 					theAlias.multiSigInfo.SetNull();
-					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5020 - " + _("Invalid redeem script provided in transaction");
+					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5030 - " + _("Invalid redeem script provided in transaction");
 				}
 				CScriptID innerID(inner);
 				multisigAddress = CSyscoinAddress(innerID);
@@ -1132,7 +1132,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		CSyscoinAddress address(PubKey.GetID());
 		if (!dontaddtodb && !paliasdb->WriteAlias(vchAlias, vchFromString(address.ToString()), vchFromString(multisigAddress.ToString()), vtxPos))
 		{
-			errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5025 - " + _("Failed to write to alias DB");
+			errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5031 - " + _("Failed to write to alias DB");
 			return error(errorMessage.c_str());
 		}
 
@@ -1691,7 +1691,7 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 			CAliasIndex multiSigAlias;
 			CTransaction txMultiSigAlias;
 			if (!GetTxOfAlias( vchFromString(aliasNames[i].get_str()), multiSigAlias, txMultiSigAlias, true))
-				throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 4515 - " + _("Could not find multisig alias with the name: ") + aliasNames[i].get_str());
+				throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5502 - " + _("Could not find multisig alias with the name: ") + aliasNames[i].get_str());
 
 			CPubKey pubkey(multiSigAlias.vchPubKey);
 			pubkeys.push_back(pubkey);
@@ -1712,7 +1712,7 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 		string strCipherText;
 		if(!EncryptMessage(vchPubKey, vchPrivateValue, strCipherText))
 		{
-			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5502 - " + _("Could not encrypt private alias value!"));
+			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5503 - " + _("Could not encrypt private alias value!"));
 		}
 		vchPrivateValue = vchFromString(strCipherText);
 	}
@@ -1819,7 +1819,7 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 	CTransaction tx;
 	CAliasIndex theAlias;
 	if (!GetTxOfAlias(vchAlias, theAlias, tx, true))
-		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5503 - " + _("Could not find an alias with this name"));
+		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5504 - " + _("Could not find an alias with this name"));
 
 
 	wtxIn = pwalletMain->GetWalletTx(tx.GetHash());
@@ -1845,7 +1845,7 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 		// encrypt using new key
 		if(!EncryptMessage(vchPubKeyByte, vchFromString(strPrivateKey), strCipherText))
 		{
-			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5509 - " + _("Could not encrypt alias private key"));
+			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5507 - " + _("Could not encrypt alias private key"));
 		}
 		vchPrivateKey = vchFromString(strCipherText);	
 	}
@@ -1873,7 +1873,7 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 			CAliasIndex multiSigAlias;
 			CTransaction txMultiSigAlias;
 			if (!GetTxOfAlias( vchFromString(aliasNames[i].get_str()), multiSigAlias, txMultiSigAlias, true))
-				throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 4515 - " + _("Could not find multisig alias with the name: ") + aliasNames[i].get_str());
+				throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5509 - " + _("Could not find multisig alias with the name: ") + aliasNames[i].get_str());
 
 			CPubKey pubkey(multiSigAlias.vchPubKey);
 			pubkeys.push_back(pubkey);
@@ -1966,13 +1966,13 @@ UniValue syscoindecoderawtransaction(const UniValue& params, bool fHelp) {
 	DecodeHexTx(rawTx,hexstring);
 	if(rawTx.IsNull())
 	{
-		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 4539 - " + _("Could not decode transaction"));
+		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5510 - " + _("Could not decode transaction"));
 	}
 	vector<unsigned char> vchData;
 	int nOut;
 	vector<unsigned char> vchHash;
 	if(!GetSyscoinData(rawTx, vchData, vchHash, nOut))
-		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 4539 - " + _("Could not find syscoin service data in this transaction"));
+		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5511 - " + _("Could not find syscoin service data in this transaction"));
 	vector<vector<unsigned char> > vvch;
 	int op;
 	bool foundSys = false;
@@ -1993,7 +1993,7 @@ UniValue syscoindecoderawtransaction(const UniValue& params, bool fHelp) {
 
 	}
 	if(!foundSys)
-		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 4539 - " + _("Could not find syscoin service output in this transaction"));
+		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5512 - " + _("Could not find syscoin service output in this transaction"));
 	if(sendCoin)
 		output.push_back(Pair("warning", _("Warning: This transaction sends coins to an address or alias you do not own")));
 	
@@ -2013,14 +2013,14 @@ void SysTxToJSON(const int op, const vector<unsigned char> &vchData, const vecto
 	else if(IsOfferOp(op))
 		OfferTxToJSON(op, vchData, vchHash, entry);
 	else
-		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 4539 - " + _("Cannot determine type of syscoin transaction"));
+		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5513 - " + _("Cannot determine type of syscoin transaction"));
 }
 void AliasTxToJSON(const int op, const vector<unsigned char> &vchData, const vector<unsigned char> &vchHash, UniValue &entry)
 {
 	string opName = aliasFromOp(op);
 	CAliasIndex alias;
 	if(!alias.UnserializeFromData(vchData, vchHash))
-		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 4539 - " + _("Alias hash mismatch when decoding syscoin transaction"));
+		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5514 - " + _("Could not decoding syscoin transaction"));
 	bool isExpired = false;
 	vector<CAliasIndex> aliasVtxPos;
 	CTransaction aliastx;
@@ -2134,10 +2134,10 @@ UniValue syscoinsignrawtransaction(const UniValue& params, bool fHelp) {
 	}
 	catch (UniValue& objError)
 	{
-		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 4539 - " + _("Could not sign multisig transaction: ") + find_value(objError, "message").get_str());
+		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5516 - " + _("Could not sign multisig transaction: ") + find_value(objError, "message").get_str());
 	}	
 	if (!res.isObject())
-		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 4540 - " + _("Could not sign multisig transaction: Invalid response from signrawtransaction"));
+		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5517 - " + _("Could not sign multisig transaction: Invalid response from signrawtransaction"));
 	
 	const UniValue& so = res.get_obj();
 	string hex_str = "";
@@ -2164,7 +2164,7 @@ UniValue syscoinsignrawtransaction(const UniValue& params, bool fHelp) {
 			throw runtime_error(find_value(objError, "message").get_str());
 		}
 		if (!returnRes.isStr())
-			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 4613 - " + _("Could not send raw transaction: Invalid response from sendrawtransaction"));
+			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5518 - " + _("Could not send raw transaction: Invalid response from sendrawtransaction"));
 	}
 	return res;
 }

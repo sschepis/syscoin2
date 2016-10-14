@@ -1304,14 +1304,14 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					CSyscoinAddress destaddy;
 					if (!ExtractDestination(tx.vout[nOutPayment].scriptPubKey, payDest)) 
 					{
-						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1109 - " + _("Could not extract payment destination from scriptPubKey");
+						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1110 - " + _("Could not extract payment destination from scriptPubKey");
 						return true;
 					}	
 					destaddy = CSyscoinAddress(payDest);
 					CSyscoinAddress commissionaddy;
 					if (!ExtractDestination(tx.vout[nOutCommission].scriptPubKey, commissionDest)) 
 					{
-						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1109 - " + _("Could not extract commission destination from scriptPubKey");
+						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1111 - " + _("Could not extract commission destination from scriptPubKey");
 						return true;
 					}		
 					commissionaddy = CSyscoinAddress(commissionDest);
@@ -1335,7 +1335,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					CSyscoinAddress destaddy;
 					if (!ExtractDestination(tx.vout[nOutPayment].scriptPubKey, payDest)) 
 					{
-						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1109 - " + _("Could not extract payment destination from scriptPubKey");
+						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1114 - " + _("Could not extract payment destination from scriptPubKey");
 						return true;
 					}	
 					destaddy = CSyscoinAddress(payDest);
@@ -3925,4 +3925,8 @@ std::string COffer::GetPaymentOptionsString()
 }
 void OfferTxToJSON(const int op, const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash, UniValue &entry)
 {
+	string opName = offerFromOp(op);
+	COffer offer;
+	if(!offer.UnserializeFromData(vchData, vchHash))
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR: ERRCODE: 1553 - " + _("Could not decoding syscoin transaction"));
 }

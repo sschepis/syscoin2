@@ -877,4 +877,8 @@ UniValue messagehistory(const UniValue& params, bool fHelp) {
 
 void MessageTxToJSON(const int op, const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash, UniValue &entry)
 {
+	string opName = messageFromOp(op);
+	CMessage message;
+	if(!message.UnserializeFromData(vchData, vchHash))
+		throw runtime_error("SYSCOIN_MESSAGE_RPC_ERROR: ERRCODE: 3506 - " + _("Could not decoding syscoin transaction"));
 }

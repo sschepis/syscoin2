@@ -1490,6 +1490,10 @@ UniValue certfilter(const UniValue& params, bool fHelp) {
 }
 void CertTxToJSON(const int op, const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash, UniValue &entry)
 {
+	string opName = certFromOp(op);
+	CCert cert;
+	if(!cert.UnserializeFromData(vchData, vchHash))
+		throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2518 - " + _("Could not decoding syscoin transaction"));
 }
 
 
