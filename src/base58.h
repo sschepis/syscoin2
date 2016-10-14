@@ -110,6 +110,7 @@ public:
 	bool safeSearch;
 	std::string aliasName;
 	std::vector<unsigned char> vchRedeemScript;
+	std::vector<unsigned char> vchPubKey;
 
     bool Set(const CKeyID &id, bool oldSys = false);
     bool Set(const CScriptID &id);

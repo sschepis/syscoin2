@@ -20,6 +20,7 @@
 #include <boost/thread.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 using namespace std;
+extern CScript GetScriptForMultisig(int nRequired, const std::vector<CPubKey>& keys);
 extern void SendMoneySyscoin(const vector<CRecipient> &vecSend, CAmount nValue, bool fSubtractFeeFromAmount, CWalletTx& wtxNew, const CWalletTx* wtxInOffer=NULL, const CWalletTx* wtxInCert=NULL, const CWalletTx* wtxInAlias=NULL, const CWalletTx* wtxInEscrow=NULL, bool syscoinMultiSigTx=false);
 void PutToEscrowList(std::vector<CEscrow> &escrowList, CEscrow& index) {
 	int i = escrowList.size() - 1;
@@ -1955,52 +1956,75 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 		if(!scriptPubKeyValue.isObject())
 			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4550 - " + _("Could not decode escrow transaction: Invalid scriptPubKey value"));
 		const UniValue &scriptPubKeyValueObj = scriptPubKeyValue.get_obj();	
+		
+		const UniValue &typeValue = find_value(scriptPubKeyValueObj, "type");
 		const UniValue &addressesValue = find_value(scriptPubKeyValueObj, "addresses");
+		if(!typeValue.isStr())
+			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4552 - " + _("Could not decode escrow transaction: Invalid type"));
 		if(!addressesValue.isArray())
 			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4551 - " + _("Could not decode escrow transaction: Invalid addresses"));
 
 		const UniValue &addresses = addressesValue.get_array();
-		for (unsigned int idx = 0; idx < addresses.size(); idx++) {
-			const UniValue& address = addresses[idx];
-			if(!address.isStr())
-				throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4552 - " + _("Could not decode escrow transaction: Invalid address"));
-			const string &strAddress = address.get_str();
-			// check arb fee is paid to arbiter or buyer
-			if(!foundFeePayment)
-			{
-				if(arbiterAddressPayment.ToString() == strAddress && iVout >= nEscrowFee)
-					foundFeePayment = true;
+		const UniValue& address = addresses[0];
+		if(!address.isStr())
+			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4552 - " + _("Could not decode escrow transaction: Invalid address"));
+		string strAddress = address.get_str();
+		if(typeValue.get_str() == "multisig")
+		{
+			const UniValue &reqSigsValue = find_value(scriptPubKeyValueObj, "reqSigs");
+			if(!reqSigsValue.isNum())
+				throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4551 - " + _("Could not decode escrow transaction: Invalid number of signatures"));
+			vector<CPubKey> pubKeys;
+			for (unsigned int idx = 0; idx < addresses.size(); idx++) {
+				const UniValue& address = addresses[idx];
+				if(!address.isStr())
+					throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4552 - " + _("Could not decode escrow transaction: Invalid address"));
+				CSyscoinaddress aliasAddress = CSyscoinAddress(address.get_str());
+				if(aliasAddress.vchPubKey.empty())
+					throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4552 - " + _("Could not decode escrow transaction: One or more of the multisig addresses do not refer to an alias"));
+				CPubKey pubkey(aliasAddress.vchPubKey);
+				pubkeys.push_back(pubkey);			
 			}
-			if(!foundFeePayment)
+			CScript script = GetScriptForMultisig(reqSigsValue.get_int(), pubKeys);
+			CScriptID innerID(inner);
+			CSyscoinAddress aliasAddress(innerID);
+			strAddress = aliasAddress.ToString();
+		}
+
+		// check arb fee is paid to arbiter or buyer
+		if(!foundFeePayment)
+		{
+			if(arbiterAddressPayment.ToString() == strAddress && iVout >= nEscrowFee)
+				foundFeePayment = true;
+		}
+		if(!foundFeePayment)
+		{
+			if(buyerAddressPayment.ToString() == strAddress  && iVout >= nEscrowFee)
+				foundFeePayment = true;
+		}	
+		if(!theOffer.vchLinkOffer.empty())
+		{
+			if(!foundCommissionPayment)
 			{
-				if(buyerAddressPayment.ToString() == strAddress  && iVout >= nEscrowFee)
-					foundFeePayment = true;
-			}	
-			if(!theOffer.vchLinkOffer.empty())
-			{
-				if(!foundCommissionPayment)
+				if(resellerAddressPayment.ToString() == strAddress  && iVout >= nExpectedCommissionAmount)
 				{
-					if(resellerAddressPayment.ToString() == strAddress  && iVout >= nExpectedCommissionAmount)
-					{
-						foundCommissionPayment = true;
-					}
-				}
-				if(!foundSellerPayment)
-				{
-					if(sellerAddressPayment.ToString() == strAddress  && iVout >= (nExpectedAmount-nExpectedCommissionAmount))
-					{
-						foundSellerPayment = true;
-					}
+					foundCommissionPayment = true;
 				}
 			}
-			else if(!foundSellerPayment)
+			if(!foundSellerPayment)
 			{
-				if(sellerAddressPayment.ToString() == strAddress && iVout >= nExpectedAmount)
+				if(sellerAddressPayment.ToString() == strAddress  && iVout >= (nExpectedAmount-nExpectedCommissionAmount))
 				{
 					foundSellerPayment = true;
 				}
 			}
-			
+		}
+		else if(!foundSellerPayment)
+		{
+			if(sellerAddressPayment.ToString() == strAddress && iVout >= nExpectedAmount)
+			{
+				foundSellerPayment = true;
+			}
 		}
 	}
 	if(!foundSellerPayment)
@@ -2641,22 +2665,45 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 		if(!scriptPubKeyValue.isObject())
 			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4596 - " + _("Could not decode escrow transaction: Invalid scriptPubKey value"));
 		const UniValue &scriptPubKeyValueObj = scriptPubKeyValue.get_obj();	
+		const UniValue &typeValue = find_value(scriptPubKeyValueObj, "type");
 		const UniValue &addressesValue = find_value(scriptPubKeyValueObj, "addresses");
+		if(!typeValue.isStr())
+			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4552 - " + _("Could not decode escrow transaction: Invalid type"));
 		if(!addressesValue.isArray())
-			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4597 - " + _("Could not decode escrow transaction: Invalid addresses"));
+			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4551 - " + _("Could not decode escrow transaction: Invalid addresses"));
 
 		const UniValue &addresses = addressesValue.get_array();
-		for (unsigned int idx = 0; idx < addresses.size(); idx++) {
-			const UniValue& address = addresses[idx];
-			if(!address.isStr())
-				throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4598 - " + _("Could not decode escrow transaction: Invalid address"));
-			const string &strAddress = address.get_str();
-			if(!foundRefundPayment)
-			{
-				if(buyerAddressPayment.ToString() == strAddress && iVout >= nExpectedAmount)
-					foundRefundPayment = true;
-			}	
+		const UniValue& address = addresses[0];
+		if(!address.isStr())
+			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4552 - " + _("Could not decode escrow transaction: Invalid address"));
+		string strAddress = address.get_str();
+		if(typeValue.get_str() == "multisig")
+		{
+			const UniValue &reqSigsValue = find_value(scriptPubKeyValueObj, "reqSigs");
+			if(!reqSigsValue.isNum())
+				throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4551 - " + _("Could not decode escrow transaction: Invalid number of signatures"));
+			vector<CPubKey> pubKeys;
+			for (unsigned int idx = 0; idx < addresses.size(); idx++) {
+				const UniValue& address = addresses[idx];
+				if(!address.isStr())
+					throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4552 - " + _("Could not decode escrow transaction: Invalid address"));
+				CSyscoinaddress aliasAddress = CSyscoinAddress(address.get_str());
+				if(aliasAddress.vchPubKey.empty())
+					throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4552 - " + _("Could not decode escrow transaction: One or more of the multisig addresses do not refer to an alias"));
+				CPubKey pubkey(aliasAddress.vchPubKey);
+				pubkeys.push_back(pubkey);			
+			}
+			CScript script = GetScriptForMultisig(reqSigsValue.get_int(), pubKeys);
+			CScriptID innerID(inner);
+			CSyscoinAddress aliasAddress(innerID);
+			strAddress = aliasAddress.ToString();
 		}
+		if(!foundRefundPayment)
+		{
+			if(buyerAddressPayment.ToString() == strAddress && iVout >= nExpectedAmount)
+				foundRefundPayment = true;
+		}	
+		
 	}
 	if(!foundRefundPayment)
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4599 - " + _("Expected refund amount not found"));	
