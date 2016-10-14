@@ -358,7 +358,7 @@ bool ManageEscrowDialog::CompleteEscrowRelease()
 		if(m_btctxid.size() > 0)
 		{
 			QMessageBox::information(this, windowTitle(),
-			tr("Escrow release completed successfully! Payment was found on the Bitcoin blockchain Transaction ID <b>%1</b>. You may click on the Check BTC Payment button to check to see if it has confirmed.").arg(m_redeemTxId),
+			tr("Escrow release completed successfully! Payment was found on the Bitcoin blockchain Transaction ID <b>%1</b>. You may click on the <b>Check BTC Payment</b> button to check to see if it has confirmed.").arg(m_redeemTxId),
 				QMessageBox::Ok, QMessageBox::Ok);
 		}
 		else

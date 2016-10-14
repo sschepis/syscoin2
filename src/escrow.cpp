@@ -1691,10 +1691,17 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	// Buyer/Arbiter signs it
 	UniValue arraySignParams(UniValue::VARR);
 	arraySignParams.push_back(createEscrowSpendingTx);
-	arraySignParams.push_back("1");
-	UniValue resSign = tableRPC.execute("syscoinsignrawtransaction", arraySignParams);
+	UniValue resSign;
+	try
+	{
+		resSign = tableRPC.execute("signrawtransaction", arraySignParams);	
+	}
+	catch (UniValue& objError)
+	{
+		throw runtime_error(find_value(objError, "message").get_str());
+	}
 	if (!resSign.isObject())
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4603 - " + _("Could not sign escrow transaction: Invalid response from syscoinsignrawtransaction"));
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4603 - " + _("Could not sign escrow transaction: Invalid response from signrawtransaction"));
 	
 	const UniValue& o = resSign.get_obj();
 	string hex_str = "";
@@ -2006,8 +2013,7 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
     // Seller signs it
 	UniValue arraySignParams(UniValue::VARR);
 	arraySignParams.push_back(HexStr(escrow.rawTx));
-	arraySignParams.push_back("1");
-	UniValue resSign = tableRPC.execute("syscoinsignrawtransaction", arraySignParams);	
+	UniValue resSign = tableRPC.execute("signrawtransaction", arraySignParams);	
 	if (!resSign.isObject())
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4559 - " + _("Could not sign escrow transaction: Invalid response from syscoinsignrawtransaction"));
 	
@@ -2164,55 +2170,40 @@ UniValue escrowcompleterelease(const UniValue& params, bool fHelp) {
 	vecSend.push_back(fee);
 	const CWalletTx * wtxInOffer=NULL;
 	const CWalletTx * wtxInCert=NULL;
-	SendMoneySyscoin(vecSend, recipientBuyer.nAmount+recipientSeller.nAmount+recipientArbiter.nAmount+fee.nAmount+aliasRecipient.nAmount, false, wtx, wtxInOffer, wtxInCert, wtxAliasIn, wtxIn, sellerAlias.multiSigInfo.vchAliases.size() > 0);
+	SendMoneySyscoin(vecSend, recipientBuyer.nAmount+recipientSeller.nAmount+recipientArbiter.nAmount+fee.nAmount+aliasRecipient.nAmount, false, wtx, wtxInOffer, wtxInCert, wtxAliasIn, wtxIn, true);
+	UniValue returnRes;
+	UniValue sendParams(UniValue::VARR);
+	sendParams.push_back(rawTx);		
+	try
+	{
+		// broadcast the payment transaction to syscoin network if not bitcoin transaction
+		if (!btcPayment)
+			returnRes = tableRPC.execute("sendrawtransaction", sendParams);
+	}
+	catch (UniValue& objError)
+	{	
+	}
+	UniValue signParams(UniValue::VARR);
+	signParams.push_back(EncodeHexTx(wtx));	
 	UniValue res(UniValue::VARR);
-	if(sellerAlias.multiSigInfo.vchAliases.size() > 0)
-	{
-		UniValue signParams(UniValue::VARR);
-		signParams.push_back(EncodeHexTx(wtx));
-		signParams.push_back("1");
-		const UniValue &resSign = tableRPC.execute("syscoinsignrawtransaction", signParams);
-		const UniValue& so = resSign.get_obj();
-		string hex_str = "";
+	const UniValue &resSign = tableRPC.execute("syscoinsignrawtransaction", signParams);
+	const UniValue& so = resSign.get_obj();
+	string hex_str = "";
 
-		const UniValue& hex_value = find_value(so, "hex");
-		if (hex_value.isStr())
-			hex_str = hex_value.get_str();
-		const UniValue& complete_value = find_value(so, "complete");
-		bool bComplete = false;
-		if (complete_value.isBool())
-			bComplete = complete_value.get_bool();
-		if(bComplete)
-		{
-			res.push_back(wtx.GetHash().GetHex());
-			// broadcast the payment transaction to syscoin network if not bitcoin transaction
-			if (!btcPayment)
-			{
-				UniValue arraySendParams(UniValue::VARR);
-				arraySendParams.push_back(rawTx);
-				UniValue returnRes;
-				try
-				{
-					returnRes = tableRPC.execute("sendrawtransaction", arraySendParams);
-				}
-				catch (UniValue& objError)
-				{
-					throw runtime_error(find_value(objError, "message").get_str());
-				}
-				if (!returnRes.isStr())
-					throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4569 - " + _("Could not send escrow transaction: Invalid response from sendrawtransaction"));
-			}
-		}
-		else
-		{
-			res.push_back(hex_str);
-			res.push_back("false");
-		}
-	}
-	else
+	const UniValue& hex_value = find_value(so, "hex");
+	if (hex_value.isStr())
+		hex_str = hex_value.get_str();
+	const UniValue& complete_value = find_value(so, "complete");
+	bool bComplete = false;
+	if (complete_value.isBool())
+		bComplete = complete_value.get_bool();
+	if(!bComplete)
 	{
-		res.push_back(wtx.GetHash().GetHex());
+		res.push_back(hex_str);
+		res.push_back("false");
+		return res;
 	}
+	res.push_back(wtx.GetHash().GetHex());
 	return res;
 }
 UniValue escrowrefund(const UniValue& params, bool fHelp) {
@@ -2416,10 +2407,17 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 	// Buyer/Arbiter signs it
 	UniValue arraySignParams(UniValue::VARR);
 	arraySignParams.push_back(createEscrowSpendingTx);
-	arraySignParams.push_back("1");
-	UniValue resSign = tableRPC.execute("syscoinsignrawtransaction", arraySignParams);	
+	UniValue resSign;
+	try
+	{
+		resSign = tableRPC.execute("signrawtransaction", arraySignParams);	
+	}
+	catch (UniValue& objError)
+	{
+		throw runtime_error(find_value(objError, "message").get_str());
+	}
 	if (!resSign.isObject())
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4559 - " + _("Could not sign escrow transaction: Invalid response from syscoinsignrawtransaction"));
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4559 - " + _("Could not sign escrow transaction: Invalid response from signrawtransaction"));
 	
 	const UniValue& o = resSign.get_obj();
 	string hex_str = "";
@@ -2674,10 +2672,17 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
     // buyer signs it
 	UniValue arraySignParams(UniValue::VARR);
 	arraySignParams.push_back(HexStr(escrow.rawTx));
-	arraySignParams.push_back("1");
-	UniValue resSign = tableRPC.execute("syscoinsignrawtransaction", arraySignParams);
+	UniValue resSign;
+	try
+	{
+		resSign = tableRPC.execute("signrawtransaction", arraySignParams);	
+	}
+	catch (UniValue& objError)
+	{
+		throw runtime_error(find_value(objError, "message").get_str());
+	}
 	if (!resSign.isObject())
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4603 - " + _("Could not sign escrow transaction: Invalid response from syscoinsignrawtransaction"));
+		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4603 - " + _("Could not sign escrow transaction: Invalid response from signrawtransaction"));
 	
 	const UniValue& o = resSign.get_obj();
 	string hex_str = "";
@@ -2831,56 +2836,40 @@ UniValue escrowcompleterefund(const UniValue& params, bool fHelp) {
 	vecSend.push_back(fee);
 	const CWalletTx * wtxInOffer=NULL;
 	const CWalletTx * wtxInCert=NULL;
-	SendMoneySyscoin(vecSend, recipientBuyer.nAmount+recipientSeller.nAmount+recipientArbiter.nAmount+fee.nAmount+aliasRecipient.nAmount, false, wtx, wtxInOffer, wtxInCert, wtxAliasIn, wtxIn, buyerAlias.multiSigInfo.vchAliases.size() > 0);
+	SendMoneySyscoin(vecSend, recipientBuyer.nAmount+recipientSeller.nAmount+recipientArbiter.nAmount+fee.nAmount+aliasRecipient.nAmount, false, wtx, wtxInOffer, wtxInCert, wtxAliasIn, wtxIn, true;
+	UniValue returnRes;
+	UniValue sendParams(UniValue::VARR);
+	sendParams.push_back(rawTx);		
+	try
+	{
+		// broadcast the payment transaction to syscoin network if not bitcoin transaction
+		if (!btcPayment)
+			returnRes = tableRPC.execute("sendrawtransaction", sendParams);
+	}
+	catch (UniValue& objError)
+	{	
+	}
+	UniValue signParams(UniValue::VARR);
+	signParams.push_back(EncodeHexTx(wtx));	
 	UniValue res(UniValue::VARR);
-	if(buyerAlias.multiSigInfo.vchAliases.size() > 0)
-	{
-		UniValue signParams(UniValue::VARR);
-		signParams.push_back(EncodeHexTx(wtx));
-		signParams.push_back("1");
-		const UniValue &resSign = tableRPC.execute("syscoinsignrawtransaction", signParams);
-		const UniValue& so = resSign.get_obj();
-		string hex_str = "";
+	const UniValue &resSign = tableRPC.execute("syscoinsignrawtransaction", signParams);
+	const UniValue& so = resSign.get_obj();
+	string hex_str = "";
 
-		const UniValue& hex_value = find_value(so, "hex");
-		if (hex_value.isStr())
-			hex_str = hex_value.get_str();
-		const UniValue& complete_value = find_value(so, "complete");
-		bool bComplete = false;
-		if (complete_value.isBool())
-			bComplete = complete_value.get_bool();
-		if(bComplete)
-		{
-			res.push_back(wtx.GetHash().GetHex());
-			// broadcast the payment transaction to syscoin network if not bitcoin transaction
-			if (!btcPayment)
-			{
-				UniValue arraySendParams(UniValue::VARR);
-				arraySendParams.push_back(rawTx);
-				UniValue returnRes;
-				try
-				{
-					returnRes = tableRPC.execute("sendrawtransaction", arraySendParams);
-				}
-				catch (UniValue& objError)
-				{
-					throw runtime_error(find_value(objError, "message").get_str());
-				}
-				if (!returnRes.isStr())
-					throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4613 - " + _("Could not send escrow transaction: Invalid response from sendrawtransaction"));
-			}
-		}
-		else
-		{
-			res.push_back(hex_str);
-			res.push_back("false");
-		}
-	}
-	else
+	const UniValue& hex_value = find_value(so, "hex");
+	if (hex_value.isStr())
+		hex_str = hex_value.get_str();
+	const UniValue& complete_value = find_value(so, "complete");
+	bool bComplete = false;
+	if (complete_value.isBool())
+		bComplete = complete_value.get_bool();
+	if(!bComplete)
 	{
-		res.push_back(wtx.GetHash().GetHex());
+		res.push_back(hex_str);
+		res.push_back("false");
+		return res;
 	}
-
+	res.push_back(wtx.GetHash().GetHex());
 	return res;
 }
 UniValue escrowfeedback(const UniValue& params, bool fHelp) {
