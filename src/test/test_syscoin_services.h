@@ -45,9 +45,9 @@ void EscrowFeedback(const string& node, const string& escrowguid, const string& 
 const string OfferLink(const string& node, const string& alias, const string& guid, const string& commission, const string& newdescription);
 const string OfferAccept(const string& ownernode, const string& node, const string& aliasname, const string& offerguid, const string& qty, const string& message,const string& resellernode="");
 const string EscrowNew(const string& node, const string& buyeralias, const string& offerguid, const string& qty, const string& message, const string& arbiteralias, const string& selleralias);
-void EscrowRelease(const string& node, const string& guid);
+void EscrowRelease(const string& node, const string& role, const string& guid);
 void EscrowClaimRelease(const string& node, const string& guid);
-void EscrowRefund(const string& node, const string& guid);
+void EscrowRefund(const string& node, const string& role, const string& guid);
 void EscrowClaimRefund(const string& node, const string& guid);
 // SYSCOIN testing setup
 struct SyscoinTestingSetup {
