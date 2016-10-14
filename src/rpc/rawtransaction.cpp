@@ -437,7 +437,10 @@ UniValue createrawtransaction(const UniValue& params, bool fHelp)
                 throw JSONRPCError(RPC_INVALID_PARAMETER, string("Invalid parameter, duplicated address: ")+name_);
             setAddress.insert(address);
 
-            CScript scriptPubKey = GetScriptForDestination(address.Get());
+			// SYSCOIN
+			CScript scriptPubKey =  GetScriptForDestination(address.Get());
+			if(!address.vchRedeemScript.empty())
+				scriptPubKey = CScript(address.vchRedeemScript.begin(), address.vchRedeemScript.end());
             CAmount nAmount = AmountFromValue(sendTo[name_]);
 
             CTxOut out(nAmount, scriptPubKey);

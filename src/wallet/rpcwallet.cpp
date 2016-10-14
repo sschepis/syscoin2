@@ -699,7 +699,10 @@ UniValue getreceivedbyaddress(const UniValue& params, bool fHelp)
     CSyscoinAddress address = CSyscoinAddress(params[0].get_str());
     if (!address.IsValid())
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Syscoin address");
-    CScript scriptPubKey = GetScriptForDestination(address.Get());
+	// SYSCOIN
+	CScript scriptPubKey =  GetScriptForDestination(address.Get());
+	if(!address.vchRedeemScript.empty())
+		scriptPubKey = CScript(address.vchRedeemScript.begin(), address.vchRedeemScript.end());
     if (!IsMine(*pwalletMain, scriptPubKey))
         return ValueFromAmount(0);
 

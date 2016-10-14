@@ -307,36 +307,9 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
 			CSyscoinAddress address = CSyscoinAddress(rcp.address.toStdString());
             CScript scriptPubKey = GetScriptForDestination(address.Get());
 			// SYSCOIN
-			CScript redeemScript;
-			UniValue params(UniValue::VARR);
-			params.push_back(rcp.address.toStdString());
-			UniValue result;
-			try
-			{
-				result = tableRPC.execute("aliasinfo", params);
-				if (result.type() == UniValue::VOBJ)
-				{
-					const UniValue& multisigValue = find_value(result.get_obj(), "multisiginfo");
-					if (multisigValue.type() == UniValue::VOBJ)
-					{
-						const UniValue& redeem_value = find_value(multisigValue.get_obj(), "redeemscript");
-						if (redeem_value.isStr())
-						{
-							vector<unsigned char> vchRedeemScript(ParseHex(redeem_value.get_str()));
-							if(!vchRedeemScript.empty())
-							{
-								scriptPubKey = CScript(vchRedeemScript.begin(), vchRedeemScript.end());
-							}
-						}
-					}
-				}
-			}
-			catch (UniValue& objError)
-			{
-			}
-			catch (const std::exception& e)
-			{
-			}
+			CScript scriptPubKey =  GetScriptForDestination(address.Get());
+			if(!address.vchRedeemScript.empty())
+				scriptPubKey = CScript(address.vchRedeemScript.begin(), address.vchRedeemScript.end());
             CRecipient recipient = {scriptPubKey, rcp.amount, rcp.fSubtractFeeFromAmount};
             vecSend.push_back(recipient);
 
