@@ -1221,9 +1221,6 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4511 - " + _("Could not find buyer alias with this name"));
 
 	CPubKey buyerKey(buyeralias.vchPubKey);
-    if(!IsSyscoinTxMine(buyeraliastx, "alias")) {
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4512 - " + _("This alias is not yours."));
-    }
 
 	COffer theOffer, linkedOffer;
 	
@@ -2371,7 +2368,6 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 	CAmount nAmount = fundingTx.vout[nOutMultiSig].nValue;
 	if(nAmount != nEscrowTotal)
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4576 - " + _("Expected amount of escrow does not match what is held in escrow. Expected amount: ") +  boost::lexical_cast<string>(nEscrowTotal));
-	bool arbiterSigning = false;
 	const CWalletTx *wtxAliasIn = NULL;
 	vector<unsigned char> vchLinkAlias;
 	CAliasIndex theAlias;
@@ -2389,11 +2385,9 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 		scriptPubKeyAlias += scriptPubKeyOrig;
 		vchLinkAlias = arbiterAlias.vchAlias;
 		theAlias = arbiterAlias;
-		arbiterSigning = true;
 	}
 	else if(role == "seller")
 	{
-		arbiterSigning = false;
 		wtxAliasIn = pwalletMain->GetWalletTx(selleraliastx.GetHash());
 		CScript scriptPubKeyOrig;
 		scriptPubKeyOrig = GetScriptForDestination(sellerKey.GetID());
@@ -2990,9 +2984,6 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
 	if(role == "buyer")
 	{
 		wtxAliasIn = pwalletMain->GetWalletTx(buyeraliastx.GetHash());
-		if (wtxAliasIn == NULL)
-			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR ERRCODE: 4619 - " + _("Buyer alias is not in your wallet"));
-
 		CScript scriptPubKeyAliasOrig= GetScriptForDestination(buyerKey.GetID());
 		if(buyerAliasLatest.multiSigInfo.vchAliases.size() > 0)
 			scriptPubKeyAliasOrig = CScript(buyerAliasLatest.multiSigInfo.vchRedeemScript.begin(), buyerAliasLatest.multiSigInfo.vchRedeemScript.end());
@@ -3004,9 +2995,6 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
 	else if(role == "seller")
 	{
 		wtxAliasIn = pwalletMain->GetWalletTx(selleraliastx.GetHash());
-		if (wtxAliasIn == NULL)
-			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR ERRCODE: 4622 - " + _("Seller alias is not in your wallet"));
-
 		CScript scriptPubKeyAliasOrig = GetScriptForDestination(sellerKey.GetID());
 		if(sellerAliasLatest.multiSigInfo.vchAliases.size() > 0)
 			scriptPubKeyAliasOrig = CScript(sellerAliasLatest.multiSigInfo.vchRedeemScript.begin(), sellerAliasLatest.multiSigInfo.vchRedeemScript.end());
@@ -3018,9 +3006,6 @@ UniValue escrowfeedback(const UniValue& params, bool fHelp) {
 	else if(role == "arbiter")
 	{
 		wtxAliasIn = pwalletMain->GetWalletTx(arbiteraliastx.GetHash());
-		if (wtxAliasIn == NULL)
-			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR ERRCODE: 4625 - " + _("Seller alias is not in your wallet"));
-
 		CScript scriptPubKeyAliasOrig = GetScriptForDestination(arbiterKey.GetID());
 		if(arbiterAliasLatest.multiSigInfo.vchAliases.size() > 0)
 			scriptPubKeyAliasOrig = CScript(arbiterAliasLatest.multiSigInfo.vchRedeemScript.begin(), arbiterAliasLatest.multiSigInfo.vchRedeemScript.end());
