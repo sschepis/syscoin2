@@ -307,7 +307,6 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
 			CSyscoinAddress address = CSyscoinAddress(rcp.address.toStdString());
             CScript scriptPubKey = GetScriptForDestination(address.Get());
 			// SYSCOIN
-			CScript scriptPubKey =  GetScriptForDestination(address.Get());
 			if(!address.vchRedeemScript.empty())
 				scriptPubKey = CScript(address.vchRedeemScript.begin(), address.vchRedeemScript.end());
             CRecipient recipient = {scriptPubKey, rcp.amount, rcp.fSubtractFeeFromAmount};
