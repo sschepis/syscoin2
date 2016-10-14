@@ -184,23 +184,23 @@ BOOST_AUTO_TEST_CASE (generate_escrowfeedback)
 	EscrowClaimRelease("node1", guid);
 	GenerateBlocks(5);
 	// seller leaves feedback first
-	EscrowFeedback("node1", guid, "buyer", "feedbackbuyer", "1", FEEDBACKBUYER, "feedbackarbiter", "2", FEEDBACKARBITER, true);
+	EscrowFeedback("node1", "buyer", guid,"feedbackbuyer", "1", FEEDBACKBUYER, "feedbackarbiter", "2", FEEDBACKARBITER, true);
 	// he can more if he wishes to
-	EscrowFeedback("node1", guid, "buyer", "feedbackbuyer", "1", FEEDBACKBUYER, "feedbackarbiter", "2", FEEDBACKARBITER, false);
-	EscrowFeedback("node1", guid, "buyer", "feedbackbuyer", "1", FEEDBACKBUYER, "feedbackarbiter", "2", FEEDBACKARBITER, false);
+	EscrowFeedback("node1", "buyer", guid, "feedbackbuyer", "1", FEEDBACKBUYER, "feedbackarbiter", "2", FEEDBACKARBITER, false);
+	EscrowFeedback("node1", "buyer", guid, "feedbackbuyer", "1", FEEDBACKBUYER, "feedbackarbiter", "2", FEEDBACKARBITER, false);
 
 
 	// then buyer can leave feedback
-	EscrowFeedback("node2", guid, "seller", "feedbackseller", "1", FEEDBACKSELLER, "feedbackarbiter", "3", FEEDBACKARBITER, true);
+	EscrowFeedback("node2", "seller", guid, "feedbackseller", "1", FEEDBACKSELLER, "feedbackarbiter", "3", FEEDBACKARBITER, true);
 	// he can more if he wishes to
-	EscrowFeedback("node2",  guid,  "seller", "feedbackseller", "1", FEEDBACKSELLER, "feedbackarbiter", "3", FEEDBACKARBITER, false);
-	EscrowFeedback("node2",  guid,  "seller", "feedbackseller", "1", FEEDBACKSELLER, "feedbackarbiter", "3", FEEDBACKARBITER, false);
+	EscrowFeedback("node2", "seller", guid,"feedbackseller", "1", FEEDBACKSELLER, "feedbackarbiter", "3", FEEDBACKARBITER, false);
+	EscrowFeedback("node2", "seller", guid, "feedbackseller", "1", FEEDBACKSELLER, "feedbackarbiter", "3", FEEDBACKARBITER, false);
 
 	// and arbiter can also leave feedback
-	EscrowFeedback("node3",  guid,  "buyer", "feedbackbuyer", "4", FEEDBACKBUYER, "feedbackseller", "2", FEEDBACKSELLER, true);
+	EscrowFeedback("node3", "buyer", guid, "feedbackbuyer", "4", FEEDBACKBUYER, "feedbackseller", "2", FEEDBACKSELLER, true);
 	// he can more if he wishes to
-	EscrowFeedback("node3",  guid,  "buyer", "feedbackbuyer", "4", FEEDBACKBUYER, "feedbackseller", "2", FEEDBACKSELLER, false);
-	EscrowFeedback("node3",  guid,  "buyer", "feedbackbuyer", "4", FEEDBACKBUYER, "feedbackseller", "2", FEEDBACKSELLER, false);
+	EscrowFeedback("node3", "buyer", guid, "feedbackbuyer", "4", FEEDBACKBUYER, "feedbackseller", "2", FEEDBACKSELLER, false);
+	EscrowFeedback("node3", "buyer", guid, "feedbackbuyer", "4", FEEDBACKBUYER, "feedbackseller", "2", FEEDBACKSELLER, false);
 }
 BOOST_AUTO_TEST_CASE (generate_escrow_linked_release)
 {

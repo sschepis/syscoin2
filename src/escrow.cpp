@@ -1224,8 +1224,6 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
     if(!IsSyscoinTxMine(buyeraliastx, "alias")) {
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4512 - " + _("This alias is not yours."));
     }
-	if (pwalletMain->GetWalletTx(buyeraliastx.GetHash()) == NULL)
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4513 - " + _("This alias is not in your wallet"));
 
 	COffer theOffer, linkedOffer;
 	
@@ -1613,8 +1611,6 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	if(role == "arbiter")
 	{
 		wtxAliasIn = pwalletMain->GetWalletTx(arbiteraliastx.GetHash());
-		if (wtxAliasIn == NULL)
-			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR ERRCODE: 4534 - This alias is not in your wallet");
 		CScript scriptPubKeyOrig;
 		scriptPubKeyOrig = GetScriptForDestination(arbiterKey.GetID());
 		if(arbiterAlias.multiSigInfo.vchAliases.size() > 0)
@@ -1627,8 +1623,6 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	else if(role == "buyer")
 	{
 		wtxAliasIn = pwalletMain->GetWalletTx(buyeraliastx.GetHash());
-		if (wtxAliasIn == NULL)
-			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR ERRCODE: 4537 - This alias is not in your wallet");
 		CScript scriptPubKeyOrig;
 		scriptPubKeyOrig = GetScriptForDestination(buyerKey.GetID());
 		if(buyerAlias.multiSigInfo.vchAliases.size() > 0)
@@ -2165,8 +2159,6 @@ UniValue escrowcompleterelease(const UniValue& params, bool fHelp) {
 	CScript scriptPubKeyAlias;
 	
 	wtxAliasIn = pwalletMain->GetWalletTx(selleraliastx.GetHash());
-	if (wtxAliasIn == NULL)
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR ERRCODE: 4568 - This alias is not in your wallet");
 	CScript scriptPubKeyOrig;
 	scriptPubKeyOrig= GetScriptForDestination(sellerKey.GetID());
 	if(sellerAlias.multiSigInfo.vchAliases.size() > 0)
@@ -2389,8 +2381,6 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 	{
 		
 		wtxAliasIn = pwalletMain->GetWalletTx(arbiteraliastx.GetHash());
-		if (wtxAliasIn == NULL)
-			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR ERRCODE: 4579 - This alias is not in your wallet");
 		CScript scriptPubKeyOrig;
 		scriptPubKeyOrig = GetScriptForDestination(arbiterKey.GetID());
 		if(arbiterAlias.multiSigInfo.vchAliases.size() > 0)
@@ -2405,8 +2395,6 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 	{
 		arbiterSigning = false;
 		wtxAliasIn = pwalletMain->GetWalletTx(selleraliastx.GetHash());
-		if (wtxAliasIn == NULL)
-			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR ERRCODE: 4582 - This alias is not in your wallet");
 		CScript scriptPubKeyOrig;
 		scriptPubKeyOrig = GetScriptForDestination(sellerKey.GetID());
 		if(sellerAlias.multiSigInfo.vchAliases.size() > 0)
@@ -2610,8 +2598,7 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 		sellerAddress = CSyscoinAddress(sellerKey.GetID());
 	}
 	const CWalletTx* wtxAliasIn = pwalletMain->GetWalletTx(buyeraliastx.GetHash());
-	if (wtxAliasIn == NULL)
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR ERRCODE: 4587 - This alias is not in your wallet");
+
 
 	CWalletTx wtx;
 	const CWalletTx *wtxIn = pwalletMain->GetWalletTx(tx.GetHash());
@@ -2867,8 +2854,6 @@ UniValue escrowcompleterefund(const UniValue& params, bool fHelp) {
 	CScript scriptPubKeyAlias;
 	
 	wtxAliasIn = pwalletMain->GetWalletTx(buyeraliastx.GetHash());
-	if (wtxAliasIn == NULL)
-		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR ERRCODE: 4612 - This alias is not in your wallet");
 	CScript scriptPubKeyOrig;
 	scriptPubKeyOrig= GetScriptForDestination(buyerKey.GetID());
 	if(buyerAlias.multiSigInfo.vchAliases.size() > 0)

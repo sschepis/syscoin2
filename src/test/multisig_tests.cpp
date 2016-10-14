@@ -162,7 +162,8 @@ BOOST_AUTO_TEST_CASE(multisig_IsStandard)
 
     CScript one_of_four;
     one_of_four << OP_1 << ToByteVector(key[0].GetPubKey()) << ToByteVector(key[1].GetPubKey()) << ToByteVector(key[2].GetPubKey()) << ToByteVector(key[3].GetPubKey()) << OP_4 << OP_CHECKMULTISIG;
-    BOOST_CHECK(!::IsStandard(one_of_four, whichType));
+    // SYSCOIN
+	BOOST_CHECK(::IsStandard(one_of_four, whichType));
 
     CScript malformed[6];
     malformed[0] << OP_3 << ToByteVector(key[0].GetPubKey()) << ToByteVector(key[1].GetPubKey()) << OP_2 << OP_CHECKMULTISIG;
@@ -233,10 +234,11 @@ BOOST_AUTO_TEST_CASE(multisig_Solver1)
         BOOST_CHECK(Solver(s, whichType, solutions));
         BOOST_CHECK_EQUAL(solutions.size(), 4U);
         CTxDestination addr;
-        BOOST_CHECK(!ExtractDestination(s, addr));
+		// SYSCOIN
+        BOOST_CHECK(ExtractDestination(s, addr));
         BOOST_CHECK(IsMine(keystore, s));
         BOOST_CHECK(!IsMine(emptykeystore, s));
-        BOOST_CHECK(!IsMine(partialkeystore, s));
+        BOOST_CHECK(IsMine(partialkeystore, s));
     }
     {
         vector<valtype> solutions;
@@ -253,7 +255,8 @@ BOOST_AUTO_TEST_CASE(multisig_Solver1)
         BOOST_CHECK(nRequired == 1);
         BOOST_CHECK(IsMine(keystore, s));
         BOOST_CHECK(!IsMine(emptykeystore, s));
-        BOOST_CHECK(!IsMine(partialkeystore, s));
+		// SYSCOIN
+        BOOST_CHECK(IsMine(partialkeystore, s));
     }
     {
         vector<valtype> solutions;
