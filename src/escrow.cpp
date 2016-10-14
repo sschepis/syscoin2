@@ -1979,14 +1979,14 @@ UniValue escrowclaimrelease(const UniValue& params, bool fHelp) {
 				const UniValue& address = addresses[idx];
 				if(!address.isStr())
 					throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4552 - " + _("Could not decode escrow transaction: Invalid address"));
-				CSyscoinaddress aliasAddress = CSyscoinAddress(address.get_str());
+				CSyscoinAddress aliasAddress = CSyscoinAddress(address.get_str());
 				if(aliasAddress.vchPubKey.empty())
 					throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4552 - " + _("Could not decode escrow transaction: One or more of the multisig addresses do not refer to an alias"));
 				CPubKey pubkey(aliasAddress.vchPubKey);
-				pubkeys.push_back(pubkey);			
+				pubKeys.push_back(pubkey);			
 			}
 			CScript script = GetScriptForMultisig(reqSigsValue.get_int(), pubKeys);
-			CScriptID innerID(inner);
+			CScriptID innerID(script);
 			CSyscoinAddress aliasAddress(innerID);
 			strAddress = aliasAddress.ToString();
 		}
@@ -2687,14 +2687,14 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 				const UniValue& address = addresses[idx];
 				if(!address.isStr())
 					throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4552 - " + _("Could not decode escrow transaction: Invalid address"));
-				CSyscoinaddress aliasAddress = CSyscoinAddress(address.get_str());
+				CSyscoinAddress aliasAddress = CSyscoinAddress(address.get_str());
 				if(aliasAddress.vchPubKey.empty())
 					throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4552 - " + _("Could not decode escrow transaction: One or more of the multisig addresses do not refer to an alias"));
 				CPubKey pubkey(aliasAddress.vchPubKey);
-				pubkeys.push_back(pubkey);			
+				pubKeys.push_back(pubkey);			
 			}
 			CScript script = GetScriptForMultisig(reqSigsValue.get_int(), pubKeys);
-			CScriptID innerID(inner);
+			CScriptID innerID(script);
 			CSyscoinAddress aliasAddress(innerID);
 			strAddress = aliasAddress.ToString();
 		}
