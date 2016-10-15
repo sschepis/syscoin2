@@ -2591,9 +2591,6 @@ UniValue escrowclaimrefund(const UniValue& params, bool fHelp) {
 		sellerKey = CPubKey(sellerAlias.vchPubKey);
 		sellerAddress = CSyscoinAddress(sellerKey.GetID());
 	}
-	const CWalletTx* wtxAliasIn = pwalletMain->GetWalletTx(buyeraliastx.GetHash());
-
-
 	CWalletTx wtx;
 	const CWalletTx *wtxIn = pwalletMain->GetWalletTx(tx.GetHash());
 	if (wtxIn == NULL)
