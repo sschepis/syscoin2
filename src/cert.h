@@ -101,7 +101,27 @@ public:
     friend bool operator!=(const CCert &a, const CCert &b) {
         return !(a == b);
     }
-
+    bool GetCertFromList(std::vector<CCert> &certList) {
+        if(certList.size() == 0) return false;
+		CCert myCert = certList.front();
+		if(nHeight <= 0)
+		{
+			*this = myCert;
+			return true;
+		}
+			
+		// find the closest cert without going over in height, assuming certList orders entries by nHeight ascending
+        for(std::vector<CCert>::reverse_iterator it = certList.rbegin(); it != certList.rend(); ++it) {
+            const CAliasIndex &a = *it;
+			// skip if this height is greater than our cert height
+			if(a.nHeight > nHeight)
+				continue;
+            myCert = a;
+			break;
+        }
+        *this = myCert;
+        return true;
+    }
     void SetNull() { vchLinkAlias.clear(); sCategory.clear(); vchCert.clear(); safetyLevel = 0; safeSearch = true; nHeight = 0; txHash.SetNull(); vchAlias.clear(); bPrivate = false; vchTitle.clear(); vchData.clear();}
     bool IsNull() const { return (vchLinkAlias.empty() && sCategory.empty() && vchCert.empty() && safetyLevel == 0 && safeSearch && !bPrivate && txHash.IsNull() &&  nHeight == 0 && vchData.empty() && vchTitle.empty() && vchAlias.empty()); }
     bool UnserializeFromTx(const CTransaction &tx);

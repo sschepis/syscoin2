@@ -1510,7 +1510,7 @@ void CertTxToJSON(const int op, const std::vector<unsigned char> &vchData, const
 	vector<CCert> certVtxPos;
 	CTransaction certtx, aliastx;
 	CCert dbCert;
-	if(GetTxAndVtxOfCert(cert.vchCert, dbCert, certtx, certVtxPos, isExpired, true))
+	if(GetTxAndVtxOfCert(cert.vchCert, dbCert, certtx, certVtxPos, true))
 	{
 		dbCert.nHeight = cert.nHeight;
 		dbCert.GetCertFromList(certVtxPos);
