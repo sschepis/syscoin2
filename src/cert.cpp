@@ -1516,7 +1516,7 @@ void CertTxToJSON(const int op, const std::vector<unsigned char> &vchData, const
 		dbCert.GetCertFromList(certVtxPos);
 	}
 	CAliasIndex dbAlias;
-	if(GetTxAndVtxOfAlias(alias.vchAlias, dbAlias, aliastx, certVtxPos, isExpired, true))
+	if(GetTxAndVtxOfAlias(cert.vchAlias, dbAlias, aliastx, certVtxPos, isExpired, true))
 	{
 		dbAlias.nHeight = cert.nHeight;
 		dbAlias.GetAliasFromList(aliasVtxPos);
