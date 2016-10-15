@@ -112,11 +112,11 @@ public:
 			
 		// find the closest cert without going over in height, assuming certList orders entries by nHeight ascending
         for(std::vector<CCert>::reverse_iterator it = certList.rbegin(); it != certList.rend(); ++it) {
-            const CAliasIndex &a = *it;
+            const CCert &c = *it;
 			// skip if this height is greater than our cert height
-			if(a.nHeight > nHeight)
+			if(c.nHeight > nHeight)
 				continue;
-            myCert = a;
+            myCert = c;
 			break;
         }
         *this = myCert;
