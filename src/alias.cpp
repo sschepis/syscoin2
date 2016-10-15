@@ -1591,13 +1591,14 @@ void CreateFeeRecipient(CScript& scriptPubKey, const vector<unsigned char>& data
 	recipient.nAmount = fee > minFee? fee: minFee;
 }
 UniValue aliasnew(const UniValue& params, bool fHelp) {
-	if (fHelp || 2 > params.size() || 7 < params.size())
+	if (fHelp || 2 > params.size() || 8 < params.size())
 		throw runtime_error(
-		"aliasnew <aliasname> <public value> [private value] [safe search=Yes] [expire=1] [nrequired=0] [\"alias\",...]\n"
+		"aliasnew <aliasname> <public value> [private value] [safe search=Yes] [accept transfers=Yes] [expire=1] [nrequired=0] [\"alias\",...]\n"
 						"<aliasname> alias name.\n"
 						"<public value> alias public profile data, 1023 chars max.\n"
 						"<private value> alias private profile data, 1023 chars max. Will be private and readable by owner only.\n"
 						"<safe search> set to No if this alias should only show in the search when safe search is not selected. Defaults to Yes (alias shows with or without safe search selected in search lists).\n"	
+						"<accept transfers> set to No if this alias should not allow a certificate to be transferred to it. Defaults to Yes.\n"	
 						"<expire> Number of years before expiry. It affects the fees you pay, the cheapest being 1 year. The more years you specify the more fees you pay. Max is 5 years, Min is 1 year. Defaults to 1 year.\n"	
 						"<nrequired> For multisig aliases only. The number of required signatures out of the n aliases for a multisig alias update.\n"
 						"<aliases>     For multisig aliases only. A json array of aliases which are used to sign on an update to this alias.\n"
@@ -1648,16 +1649,21 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 
 	string strPrivateValue = params.size()>=3?params[2].get_str():"";
 	string strSafeSearch = "Yes";
+	string strAcceptCertTransfers = "Yes";
 	int nRenewal = 1;
 	if(params.size() >= 4)
 	{
 		strSafeSearch = params[3].get_str();
 	}
 	if(params.size() >= 5)
-		nRenewal = boost::lexical_cast<int>(params[4].get_str());
-    int nMultiSig = 1;
+	{
+		strAcceptCertTransfers = params[4].get_str();
+	}
 	if(params.size() >= 6)
-		nMultiSig = boost::lexical_cast<int>(params[5].get_str());
+		nRenewal = boost::lexical_cast<int>(params[5].get_str());
+    int nMultiSig = 1;
+	if(params.size() >= 7)
+		nMultiSig = boost::lexical_cast<int>(params[6].get_str());
     UniValue aliasNames;
 	if(params.size() >= 7)
 		aliasNames = params[6].get_array();
@@ -1728,6 +1734,7 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	newAlias.nRenewal = nRenewal;
 	newAlias.safetyLevel = 0;
 	newAlias.safeSearch = strSafeSearch == "Yes"? true: false;
+	newAlias.acceptCertTransfers = strAcceptCertTransfers == "Yes"? true: false;
 	newAlias.multiSigInfo = multiSigInfo;
 	
 	const vector<unsigned char> &data = newAlias.Serialize();
@@ -1762,15 +1769,16 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	return res;
 }
 UniValue aliasupdate(const UniValue& params, bool fHelp) {
-	if (fHelp || 2 > params.size() || 8 < params.size())
+	if (fHelp || 2 > params.size() || 9 < params.size())
 		throw runtime_error(
-		"aliasupdate <aliasname> <public value> [private value=''] [safesearch=Yes] [toalias_pubkey=''] [expire=1] [nrequired=0] [\"alias\",...]\n"
+		"aliasupdate <aliasname> <public value> [private value=''] [safesearch=Yes] [toalias_pubkey=''] [accept transfers=Yes] [expire=1] [nrequired=0] [\"alias\",...]\n"
 						"Update and possibly transfer an alias.\n"
 						"<aliasname> alias name.\n"
 						"<public value> alias public profile data, 1023 chars max.\n"
 						"<private value> alias private profile data, 1023 chars max. Will be private and readable by owner only.\n"				
 						"<safesearch> is this alias safe to search. Defaults to Yes, No for not safe and to hide in GUI search queries\n"
 						"<toalias_pubkey> receiver syscoin alias pub key, if transferring alias.\n"
+						"<accept transfers> set to No if this alias should not allow a certificate to be transferred to it. Defaults to Yes.\n"		
 						"<expire> Number of years before expiry. It affects the fees you pay, the cheapest being 1 year. The more years you specify the more fees you pay. Max is 5 years, Min is 1 year. Defaults to 1 year.\n"	
 						"<nrequired> For multisig aliases only. The number of required signatures out of the n aliases for a multisig alias update.\n"
 						"<aliases>     For multisig aliases only. A json array of aliases which are used to sign on an update to this alias.\n"
@@ -1793,28 +1801,33 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 	CAliasIndex updateAlias;
 	const CWalletTx* wtxIn;
 	CScript scriptPubKeyOrig;
-	string strPubKey;
-    if (params.size() >= 5 && params[4].get_str().size() > 0) {
-		vector<unsigned char> vchPubKey;
-		vchPubKey = vchFromString(params[4].get_str());
-		boost::algorithm::unhex(vchPubKey.begin(), vchPubKey.end(), std::back_inserter(vchPubKeyByte));
-	}
 
 	string strSafeSearch = "Yes";
 	if(params.size() >= 4)
 	{
 		strSafeSearch = params[3].get_str();
 	}
+	string strPubKey;
+    if (params.size() >= 5 && params[4].get_str().size() > 0) {
+		vector<unsigned char> vchPubKey;
+		vchPubKey = vchFromString(params[4].get_str());
+		boost::algorithm::unhex(vchPubKey.begin(), vchPubKey.end(), std::back_inserter(vchPubKeyByte));
+	}
+	string strAcceptCertTransfers = "Yes";
 	if(params.size() >= 6)
 	{
-		nRenewal = boost::lexical_cast<int>(params[5].get_str());
+		strAcceptCertTransfers = params[5].get_str();
+	}
+	if(params.size() >= 7)
+	{
+		nRenewal = boost::lexical_cast<int>(params[6].get_str());
 	}
     int nMultiSig = 1;
-	if(params.size() >= 7)
-		nMultiSig = boost::lexical_cast<int>(params[6].get_str());
-    UniValue aliasNames;
 	if(params.size() >= 8)
-		aliasNames = params[7].get_array();
+		nMultiSig = boost::lexical_cast<int>(params[7].get_str());
+    UniValue aliasNames;
+	if(params.size() >= 9)
+		aliasNames = params[8].get_array();
 	EnsureWalletIsUnlocked();
 	CTransaction tx;
 	CAliasIndex theAlias;
@@ -1899,6 +1912,7 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 	theAlias.vchPrivateKey = vchPrivateKey;
 	theAlias.nRenewal = nRenewal;
 	theAlias.safeSearch = strSafeSearch == "Yes"? true: false;
+	theAlias.acceptCertTransfers = strAcceptCertTransfers == "Yes"? true: false;
 	
 
 	
@@ -2083,6 +2097,12 @@ void AliasTxToJSON(const int op, const vector<unsigned char> &vchData, const vec
 		safeSearchValue = alias.safeSearch? "Yes": "No";
 
 	entry.push_back(Pair("safesearch", safeSearchValue));
+	
+	string acceptTransfersValue = noDifferentStr;
+	if(alias.acceptCertTransfers != dbAlias.acceptCertTransfers)
+		acceptTransfersValue = alias.acceptCertTransfers? "Yes": "No";
+
+	entry.push_back(Pair("acceptcerttransfers", acceptTransfersValue));
 
 	string expireValue = noDifferentStr;
 	if(alias.nRenewal != dbAlias.nRenewal)
@@ -2267,6 +2287,7 @@ UniValue aliaslist(const UniValue& params, bool fHelp) {
 			oName.push_back(Pair("privatekey", strPrivateKey));
 
 			oName.push_back(Pair("safesearch", alias.safeSearch ? "Yes" : "No"));
+			oName.push_back(Pair("acceptcerttransfers", alias.acceptCertTransfers ? "Yes" : "No"));
 			oName.push_back(Pair("safetylevel", alias.safetyLevel ));
 			float ratingAsBuyer = 0;
 			if(alias.nRatingCountAsBuyer > 0)
@@ -2468,6 +2489,7 @@ UniValue aliasinfo(const UniValue& params, bool fHelp) {
 		bool fAliasMine = IsSyscoinTxMine(tx, "alias")? true:  false;
 		oName.push_back(Pair("ismine", fAliasMine));
 		oName.push_back(Pair("safesearch", alias.safeSearch ? "Yes" : "No"));
+		oName.push_back(Pair("acceptcerttransfers", alias.acceptCertTransfers ? "Yes" : "No"));
 		oName.push_back(Pair("safetylevel", alias.safetyLevel ));
 		float ratingAsBuyer = 0;
 		if(alias.nRatingCountAsBuyer > 0)

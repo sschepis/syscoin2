@@ -612,12 +612,19 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 							theCert.vchAlias = dbCert.vchAlias;						
 						}
 						else
-							theCert.vchAlias = theCert.vchLinkAlias;
+						{
+							theCert.vchAlias = theCert.vchLinkAlias;					
+							if(!alias.acceptCertTransfers)
+							{
+								errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("The alias you are transferring to does not accept certificate transfers");
+								theCert.vchAlias = dbCert.vchAlias;	
+							}
+						}
 					}
 				}
 				if(!GetTxOfAlias(theCert.vchAlias, alias, aliasTx))
 				{
-					errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("Cannot find alias for this certificate. It may be expired");	
+					errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2029 - " + _("Cannot find alias for this certificate. It may be expired");	
 					theCert = dbCert;
 				}
 			}
@@ -628,12 +635,12 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 		{
 			if (!GetTxOfAlias(theCert.vchAlias, alias, aliasTx))
 			{
-				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2029 - " + _("Cannot find alias for this certificate. It may be expired");
+				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2030 - " + _("Cannot find alias for this certificate. It may be expired");
 				return true;
 			}
 			if (pcertdb->ExistsCert(vvchArgs[0]))
 			{
-				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2030 - " + _("Certificate already exists");
+				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2031 - " + _("Certificate already exists");
 				return true;
 			}
 		}
@@ -645,7 +652,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 
         if (!dontaddtodb && !pcertdb->WriteCert(vvchArgs[0], vtxPos))
 		{
-			errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2031 - " + _("Failed to write to certifcate DB");
+			errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2032 - " + _("Failed to write to certifcate DB");
             return error(errorMessage.c_str());
 		}
 		
@@ -1054,6 +1061,9 @@ UniValue certtransfer(const UniValue& params, bool fHelp) {
 	theCert.nHeight = chainActive.Tip()->nHeight;
 	theCert.vchAlias = fromAlias.vchAlias;
 	theCert.vchLinkAlias = toAlias.vchAlias;
+	theCert.bPrivate = copyCert.bPrivate;
+	theCert.safeSearch = copyCert.safeSearch;
+	theCert.safetyLevel = copyCert.safetyLevel;
 	if(copyCert.vchData != vchData)
 		theCert.vchData = vchData;
 
@@ -1494,6 +1504,83 @@ void CertTxToJSON(const int op, const std::vector<unsigned char> &vchData, const
 	CCert cert;
 	if(!cert.UnserializeFromData(vchData, vchHash))
 		throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2518 - " + _("Could not decoding syscoin transaction"));
+
+	bool isExpired = false;
+	vector<CAliasIndex> aliasVtxPos;
+	vector<CCert> certVtxPos;
+	CTransaction certtx, aliastx;
+	CCert dbCert;
+	if(GetTxAndVtxOfCert(cert.vchCert, dbCert, certtx, certVtxPos, isExpired, true))
+	{
+		dbCert.nHeight = cert.nHeight;
+		dbCert.GetCertFromList(certVtxPos);
+	}
+	CAliasIndex dbAlias;
+	if(GetTxAndVtxOfAlias(alias.vchAlias, dbAlias, aliastx, certVtxPos, isExpired, true))
+	{
+		dbAlias.nHeight = cert.nHeight;
+		dbAlias.GetAliasFromList(aliasVtxPos);
+	}
+	string noDifferentStr = _("<No Difference Detected>");
+
+	entry.push_back(Pair("txtype", opName));
+	entry.push_back(Pair("cert", stringFromVch(cert.vchCert)));
+
+	string titleValue = noDifferentStr;
+	if(!cert.vchTitle.empty() && cert.vchTitle != dbCert.vchTitle)
+		titleValue = stringFromVch(cert.vchTitle);
+	entry.push_back(Pair("title", titleValue));
+
+	string strDataValue = "";
+	if(cert.bPrivate)
+	{
+		if(!cert.vchData.empty())
+			strDataValue = _("Encrypted for owner of certificate private data");
+		string strDecrypted = "";
+		if(DecryptMessage(dbAlias.vchPubKey, cert.vchData, strDecrypted))
+			strDataValue = strDecrypted;		
+	}
+	string dataValue = noDifferentStr;
+	if(!cert.vchData.empty() && cert.vchData != dbCert.vchData)
+		dataValue = strDataValue;
+
+	entry.push_back(Pair("data", dataValue));
+
+
+	string aliasValue = noDifferentStr;
+	if(!cert.vchLinkAlias.empty() && cert.vchLinkAlias != dbCert.vchAlias)
+		aliasValue = stringFromVch(cert.vchLinkAlias);
+	if(cert.vchAlias != dbCert.vchAlias)
+		aliasValue = stringFromVch(cert.vchAlias);
+
+	entry.push_back(Pair("alias", aliasValue));
+
+	string categoryValue = noDifferentStr;
+	if(!cert.sCategory.empty() && cert.sCategory != dbCert.sCategory)
+		categoryValue = stringFromVch(cert.sCategory);
+
+	entry.push_back(Pair("category", categoryValue ));
+
+
+	string safeSearchValue = noDifferentStr;
+	if(cert.safeSearch != dbCert.safeSearch)
+		safeSearchValue = cert.safeSearch? "Yes": "No";
+
+	entry.push_back(Pair("safesearch", safeSearchValue));
+
+	string safetyLevelValue = noDifferentStr;
+	if(cert.safetyLevel != dbCert.safetyLevel)
+		safetyLevelValue = cert.safetyLevel;
+
+	entry.push_back(Pair("safetylevel", safetyLevelValue));
+
+	string privateValue = noDifferentStr;
+	if(cert.bPrivate != dbCert.bPrivate)
+		privateValue = cert.bPrivate? "Yes": "No";
+
+	entry.push_back(Pair("private", privateValue ));
+
+
 }
 
 

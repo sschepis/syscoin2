@@ -34,6 +34,7 @@ EditAliasDialog::EditAliasDialog(Mode mode, QWidget *parent) :
     ui->privateDisclaimer->setText(tr("<font color='blue'>This is to private profile information which is encrypted and only available to you. This is useful for when sending notes to a merchant through the payment screen so you don't have to type it out everytime.</font>"));
 	ui->publicDisclaimer->setText(tr("<font color='blue'>This is public profile information that anyone on the network can see. Fill this in with things you would like others to know about you.</font>"));
 	ui->reqsigsDisclaimer->setText(tr("<font color='blue'>The number of required signatures ensures that not one person can control this alias and anything service that this alias uses (certificates, messages, offers).</font>"));
+	ui->acceptCertTransfersDisclaimer->setText(tr("<font color='blue'>Would you like to accept certificates transferred to this alias? Select <b>Yes</b> otherwise if you want to block others from sending certificates to this alias select <b>No</b>.</font>"));
 	ui->multisigTitle->setText(tr("<font color='blue'>Set up your multisig alias here with the required number of signatures and the aliases that are capable of signing when this alias is updated. A user from this list can request an update to the alias and the other signers must sign the raw multisig transaction using the <b>Sign Multisig Tx</b> button in order for the alias to complete the update. Services that use this alias require alias updates prior to updating those services which allows all services to benefit from alias multisig technology.</font>"));
 	ui->reqSigsEdit->setValidator( new QIntValidator(0, 50, this) );
 	connect(ui->reqSigsEdit, SIGNAL(textChanged(QString)), this, SLOT(reqSigsChanged()));
@@ -58,6 +59,7 @@ EditAliasDialog::EditAliasDialog(Mode mode, QWidget *parent) :
 		ui->aliasEdit->setEnabled(false);
 		ui->nameEdit->setEnabled(false);
 		ui->safeSearchEdit->setEnabled(false);
+		ui->acceptCertTransfersEdit->setEnabled(false);
 		ui->safeSearchDisclaimer->setVisible(false);
 		ui->privateEdit->setEnabled(false);
 		ui->transferEdit->setVisible(true);
@@ -85,7 +87,7 @@ void EditAliasDialog::reqSigsChanged()
 		ui->multisigDisclaimer->setText(tr("<font color='blue'>This is a <b>%1</b> of <b>%2</b> multisig alias (<b>%3</b> is assumed to also be a signer)</font>").arg(ui->reqSigsEdit->text()).arg(QString::number(ui->multisigList->count()+1)).arg(ui->aliasEdit->text()));
 	}
 }
-void EditAliasDialog::loadAliasMultsigDetails()
+void EditAliasDialog::loadAliasDetails()
 {
 	string strMethod = string("aliasinfo");
     UniValue params(UniValue::VARR); 
@@ -95,7 +97,8 @@ void EditAliasDialog::loadAliasMultsigDetails()
 		result = tableRPC.execute(strMethod, params);
 		if (result.type() == UniValue::VOBJ)
 		{
-	
+			const UniValue& acceptTransferValue = find_value(result.get_obj(), "acceptcerttransfers");
+			ui->accpetCertTransfersEdit->setCurrentIndex(ui->accpetCertTransfersEdit->findText(acceptTransferValue.get_str()));
 			const UniValue& multisigValue = find_value(result.get_obj(), "multisiginfo");
 			if (multisigValue.type() == UniValue::VOBJ)
 			{
@@ -223,6 +226,7 @@ bool EditAliasDialog::saveCurrentRow()
 		params.push_back(ui->nameEdit->toPlainText().toStdString());
 		params.push_back(ui->privateEdit->toPlainText().toStdString());
 		params.push_back(ui->safeSearchEdit->currentText().toStdString());
+		params.push_back(ui->acceptCertTransfersEdit->currentText().toStdString());
 		params.push_back(ui->expiryEdit->itemData(ui->expiryEdit->currentIndex()).toString().toStdString());
 		if(ui->multisigList->count() > 0)
 		{
@@ -270,6 +274,7 @@ bool EditAliasDialog::saveCurrentRow()
 			params.push_back(ui->privateEdit->toPlainText().toStdString());
 			params.push_back(ui->safeSearchEdit->currentText().toStdString());	
 			params.push_back("");
+			params.push_back(ui->acceptCertTransfersEdit->currentText().toStdString());
 			params.push_back(ui->expiryEdit->itemData(ui->expiryEdit->currentIndex()).toString().toStdString());
 			if(ui->multisigList->count() > 0)
 			{
@@ -334,6 +339,7 @@ bool EditAliasDialog::saveCurrentRow()
 			params.push_back(ui->privateEdit->toPlainText().toStdString());
 			params.push_back(ui->safeSearchEdit->currentText().toStdString());
 			params.push_back(ui->transferEdit->text().toStdString());
+			params.push_back(ui->acceptCertTransfersEdit->currentText().toStdString());
 			params.push_back(ui->expiryEdit->itemData(ui->expiryEdit->currentIndex()).toString().toStdString());
 			try {
 				UniValue result = tableRPC.execute(strMethod, params);
