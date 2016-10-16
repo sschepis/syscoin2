@@ -60,6 +60,7 @@ EditAliasDialog::EditAliasDialog(Mode mode, QWidget *parent) :
 		ui->nameEdit->setEnabled(false);
 		ui->safeSearchEdit->setEnabled(false);
 		ui->acceptCertTransfersEdit->setEnabled(false);
+		ui->acceptCertTransfersDisclaimer->setVisible(false);
 		ui->safeSearchDisclaimer->setVisible(false);
 		ui->privateEdit->setEnabled(false);
 		ui->privateDisclaimer->setVisible(false);
