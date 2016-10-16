@@ -3995,7 +3995,7 @@ void OfferTxToJSON(const int op, const std::vector<unsigned char> &vchData, cons
 	entry.push_back(Pair("exclusiveresell", exclusiveResellValue));
 
 	string paymentOptionsValue = noDifferentStr;
-	if(offer.paymentOptions > 0 && offer,paymentOptions != dbOffer.paymentOptions)
+	if(offer.paymentOptions > 0 && offer.paymentOptions != dbOffer.paymentOptions)
 		paymentOptionsValue = offer.GetPaymentOptionsString();
 
 	entry.push_back(Pair("paymentoptions", paymentOptionsValue));
@@ -4038,20 +4038,20 @@ void OfferTxToJSON(const int op, const std::vector<unsigned char> &vchData, cons
 	
 
 	string safeSearchValue = noDifferentStr;
-	if(cert.safeSearch != dbCert.safeSearch)
-		safeSearchValue = cert.safeSearch? "Yes": "No";
+	if(offer.safeSearch != dbOffer.safeSearch)
+		safeSearchValue = offer.safeSearch? "Yes": "No";
 
 	entry.push_back(Pair("safesearch", safeSearchValue));
 
 	string safetyLevelValue = noDifferentStr;
-	if(cert.safetyLevel != dbCert.safetyLevel)
-		safetyLevelValue = cert.safetyLevel;
+	if(offer.safetyLevel != dbOffer.safetyLevel)
+		safetyLevelValue = offer.safetyLevel;
 
 	entry.push_back(Pair("safetylevel", safetyLevelValue));
 
 	string privateValue = noDifferentStr;
-	if(cert.bPrivate != dbCert.bPrivate)
-		privateValue = cert.bPrivate? "Yes": "No";
+	if(offer.bPrivate != dbOffer.bPrivate)
+		privateValue = offer.bPrivate? "Yes": "No";
 
 	entry.push_back(Pair("private", privateValue ));
 
