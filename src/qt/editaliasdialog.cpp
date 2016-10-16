@@ -98,7 +98,7 @@ void EditAliasDialog::loadAliasDetails()
 		if (result.type() == UniValue::VOBJ)
 		{
 			const UniValue& acceptTransferValue = find_value(result.get_obj(), "acceptcerttransfers");
-			ui->accpetCertTransfersEdit->setCurrentIndex(ui->accpetCertTransfersEdit->findText(acceptTransferValue.get_str()));
+			ui->acceptCertTransfersEdit->setCurrentIndex(ui->acceptCertTransfersEdit->findText(acceptTransferValue.get_str()));
 			const UniValue& multisigValue = find_value(result.get_obj(), "multisiginfo");
 			if (multisigValue.type() == UniValue::VOBJ)
 			{
