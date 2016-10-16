@@ -881,4 +881,40 @@ void MessageTxToJSON(const int op, const std::vector<unsigned char> &vchData, co
 	CMessage message;
 	if(!message.UnserializeFromData(vchData, vchHash))
 		throw runtime_error("SYSCOIN_MESSAGE_RPC_ERROR: ERRCODE: 3506 - " + _("Could not decoding syscoin transaction"));
+
+	bool isExpired = false;
+	vector<CAliasIndex> aliasVtxPosFrom. aliasVtxPosTo;
+	CTransaction aliastx;
+	CAliasIndex dbAliasFrom, dbAliasTo;
+	if(GetTxAndVtxOfAlias(message.vchAliasFrom, dbAliasFrom, aliastx, aliasVtxPosFrom, isExpired, true))
+	{
+		dbAliasFrom.nHeight = message.nHeight;
+		dbAliasFrom.GetAliasFromList(aliasVtxPosFrom);
+	}
+	if(GetTxAndVtxOfAlias(message.vchAliasTo, dbAliasTo, aliastx, aliasVtxPosTo, isExpired, true))
+	{
+		dbAliasTo.nHeight = message.nHeight;
+		dbAliasTo.GetAliasFromList(aliasVtxPosTo);
+	}
+	entry.push_back(Pair("txtype", opName));
+	entry.push_back(Pair("GUID", stringFromVch(message.vchMessage)));
+
+	string aliasFromValue = stringFromVch(message.vchAliasFrom);
+	entry.push_back(Pair("from", aliasFromValue));
+
+	string aliasToValue = stringFromVch(message.vchAliasTo);
+	entry.push_back(Pair("to", aliasToValue));
+
+	string titleValue = stringFromVch(message.vchTitle);
+	entry.push_back(Pair("title", titleValue));
+
+	string strMessage =_("Encrypted for recipient of message");
+	if(DecryptMessage(dbAliasTo.vchPubKey, message.vchMessageTo, strDecrypted))
+		strMessage = strDecrypted;
+	else if(DecryptMessage(dbAliasFrom.vchPubKey, message.vchMessageFrom, strDecrypted))
+		strMessage = strDecrypted;	
+
+	entry.push_back(Pair("message", strMessage));
+
+
 }
