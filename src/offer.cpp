@@ -3984,12 +3984,12 @@ void OfferTxToJSON(const int op, const std::vector<unsigned char> &vchData, cons
 	entry.push_back(Pair("offerlink", linkOfferValue));
 
 	string commissionValue = noDifferentStr;
-	if(offer.nCommissiion  != 0 && offer.nCommissiion != dbOffer.nCommissiion)
-		commissionValue =  boost::lexical_cast<string>(offer.nCommissiion); 
+	if(offer.nCommission  != 0 && offer.nCommission != dbOffer.nCommission)
+		commissionValue =  boost::lexical_cast<string>(offer.nCommission); 
 	entry.push_back(Pair("commission", commissionValue));
 
 	string exclusiveResellValue = noDifferentStr;
-	if(offer.linkWhitelist,bExclusiveResell != dbOffer.linkWhitelist.bExclusiveResell)
+	if(offer.linkWhitelist.bExclusiveResell != dbOffer.linkWhitelist.bExclusiveResell)
 		exclusiveResellValue = offer.linkWhitelist.bExclusiveResell? "ON": "OFF";
 
 	entry.push_back(Pair("exclusiveresell", exclusiveResellValue));
