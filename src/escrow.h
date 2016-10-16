@@ -133,7 +133,27 @@ public:
     friend bool operator!=(const CEscrow &a, const CEscrow &b) {
         return !(a == b);
     }
-
+    bool GetEscrowFromList(std::vector<CEscrow> &escrowList) {
+        if(escrowList.size() == 0) return false;
+		CEscrow myEscrow = escrowList.front();
+		if(nHeight <= 0)
+		{
+			*this = myEscrow;
+			return true;
+		}
+			
+		// find the closest escrow without going over in height, assuming escrowList orders entries by nHeight ascending
+        for(std::vector<CEscrow>::reverse_iterator it = escrowList.rbegin(); it != escrowList.rend(); ++it) {
+            const CEscrow &e = *it;
+			// skip if this height is greater than our escrow height
+			if(e.nHeight > nHeight)
+				continue;
+            myEscrow = e;
+			break;
+        }
+        *this = myEscrow;
+        return true;
+    }
     void SetNull() { op = 0; redeemTxId.SetNull(); txBTCId.SetNull(); vchLinkAlias.clear(); feedback.clear(); vchEscrow.clear(); nHeight = nAcceptHeight = 0; txHash.SetNull(); escrowInputTx.clear(); nQty = 0; vchBuyerAlias.clear(); vchArbiterAlias.clear(); vchSellerAlias.clear(); vchRedeemScript.clear(); vchOffer.clear(); rawTx.clear(); vchPaymentMessage.clear();}
     bool IsNull() const { return (redeemTxId.IsNull() && txBTCId.IsNull() && vchLinkAlias.empty() && feedback.empty() && op == 0 && vchEscrow.empty() && txHash.IsNull() && escrowInputTx.empty() && nHeight == 0 && nAcceptHeight == 0 && nQty == 0 && vchBuyerAlias.empty() && vchArbiterAlias.empty() && vchSellerAlias.empty() && vchRedeemScript.empty() && vchOffer.empty() && rawTx.empty() && vchPaymentMessage.empty()); }
     bool UnserializeFromTx(const CTransaction &tx);

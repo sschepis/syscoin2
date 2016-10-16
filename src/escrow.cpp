@@ -3936,7 +3936,7 @@ void EscrowTxToJSON(const int op, const std::vector<unsigned char> &vchData, con
 	vector<CEscrow> escrowVtxPos;
 	CTransaction escrowtx;
 	CEscrow dbEscrow;
-	if(GetTxAndVtxOfEscrow(escrow.vchEscrow, dbEscrow, escrowtx, escrowVtxPos, true))
+	if(GetTxAndVtxOfEscrow(escrow.vchEscrow, dbEscrow, escrowtx, escrowVtxPos))
 	{
 		dbEscrow.nHeight = escrow.nHeight;
 		dbEscrow.GetEscrowFromList(escrowVtxPos);
@@ -3953,7 +3953,7 @@ void EscrowTxToJSON(const int op, const std::vector<unsigned char> &vchData, con
 	entry.push_back(Pair("linkalias", linkAliasValue));
 
 	string feedbackValue = noDifferentStr;
-	if(!escrow.feedback.IsNull() && escrow.feedback != dbEscrow.feedback)
+	if(!escrow.feedback.empty())
 		feedbackValue = _("Escrow feedback was given");
 	entry.push_back(Pair("feedback", feedbackValue));
 }
