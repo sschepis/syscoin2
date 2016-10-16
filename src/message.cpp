@@ -883,7 +883,8 @@ void MessageTxToJSON(const int op, const std::vector<unsigned char> &vchData, co
 		throw runtime_error("SYSCOIN_MESSAGE_RPC_ERROR: ERRCODE: 3506 - " + _("Could not decoding syscoin transaction"));
 
 	bool isExpired = false;
-	vector<CAliasIndex> aliasVtxPosFrom. aliasVtxPosTo;
+	vector<CAliasIndex> aliasVtxPosFrom;
+	vector<CAliasIndex> aliasVtxPosTo;
 	CTransaction aliastx;
 	CAliasIndex dbAliasFrom, dbAliasTo;
 	if(GetTxAndVtxOfAlias(message.vchAliasFrom, dbAliasFrom, aliastx, aliasVtxPosFrom, isExpired, true))
@@ -905,10 +906,11 @@ void MessageTxToJSON(const int op, const std::vector<unsigned char> &vchData, co
 	string aliasToValue = stringFromVch(message.vchAliasTo);
 	entry.push_back(Pair("to", aliasToValue));
 
-	string titleValue = stringFromVch(message.vchTitle);
-	entry.push_back(Pair("title", titleValue));
+	string subjectValue = stringFromVch(message.vchSubject);
+	entry.push_back(Pair("subject", subjectValue));
 
 	string strMessage =_("Encrypted for recipient of message");
+	string strDecrypted = "";
 	if(DecryptMessage(dbAliasTo.vchPubKey, message.vchMessageTo, strDecrypted))
 		strMessage = strDecrypted;
 	else if(DecryptMessage(dbAliasFrom.vchPubKey, message.vchMessageFrom, strDecrypted))
