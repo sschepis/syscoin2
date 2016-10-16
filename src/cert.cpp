@@ -533,7 +533,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 				}
 				if(!IsAliasOp(prevAliasOp) || theCert.vchAlias != vvchPrevAliasArgs[0])
 				{
-					errorMessage = "SYSCOIN_CERTIFICATE_ CONSENSUS_ERROR: ERRCODE: 2020 - " + _("Alias input mismatch");
+					errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2020 - " + _("Alias input mismatch");
 					return error(errorMessage.c_str());
 				}
 			}
