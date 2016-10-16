@@ -3939,7 +3939,7 @@ void EscrowTxToJSON(const int op, const std::vector<unsigned char> &vchData, con
 	entry.push_back(Pair("txtype", opName));
 	entry.push_back(Pair("escrow", stringFromVch(escrow.vchEscrow)));
 
-	entry.push_back(Pair("linkalias", stringFromVch(escrow.vchLinkAlias);));
+	entry.push_back(Pair("linkalias", stringFromVch(escrow.vchLinkAlias));
 
 	string feedbackValue = noDifferentStr;
 	if(!escrow.feedback.empty())

@@ -195,7 +195,7 @@ void EditAliasDialog::loadRow(int row)
 			ui->safeSearchEdit->setCurrentIndex(ui->safeSearchEdit->findText(safeSearchStr));
 		}
 	}
-	loadAliasMultsigDetails();
+	loadAliasDetails();
 }
 
 bool EditAliasDialog::saveCurrentRow()
