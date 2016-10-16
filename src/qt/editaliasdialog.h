@@ -32,7 +32,7 @@ public:
 
     void setModel(WalletModel*,AliasTableModel *model);
     void loadRow(int row);
-	void loadAliasMultsigDetails();
+	void loadAliasDetails();
 
     QString getAlias() const;
     void setAlias(const QString &alias);
