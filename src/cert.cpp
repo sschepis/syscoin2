@@ -918,7 +918,7 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
 	if(copyCert.sCategory != vchCat)
 		theCert.sCategory = vchCat;
 	theCert.vchAlias = vchAlias;
-	if(!vchAlias.empty() && vchAlias != alias.vchAlias)
+	if(!vchAlias.empty() && vchAlias != theAlias.vchAlias)
 		theCert.vchLinkAlias = vchAlias;
 	theCert.nHeight = chainActive.Tip()->nHeight;
 	theCert.bPrivate = bPrivate;
