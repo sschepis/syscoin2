@@ -903,8 +903,17 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
 	// if we want to make data private, encrypt it
 	if(bPrivate)
 	{
+		vector<unsigned char> vchPubKeyPrivate = theAlias.vchPubKey;
+		if(!vchAlias.empty())
+		{
+			CTransaction aliastmptx;
+			CAliasIndex privateAlias;
+			if (!GetTxOfAlias(vchAlias, privateAlias, aliastmptx, true))
+				throw runtime_error("SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2505 - " + _("Failed to read alias from alias DB"));
+			vchPubKeyPrivate = privateAlias.vchPubKey;
+		}
 		string strCipherText;
-		if(!EncryptMessage(theAlias.vchPubKey, vchData, strCipherText))
+		if(!EncryptMessage(vchPubKeyPrivate, vchData, strCipherText))
 		{
 			throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2509 - " + _("Could not encrypt certificate data"));
 		}
