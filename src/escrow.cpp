@@ -3933,14 +3933,6 @@ void EscrowTxToJSON(const int op, const std::vector<unsigned char> &vchData, con
 	if(!escrow.UnserializeFromData(vchData, vchHash))
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4590 - " + _("Could not decoding syscoin transaction"));
 
-	vector<CEscrow> escrowVtxPos;
-	CTransaction escrowtx;
-	CEscrow dbEscrow;
-	if(GetTxAndVtxOfEscrow(escrow.vchEscrow, dbEscrow, escrowtx, escrowVtxPos))
-	{
-		dbEscrow.nHeight = escrow.nHeight;
-		dbEscrow.GetEscrowFromList(escrowVtxPos);
-	}
 
 	string noDifferentStr = _("<No Difference Detected>");
 
@@ -3948,7 +3940,7 @@ void EscrowTxToJSON(const int op, const std::vector<unsigned char> &vchData, con
 	entry.push_back(Pair("escrow", stringFromVch(escrow.vchEscrow)));
 
 	string linkAliasValue = noDifferentStr;
-	if(!escrow.vchLinkAlias.empty() && escrow.vchLinkAlias != dbEscrow.vchLinkAlias)
+	if(!escrow.vchLinkAlias.empty())
 		linkAliasValue = stringFromVch(escrow.vchLinkAlias);
 	entry.push_back(Pair("linkalias", linkAliasValue));
 
