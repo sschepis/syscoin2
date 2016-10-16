@@ -898,11 +898,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 								errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1059 - " + _("This resold offer must be of higher price than the original offer including any discount");
 								theOffer.vchLinkOffer.clear();	
 							}
-						}	
-						else if(theOffer.nCommission < 0)
-						{
-							errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1060 - " + _("Commission cannot be negative");
-							theOffer.vchLinkOffer.clear();	
 						}
 						else if (!linkOffer.vchLinkOffer.empty())
 						{
@@ -988,11 +983,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						theOffer.vchLinkOffer.clear();	
 					}
 				}	
-				else if(theOffer.nCommission < 0)
-				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1073 - " + _("Commission cannot be negative");
-					theOffer.vchLinkOffer.clear();	
-				}
 				if (!linkOffer.vchLinkOffer.empty())
 				{
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1074 - " + _("Cannot link to an offer that is already linked to another offer");
@@ -3929,4 +3919,140 @@ void OfferTxToJSON(const int op, const std::vector<unsigned char> &vchData, cons
 	COffer offer;
 	if(!offer.UnserializeFromData(vchData, vchHash))
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR: ERRCODE: 1553 - " + _("Could not decoding syscoin transaction"));
+
+
+	bool isExpired = false;
+	vector<CAliasIndex> aliasVtxPos;
+	vector<COffer> offerVtxPos;
+	CTransaction offertx, aliastx;
+	COffer dbOffer;
+	if(GetTxAndVtxOfOffer(offer.vchOffer, dbOffer, offertx, offerVtxPos, true))
+	{
+		dbOffer.nHeight = offer.nHeight;
+		dbOffer.GetCertFromList(offerVtxPos);
+	}
+	CAliasIndex dbAlias;
+	if(GetTxAndVtxOfAlias(offer.vchAlias, dbAlias, aliastx, aliasVtxPos, isExpired, true))
+	{
+		dbAlias.nHeight = offer.nHeight;
+		dbAlias.GetAliasFromList(aliasVtxPos);
+	}
+	string noDifferentStr = _("<No Difference Detected>");
+
+	entry.push_back(Pair("txtype", opName));
+	entry.push_back(Pair("offer", stringFromVch(offer.vchOffer)));
+
+	if(!offer.linkWhitelist.IsNull())
+	{
+		string whitelistValue = noDifferentStr;
+		if(offer.linkWhitelist.entries[0].nDiscountPct == 127)
+			whitelistValue = _("Whitelist was cleared");
+		else
+			whitelistValue = _("Whitelist entries were added or removed");
+	
+		entry.push_back(Pair("whitelist", whitelistValue));
+		return;
+	}
+
+	string titleValue = noDifferentStr;
+	if(!offer.sTitle.empty() && offer.sTitle != dbOffer.sTitle)
+		titleValue = stringFromVch(offer.sTitle);
+	entry.push_back(Pair("title", titleValue));
+
+	string certValue = noDifferentStr;
+	if(!offer.vchCert.empty() && offer.vchCert != dbOffer.vchCert)
+		certValue = stringFromVch(offer.vchCert);
+	entry.push_back(Pair("cert", certValue));
+
+	string aliasValue = noDifferentStr;
+	if(!offer.vchAlias.empty() && offer.vchAlias != dbOffer.vchAlias)
+		aliasValue = stringFromVch(offer.vchAlias);
+
+	entry.push_back(Pair("alias", aliasValue));
+
+	string aliasPegValue = noDifferentStr;
+	if(!offer.vchAliasPeg.empty() offer.vchAliasPeg != dbOffer.vchAliasPeg)
+		aliasPegValue = stringFromVch(offer.vchAliasPeg);
+
+	entry.push_back(Pair("aliaspeg", aliasPegValue));
+
+
+	string linkOfferValue = noDifferentStr;
+	if(!offer.vchLinkOffer.empty() && offer.vchLinkOffer != dbOffer.vchLinkOffer)
+		linkOfferValue = stringFromVch(offer.vchLinkOffer);
+
+	entry.push_back(Pair("offerlink", linkOfferValue));
+
+	string commissionValue = noDifferentStr;
+	if(offer.nCommissiion  != 0 && offer.nCommissiion != dbOffer.nCommissiion)
+		commissionValue =  boost::lexical_cast<string>(offer.nCommissiion); 
+	entry.push_back(Pair("commission", commissionValue));
+
+	string exclusiveResellValue = noDifferentStr;
+	if(offer.linkWhitelist,bExclusiveResell != dbOffer.linkWhitelist.bExclusiveResell)
+		exclusiveResellValue = offer.linkWhitelist.bExclusiveResell? "ON": "OFF";
+
+	entry.push_back(Pair("exclusiveresell", exclusiveResellValue));
+
+	string paymentOptionsValue = noDifferentStr;
+	if(offer.paymentOptions > 0 && offer,paymentOptions != dbOffer.paymentOptions)
+		paymentOptionsValue = offer.GetPaymentOptionsString();
+
+	entry.push_back(Pair("paymentoptions", paymentOptionsValue));
+
+
+	string categoryValue = noDifferentStr;
+	if(!offer.sCategory.empty() && offer.sCategory != dbOffer.sCategory)
+		categoryValue = stringFromVch(offer.sCategory);
+
+	entry.push_back(Pair("category", categoryValue ));
+
+	string geolocationValue = noDifferentStr;
+	if(!offer.vchGeoLocation.empty() && offer.vchGeoLocation != dbOffer.vchGeoLocation)
+		geolocationValue = stringFromVch(offer.vchGeoLocation);
+
+	entry.push_back(Pair("geolocation", geolocationValue ));
+	
+
+	string descriptionValue = noDifferentStr;
+	if(!offer.sDescription.empty() && offer.sDescription != dbOffer.sDescription)
+		descriptionValue = stringFromVch(offer.sDescription);
+	entry.push_back(Pair("description", descriptionValue));
+
+
+	string qtyValue = noDifferentStr;
+	if(offer.nQty != dbOffer.nQty)
+		qtyValue =  boost::lexical_cast<string>(offer.nQty); 
+	entry.push_back(Pair("quantity", qtyValue));
+
+	string currencyValue = noDifferentStr;
+	if(!offer.sCurrencyCode.empty()  && offer.sCurrencyCode != dbOffer.sCurrencyCode)
+		currencyValue = stringFromVch(offer.sCurrencyCode);
+	entry.push_back(Pair("currency", currencyValue));
+
+	
+	string priceValue = noDifferentStr;
+	if(offer.GetPrice() != dbOffer.GetPrice())
+		priceValue = boost::lexical_cast<string>(offer.GetPrice());
+	entry.push_back(Pair("price", priceValue));
+	
+
+	string safeSearchValue = noDifferentStr;
+	if(cert.safeSearch != dbCert.safeSearch)
+		safeSearchValue = cert.safeSearch? "Yes": "No";
+
+	entry.push_back(Pair("safesearch", safeSearchValue));
+
+	string safetyLevelValue = noDifferentStr;
+	if(cert.safetyLevel != dbCert.safetyLevel)
+		safetyLevelValue = cert.safetyLevel;
+
+	entry.push_back(Pair("safetylevel", safetyLevelValue));
+
+	string privateValue = noDifferentStr;
+	if(cert.bPrivate != dbCert.bPrivate)
+		privateValue = cert.bPrivate? "Yes": "No";
+
+	entry.push_back(Pair("private", privateValue ));
+
 }
