@@ -1666,7 +1666,7 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 		nMultiSig = boost::lexical_cast<int>(params[6].get_str());
     UniValue aliasNames;
 	if(params.size() >= 7)
-		aliasNames = params[6].get_array();
+		aliasNames = params[7].get_array();
 	
 	vchPrivateValue = vchFromString(strPrivateValue);
 
