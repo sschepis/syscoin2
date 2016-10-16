@@ -3929,7 +3929,7 @@ void OfferTxToJSON(const int op, const std::vector<unsigned char> &vchData, cons
 	if(GetTxAndVtxOfOffer(offer.vchOffer, dbOffer, offertx, offerVtxPos, true))
 	{
 		dbOffer.nHeight = offer.nHeight;
-		dbOffer.GetCertFromList(offerVtxPos);
+		dbOffer.GetOfferFromList(offerVtxPos);
 	}
 	CAliasIndex dbAlias;
 	if(GetTxAndVtxOfAlias(offer.vchAlias, dbAlias, aliastx, aliasVtxPos, isExpired, true))
@@ -3971,7 +3971,7 @@ void OfferTxToJSON(const int op, const std::vector<unsigned char> &vchData, cons
 	entry.push_back(Pair("alias", aliasValue));
 
 	string aliasPegValue = noDifferentStr;
-	if(!offer.vchAliasPeg.empty() offer.vchAliasPeg != dbOffer.vchAliasPeg)
+	if(!offer.vchAliasPeg.empty() && offer.vchAliasPeg != dbOffer.vchAliasPeg)
 		aliasPegValue = stringFromVch(offer.vchAliasPeg);
 
 	entry.push_back(Pair("aliaspeg", aliasPegValue));
