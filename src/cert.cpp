@@ -519,11 +519,6 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2016 - " + _("Certificate input guid mismatch");
 				return error(errorMessage.c_str());
 			}
-			if(!theCert.vchLinkAlias.empty())
-			{
-				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2017 - " + _("Certificate linked alias not allowed in update");
-				return error(errorMessage.c_str());
-			}
 			if(!theCert.IsNull())
 			{
 				if (theCert.vchCert != vvchArgs[0])
@@ -603,6 +598,14 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 					// user can't update safety level after creation
 					theCert.safetyLevel = dbCert.safetyLevel;
 					theCert.vchCert = dbCert.vchCert;
+					if(theCert.vchAlias != dbCert.vchAlias)
+					{
+						errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 1063 - " + _("Wrong alias input provided in this certificate transaction");
+						theCert.vchAlias = dbCert.vchAlias;
+					}
+					else if(!theCert.vchLinkAlias.empty())
+						theCert.vchAlias = theCert.vchLinkAlias;
+
 					if(op == OP_CERT_TRANSFER)
 					{
 						// check to alias
@@ -613,7 +616,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 						}
 						else
 						{
-							theCert.vchAlias = theCert.vchLinkAlias;					
+									
 							if(!alias.acceptCertTransfers)
 							{
 								errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("The alias you are transferring to does not accept certificate transfers");
@@ -621,6 +624,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 							}
 						}
 					}
+					theCert.vchLinkAlias.clear();
 				}
 				if(!GetTxOfAlias(theCert.vchAlias, alias, aliasTx))
 				{

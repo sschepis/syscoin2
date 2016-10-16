@@ -901,23 +901,31 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						}
 						else if (!linkOffer.vchLinkOffer.empty())
 						{
-							errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1061 - " + _("Cannot link to an offer that is already linked to another offer");
+							errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1060 - " + _("Cannot link to an offer that is already linked to another offer");
 							theOffer.vchLinkOffer.clear();	
 						}
 						else if(linkOffer.sCategory.size() > 0 && boost::algorithm::starts_with(stringFromVch(linkOffer.sCategory), "wanted"))
 						{
-							errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1062 - " + _("Cannot link to a wanted offer");
+							errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1061 - " + _("Cannot link to a wanted offer");
 							theOffer.vchLinkOffer.clear();
 						}
 						else if(!theOffer.vchCert.empty() && theCert.vchAlias != linkOffer.vchAlias)
 						{
-							errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1063 - " + _("Cannot update this offer because the certificate alias does not match the linked offer alias");
+							errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1062 - " + _("Cannot update this offer because the certificate alias does not match the linked offer alias");
 							theOffer.vchAlias = dbOffer.vchAlias;
 						}
 					}
 					// non linked offers cant edit commission
 					else
 						theOffer.nCommission = 0;
+					if(theOffer.vchAlias != dbOffer.vchAlias)
+					{
+						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1063 - " + _("Wrong alias input provided in this offer update transaction");
+						theOffer.vchAlias = dbOffer.vchAlias;
+					}
+					else if(!theOffer.vchLinkAlias.empty())
+						theOffer.vchAlias = theOffer.vchLinkAlias;
+					theOffer.vchLinkAlias.clear();
 					if(!GetTxOfAlias(theOffer.vchAlias, alias, aliasTx))
 					{
 						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1064 - " + _("Cannot find alias for this offer. It may be expired");
@@ -2338,7 +2346,7 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	if (!GetTxOfOffer( vchOffer, theOffer, tx, true))
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1527 - " + _("Could not find an offer with this guid"));
 	
-	if ((!vchAlias.empty() && !GetTxOfAlias(vchAlias, alias, aliastx, true)) || (vchAlias.empty() && !GetTxOfAlias(theOffer.vchAlias, alias, aliastx, true)))
+	if (!GetTxOfAlias(theOffer.vchAlias, alias, aliastx, true))
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1528 - " + _("Could not find an alias with this name"));
 
 	if(!IsSyscoinTxMine(aliastx, "alias")) {
@@ -2399,6 +2407,8 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	if(params.size() >= 16 && params[15].get_str() != "NONE")
 		theOffer.nCommission = nCommission;
 	theOffer.vchAlias = alias.vchAlias;
+	if(!vchAlias.empty() && vchAlias != offerCopy.vchAlias)
+		theOffer.vchLinkAlias = vchAlias;
 	theOffer.safeSearch = strSafeSearch == "Yes"? true: false;
 	theOffer.nQty = nQty;
 	if (params.size() >= 10)
@@ -2410,6 +2420,8 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	theOffer.SetPrice(nPricePerUnit);
 	if(params.size() >= 12 && params[11].get_str().size() > 0)
 		theOffer.linkWhitelist.bExclusiveResell = bExclusiveResell;
+	else
+		theOffer.linkWhitelist.bExclusiveResell = offerCopy.linkWhitelist.bExclusiveResell;
 
 
 
