@@ -1922,7 +1922,7 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
     vector<unsigned char> vchHashAlias = vchFromValue(HexStr(vchHash));
 
 	CScript scriptPubKey;
-	scriptPubKey << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << vchAlias << copyAlias.vchGUID << vchHashAlias << OP_2DROP << OP_2DROP;
+	scriptPubKey << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << copyAlias.vchAlias << copyAlias.vchGUID << vchHashAlias << OP_2DROP << OP_2DROP;
 	scriptPubKey += scriptPubKeyOrig;
 
     vector<CRecipient> vecSend;

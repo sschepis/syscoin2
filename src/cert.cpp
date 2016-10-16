@@ -878,7 +878,7 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
 	CTransaction aliastx;
 	CAliasIndex theAlias;
 	const CWalletTx *wtxAliasIn = NULL;
-	if (!GetTxOfAlias(vchAlias, theAlias, aliastx, true))
+	if (!GetTxOfAlias(theCert.vchAlias, theAlias, aliastx, true))
 		throw runtime_error("SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2505 - " + _("Failed to read alias from alias DB"));
 	if(!IsSyscoinTxMine(aliastx, "alias")) {
 		throw runtime_error("SYSCOIN_CERTIFICATE_CONSENSUS_ERROR ERRCODE: 2506 - " + _("This alias is not yours"));
@@ -918,6 +918,8 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
 	if(copyCert.sCategory != vchCat)
 		theCert.sCategory = vchCat;
 	theCert.vchAlias = vchAlias;
+	if(!vchAlias.empty() && vchAlias != alias.vchAlias)
+		theCert.vchLinkAlias = vchAlias;
 	theCert.nHeight = chainActive.Tip()->nHeight;
 	theCert.bPrivate = bPrivate;
 	theCert.safeSearch = strSafeSearch == "Yes"? true: false;
@@ -936,7 +938,7 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
 	CScript scriptPubKeyAlias;
 	if(theAlias.multiSigInfo.vchAliases.size() > 0)
 		scriptPubKeyOrig = CScript(theAlias.multiSigInfo.vchRedeemScript.begin(), theAlias.multiSigInfo.vchRedeemScript.end());
-	scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << vchAlias << theAlias.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
+	scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << theAlias.vchAlias << theAlias.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
 	scriptPubKeyAlias += scriptPubKeyOrig;
 	CRecipient aliasRecipient;
 	CreateRecipient(scriptPubKeyAlias, aliasRecipient);

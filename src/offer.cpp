@@ -2407,7 +2407,7 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	if(params.size() >= 16 && params[15].get_str() != "NONE")
 		theOffer.nCommission = nCommission;
 	theOffer.vchAlias = alias.vchAlias;
-	if(!vchAlias.empty() && vchAlias != offerCopy.vchAlias)
+	if(!vchAlias.empty() && vchAlias != alias.vchAlias)
 		theOffer.vchLinkAlias = vchAlias;
 	theOffer.safeSearch = strSafeSearch == "Yes"? true: false;
 	theOffer.nQty = nQty;
@@ -2436,8 +2436,6 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	CRecipient recipient;
 	CreateRecipient(scriptPubKey, recipient);
 	vecSend.push_back(recipient);
-	if(alias.multiSigInfo.vchAliases.size() > 0)
-		scriptPubKeyOrig = CScript(alias.multiSigInfo.vchRedeemScript.begin(), alias.multiSigInfo.vchRedeemScript.end());
 	CScript scriptPubKeyAlias;
 	if(alias.multiSigInfo.vchAliases.size() > 0)
 		scriptPubKeyOrig = CScript(alias.multiSigInfo.vchRedeemScript.begin(), alias.multiSigInfo.vchRedeemScript.end());
