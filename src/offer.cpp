@@ -899,7 +899,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 							errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1059 - " + _("Cannot find this alias in the parent offer affiliate list");
 							theOffer.vchLinkOffer.clear();
 						}	
-						else if (!linkOffer.vchLinkOffer.empty())
+						if (!linkOffer.vchLinkOffer.empty())
 						{
 							errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1060 - " + _("Cannot link to an offer that is already linked to another offer");
 							theOffer.vchLinkOffer.clear();	
@@ -991,7 +991,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1072 - " + _("Cannot find this alias in the parent offer affiliate list");
 					theOffer.vchLinkOffer.clear();
 				}	
-				else if (!linkOffer.vchLinkOffer.empty())
+				if (!linkOffer.vchLinkOffer.empty())
 				{
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1074 - " + _("Cannot link to an offer that is already linked to another offer");
 					theOffer.vchLinkOffer.clear();	
