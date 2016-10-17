@@ -2417,7 +2417,7 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
                         assert(ret); // should never fail, as we just unlocked
 						// SYSCOIN pay to input destination as change
 						CTxDestination payDest;
-						if (ExtractDestination(setCoins.first->vout[setCoins.second].scriptPubKey, payDest)) 
+						if (ExtractDestination(vecCoins[0].first->vout[vecCoins[0].second].scriptPubKey, payDest)) 
 						{
 							scriptChange = GetScriptForDestination(payDest);
 							CSyscoinAddress address = CSyscoinAddress(payDest);
