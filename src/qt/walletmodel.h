@@ -174,8 +174,7 @@ public:
     };
 
     // prepare transaction for getting txfee before sending coins
-	// SYSCOIN
-    SendCoinsReturn prepareTransaction(WalletModelTransaction &transaction, CCoinControl *coinControl = NULL);
+    SendCoinsReturn prepareTransaction(WalletModelTransaction &transaction, const CCoinControl *coinControl = NULL);
 
     // Send coins to a list of recipients
     SendCoinsReturn sendCoins(WalletModelTransaction &transaction);
