@@ -248,8 +248,8 @@ bool WalletModel::validateAddress(const QString &address)
     CSyscoinAddress addressParsed(address.toStdString());
     return addressParsed.IsValid();
 }
-
-WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransaction &transaction, const CCoinControl *coinControl)
+// SYSCOIN unconst coinconrol
+WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransaction &transaction, CCoinControl *coinControl)
 {
     CAmount total = 0;
     bool fSubtractFeeFromAmount = false;
