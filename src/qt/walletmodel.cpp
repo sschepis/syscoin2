@@ -28,7 +28,6 @@
 #include <boost/foreach.hpp>
 // SYSCOIN
 #include "guiutil.h"
-#include "coincontrol.h"
 #include "aliastablemodel.h"
 #include "messagetablemodel.h"
 #include "escrowtablemodel.h"
