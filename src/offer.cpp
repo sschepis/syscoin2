@@ -885,20 +885,20 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 							errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1057 - " + _("Linked offer not found. It may be expired");
 							theOffer.vchLinkOffer.clear();
 						}
-						// make sure alias exists in the root offer affiliate list if root offer is in exclusive mode
-						else if (linkOffer.linkWhitelist.bExclusiveResell)
+						else if(linkOffer.linkWhitelist.GetLinkEntryByHash(theOffer.vchAlias, entry))
 						{
-							if(!linkOffer.linkWhitelist.GetLinkEntryByHash(theOffer.vchAlias, entry))
+							if(theOffer.nCommission <= -entry.nDiscountPct)
 							{
-								errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1058 - " + _("Cannot find this alias in the parent offer affiliate list");
-								theOffer.vchLinkOffer.clear();	
-							}
-							else if(theOffer.nCommission <= -entry.nDiscountPct)
-							{
-								errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1059 - " + _("This resold offer must be of higher price than the original offer including any discount");
+								errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1058 - " + _("This resold offer must be of higher price than the original offer including any discount");
 								theOffer.vchLinkOffer.clear();	
 							}
 						}
+						// make sure alias exists in the root offer affiliate list if root offer is in exclusive mode
+						else if (linkOffer.linkWhitelist.bExclusiveResell)
+						{
+							errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1059 - " + _("Cannot find this alias in the parent offer affiliate list");
+							theOffer.vchLinkOffer.clear();
+						}	
 						else if (!linkOffer.vchLinkOffer.empty())
 						{
 							errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1060 - " + _("Cannot link to an offer that is already linked to another offer");
@@ -977,36 +977,36 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1070 - " + _("Linked offer not found. It may be expired");
 					theOffer.vchLinkOffer.clear();
 				}
-				// make sure alias exists in the root offer affiliate list if root offer is in exclusive mode
-				if (linkOffer.linkWhitelist.bExclusiveResell)
+				else if(linkOffer.linkWhitelist.GetLinkEntryByHash(theOffer.vchAlias, entry))
 				{
-					if(!linkOffer.linkWhitelist.GetLinkEntryByHash(theOffer.vchAlias, entry))
+					if(theOffer.nCommission <= -entry.nDiscountPct)
 					{
-						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1071 - " + _("Cannot find this alias in the parent offer affiliate list");
+						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1071 - " + _("This resold offer must be of higher price than the original offer including any discount");
 						theOffer.vchLinkOffer.clear();	
 					}
-					else if(theOffer.nCommission <= -entry.nDiscountPct)
-					{
-						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1072 - " + _("This resold offer must be of higher price than the original offer including any discount");
-						theOffer.vchLinkOffer.clear();	
-					}
+				}
+				// make sure alias exists in the root offer affiliate list if root offer is in exclusive mode
+				else if (linkOffer.linkWhitelist.bExclusiveResell)
+				{
+					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1072 - " + _("Cannot find this alias in the parent offer affiliate list");
+					theOffer.vchLinkOffer.clear();
 				}	
-				if (!linkOffer.vchLinkOffer.empty())
+				else if (!linkOffer.vchLinkOffer.empty())
 				{
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1074 - " + _("Cannot link to an offer that is already linked to another offer");
 					theOffer.vchLinkOffer.clear();	
 				}
-				if(linkOffer.sCategory.size() > 0 && boost::algorithm::starts_with(stringFromVch(linkOffer.sCategory), "wanted"))
+				else if(linkOffer.sCategory.size() > 0 && boost::algorithm::starts_with(stringFromVch(linkOffer.sCategory), "wanted"))
 				{
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1075 - " + _("Cannot link to a wanted offer");
 					theOffer.vchLinkOffer.clear();
 				}
-				if(!theOffer.vchCert.empty() && theCert.vchAlias != linkOffer.vchAlias)
+				else if(!theOffer.vchCert.empty() && theCert.vchAlias != linkOffer.vchAlias)
 				{
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1076 -" + _(" Cannot create this offer because the certificate alias does not match the offer alias");
 					theOffer.vchLinkOffer.clear();	
 				}
-				if(!theOffer.vchLinkOffer.empty())
+				else if(!theOffer.vchLinkOffer.empty())
 				{
 					// max links are 100 per offer
 					if(linkOffer.offerLinks.size() < 100)
