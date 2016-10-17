@@ -311,9 +311,9 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
 			if(!address.vchRedeemScript.empty())
 			{
 				scriptPubKey = CScript(address.vchRedeemScript.begin(), address.vchRedeemScript.end());
-				// override the change destination to send back to multisig destination... we don't want change to leave the multisig address unless it was explicit]
-				if (coinControl && !boost::get<CNoDestination>(&coinControl->destChange))
-					coinControl->destChange = scriptPubKey;
+				// override the change destination to send back to multisig destination... we don't want change to leave the multisig address unless it was explicit
+				if (coinControl && coinControl->destScript.empty())
+					coinControl->destScript = scriptPubKey;
 			}
             CRecipient recipient = {scriptPubKey, rcp.amount, rcp.fSubtractFeeFromAmount};
             vecSend.push_back(recipient);
