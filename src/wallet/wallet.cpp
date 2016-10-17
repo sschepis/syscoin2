@@ -2391,8 +2391,14 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
                     CScript scriptChange;
 
                     // coin control: send change to custom address
+					// SYSCOIN
                     if (coinControl && !boost::get<CNoDestination>(&coinControl->destChange))
+					{
                         scriptChange = GetScriptForDestination(coinControl->destChange);
+						CSyscoinAddress address = CSyscoinAddress(coinControl->destChange);
+						if(!address.vchRedeemScript.empty())
+							scriptChange = CScript(address.vchRedeemScript.begin(), address.vchRedeemScript.end());
+					}
 
                     // no coin control: send change to newly generated address
                     else
@@ -2409,8 +2415,17 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
                         bool ret;
                         ret = reservekey.GetReservedKey(vchPubKey);
                         assert(ret); // should never fail, as we just unlocked
-
-                        scriptChange = GetScriptForDestination(vchPubKey.GetID());
+						// SYSCOIN pay to input destination as change
+						CTxDestination payDest;
+						if (ExtractDestination(setCoins.first->vout[setCoins.second].scriptPubKey, payDest)) 
+						{
+							scriptChange = GetScriptForDestination(payDest);
+							CSyscoinAddress address = CSyscoinAddress(payDest);
+							if(!address.vchRedeemScript.empty())
+								scriptChange = CScript(address.vchRedeemScript.begin(), address.vchRedeemScript.end());
+						}
+						else
+							scriptChange = GetScriptForDestination(vchPubKey.GetID());
                     }
 
                     CTxOut newTxOut(nChange, scriptChange);
