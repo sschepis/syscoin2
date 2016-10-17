@@ -722,8 +722,7 @@ void SendCoinsDialog::coinControlChangeChecked(int state)
 {
     if (state == Qt::Unchecked)
     {
-		// SYSCOIN
-        CoinControlDialog::coinControl->destScript.clear();
+        CoinControlDialog::coinControl->destChange = CNoDestination();
         ui->labelCoinControlChangeLabel->clear();
     }
     else
@@ -739,8 +738,7 @@ void SendCoinsDialog::coinControlChangeEdited(const QString& text)
     if (model && model->getAddressTableModel())
     {
         // Default to no change address until verified
-		// SYSCOIN
-       CoinControlDialog::coinControl->destScript.clear();
+        CoinControlDialog::coinControl->destChange = CNoDestination();
         ui->labelCoinControlChangeLabel->setStyleSheet("QLabel{color:red;}");
 
         CSyscoinAddress addr = CSyscoinAddress(text.toStdString());
@@ -772,8 +770,7 @@ void SendCoinsDialog::coinControlChangeEdited(const QString& text)
                 else
                     ui->labelCoinControlChangeLabel->setText(tr("(no label)"));
 
-				// SYSCOIN
-                CoinControlDialog::coinControl->destScript = GetScriptForDestination(addr.Get());
+                CoinControlDialog::coinControl->destChange = addr.Get();
             }
         }
     }

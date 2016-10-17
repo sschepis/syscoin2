@@ -2141,8 +2141,7 @@ bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, bool ov
     }
 
     CCoinControl coinControl;
-	// SYSCOIN
-    coinControl.destScript = GetScriptForDestination(destChange);
+    coinControl.destChange = destChange;
     coinControl.fAllowOtherInputs = true;
     coinControl.fAllowWatchOnly = includeWatching;
     coinControl.fOverrideFeeRate = overrideEstimatedFeeRate;
@@ -2392,9 +2391,8 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
                     CScript scriptChange;
 
                     // coin control: send change to custom address
-					// SYSCOIN
-                    if (coinControl && !coinControl->destScript.empty())
-                        scriptChange = coinControl->destScript;
+                    if (coinControl && !boost::get<CNoDestination>(&coinControl->destChange))
+                        scriptChange = GetScriptForDestination(coinControl->destChange);
 
                     // no coin control: send change to newly generated address
                     else

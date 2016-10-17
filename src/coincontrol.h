@@ -11,8 +11,7 @@
 class CCoinControl
 {
 public:
-	// SYSCOIN
-    CScript destScript;
+    CTxDestination destChange;
     //! If false, allows unselected inputs, but requires all selected inputs be used
     bool fAllowOtherInputs;
     //! Includes watch only addresses which match the ISMINE_WATCH_SOLVABLE criteria
@@ -31,8 +30,7 @@ public:
 
     void SetNull()
     {
-		// SYSCOIN
-        destScript.clear();
+        destChange = CNoDestination();
         fAllowOtherInputs = false;
         fAllowWatchOnly = false;
         setSelected.clear();
