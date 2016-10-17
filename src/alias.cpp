@@ -1987,7 +1987,7 @@ UniValue syscoindecoderawtransaction(const UniValue& params, bool fHelp) {
 	vector<unsigned char> vchHash;
 	GetSyscoinData(rawTx, vchData, vchHash, nOut);	
 	vector<vector<unsigned char> > vvch;
-	int op;
+	int op = -1;
 	bool foundSys = false;
 	bool sendCoin = false;
 	UniValue output(UniValue::VOBJ);
@@ -2007,8 +2007,8 @@ UniValue syscoindecoderawtransaction(const UniValue& params, bool fHelp) {
 	}
 	if(sendCoin)
 		output.push_back(Pair("warning", _("Warning: This transaction sends coins to an address or alias you do not own")));
-	
-	SysTxToJSON(op, vchData, vchHash, output);
+	if(foundSys)
+		SysTxToJSON(op, vchData, vchHash, output);
 	return output;
 }
 void SysTxToJSON(const int op, const vector<unsigned char> &vchData, const vector<unsigned char> &vchHash, UniValue &entry)
