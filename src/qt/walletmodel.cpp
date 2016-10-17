@@ -308,12 +308,7 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
             CScript scriptPubKey = GetScriptForDestination(address.Get());
 			// SYSCOIN
 			if(!address.vchRedeemScript.empty())
-			{
 				scriptPubKey = CScript(address.vchRedeemScript.begin(), address.vchRedeemScript.end());
-				// override the change destination to send back to multisig destination... we don't want change to leave the multisig address unless it was explicit]
-				if(CoinControlDialog::coinControl->destChange != CNoDestination())
-					CoinControlDialog::coinControl->destChange = scriptPubKey;
-			}
             CRecipient recipient = {scriptPubKey, rcp.amount, rcp.fSubtractFeeFromAmount};
             vecSend.push_back(recipient);
 
