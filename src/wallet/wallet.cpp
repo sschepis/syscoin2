@@ -2360,13 +2360,13 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
 				vector<pair<const CWalletTx*, unsigned int> > vecCoins(
 					setCoins.begin(), setCoins.end());
 				if(wtxInOffer != NULL)
-					vecCoins.insert(vecCoins.begin(), make_pair(wtxInOffer, nTxOutOffer));
+					vecCoins.insert(vecCoins.end(), make_pair(wtxInOffer, nTxOutOffer));
 				if(wtxInCert != NULL)
-					vecCoins.insert(vecCoins.begin(), make_pair(wtxInCert, nTxOutCert));
+					vecCoins.insert(vecCoins.end(), make_pair(wtxInCert, nTxOutCert));
 				if(wtxInAlias != NULL)
-					vecCoins.insert(vecCoins.begin(), make_pair(wtxInAlias, nTxOutAlias));
+					vecCoins.insert(vecCoins.end(), make_pair(wtxInAlias, nTxOutAlias));
 				if(wtxInEscrow != NULL)
-					vecCoins.insert(vecCoins.begin(), make_pair(wtxInEscrow, nTxOutEscrow));
+					vecCoins.insert(vecCoins.end(), make_pair(wtxInEscrow, nTxOutEscrow));
 				// SYSCOIN
                 BOOST_FOREACH(PAIRTYPE(const CWalletTx*, unsigned int) pcoin, vecCoins)
                 {
