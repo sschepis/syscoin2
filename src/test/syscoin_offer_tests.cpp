@@ -164,12 +164,13 @@ BOOST_AUTO_TEST_CASE (generate_offernew_linkedoffer)
 	// generate a good offer
 	string offerguid = OfferNew("node1", "selleralias5", "category", "title", "100", "10.00", "description", "USD", "nocert", false);
 	string lofferguid = OfferLink("node2", "selleralias6", offerguid, "5", "newdescription");
+	// add 5% discount to selleralias6
 	OfferAddWhitelist("node1", offerguid, "selleralias6", "5");
 	
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "offerinfo " + lofferguid));
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "price").get_str(), "10.50");
 
-	// generate a cert offer using a negative percentage bigger than discount
+	// generate a cert offer using a negative percentage bigger or equal to than discount which was set to 5% (uses -5 in calculcation)
 	BOOST_CHECK_THROW(r = CallRPC("node2", "offerlink selleralias6 " + offerguid + " -5 newdescription"), runtime_error);	
 
 
