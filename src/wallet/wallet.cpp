@@ -2396,6 +2396,7 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
 					{
                         scriptChange = GetScriptForDestination(coinControl->destChange);
 						CSyscoinAddress address = CSyscoinAddress(coinControl->destChange);
+						address = CSyscoinAddress(address.ToString());
 						if(!address.vchRedeemScript.empty())
 							scriptChange = CScript(address.vchRedeemScript.begin(), address.vchRedeemScript.end());
 					}
@@ -2421,6 +2422,7 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
 						{
 							scriptChange = GetScriptForDestination(payDest);
 							CSyscoinAddress address = CSyscoinAddress(payDest);
+							address = CSyscoinAddress(address.ToString());
 							if(!address.vchRedeemScript.empty())
 								scriptChange = CScript(address.vchRedeemScript.begin(), address.vchRedeemScript.end());
 						}
