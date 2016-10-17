@@ -1980,17 +1980,16 @@ UniValue syscoindecoderawtransaction(const UniValue& params, bool fHelp) {
 	DecodeHexTx(rawTx,hexstring);
 	if(rawTx.IsNull())
 	{
-		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5510 - " + _("Could not decode transaction"));
+		throw runtime_error("SYSCOIN_RPC_ERROR: ERRCODE: 5510 - " + _("Could not decode transaction"));
 	}
 	vector<unsigned char> vchData;
 	int nOut;
 	vector<unsigned char> vchHash;
 	if(!GetSyscoinData(rawTx, vchData, vchHash, nOut))
-		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5511 - " + _("Could not find syscoin service data in this transaction"));
+		throw runtime_error("SYSCOIN_RPC_ERROR: ERRCODE: 5511 - " + _("Could not find syscoin service data in this transaction"));
 	vector<vector<unsigned char> > vvch;
 	int op;
 	bool foundSys = false;
-	bool sendCoin = false;
 	UniValue output(UniValue::VOBJ);
 	for (unsigned int i = 0; i < rawTx.vout.size(); i++) {
 		int tmpOp;
@@ -1999,17 +1998,11 @@ UniValue syscoindecoderawtransaction(const UniValue& params, bool fHelp) {
 		{
 			foundSys = true;
 		}
-		else if(!IsSyscoinDataOutput(rawTx.vout[i]) && !IsSyscoinScript(rawTx.vout[i].scriptPubKey, tmpOp, tmpvvch))
-		{
-			if(!pwalletMain->IsMine(rawTx.vout[i]))
-				sendCoin = true;
-		}
 
 	}
 	if(!foundSys)
-		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5512 - " + _("Could not find syscoin service output in this transaction"));
-	if(sendCoin)
-		output.push_back(Pair("warning", _("Warning: This transaction sends coins to an address or alias you do not own")));
+		throw runtime_error("SYSCOIN_RPC_ERROR: ERRCODE: 5512 - " + _("Could not find syscoin service output in this transaction"));
+
 	
 	SysTxToJSON(op, vchData, vchHash, output);
 	return output;
@@ -2027,7 +2020,7 @@ void SysTxToJSON(const int op, const vector<unsigned char> &vchData, const vecto
 	else if(IsOfferOp(op))
 		OfferTxToJSON(op, vchData, vchHash, entry);
 	else
-		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5513 - " + _("Cannot determine type of syscoin transaction"));
+		throw runtime_error("SYSCOIN_RPC_ERROR: ERRCODE: 5513 - " + _("Cannot determine type of syscoin transaction"));
 }
 void AliasTxToJSON(const int op, const vector<unsigned char> &vchData, const vector<unsigned char> &vchHash, UniValue &entry)
 {
