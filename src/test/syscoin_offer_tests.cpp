@@ -782,7 +782,10 @@ BOOST_AUTO_TEST_CASE (generate_offerpruning)
 	// make sure our offer alias doesn't expire
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate pruneoffer newdata privdata"));
 	// generate 89 more blocks (10 get mined from update)
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 89"));
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 85"));
+	MilliSleep(2500);
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate pruneoffer newdata privdata"));
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 4"));
 	MilliSleep(2500);
 	// ensure service is still active since its supposed to expire at 100 blocks of non updated services
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "offerupdate sysrates.peg pruneoffer " + guid1 + " category title 1 0.05 description"));
@@ -793,7 +796,9 @@ BOOST_AUTO_TEST_CASE (generate_offerpruning)
 	MilliSleep(2500);
 	// make sure our offer alias doesn't expire
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate pruneoffer newdata privdata"));
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 55"));
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 5"));
+	MilliSleep(2500);
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 50"));
 	MilliSleep(2500);
 	// make sure our offer alias doesn't expire
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate pruneoffer newdata privdata"));

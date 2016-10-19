@@ -561,18 +561,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 					theCert = vtxPos.back();
 				else
 				{
-					if(op == OP_CERT_TRANSFER)
-					{			
-						const vector<unsigned char> vchAlias = theCert.vchAlias;
-						theCert = dbCert;
-						if(!alias.acceptCertTransfers)
-						{
-							errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("The alias you are transferring to does not accept certificate transfers");
-						}
-						else
-							theCert.vchAlias = vchAlias;
-					}
-					else
+					if(op == OP_CERT_UPDATE)
 					{
 						if(theCert.vchData.empty())
 							theCert.vchData = dbCert.vchData;
@@ -592,6 +581,18 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 					errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2029 - " + _("Cannot find alias for this certificate. It may be expired");	
 					theCert = dbCert;
 				}
+				else if(op == OP_CERT_TRANSFER)
+				{			
+					const vector<unsigned char> vchAlias = theCert.vchAlias;
+					theCert = dbCert;
+					if(!alias.acceptCertTransfers)
+					{
+						errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("The alias you are transferring to does not accept certificate transfers");
+					}
+					else
+						theCert.vchAlias = vchAlias;
+				}
+
 				CSyscoinAddress destaddy;
 				CTxDestination dest;
 				// check that the script for the cert update is sent to the correct destination
@@ -985,7 +986,6 @@ UniValue certtransfer(const UniValue& params, bool fHelp) {
 		 throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2512 - " + _("Could not find the certificate alias"));
 	}
 
-	CPubKey fromKey = CPubKey(fromAlias.vchPubKey);
 
 	// check to see if certificate in wallet
 	wtxIn = pwalletMain->GetWalletTx(theCert.txHash);
@@ -1001,7 +1001,7 @@ UniValue certtransfer(const UniValue& params, bool fHelp) {
 		string strCipherText;
 		
 		// decrypt using old key
-		if(DecryptMessage(fromAlias.vchPubKey, theCert.vchData, strData))
+		if(DecryptMessage(fromAlias.vchPubKey, vchData, strData))
 			strDecryptedData = strData;
 		else
 			throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2516 - " + _("Could not decrypt certificate data"));
