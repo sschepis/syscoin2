@@ -1052,7 +1052,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					if (paliasdb->ExistsAddress(vchFromString(myAddress.ToString())))
 					{
 						theAlias.vchPubKey = dbAlias.vchPubKey;
-						errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5023 - " + _("Cannot transfer an alias that points to another alias");
+						errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5023 - " + _("An alias already exists with that address, try another public key");
 					}
 					if(theAlias.vchPrivateKey.empty())
 					{
