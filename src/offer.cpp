@@ -1345,7 +1345,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1116 - " + _("Cannot extract destination from output script");
 				return true;
 			}	
-			destaddy = CSyscoinAddress(dest);
+			CSyscoinAddress destaddy = CSyscoinAddress(dest);
 			CSyscoinAddress aliasaddy;
 			alias.GetAddress(&aliasaddy);
 			if(aliasaddy.ToString() != destaddy.ToString())
@@ -2060,7 +2060,7 @@ UniValue offerremovewhitelist(const UniValue& params, bool fHelp) {
 	const CWalletTx * wtxInAlias=NULL;
 	const CWalletTx * wtxInEscrow=NULL;
 	const CWalletTx * wtxInCert=NULL;
-	SendMoneySyscoin(vecSend, recipient.nAmount+fee.nAmount+aliasRecipient.nAmount, false, wtx, wtxIn, wtxInCert, wtxInAlias, wtxInEscrow, theAlias.multiSigInfo.vchAliases.size() > 0);
+	SendMoneySyscoin(vecSend, recipient.nAmount+fee.nAmount, false, wtx, wtxIn, wtxInCert, wtxInAlias, wtxInEscrow, theAlias.multiSigInfo.vchAliases.size() > 0);
 
 	UniValue res(UniValue::VARR);
 	if(theAlias.multiSigInfo.vchAliases.size() > 0)
@@ -2388,7 +2388,7 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	const CWalletTx * wtxInAlias=NULL;
 	const CWalletTx * wtxInEscrow=NULL;
 	const CWalletTx * wtxInCert=NULL;
-	SendMoneySyscoin(vecSend, recipient.nAmount+aliasRecipient.nAmount+fee.nAmount, false, wtx, wtxIn, wtxInCert, wtxInAlias, wtxInEscrow, alias.multiSigInfo.vchAliases.size() > 0);
+	SendMoneySyscoin(vecSend, recipient.nAmount+fee.nAmount, false, wtx, wtxIn, wtxInCert, wtxInAlias, wtxInEscrow, alias.multiSigInfo.vchAliases.size() > 0);
 	UniValue res(UniValue::VARR);
 	if(alias.multiSigInfo.vchAliases.size() > 0)
 	{
@@ -2878,8 +2878,8 @@ UniValue offeracceptfeedback(const UniValue& params, bool fHelp) {
 			throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1550 - " + _("Buyer alias is not in your wallet"));
 
 		scriptPubKeyOrig= GetScriptForDestination(buyerKey.GetID());
-		if(buyeralias.multiSigInfo.vchAliases.size() > 0)
-			scriptPubKeyOrig = CScript(buyeralias.multiSigInfo.vchRedeemScript.begin(), buyeralias.multiSigInfo.vchRedeemScript.end());
+		if(buyerAlias.multiSigInfo.vchAliases.size() > 0)
+			scriptPubKeyOrig = CScript(buyerAlias.multiSigInfo.vchRedeemScript.begin(), buyerAlias.multiSigInfo.vchRedeemScript.end());
 		scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << buyerAlias.vchAlias << buyerAlias.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
 		scriptPubKeyAlias += scriptPubKeyOrig;
 	}
