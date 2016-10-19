@@ -1865,7 +1865,7 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 		vchPrivateKey = vchFromString(strCipherText);	
 		UniValue balanceParams(UniValue::VARR);
 		balanceParams.push_back(stringFromVch(theAlias.vchAlias));
-		const UniValue &resBalance = tableRPC.execute("getreceivedbyaddress", balanceParams);
+		const UniValue &resBalance = tableRPC.execute("aliasbalance", balanceParams);
 		nAliasBalance = AmountFromValue(resBalance);
 	}
 	if(!vchPrivateValue.empty())
@@ -2429,6 +2429,56 @@ string GenerateSyscoinGuid()
 	vector<unsigned char> vchGuidRand = CScriptNum(rand).getvch();
 	return HexStr(vchGuidRand);
 }
+niValue getaliasbalance(const UniValue& params, bool fHelp)
+{
+    if (!EnsureWalletIsAvailable(fHelp))
+        return NullUniValue;
+
+    if (fHelp || params.size() < 1 || params.size() > 2)
+        throw runtime_error(
+            "getaliasbalance \"alias\" ( minconf )\n"
+            "\nReturns the total amount received by the given alias in transactions with at least minconf confirmations.\n"
+            "\nArguments:\n"
+            "1. \"alias\"  (string, required) The syscoin alias for transactions.\n"
+            "2. minconf             (numeric, optional, default=1) Only include transactions confirmed at least this many times.\n"
+       );
+
+    LOCK2(cs_main, pwalletMain->cs_wallet);
+
+    // Syscoin address
+    CSyscoinAddress address = CSyscoinAddress(params[0].get_str());
+    if (!address.IsValid())
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Syscoin address");
+	// SYSCOIN
+	CScript scriptPubKey =  GetScriptForDestination(address.Get());
+	if(!address.vchRedeemScript.empty())
+		scriptPubKey = CScript(address.vchRedeemScript.begin(), address.vchRedeemScript.end());
+    if (!IsMine(*pwalletMain, scriptPubKey))
+        return ValueFromAmount(0);
+
+    // Minimum confirmations
+    int nMinDepth = 1;
+    if (params.size() > 1)
+        nMinDepth = params[1].get_int();
+
+    // Tally
+    CAmount nAmount = 0;
+    for (map<uint256, CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
+    {
+        const CWalletTx& wtx = (*it).second;
+        if (wtx.IsCoinBase() || !CheckFinalTx(wtx))
+            continue;
+
+        for (unsigned int j = 0; j < wtx.vout.size(); j++)
+		{
+            if (wtx.vout[j].scriptPubKey == scriptPubKey && !pwallet->IsSpent(wtx.GetHash(), j)))
+                if (wtx.GetDepthInMainChain() >= nMinDepth)
+                    nAmount += wtx.vout[j].nValue;
+		}
+    }
+
+    return  ValueFromAmount(nAmount);
+}
 /**
  * [aliasinfo description]
  * @param  params [description]
@@ -2489,7 +2539,7 @@ UniValue aliasinfo(const UniValue& params, bool fHelp) {
 
 		UniValue balanceParams(UniValue::VARR);
 		balanceParams.push_back(stringFromVch(alias.vchAlias));
-		const UniValue &resBalance = tableRPC.execute("getreceivedbyaddress", balanceParams);
+		const UniValue &resBalance = tableRPC.execute("aliasbalance", balanceParams);
 		CAmount nAliasBalance = AmountFromValue(resBalance);
 		oName.push_back(Pair("balance", ValueFromAmount(nAliasBalance)));
 
