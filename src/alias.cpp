@@ -2490,7 +2490,7 @@ UniValue aliasinfo(const UniValue& params, bool fHelp) {
 		UniValue balanceParams(UniValue::VARR);
 		balanceParams.push_back(stringFromVch(alias.vchAlias));
 		const UniValue &resBalance = tableRPC.execute("getreceivedbyaddress", balanceParams);
-		nAliasBalance = AmountFromValue(resBalance);
+		CAmount nAliasBalance = AmountFromValue(resBalance);
 		oName.push_back(Pair("balance", ValueFromAmount(nAliasBalance)));
 
 		bool fAliasMine = IsSyscoinTxMine(tx, "alias")? true:  false;
