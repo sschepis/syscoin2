@@ -674,8 +674,10 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 			arbiterAlias.GetAddress(&arbiteraddy);
 			// these are the only settings allowed to change outside of activate
 			vector<unsigned char> rawTx = theEscrow.rawTx;
+			const uint256 redeemTxId = theEscrow.redeemTxId;
 			if(theEscrow.rawTx.empty())
 				rawTx = dbEscrow.rawTx;
+			theEscrow.redeemTxId.SetNull();
 			theEscrow.rawTx = rawTx;
 			escrowOp = theEscrow.op;
 			if(op == OP_ESCROW_REFUND && vvchArgs[1] == vchFromString("0"))
@@ -777,8 +779,8 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				{
 					CSyscoinAddress buyeraddy;
 					buyerAlias.GetAddress(&buyeraddy);
-					if(!serializedEscrow.redeemTxId.IsNull())
-						theEscrow.redeemTxId = serializedEscrow.redeemTxId;
+					if(!redeemTxId.IsNull())
+						theEscrow.redeemTxId = redeemTxId;
 					else if(buyeraddy.ToString() != destaddy.ToString())
 					{
 						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4051 - " + _("Only buyer can claim an escrow refund");
@@ -815,8 +817,8 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				{
 					CSyscoinAddress selleraddy;
 					sellerAlias.GetAddress(&selleraddy);
-					if(!serializedEscrow.redeemTxId.IsNull())
-						theEscrow.redeemTxId = serializedEscrow.redeemTxId;
+					if(!redeemTxId.IsNull())
+						theEscrow.redeemTxId = redeemTxId;
 					else if(selleraddy.ToString() != destaddy.ToString())
 					{
 						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4056 - " + _("Only seller can claim an escrow release");
