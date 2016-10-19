@@ -695,6 +695,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	BOOST_CHECK_THROW(CallRPC("node2", "escrownew aliasexpirenode2 " + offerguid + " 1 message aliasexpire"), runtime_error);
 
 	// keep alive for later calls
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate aliasexpire newdata1 privdata"));
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate aliasexpire2 newdata1 privdata"));
 	BOOST_CHECK_NO_THROW(CallRPC("node1","generate 5"));
 	MilliSleep(2500);
@@ -714,6 +715,7 @@ BOOST_AUTO_TEST_CASE (generate_aliasexpired)
 	MilliSleep(2500); 
 	BOOST_CHECK_NO_THROW(CallRPC("node2", "generate 5"));
 	MilliSleep(2500);
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate aliasexpire newdata1 privdata"));
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "aliasupdate aliasexpire2 newdata1 privdata"));
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "generate 5"));
 	MilliSleep(2500);
