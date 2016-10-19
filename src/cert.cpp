@@ -606,7 +606,6 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 					errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 1117 - " + _("Service destination address mismatch");
 					theCert = dbCert;
 				}
-
 			}
 			else
 				return true;

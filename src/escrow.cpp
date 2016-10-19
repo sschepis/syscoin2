@@ -629,6 +629,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 		if(op != OP_ESCROW_ACTIVATE) 
 		{
 			CTransaction escrowTx;
+			CEscrow dbEscrow;
 			if(!GetTxAndVtxOfEscrow(vvchArgs[0], dbEscrow, escrowTx, vtxPos))	
 			{
 				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4041 - " + _("Failed to read from escrow DB");
@@ -661,13 +662,14 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				return true;
 			}
 			CSyscoinAddress destaddy;
+			CTxDestination dest;
 			// check that the script for the escrow update is sent to the correct destination
 			if (!ExtractDestination(tx.vout[nOut].scriptPubKey, dest)) 
 			{
 				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 1116 - " + _("Cannot extract destination from output script");
-				theCert = dbCert;
+				theEscrow = dbEscrow;
 			}	
-			destaddy = CSyscoinAddress(payDest);
+			destaddy = CSyscoinAddress(dest);
 			CSyscoinAddress arbiteraddy;
 			arbiterAlias.GetAddress(&arbiteraddy);
 			// these are the only settings allowed to change outside of activate
@@ -1336,17 +1338,17 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 		throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4520 - " + _("Payment message length cannot exceed 1023 bytes"));
 
 	CPubKey ArbiterPubKey(arbiteralias.vchPubKey);
-	CScript scriptArbiter = GetScriptForDestination(ArbiterPubKey.GetID());
+	scriptArbiter = GetScriptForDestination(ArbiterPubKey.GetID());
 	if(arbiteralias.multiSigInfo.vchAliases.size() > 0)
 		scriptArbiter = CScript(arbiteralias.multiSigInfo.vchRedeemScript.begin(), arbiteralias.multiSigInfo.vchRedeemScript.end());	
 
 	CPubKey SellerPubKey(selleralias.vchPubKey);
-	CScript scriptSeller = GetScriptForDestination(SellerPubKey.GetID());
+	scriptSeller = GetScriptForDestination(SellerPubKey.GetID());
 	if(selleralias.multiSigInfo.vchAliases.size() > 0)
 		scriptSeller = CScript(selleralias.multiSigInfo.vchRedeemScript.begin(), selleralias.multiSigInfo.vchRedeemScript.end());	
 
 	CPubKey BuyerPubKey(buyeralias.vchPubKey);
-	CScript scriptBuyer = GetScriptForDestination(BuyerPubKey.GetID());
+	scriptBuyer = GetScriptForDestination(BuyerPubKey.GetID());
 	if(buyeralias.multiSigInfo.vchAliases.size() > 0)
 		scriptBuyer = CScript(buyeralias.multiSigInfo.vchRedeemScript.begin(), buyeralias.multiSigInfo.vchRedeemScript.end());	
 
