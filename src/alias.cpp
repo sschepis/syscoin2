@@ -2431,8 +2431,8 @@ string GenerateSyscoinGuid()
 }
 UniValue aliasbalance(const UniValue& params, bool fHelp)
 {
-    if (!EnsureWalletIsAvailable(fHelp))
-        return NullUniValue;
+	if(!pwalletMain)
+     return ValueFromAmount(0);
 
     if (fHelp || params.size() < 1 || params.size() > 2)
         throw runtime_error(
