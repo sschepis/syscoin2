@@ -2429,14 +2429,14 @@ string GenerateSyscoinGuid()
 	vector<unsigned char> vchGuidRand = CScriptNum(rand).getvch();
 	return HexStr(vchGuidRand);
 }
-niValue getaliasbalance(const UniValue& params, bool fHelp)
+UniValue aliasbalance(const UniValue& params, bool fHelp)
 {
     if (!EnsureWalletIsAvailable(fHelp))
         return NullUniValue;
 
     if (fHelp || params.size() < 1 || params.size() > 2)
         throw runtime_error(
-            "getaliasbalance \"alias\" ( minconf )\n"
+            "aliasbalance \"alias\" ( minconf )\n"
             "\nReturns the total amount received by the given alias in transactions with at least minconf confirmations.\n"
             "\nArguments:\n"
             "1. \"alias\"  (string, required) The syscoin alias for transactions.\n"
