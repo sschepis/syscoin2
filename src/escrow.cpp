@@ -527,7 +527,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4027 - " + _("Invalid op, should be escrow complete");
 					return error(errorMessage.c_str());
 				}
-				if (vvchArgs.size() > 1 && vvchArgs[1] == "1")
+				if (vvchArgs.size() > 1 && vvchArgs[1] == vchFromString("1"))
 				{
 					if(!IsAliasOp(prevAliasOp) || theEscrow.vchLinkAlias != vvchPrevAliasArgs[0] )
 					{
@@ -677,7 +677,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 			if(theEscrow.rawTx.empty())
 				rawTx = dbEscrow.rawTx;
 			theEscrow.rawTx = rawTx;
-			escrowOp = serializedEscrow.op;
+			escrowOp = theEscrow.op;
 			if(op == OP_ESCROW_REFUND && vvchArgs[1] == vchFromString("0"))
 			{
 				CSyscoinAddress selleraddy;
@@ -2149,6 +2149,7 @@ UniValue escrowcompleterelease(const UniValue& params, bool fHelp) {
 	
 	CScript scriptPubKey;
 	CScript scriptPubKeyOrig;
+	CPubKey sellerKey(sellerAlias.vchPubKey);
 	scriptPubKeyOrig= GetScriptForDestination(sellerKey.GetID());
 	if(sellerAlias.multiSigInfo.vchAliases.size() > 0)
 		scriptPubKeyOrig = CScript(sellerAlias.multiSigInfo.vchRedeemScript.begin(), sellerAlias.multiSigInfo.vchRedeemScript.end());		
