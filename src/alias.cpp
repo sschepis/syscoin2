@@ -2471,7 +2471,7 @@ UniValue aliasbalance(const UniValue& params, bool fHelp)
 
         for (unsigned int j = 0; j < wtx.vout.size(); j++)
 		{
-            if (wtx.vout[j].scriptPubKey == scriptPubKey && !pwallet->IsSpent(wtx.GetHash(), j)))
+            if (wtx.vout[j].scriptPubKey == scriptPubKey && !pwalletMain->IsSpent(wtx.GetHash(), j))
                 if (wtx.GetDepthInMainChain() >= nMinDepth)
                     nAmount += wtx.vout[j].nValue;
 		}
