@@ -1846,10 +1846,12 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5506 - " + _("Alias address does not refer to a key"));
 	CKey vchSecret;
 	vector<unsigned char> vchPrivateKey = theAlias.vchPrivateKey;
+	CAmount nAliasBalance = 0;
 	if(vchPubKeyByte.empty())
 	{
 		vchPubKeyByte = theAlias.vchPubKey;
 	}
+	// if transfer
 	else if (pwalletMain->GetKey(keyID, vchSecret))
 	{		
 		string strPrivateKey = CSyscoinSecret(vchSecret).ToString();
@@ -1861,6 +1863,10 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5507 - " + _("Could not encrypt alias private key"));
 		}
 		vchPrivateKey = vchFromString(strCipherText);	
+		UniValue balanceParams(UniValue::VARR);
+		balanceParams.push_back(stringFromVch(theAlias.vchAlias));
+		const UniValue &resBalance = tableRPC.execute("getreceivedbyaddress", balanceParams);
+		nAliasBalance = AmountFromValue(resBalance);
 	}
 	if(!vchPrivateValue.empty())
 	{
@@ -1926,8 +1932,7 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 	scriptPubKey += scriptPubKeyOrig;
 
     vector<CRecipient> vecSend;
-	CRecipient recipient;
-	CreateRecipient(scriptPubKey, recipient);
+	CRecipient recipient = {scriptPubKey, nAliasBalance, false};
 	vecSend.push_back(recipient);
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
@@ -2481,6 +2486,13 @@ UniValue aliasinfo(const UniValue& params, bool fHelp) {
 		if(!address.IsValid())
 			throw runtime_error("Invalid alias address");
 		oName.push_back(Pair("address", address.ToString()));
+
+		UniValue balanceParams(UniValue::VARR);
+		balanceParams.push_back(stringFromVch(alias.vchAlias));
+		const UniValue &resBalance = tableRPC.execute("getreceivedbyaddress", balanceParams);
+		nAliasBalance = AmountFromValue(resBalance);
+		oName.push_back(Pair("balance", ValueFromAmount(nAliasBalance)));
+
 		bool fAliasMine = IsSyscoinTxMine(tx, "alias")? true:  false;
 		oName.push_back(Pair("ismine", fAliasMine));
 		oName.push_back(Pair("safesearch", alias.safeSearch ? "Yes" : "No"));

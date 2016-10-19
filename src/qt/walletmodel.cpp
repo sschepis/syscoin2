@@ -791,7 +791,13 @@ void WalletModel::listCoins(std::map<QString, std::vector<COutput> >& mapCoins) 
 		// SYSCOIN
         if(/*!out.fSpendable || */!ExtractDestination(cout.tx->vout[cout.i].scriptPubKey, address))
             continue;
-        mapCoins[QString::fromStdString(CSyscoinAddress(address).ToString())].push_back(out);
+		// SYSCOIN
+		CSyscoin syscoinAddress = CSyscoinAddress(address);
+		syscoinAddress = CSyscoinAddress(syscoinAddress.ToString());
+		QString qStrAddress = QString::fromStdString(syscoinAddress.ToString());
+		if(syscoinAddress.isAlias)
+			qStrAddress = QString::fromStdString(syscoinAddress.aliasName);
+        mapCoins[qStrAddress].push_back(out);
     }
 }
 
