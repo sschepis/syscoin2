@@ -591,13 +591,14 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 					theCert = dbCert;
 				}
 				CSyscoinAddress destaddy;
+				CTxDestination dest;
 				// check that the script for the cert update is sent to the correct destination
 				if (!ExtractDestination(tx.vout[nOut].scriptPubKey, dest)) 
 				{
 					errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 1116 - " + _("Cannot extract destination from output script");
 					theCert = dbCert;
 				}	
-				destaddy = CSyscoinAddress(payDest);
+				destaddy = CSyscoinAddress(dest);
 				CSyscoinAddress aliasaddy;
 				alias.GetAddress(&aliasaddy);
 				if(aliasaddy.ToString() != destaddy.ToString())
