@@ -599,7 +599,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 				if (!ExtractDestination(tx.vout[nOut].scriptPubKey, dest)) 
 				{
 					errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 1116 - " + _("Cannot extract destination from output script");
-					theCert = dbCert;
+					return true;
 				}	
 				destaddy = CSyscoinAddress(dest);
 				CSyscoinAddress aliasaddy;
@@ -607,7 +607,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 				if(aliasaddy.ToString() != destaddy.ToString())
 				{
 					errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 1117 - " + _("Service destination address mismatch");
-					theCert = dbCert;
+					return true;
 				}
 			}
 			else
