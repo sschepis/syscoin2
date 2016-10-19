@@ -715,7 +715,11 @@ void CoinControlDialog::updateView()
             QString sAddress = "";
             if(ExtractDestination(out.tx->vout[out.i].scriptPubKey, outputAddress))
             {
-                sAddress = QString::fromStdString(CSyscoinAddress(outputAddress).ToString());
+				// SYSCOIN
+				CSyscoinAddress syscoinAddress = CSyscoinAddress(outputAddress).ToString();
+				sAddress = QString::fromStdString(syscoinAddress.ToString());
+				if(syscoinAddress.isAlias)
+					sAddress = QString::fromStdString(syscoinAddress.aliasName);
 
                 // if listMode or change => show syscoin address. In tree mode, address is not shown again for direct wallet address outputs
                 if (!treeMode || (!(sAddress == sWalletAddress)))
