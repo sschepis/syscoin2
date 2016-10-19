@@ -580,6 +580,8 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 							theCert.vchTitle = dbCert.vchTitle;
 						if(theCert.sCategory.empty())
 							theCert.sCategory = dbCert.sCategory;
+						if(theCert.vchAlias.empty())
+							theCert.vchAlias = dbCert.vchAlias;
 						// user can't update safety level after creation
 						theCert.safetyLevel = dbCert.safetyLevel;
 						theCert.vchCert = dbCert.vchCert;
@@ -882,7 +884,8 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
 		theCert.vchData = vchData;
 	if(copyCert.sCategory != vchCat)
 		theCert.sCategory = vchCat;
-	theCert.vchAlias = theAlias.vchAlias;
+	if(copyCert.vchAlias != vchAlias)
+		theCert.vchAlias = vchAlias;
 	theCert.nHeight = chainActive.Tip()->nHeight;
 	theCert.bPrivate = bPrivate;
 	theCert.safeSearch = strSafeSearch == "Yes"? true: false;
@@ -1499,7 +1502,7 @@ void CertTxToJSON(const int op, const std::vector<unsigned char> &vchData, const
 
 
 	string aliasValue = noDifferentStr;
-	if(cert.vchAlias != dbCert.vchAlias)
+	if(!cert.vchAlias.empty() && cert.vchAlias != dbCert.vchAlias)
 		aliasValue = stringFromVch(cert.vchAlias);
 
 	entry.push_back(Pair("alias", aliasValue));

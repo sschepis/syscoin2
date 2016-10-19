@@ -860,7 +860,8 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						theOffer.sCurrencyCode = dbOffer.sCurrencyCode;
 					if(serializedOffer.paymentOptions <= 0)
 						theOffer.paymentOptions = dbOffer.paymentOptions;
-									
+					if(serializedOffer.vchAlias.empty())
+						theOffer.vchAlias = dbOffer.vchAlias;									
 					// user can't update safety level after creation
 					theOffer.safetyLevel = dbOffer.safetyLevel;
 					if(!theOffer.vchCert.empty())
@@ -2325,6 +2326,8 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 		sCurrencyCode = offerCopy.sCurrencyCode;
 	if(offerCopy.sCurrencyCode != sCurrencyCode)
 		theOffer.sCurrencyCode = sCurrencyCode;
+	if(offerCopy.vchAlias != vchAlias)
+		theOffer.vchAlias = vchAlias;
 	
 	// linked offers can't change these settings, they are overrided by parent info
 	if(offerCopy.vchLinkOffer.empty())
@@ -2348,7 +2351,6 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 		theOffer.paymentOptions = paymentOptions;
 	if(params.size() >= 16 && params[15].get_str() != "NONE")
 		theOffer.nCommission = nCommission;
-	theOffer.vchAlias = alias.vchAlias;
 	theOffer.safeSearch = strSafeSearch == "Yes"? true: false;
 	theOffer.nQty = nQty;
 	if (params.size() >= 10)

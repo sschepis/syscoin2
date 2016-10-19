@@ -242,6 +242,7 @@ public:
 		sDescription.clear();
 		vchLinkOffer.clear();
 		vchCert.clear();
+		vchAlias.clear();
 		vchAliasPeg.clear();
 		vchGeoLocation.clear();
 		sCurrencyCode.clear();

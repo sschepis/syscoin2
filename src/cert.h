@@ -45,6 +45,7 @@ public:
     }
 	void ClearCert()
 	{
+		vchAlias.clear();
 		vchData.clear();
 		vchTitle.clear();
 		sCategory.clear();
