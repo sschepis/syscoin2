@@ -1932,7 +1932,8 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 	scriptPubKey += scriptPubKeyOrig;
 
     vector<CRecipient> vecSend;
-	CRecipient recipient = {scriptPubKey, nAliasBalance, false};
+	CreateRecipient(scriptPubKey, recipient);
+	recipient.nAmount += nAliasBalance;
 	vecSend.push_back(recipient);
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
