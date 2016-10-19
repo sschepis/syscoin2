@@ -539,7 +539,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4024 - " + _("No Alias input given");
 						return error(errorMessage.c_str());
 					}
-					if(!IsAliasOp(prevAliasOp) || (theEscrow.vchBuyerAlias != vvchPrevAliasArgs[0] && theEscrow.vchSellerAlias != vvchPrevAliasArgs[0 && theEscrow.vchArbiterAlias != vvchPrevAliasArgs[0) )
+					if(!IsAliasOp(prevAliasOp) || (theEscrow.vchBuyerAlias != vvchPrevAliasArgs[0] && theEscrow.vchSellerAlias != vvchPrevAliasArgs[0] && theEscrow.vchArbiterAlias != vvchPrevAliasArgs[0]) )
 					{
 						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4024 - " + _("Alias input mismatch");
 						return error(errorMessage.c_str());
