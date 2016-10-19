@@ -1012,12 +1012,11 @@ UniValue certtransfer(const UniValue& params, bool fHelp) {
 	CCert copyCert = theCert;
 	theCert.ClearCert();
     scriptPubKeyOrig= GetScriptForDestination(xferKey.GetID());
-	scriptPubKeyFromOrig= GetScriptForDestination(fromKey.GetID());
-	if(fromAlias.multiSigInfo.vchAliases.size() > 0)
-		scriptPubKeyFromOrig = CScript(fromAlias.multiSigInfo.vchRedeemScript.begin(), fromAlias.multiSigInfo.vchRedeemScript.end());
+	if(toAlias.multiSigInfo.vchAliases.size() > 0)
+		scriptPubKeyFromOrig = CScript(toAlias.multiSigInfo.vchRedeemScript.begin(), toAlias.multiSigInfo.vchRedeemScript.end());
     CScript scriptPubKey;
 	theCert.nHeight = chainActive.Tip()->nHeight;
-	theCert.vchAlias = fromAlias.vchAlias;
+	theCert.vchAlias = toAlias.vchAlias;
 	theCert.bPrivate = copyCert.bPrivate;
 	theCert.safeSearch = copyCert.safeSearch;
 	theCert.safetyLevel = copyCert.safetyLevel;

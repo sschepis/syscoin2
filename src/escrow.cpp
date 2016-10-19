@@ -932,13 +932,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 						HandleEscrowFeedback(theEscrow, dbEscrow, vtxPos);	
 					return true;
 				}
-			}
-			else
-			{
-				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4067 - " + _("Escrow not found when trying to update");
-				return true;
-			}
-					
+			}		
 		}
 		else
 		{
