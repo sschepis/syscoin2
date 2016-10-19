@@ -687,10 +687,10 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 			// these are the only settings allowed to change outside of activate
 			vector<unsigned char> rawTx = theEscrow.rawTx;
 			const uint256 redeemTxId = theEscrow.redeemTxId;
-			if(theEscrow.rawTx.empty())
-				rawTx = dbEscrow.rawTx;
+			theEscrow = dbEscrow;
+			if(!rawTx.empty())
+				theEscrow.rawTx = rawTx;
 			theEscrow.redeemTxId.SetNull();
-			theEscrow.rawTx = rawTx;
 			escrowOp = theEscrow.op;
 			if(op == OP_ESCROW_REFUND && vvchArgs[1] == vchFromString("0"))
 			{
