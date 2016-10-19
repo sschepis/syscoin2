@@ -651,10 +651,6 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4041 - " + _("Failed to read from escrow DB");
 				return true;
 			}
-			if(!vtxPos.empty())
-			{
-				theEscrow = dbEscrow;
-			}
 			CAliasIndex buyerAlias, sellerAlias, arbiterAlias;
 			if(!GetTxOfAlias(dbEscrow.vchBuyerAlias, buyerAlias, aliasTx, true))
 			{
@@ -675,7 +671,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 			if (theEscrow.vchEscrow != vvchArgs[0])
 			{
 				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4042 - " + _("Escrow Guid mismatch");
-				return true;
+				theEscrow = dbEscrow;
 			}
 			CSyscoinAddress destaddy;
 			CTxDestination dest;
