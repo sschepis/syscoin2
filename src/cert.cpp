@@ -482,11 +482,6 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2011 - " + _("Certificate guid mismatch");
 				return error(errorMessage.c_str());
 			}
-			if(!theCert.vchLinkAlias.empty())
-			{
-				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2012 - " + _("Certificate linked alias not allowed in activate");
-				return error(errorMessage.c_str());
-			}
 			if((theCert.vchTitle.size() > MAX_NAME_LENGTH || theCert.vchTitle.empty()))
 			{
 				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2014 - " + _("Certificate title too big or is empty");
@@ -1023,7 +1018,6 @@ UniValue certtransfer(const UniValue& params, bool fHelp) {
     CScript scriptPubKey;
 	theCert.nHeight = chainActive.Tip()->nHeight;
 	theCert.vchAlias = fromAlias.vchAlias;
-	theCert.vchLinkAlias = toAlias.vchAlias;
 	theCert.bPrivate = copyCert.bPrivate;
 	theCert.safeSearch = copyCert.safeSearch;
 	theCert.safetyLevel = copyCert.safetyLevel;
@@ -1506,8 +1500,6 @@ void CertTxToJSON(const int op, const std::vector<unsigned char> &vchData, const
 
 
 	string aliasValue = noDifferentStr;
-	if(!cert.vchLinkAlias.empty() && cert.vchLinkAlias != dbCert.vchAlias)
-		aliasValue = stringFromVch(cert.vchLinkAlias);
 	if(cert.vchAlias != dbCert.vchAlias)
 		aliasValue = stringFromVch(cert.vchAlias);
 

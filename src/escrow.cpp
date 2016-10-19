@@ -1744,10 +1744,6 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	if(buyerAlias.multiSigInfo.vchAliases.size() > 0)
 		scriptPubKeyOrigBuyer = CScript(buyerAlias.multiSigInfo.vchRedeemScript.begin(), buyerAlias.multiSigInfo.vchRedeemScript.end());		
 
-	CPubKey SellerKey(sellerAlias.vchPubKey);
-	CScript scriptPubKeyOrigSeller = GetScriptForDestination(SellerKey.GetID());
-	if(sellerAlias.multiSigInfo.vchAliases.size() > 0)
-		scriptPubKeyOrigSeller = CScript(sellerAlias.multiSigInfo.vchRedeemScript.begin(), sellerAlias.multiSigInfo.vchRedeemScript.end());
 
     CScript scriptPubKeyArbiter;
     scriptPubKeyArbiter << CScript::EncodeOP_N(OP_ESCROW_RELEASE) << vchEscrow << vchFromString("0") << vchHashEscrow << OP_2DROP << OP_2DROP;
@@ -1755,9 +1751,6 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
     CScript scriptPubKeyBuyer;
     scriptPubKeyBuyer << CScript::EncodeOP_N(OP_ESCROW_RELEASE) << vchEscrow << vchFromString("0") << vchHashEscrow << OP_2DROP << OP_2DROP;
     scriptPubKeyBuyer += scriptPubKeyOrigBuyer;
-    CScript scriptPubKeySeller;
-    scriptPubKeySeller << CScript::EncodeOP_N(OP_ESCROW_RELEASE) << vchEscrow << vchFromString("0") << vchHashEscrow << OP_2DROP << OP_2DROP;
-    scriptPubKeySeller += scriptPubKeyOrigSeller;
 
 	vector<CRecipient> vecSend;
 	CRecipient recipientBuyer;
@@ -1766,9 +1759,6 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	CRecipient recipientArbiter;
 	CreateRecipient(scriptPubKeyArbiter, recipientArbiter);
 	vecSend.push_back(recipientArbiter);
-	CRecipient recipientSeller;
-	CreateRecipient(scriptPubKeySeller, recipientSeller);
-	vecSend.push_back(recipientSeller);
 
 	CScript scriptData;
 	scriptData << OP_RETURN << data;
@@ -1779,7 +1769,7 @@ UniValue escrowrelease(const UniValue& params, bool fHelp) {
 	const CWalletTx * wtxInOffer=NULL;
 	const CWalletTx * wtxInCert=NULL;
 	const CWalletTx * wtxInAlias=NULL;
-	SendMoneySyscoin(vecSend, recipientArbiter.nAmount+recipientBuyer.nAmount+recipientSeller.nAmount+fee.nAmount, false, wtx, wtxInOffer, wtxInCert, wtxInAlias, wtxIn, theAlias.multiSigInfo.vchAliases.size() > 0);
+	SendMoneySyscoin(vecSend, recipientArbiter.nAmount+recipientBuyer.nAmount+fee.nAmount, false, wtx, wtxInOffer, wtxInCert, wtxInAlias, wtxIn, theAlias.multiSigInfo.vchAliases.size() > 0);
 	UniValue res(UniValue::VARR);
 	if(theAlias.multiSigInfo.vchAliases.size() > 0)
 	{
@@ -2358,7 +2348,8 @@ UniValue escrowrefund(const UniValue& params, bool fHelp) {
 	CScript scriptPubKeyAlias;
 	// who is initiating release arbiter or seller?
 	if(role == "arbiter")
-	{	
+	{
+		
 		wtxAliasIn = pwalletMain->GetWalletTx(arbiteraliastx.GetHash());
 		CScript scriptPubKeyOrig;
 		scriptPubKeyOrig = GetScriptForDestination(arbiterKey.GetID());
