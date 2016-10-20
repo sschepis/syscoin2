@@ -1799,7 +1799,6 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 	int nRenewal = 1;
 	CWalletTx wtx;
 	CAliasIndex updateAlias;
-	const CWalletTx* wtxIn;
 	CScript scriptPubKeyOrig;
 
 	string strSafeSearch = "Yes";
@@ -1845,23 +1844,9 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 	if (!aliasAddress.GetKeyID(keyID))
 		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5506 - " + _("Alias address does not refer to a key"));
 	CKey vchSecret;
-	vector<unsigned char> vchPrivateKey = theAlias.vchPrivateKey;
 	if(vchPubKeyByte.empty())
 	{
 		vchPubKeyByte = theAlias.vchPubKey;
-	}
-	// if transfer
-	else if (pwalletMain->GetKey(keyID, vchSecret))
-	{		
-		string strPrivateKey = CSyscoinSecret(vchSecret).ToString();
-		string strCipherText;
-		
-		// encrypt using new key
-		if(!EncryptMessage(vchPubKeyByte, vchFromString(strPrivateKey), strCipherText))
-		{
-			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5507 - " + _("Could not encrypt alias private key"));
-		}
-		vchPrivateKey = vchFromString(strCipherText);	
 	}
 	if(!vchPrivateValue.empty())
 	{
@@ -1910,7 +1895,6 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 
 	theAlias.multiSigInfo = multiSigInfo;
 	theAlias.vchPubKey = vchPubKeyByte;
-	theAlias.vchPrivateKey = vchPrivateKey;
 	theAlias.nRenewal = nRenewal;
 	theAlias.safeSearch = strSafeSearch == "Yes"? true: false;
 	theAlias.acceptCertTransfers = strAcceptCertTransfers == "Yes"? true: false;
@@ -2062,19 +2046,6 @@ void AliasTxToJSON(const int op, const vector<unsigned char> &vchData, const vec
 		privateValue = strPrivateValue;
 
 	entry.push_back(Pair("privatevalue", strPrivateValue));
-
-	string strPrivateKey = "";
-	if(!alias.vchPrivateKey.empty())
-		strPrivateKey = _("Encrypted for alias owner");
-	string strDecryptedKey = "";
-	if(DecryptMessage(alias.vchPubKey, alias.vchPrivateKey, strDecryptedKey))
-		strPrivateKey = strDecryptedKey;	
-
-	string privateKeyValue = noDifferentStr;
-	if(alias.vchPrivateKey != dbAlias.vchPrivateKey)
-		privateKeyValue = strPrivateKey;
-
-	entry.push_back(Pair("privatekey", privateKeyValue));
 
 	CSyscoinAddress address;
 	alias.GetAddress(&address);
@@ -2273,14 +2244,6 @@ UniValue aliaslist(const UniValue& params, bool fHelp) {
 			if(DecryptMessage(alias.vchPubKey, alias.vchPrivateValue, strDecrypted))
 				strPrivateValue = strDecrypted;		
 			oName.push_back(Pair("privatevalue", strPrivateValue));
-
-			string strPrivateKey = "";
-			if(!alias.vchPrivateKey.empty())
-				strPrivateKey = _("Encrypted for alias owner");
-			string strDecryptedKey = "";
-			if(DecryptMessage(alias.vchPubKey, alias.vchPrivateKey, strDecryptedKey))
-				strPrivateKey = strDecryptedKey;		
-			oName.push_back(Pair("privatekey", strPrivateKey));
 
 			oName.push_back(Pair("safesearch", alias.safeSearch ? "Yes" : "No"));
 			oName.push_back(Pair("acceptcerttransfers", alias.acceptCertTransfers ? "Yes" : "No"));
@@ -2518,13 +2481,6 @@ UniValue aliasinfo(const UniValue& params, bool fHelp) {
 			strPrivateValue = strDecrypted;		
 		oName.push_back(Pair("privatevalue", strPrivateValue));
 
-		string strPrivateKey = "";
-		if(!alias.vchPrivateKey.empty())
-			strPrivateKey = _("Encrypted for alias owner");
-		string strDecryptedKey = "";
-		if(DecryptMessage(alias.vchPubKey, alias.vchPrivateKey, strDecryptedKey))
-			strPrivateKey = strDecryptedKey;		
-		oName.push_back(Pair("privatekey", strPrivateKey));
 
 		oName.push_back(Pair("txid", alias.txHash.GetHex()));
 		CSyscoinAddress address;
@@ -2641,13 +2597,6 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 				strPrivateValue = strDecrypted;		
 			oName.push_back(Pair("privatevalue", strPrivateValue));
 
-			string strPrivateKey = "";
-			if(!txPos2.vchPrivateKey.empty())
-				strPrivateKey = _("Encrypted for alias owner");
-			string strDecryptedKey = "";
-			if(DecryptMessage(txPos2.vchPubKey, txPos2.vchPrivateKey, strDecryptedKey))
-				strPrivateKey = strDecryptedKey;		
-			oName.push_back(Pair("privatekey", strPrivateKey));
 
 			oName.push_back(Pair("txid", tx.GetHash().GetHex()));
 			CSyscoinAddress address;
@@ -2717,26 +2666,6 @@ UniValue importalias(const UniValue& params, bool fHelp) {
 	{
 		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid or expired alias");
 	}
-	string strDecryptedKey = "";
-	DecryptMessage(theAlias.vchPubKey, theAlias.vchPrivateKey, strDecryptedKey);
-		
-    CSyscoinSecret vchSecret;
-    bool fGood = vchSecret.SetString(strDecryptedKey);
-
-    if (!fGood) throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key encoding");
-
-    CKey key = vchSecret.GetKey();
-    if (!key.IsValid()) throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Private key outside allowed range");
-
-    CPubKey pubkey = key.GetPubKey();
-    CKeyID vchAddress = pubkey.GetID();
- 
-	if (!pwalletMain->HaveKey(vchAddress))
-	{
-		pwalletMain->mapKeyMetadata[vchAddress].nCreateTime = 1;
-		if (!pwalletMain->AddKeyPubKey(key, pubkey))
-			throw JSONRPCError(RPC_WALLET_ERROR, "Error adding key to wallet");
-	}	
 	CWalletDB walletdb(pwalletMain->strWalletFile);
 	BOOST_FOREACH(theAlias, vtxPos) {
 		CTransaction tx;

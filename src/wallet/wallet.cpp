@@ -924,7 +924,8 @@ bool CWallet::AddToWalletIfInvolvingMe(const CTransaction& tx, const CBlockIndex
 
         bool fExisted = mapWallet.count(tx.GetHash()) != 0;
         if (fExisted && !fUpdate) return false;
-        if (fExisted || IsMine(tx) || IsFromMe(tx))
+		// SYSCOIN
+        if (fExisted || IsMine(tx) || IsFromMe(tx) || IsFromMyAlias(tx))
         {
             CWalletTx wtx(this,tx);
 
@@ -1157,7 +1158,21 @@ bool CWallet::IsFromMe(const CTransaction& tx) const
 {
     return (GetDebit(tx, ISMINE_ALL) > 0);
 }
-
+// SYSCOIN
+bool CWallet::IsFromMyAlias(const CTransaction& tx) const
+{
+	vector<unsigned char>  vchAlias;
+    if(GetAliasOfTx(tx, vchAlias))
+	{
+		CAliasIndex theAlias;
+		CTransaction txAlias;
+		if (GetTxOfAlias(vchAlias, theAlias, txAlias))
+		{
+			return IsMine(txAlias);
+		}
+	}
+	return false;
+}
 CAmount CWallet::GetDebit(const CTransaction& tx, const isminefilter& filter) const
 {
     CAmount nDebit = 0;

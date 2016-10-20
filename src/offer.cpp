@@ -404,16 +404,11 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			op==OP_OFFER_ACCEPT ? "OFFERACCEPT: ": "", 
 			op==OP_OFFER_ACCEPT && vvchArgs.size() > 1? stringFromVch(vvchArgs[1]).c_str(): "", 
 			fJustCheck ? "JUSTCHECK" : "BLOCK", " VVCH SIZE: ", vvchArgs.size());
-	bool foundOffer = false;
-	bool foundCert = false;
-	bool foundEscrow = false;
 	bool foundAlias = false;
 	const COutPoint *prevOutput = NULL;
 	CCoins prevCoins;
-	uint256 prevOfferHash;
-	int prevOp, prevCertOp, prevEscrowOp, prevAliasOp;
-	prevOp = prevCertOp = prevEscrowOp = prevAliasOp = 0;
-	vector<vector<unsigned char> > vvchPrevArgs, vvchPrevCertArgs, vvchPrevEscrowArgs, vvchPrevAliasArgs;
+	int prevAliasOp = 0;
+	vector<vector<unsigned char> > vvchPrevAliasArgs;
 	// unserialize msg from txn, check for valid
 	COffer theOffer;
 	vector<unsigned char> vchData;
@@ -489,29 +484,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			if(prevCoins.vout.size() <= prevOutput->n || !IsSyscoinScript(prevCoins.vout[prevOutput->n].scriptPubKey, pop, vvch))
 				continue;
 
-
-			if(foundEscrow && foundOffer && foundCert && foundAlias)
-				break;
-
-			if (!foundOffer && IsOfferOp(pop)) {
-				foundOffer = true; 
-				prevOp = pop;
-				vvchPrevArgs = vvch;
-				prevOfferHash = prevOutput->hash;
-			}
-			else if (!foundCert && IsCertOp(pop))
-			{
-				foundCert = true; 
-				prevCertOp = pop;
-				vvchPrevCertArgs = vvch;
-			}
-			else if (!foundEscrow && IsEscrowOp(pop))
-			{
-				foundEscrow = true; 
-				prevEscrowOp = pop;
-				vvchPrevEscrowArgs = vvch;
-			}
-			else if (!foundAlias && IsAliasOp(pop))
+			if (!foundAlias && IsAliasOp(pop))
 			{
 				foundAlias = true; 
 				prevAliasOp = pop;
@@ -678,21 +651,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			if(!theOffer.accept.IsNull())
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1030 - " + _("Cannot have accept information on offer update");
-				return error(errorMessage.c_str());
-			}
-			if (!IsOfferOp(prevOp) )
-			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1031 - " + _("Offerupdate previous op is invalid");
-				return error(errorMessage.c_str());
-			}
-			if(prevOp == OP_OFFER_ACCEPT)
-			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1032 - " + _("Cannot use offer purchase as input to an update");
-				return error(errorMessage.c_str());
-			}
-			if (vvchPrevArgs.empty() || vvchPrevArgs[0] != vvchArgs[0])
-			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1033 - " + _("Offerupdate offer mismatch");
 				return error(errorMessage.c_str());
 			}
 			if ( theOffer.vchOffer != vvchArgs[0])
@@ -1942,9 +1900,6 @@ UniValue offeraddwhitelist(const UniValue& params, bool fHelp) {
 	CPubKey currentKey(theAlias.vchPubKey);
 	scriptPubKeyOrig = GetScriptForDestination(currentKey.GetID());
 
-	const CWalletTx* wtxIn = pwalletMain->GetWalletTx(tx.GetHash());
-	if (wtxIn == NULL)
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1513 - " + _("This offer is not in your wallet"));
 
 	COfferLinkWhitelistEntry foundEntry;
 	if(theOffer.linkWhitelist.GetLinkEntryByHash(vchAlias, foundEntry))
@@ -1983,6 +1938,7 @@ UniValue offeraddwhitelist(const UniValue& params, bool fHelp) {
 	CRecipient fee;
 	CreateFeeRecipient(scriptData, data, fee);
 	vecSend.push_back(fee);
+	const CWalletTx * wtxIn=NULL;
 	const CWalletTx * wtxInCert=NULL;
 	const CWalletTx * wtxInEscrow=NULL;
 	SendMoneySyscoin(vecSend, recipient.nAmount+fee.nAmount+aliasRecipient.nAmount, false, wtx, wtxIn, wtxInCert, wtxAliasIn, wtxInEscrow, theAlias.multiSigInfo.vchAliases.size() > 0);
@@ -2059,9 +2015,6 @@ UniValue offerremovewhitelist(const UniValue& params, bool fHelp) {
 	CPubKey currentKey(theAlias.vchPubKey);
 	scriptPubKeyOrig = GetScriptForDestination(currentKey.GetID());
 
-	wtxIn = pwalletMain->GetWalletTx(tx.GetHash());
-	if (wtxIn == NULL)
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1519 - " + _("This offer is not in your wallet"));
 	// create OFFERUPDATE txn keys
 	COfferLinkWhitelistEntry foundEntry;
 	if(!theOffer.linkWhitelist.GetLinkEntryByHash(vchAlias, foundEntry))
@@ -2095,6 +2048,7 @@ UniValue offerremovewhitelist(const UniValue& params, bool fHelp) {
 	CRecipient fee;
 	CreateFeeRecipient(scriptData, data, fee);
 	vecSend.push_back(fee);
+	const CWalletTx * wtxIn=NULL;
 	const CWalletTx * wtxInEscrow=NULL;
 	const CWalletTx * wtxInCert=NULL;
 	SendMoneySyscoin(vecSend, recipient.nAmount+fee.nAmount+aliasRecipient.nAmount, false, wtx, wtxIn, wtxInCert, wtxAliasIn, wtxInEscrow, theAlias.multiSigInfo.vchAliases.size() > 0);
@@ -2140,7 +2094,6 @@ UniValue offerclearwhitelist(const UniValue& params, bool fHelp) {
 
 	// this is a syscoind txn
 	CWalletTx wtx;
-	const CWalletTx* wtxIn;
 	CScript scriptPubKeyOrig;
 
 	EnsureWalletIsUnlocked();
@@ -2166,9 +2119,6 @@ UniValue offerclearwhitelist(const UniValue& params, bool fHelp) {
 	CPubKey currentKey(theAlias.vchPubKey);
 	scriptPubKeyOrig = GetScriptForDestination(currentKey.GetID());
 
-	wtxIn = pwalletMain->GetWalletTx(tx.GetHash());
-	if (wtxIn == NULL)
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1525 - " + _("This offer is not in your wallet"));
 	theOffer.ClearOffer();
 	theOffer.nHeight = chainActive.Tip()->nHeight;
 	// create OFFERUPDATE txn keys
@@ -2204,6 +2154,7 @@ UniValue offerclearwhitelist(const UniValue& params, bool fHelp) {
 	CRecipient fee;
 	CreateFeeRecipient(scriptData, data, fee);
 	vecSend.push_back(fee);
+	const CWalletTx * wtxIn=NULL;
 	const CWalletTx * wtxInCert=NULL;
 	const CWalletTx * wtxInEscrow=NULL;
 	SendMoneySyscoin(vecSend, recipient.nAmount+fee.nAmount+aliasRecipient.nAmount, false, wtx, wtxIn, wtxInCert, wtxAliasIn, wtxInEscrow, theAlias.multiSigInfo.vchAliases.size() > 0);
@@ -2335,7 +2286,6 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 
 	// this is a syscoind txn
 	CWalletTx wtx;
-	const CWalletTx* wtxIn;
 	CScript scriptPubKeyOrig, scriptPubKeyCertOrig;
 
 	EnsureWalletIsUnlocked();
@@ -2361,11 +2311,6 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 
 	// create OFFERUPDATE, ALIASUPDATE txn keys
 	CScript scriptPubKey;
-
-	wtxIn = pwalletMain->GetWalletTx(tx.GetHash());
-	if (wtxIn == NULL)
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1531 - " + _("This offer is not in your wallet"));
-	
 
 	COffer offerCopy = theOffer;
 	theOffer.ClearOffer();
@@ -2451,6 +2396,7 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	CRecipient fee;
 	CreateFeeRecipient(scriptData, data, fee);
 	vecSend.push_back(fee);
+	const CWalletTx * wtxIn=NULL;
 	const CWalletTx * wtxInEscrow=NULL;
 	const CWalletTx * wtxInCert=NULL;
 	SendMoneySyscoin(vecSend, recipient.nAmount+aliasRecipient.nAmount+fee.nAmount, false, wtx, wtxIn, wtxInCert, wtxAliasIn, wtxInEscrow, alias.multiSigInfo.vchAliases.size() > 0);

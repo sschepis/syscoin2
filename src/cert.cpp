@@ -356,12 +356,10 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 		LogPrintf("*** CERT %d %d %s %s\n", nHeight,
 			chainActive.Tip()->nHeight, tx.GetHash().ToString().c_str(),
 			fJustCheck ? "JUSTCHECK" : "BLOCK");
-    bool foundCert = false;
 	bool foundAlias = false;
     const COutPoint *prevOutput = NULL;
     CCoins prevCoins;
 
-    int prevOp = 0;
 	int prevAliasOp = 0;
     // Make sure cert outputs are not spent by a regular transaction, or the cert would be lost
 	if (tx.nVersion != SYSCOIN_TX_VERSION) 
@@ -369,7 +367,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 		errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2000 - " + _("Non-Syscoin transaction found");
 		return true;
 	}
-	vector<vector<unsigned char> > vvchPrevArgs, vvchPrevAliasArgs;
+	vector<vector<unsigned char> > vvchPrevAliasArgs;
 	// unserialize cert from txn, check for valid
 	CCert theCert;
 	vector<unsigned char> vchData;
@@ -408,19 +406,7 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 			errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2004 - " + _("Hash provided doesn't match the calculated hash the data");
 			return error(errorMessage.c_str());
 		}
-		
-		for (unsigned int i = 0; i < tx.vout.size(); i++) {
-			vector<vector<unsigned char> > vvchRead;
-			int tmpOp;
-			if (DecodeCertScript(tx.vout[i].scriptPubKey, tmpOp, vvchRead) && vvchRead[0] == vvchArgs[0]) {
-				if(found)
-				{
-					errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2005 - " + _("Too many certificate outputs found in a transaction, only 1 allowed");
-					return error(errorMessage.c_str());
-				}
-				found = true; 
-			}
-		}	
+			
 		// Strict check - bug disallowed
 		for (unsigned int i = 0; i < tx.vin.size(); i++) {
 			vector<vector<unsigned char> > vvch;
@@ -433,13 +419,8 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 				continue;
 			if(prevCoins.vout.size() <= prevOutput->n || !IsSyscoinScript(prevCoins.vout[prevOutput->n].scriptPubKey, pop, vvch))
 				continue;
-			if(foundCert && foundAlias)
+			if(foundAlias)
 				break;
-			if (!foundCert && IsCertOp(pop)) {
-				foundCert = true; 
-				prevOp = pop;
-				vvchPrevArgs = vvch;
-			}
 			else if (!foundAlias && IsAliasOp(pop))
 			{
 				foundAlias = true; 
@@ -479,11 +460,6 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 		}
 		switch (op) {
 		case OP_CERT_ACTIVATE:
-			if (foundCert)
-			{
-				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2010 - " + _("Certificate does use an input");
-				return error(errorMessage.c_str());
-			}
 			if (theCert.vchCert != vvchArgs[0])
 			{
 				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2011 - " + _("Certificate guid mismatch");
@@ -507,17 +483,6 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 			break;
 
 		case OP_CERT_UPDATE:
-			// previous op must be a cert
-			if (!IsCertOp(prevOp))
-			{
-				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2015 - " + _("Certificate input transaction is of wrong type");
-				return error(errorMessage.c_str());
-			}
-			if (vvchPrevArgs.empty() || vvchPrevArgs[0] != vvchArgs[0])
-			{
-				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2016 - " + _("Certificate input guid mismatch");
-				return error(errorMessage.c_str());
-			}
 			if (theCert.vchCert != vvchArgs[0])
 			{
 				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2018 - " + _("Certificate guid mismatch");
@@ -536,17 +501,6 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 			break;
 
 		case OP_CERT_TRANSFER:
-			// validate conditions
-			if ( !foundCert || !IsCertOp(prevOp))
-			{
-				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2021 - " + _("Certificate input transaction is of wrong type");
-				return error(errorMessage.c_str());
-			}
-			if (vvchPrevArgs.empty() || vvchPrevArgs[0] != vvchArgs[0])
-			{
-				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2022 - " + _("Certificate input guid mismatch");
-				return error(errorMessage.c_str());
-			}
 			if (theCert.vchCert != vvchArgs[0])
 			{
 				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2023 - " + _("Certificate guid mismatch");
@@ -583,6 +537,10 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 				theCert.vchTitle = dbCert.vchTitle;
 			if(theCert.sCategory.empty())
 				theCert.sCategory = dbCert.sCategory;
+			if(theCert.vchViewAlias.empty())
+				theCert.vchViewAlias = dbCert.vchViewAlias;
+			if(theCert.vchViewData.empty())
+				theCert.vchViewData = dbCert.vchViewData;
 			// user can't update safety level after creation
 			theCert.safetyLevel = dbCert.safetyLevel;
 			theCert.vchCert = dbCert.vchCert;
@@ -741,6 +699,7 @@ UniValue certnew(const UniValue& params, bool fHelp) {
 	newCert.sCategory = vchCat;
     newCert.vchTitle = vchTitle;
 	newCert.vchData = vchData;
+	newCert.vchViewAlias = vchAlias;
 	newCert.nHeight = chainActive.Tip()->nHeight;
 	newCert.vchAlias = vchAlias;
 	newCert.bPrivate = bPrivate;
@@ -817,9 +776,9 @@ UniValue certnew(const UniValue& params, bool fHelp) {
 }
 
 UniValue certupdate(const UniValue& params, bool fHelp) {
-    if (fHelp || params.size() < 5 || params.size() > 7)
+    if (fHelp || params.size() < 5 || params.size() > 8)
         throw runtime_error(
-		"certupdate <guid> <alias> <title> <data> <private> [safesearch=Yes] [category=certificates]\n"
+		"certupdate <guid> <alias> <title> <data> <private> [safesearch=Yes] [category=certificates] [viewalias='']\n"
                         "Perform an update on an certificate you control.\n"
                         "<guid> certificate guidkey.\n"
 						"<alias> an alias you own to associate with this certificate.\n"
@@ -827,6 +786,7 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
                         "<data> certificate data, 1KB max.\n"
 						"<private> set to 1 if you only want to make the cert data private, only the owner of the cert can view it.\n"
 						"<category> category, 255 chars max. Defaults to certificates\n"
+						"<viewalias> Allow this alias to view certificate private data.\n"
                         + HelpRequiringPassphrase());
     // gather & validate inputs
     vector<unsigned char> vchCert = vchFromValue(params[0]);
@@ -834,6 +794,11 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
     vector<unsigned char> vchTitle = vchFromValue(params[2]);
     vector<unsigned char> vchData = vchFromValue(params[3]);
 	vector<unsigned char> vchCat = vchFromString("certificates");
+	
+	vector<unsigned char> vchViewAlias;
+	if(params.size() >= 8)
+		vchViewAlias = vchFromValue(params[7]);
+
 	if(params.size() >= 7)
 		vchCat = vchFromValue(params[6]);
 	bool bPrivate = boost::lexical_cast<int>(params[4].get_str()) == 1? true: false;
@@ -847,7 +812,6 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
         vchData = vchFromString(" ");
     // this is a syscoind txn
     CWalletTx wtx;
-	const CWalletTx* wtxIn;
     CScript scriptPubKeyOrig;
 
     EnsureWalletIsUnlocked();
@@ -859,8 +823,8 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
     if (!GetTxOfCert( vchCert, theCert, tx, true))
         throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2504 - " + _("Could not find a certificate with this key"));
 
-	CTransaction aliastx;
-	CAliasIndex theAlias;
+	CTransaction aliastx, viewaliastx;
+	CAliasIndex theAlias, viewAlias;
 	const CWalletTx *wtxAliasIn = NULL;
 	if (!GetTxOfAlias(theCert.vchAlias, theAlias, aliastx, true))
 		throw runtime_error("SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2505 - " + _("Failed to read alias from alias DB"));
@@ -871,12 +835,9 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
 	if (wtxAliasIn == NULL)
 		throw runtime_error("SYSCOIN_CERTIFICATE_CONSENSUS_ERROR ERRCODE: 2507 - " + _("This alias is not in your wallet"));
 
-		
-    // make sure cert is in wallet
-	wtxIn = pwalletMain->GetWalletTx(tx.GetHash());
-	if (wtxIn == NULL || !IsSyscoinTxMine(tx, "cert"))
-		throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2508 - " + _("This cert is not in your wallet"));
-
+	if(!GetTxOfAlias(vchViewAlias, viewAlias, viewaliastx, true))
+		vchViewAlias = theAlias.vchAlias;
+			
 	CCert copyCert = theCert;
 	theCert.ClearCert();
 	CPubKey currentKey(theAlias.vchPubKey);
@@ -901,13 +862,28 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
 		{
 			throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2509 - " + _("Could not encrypt certificate data"));
 		}
+		vector<unsigned char> vchPubKeyViewPrivate = theAlias.vchPubKey;
+		if(!viewAlias.IsNull())
+		{
+			vchPubKeyViewPrivate = viewAlias.vchPubKey;
+		}
+		string strCipherViewText = "";
+		if(!EncryptMessage(vchPubKeyViewPrivate, vchData, strCipherViewText))
+		{
+			throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2509 - " + _("Could not encrypt certificate data"));
+		}
 		vchData = vchFromString(strCipherText);
+		vchViewData = vchFromString(strCipherViewText);
 	}
 
     if(copyCert.vchTitle != vchTitle)
 		theCert.vchTitle = vchTitle;
 	if(copyCert.vchData != vchData)
 		theCert.vchData = vchData;
+	if(copyCert.vchViewData != vchViewData)
+		theCert.vchViewData = vchViewData;
+	if(copyCert.vchViewAlias != vchViewAlias)
+		theCert.vchViewAlias = vchViewAlias;
 	if(copyCert.sCategory != vchCat)
 		theCert.sCategory = vchCat;
 	theCert.vchAlias = theAlias.vchAlias;
@@ -942,6 +918,7 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
 	CRecipient fee;
 	CreateFeeRecipient(scriptData, data, fee);
 	vecSend.push_back(fee);
+	const CWalletTx * wtxIn=NULL;
 	const CWalletTx * wtxInOffer=NULL;
 	const CWalletTx * wtxInEscrow=NULL;
 	SendMoneySyscoin(vecSend, recipient.nAmount+aliasRecipient.nAmount+fee.nAmount, false, wtx, wtxInOffer, wtxIn, wtxAliasIn, wtxInEscrow, theAlias.multiSigInfo.vchAliases.size() > 0);	
@@ -1001,7 +978,6 @@ UniValue certtransfer(const UniValue& params, bool fHelp) {
 	CSyscoinAddress sendAddr;
     // this is a syscoin txn
     CWalletTx wtx;
-	const CWalletTx* wtxIn;
     CScript scriptPubKeyOrig, scriptPubKeyFromOrig;
 
     EnsureWalletIsUnlocked();
@@ -1024,11 +1000,6 @@ UniValue certtransfer(const UniValue& params, bool fHelp) {
 		throw runtime_error("SYSCOIN_CERTIFICATE_CONSENSUS_ERROR ERRCODE: 2514 - " + _("This alias is not in your wallet"));
 
 	CPubKey fromKey = CPubKey(fromAlias.vchPubKey);
-
-	// check to see if certificate in wallet
-	wtxIn = pwalletMain->GetWalletTx(theCert.txHash);
-	if (wtxIn == NULL || !IsSyscoinTxMine(*wtxIn, "cert"))
-		throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2515 - " + _("This certificate is not in your wallet"));
 
 	// if cert is private, decrypt the data
 	vector<unsigned char> vchData = theCert.vchData;
@@ -1090,6 +1061,7 @@ UniValue certtransfer(const UniValue& params, bool fHelp) {
 	CRecipient fee;
 	CreateFeeRecipient(scriptData, data, fee);
 	vecSend.push_back(fee);
+	const CWalletTx * wtxIn=NULL;
 	const CWalletTx * wtxInOffer=NULL;
 	const CWalletTx * wtxInEscrow=NULL;
 	SendMoneySyscoin(vecSend, recipient.nAmount+aliasRecipient.nAmount+fee.nAmount, false, wtx, wtxInOffer, wtxIn, wtxAliasIn, wtxInEscrow, fromAlias.multiSigInfo.vchAliases.size() > 0);
@@ -1553,6 +1525,12 @@ void CertTxToJSON(const int op, const std::vector<unsigned char> &vchData, const
 		aliasValue = stringFromVch(cert.vchAlias);
 
 	entry.push_back(Pair("alias", aliasValue));
+
+	string aliasViewValue = noDifferentStr;
+	if(!cert.vchViewAlias.empty() && cert.vchViewAlias != dbCert.vchViewAlias)
+		aliasViewValue = stringFromVch(cert.vchViewAlias);
+
+	entry.push_back(Pair("viewalias", aliasViewValue));
 
 	string categoryValue = noDifferentStr;
 	if(!cert.sCategory.empty() && cert.sCategory != dbCert.sCategory)
