@@ -915,11 +915,6 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5011 - " + _("Guid in data output doesn't match guid in tx");
 					return error(errorMessage.c_str());
 				}
-				if(!theAlias.vchPrivateKey.empty())
-				{
-					errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5012 - " + _("Private key must be empty on activate");
-					return error(errorMessage.c_str());
-				}
 				
 				break;
 			case OP_ALIAS_UPDATE:
@@ -1053,21 +1048,8 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					{
 						theAlias.vchPubKey = dbAlias.vchPubKey;
 						errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5023 - " + _("An alias already exists with that address, try another public key");
-					}
-					if(theAlias.vchPrivateKey.empty())
-					{
-						theAlias.vchPubKey = dbAlias.vchPubKey;
-						errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5024 - " + _("Private key cannot be empty on transfer");
-					}	
-					else if(theAlias.vchPrivateKey == dbAlias.vchPrivateKey)
-					{
-						theAlias.vchPubKey = dbAlias.vchPubKey;
-						errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5025 - " + _("Private key must change on transfer");
-					}
-					
+					}					
 				}
-				else
-					theAlias.vchPrivateKey = dbAlias.vchPrivateKey;
 			}
 			else
 			{
@@ -2751,14 +2733,6 @@ UniValue aliasfilter(const UniValue& params, bool fHelp) {
 		if(DecryptMessage(txName.vchPubKey, alias.vchPrivateValue, strDecrypted))
 			strPrivateValue = strDecrypted;		
 		oName.push_back(Pair("privatevalue", strPrivateValue));
-
-		string strPrivateKey = "";
-		if(!txName.vchPrivateKey.empty())
-			strPrivateKey = _("Encrypted for alias owner");
-		string strDecryptedKey = "";
-		if(DecryptMessage(txName.vchPubKey, txName.vchPrivateKey, strDecryptedKey))
-			strPrivateKey = strDecryptedKey;		
-		oName.push_back(Pair("privatekey", strPrivateKey));
 
 
         oName.push_back(Pair("lastupdate_height", nHeight));
