@@ -794,7 +794,7 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
     vector<unsigned char> vchTitle = vchFromValue(params[2]);
     vector<unsigned char> vchData = vchFromValue(params[3]);
 	vector<unsigned char> vchCat = vchFromString("certificates");
-	
+	vector<unsigned char> vchViewData;
 	vector<unsigned char> vchViewAlias;
 	if(params.size() >= 8)
 		vchViewAlias = vchFromValue(params[7]);
