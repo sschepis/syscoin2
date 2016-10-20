@@ -400,14 +400,13 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 			return error(errorMessage.c_str());
 		}
 
-		if(!theCert.IsNull())
-		{					
-			if(vvchArgs.size() <= 1 || vchHash != vvchArgs[1])
-			{
-				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2004 - " + _("Hash provided doesn't match the calculated hash the data");
-				return error(errorMessage.c_str());
-			}
+					
+		if(vvchArgs.size() <= 1 || vchHash != vvchArgs[1])
+		{
+			errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2004 - " + _("Hash provided doesn't match the calculated hash the data");
+			return error(errorMessage.c_str());
 		}
+		
 		for (unsigned int i = 0; i < tx.vout.size(); i++) {
 			vector<vector<unsigned char> > vvchRead;
 			int tmpOp;
@@ -500,20 +499,18 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 			{
 				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2016 - " + _("Certificate input guid mismatch");
 				return error(errorMessage.c_str());
-			}
-			if(!theCert.IsNull())
+			}		
+			if (theCert.vchCert != vvchArgs[0])
 			{
-				if (theCert.vchCert != vvchArgs[0])
-				{
-					errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2018 - " + _("Certificate guid mismatch");
-					return error(errorMessage.c_str());
-				}
-				if(theCert.vchTitle.size() > MAX_NAME_LENGTH)
-				{
-					errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2019 - " + _("Certificate title too big");
-					return error(errorMessage.c_str());
-				}
+				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2018 - " + _("Certificate guid mismatch");
+				return error(errorMessage.c_str());
 			}
+			if(theCert.vchTitle.size() > MAX_NAME_LENGTH)
+			{
+				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2019 - " + _("Certificate title too big");
+				return error(errorMessage.c_str());
+			}
+			
 			break;
 
 		case OP_CERT_TRANSFER:
@@ -552,66 +549,61 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 			{
 				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Failed to read from certificate DB");
 				return true;
+			}	
+			if(op == OP_CERT_UPDATE)
+			{
+				if(theCert.vchData.empty())
+					theCert.vchData = dbCert.vchData;
+				if(theCert.vchTitle.empty())
+					theCert.vchTitle = dbCert.vchTitle;
+				if(theCert.sCategory.empty())
+					theCert.sCategory = dbCert.sCategory;
+				if(theCert.vchAlias.empty())
+					theCert.vchAlias = dbCert.vchAlias;
+				// user can't update safety level after creation
+				theCert.safetyLevel = dbCert.safetyLevel;
+				theCert.vchCert = dbCert.vchCert;
 			}
 			
-
-			if(!vtxPos.empty())
+			if(!GetTxOfAlias(theCert.vchAlias, alias, aliasTx))
 			{
-				if(theCert.IsNull())
-					theCert = vtxPos.back();
+				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2029 - " + _("Cannot find alias for this certificate. It may be expired");	
+				theCert = dbCert;
+			}
+			if(op == OP_CERT_TRANSFER)
+			{			
+				// only 2 fields allowed to change on cert transfer
+				const vector<unsigned char> vchAlias = theCert.vchAlias;
+				const vector<unsigned char> vchData = theCert.vchData;
+				theCert = dbCert;
+				if(!alias.acceptCertTransfers)
+				{
+					errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("The alias you are transferring to does not accept certificate transfers");
+				}
 				else
 				{
-					if(op == OP_CERT_UPDATE)
-					{
-						if(theCert.vchData.empty())
-							theCert.vchData = dbCert.vchData;
-						if(theCert.vchTitle.empty())
-							theCert.vchTitle = dbCert.vchTitle;
-						if(theCert.sCategory.empty())
-							theCert.sCategory = dbCert.sCategory;
-						if(theCert.vchAlias.empty())
-							theCert.vchAlias = dbCert.vchAlias;
-						// user can't update safety level after creation
-						theCert.safetyLevel = dbCert.safetyLevel;
-						theCert.vchCert = dbCert.vchCert;
-					}
-				}
-				if(!GetTxOfAlias(theCert.vchAlias, alias, aliasTx))
-				{
-					errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2029 - " + _("Cannot find alias for this certificate. It may be expired");	
-					theCert = dbCert;
-				}
-				else if(op == OP_CERT_TRANSFER)
-				{			
-					const vector<unsigned char> vchAlias = theCert.vchAlias;
-					theCert = dbCert;
-					if(!alias.acceptCertTransfers)
-					{
-						errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 2028 - " + _("The alias you are transferring to does not accept certificate transfers");
-					}
-					else
-						theCert.vchAlias = vchAlias;
-				}
-
-				CSyscoinAddress destaddy;
-				CTxDestination dest;
-				// check that the script for the cert update is sent to the correct destination
-				if (!ExtractDestination(tx.vout[nOut].scriptPubKey, dest)) 
-				{
-					errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 1116 - " + _("Cannot extract destination from output script");
-					return true;
-				}	
-				destaddy = CSyscoinAddress(dest);
-				CSyscoinAddress aliasaddy;
-				alias.GetAddress(&aliasaddy);
-				if(aliasaddy.ToString() != destaddy.ToString())
-				{
-					errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 1117 - " + _("Service destination address mismatch");
-					return true;
+					theCert.vchAlias = vchAlias;
+					theCert.vchData = vchData;
 				}
 			}
-			else
-				return true;
+
+			CSyscoinAddress destaddy;
+			CTxDestination dest;
+			// check that the script for the cert update is sent to the correct destination
+			if (!ExtractDestination(tx.vout[nOut].scriptPubKey, dest)) 
+			{
+				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 1116 - " + _("Cannot extract destination from output script");
+				theCert = dbCert;
+			}	
+			destaddy = CSyscoinAddress(dest);
+			CSyscoinAddress aliasaddy;
+			alias.GetAddress(&aliasaddy);
+			if(aliasaddy.ToString() != destaddy.ToString())
+			{
+				errorMessage = "SYSCOIN_CERTIFICATE_CONSENSUS_ERROR: ERRCODE: 1117 - " + _("Service destination address mismatch");
+				theCert = dbCert;
+			}
+
 		}
 		else
 		{

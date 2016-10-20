@@ -655,23 +655,23 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 			if(!GetTxOfAlias(dbEscrow.vchBuyerAlias, buyerAlias, aliasTx, theEscrow.op == OP_ESCROW_COMPLETE))
 			{
 				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4038 - " + _("Cannot find buyer alias");
-				return true;
+				theEscrow = dbEscrow;
 			}
 			if(!GetTxOfAlias(dbEscrow.vchSellerAlias, sellerAlias, aliasTx, theEscrow.op == OP_ESCROW_COMPLETE))
 			{
 				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4039 - " + _("Cannot find seller alias");
-				return true;
+				theEscrow = dbEscrow;
 			}	
 			if(!GetTxOfAlias(dbEscrow.vchArbiterAlias, arbiterAlias, aliasTx, theEscrow.op == OP_ESCROW_COMPLETE))
 			{
 				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4040 - " + _("Cannot find arbiter alias");
-				return true;
+				theEscrow = dbEscrow;
 			}			
 		
 			if (theEscrow.vchEscrow != vvchArgs[0])
 			{
 				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4042 - " + _("Escrow Guid mismatch");
-				return true;
+				theEscrow = dbEscrow;
 			}
 			CSyscoinAddress destaddy;
 			CTxDestination dest;
@@ -679,7 +679,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 			if (!ExtractDestination(tx.vout[nOut].scriptPubKey, dest)) 
 			{
 				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 1116 - " + _("Cannot extract destination from output script");
-				return true;
+				theEscrow = dbEscrow;
 			}	
 			destaddy = CSyscoinAddress(dest);
 			CSyscoinAddress arbiteraddy;
@@ -700,23 +700,23 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				if(theEscrow.op == OP_ESCROW_COMPLETE)
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4043 - " + _("Can only refund an active escrow");
-					return true;
+					theEscrow = dbEscrow;
 				}
 				else if(theEscrow.op == OP_ESCROW_RELEASE)
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4044 - " + _("Cannot refund an escrow that is already released");
-					return true;
+					theEscrow = dbEscrow;
 				}
 				else if(selleraddy.ToString() != destaddy.ToString() && arbiteraddy.ToString() != destaddy.ToString())
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4045 - " + _("Only arbiter or seller can initiate an escrow refund");
-					return true;
+					theEscrow = dbEscrow;
 				}
 				// only the arbiter can re-refund an escrow
 				else if(theEscrow.op == OP_ESCROW_REFUND && arbiteraddy.ToString() != destaddy.ToString())
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4046 - " + _("Only arbiter can refund an escrow after it has already been refunded");
-					return true;
+					theEscrow = dbEscrow;
 				}
 	
 				if(dbOffer.nQty != -1)
@@ -797,7 +797,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 					else if(buyeraddy.ToString() != destaddy.ToString())
 					{
 						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4051 - " + _("Only buyer can claim an escrow refund");
-						return true;
+						theEscrow = dbEscrow;
 					}
 				}
 				else if(op == OP_ESCROW_RELEASE && vvchArgs[1] == vchFromString("0"))
@@ -807,23 +807,23 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 					if(theEscrow.op == OP_ESCROW_COMPLETE)
 					{
 						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4052 - " + _("Can only release an active escrow");
-						return true;
+						theEscrow = dbEscrow;
 					}
 					else if(theEscrow.op == OP_ESCROW_REFUND)
 					{
 						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4053 - " + _("Cannot release an escrow that is already refunded");
-						return true;
+						theEscrow = dbEscrow;
 					}
 					else if(buyeraddy.ToString() != destaddy.ToString() && arbiteraddy.ToString() != destaddy.ToString())
 					{
 						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4054 - " + _("Only arbiter or buyer can initiate an escrow release");
-						return true;
+						theEscrow = dbEscrow;
 					}
 					// only the arbiter can re-release an escrow
 					else if(theEscrow.op == OP_ESCROW_RELEASE && arbiteraddy.ToString() != destaddy.ToString())
 					{
 						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4055 - " + _("Only arbiter can release an escrow after it has already been released");
-						return true;
+						theEscrow = dbEscrow;
 					}
 				}
 				else if(op == OP_ESCROW_RELEASE && vvchArgs[1] == vchFromString("1"))
@@ -835,7 +835,7 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 					else if(selleraddy.ToString() != destaddy.ToString())
 					{
 						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4056 - " + _("Only seller can claim an escrow release");
-						return true;
+						theEscrow = dbEscrow;
 					}
 				}
 				else if(op == OP_ESCROW_COMPLETE)
@@ -847,38 +847,38 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 					if(theEscrow.feedback.size() != 2)
 					{
 						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4057 - " + _("Invalid number of escrow feedbacks provided");
-						return true;
+						theEscrow = dbEscrow;
 					}
 					if(theEscrow.feedback[0].nFeedbackUserFrom ==  theEscrow.feedback[0].nFeedbackUserTo ||
 						theEscrow.feedback[1].nFeedbackUserFrom ==  theEscrow.feedback[1].nFeedbackUserTo)
 					{
 						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4058 - " + _("Cannot send yourself feedback");
-						return true;
+						theEscrow = dbEscrow;
 					}
 					else if(theEscrow.feedback[0].vchFeedback.size() <= 0 && theEscrow.feedback[1].vchFeedback.size() <= 0)
 					{
 						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4059 - " + _("Feedback must leave a message");
-						return true;
+						theEscrow = dbEscrow;
 					}
 					else if(theEscrow.feedback[0].nRating > 5 || theEscrow.feedback[1].nRating > 5)
 					{
 						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4060 - " + _("Invalid rating, must be less than or equal to 5 and greater than or equal to 0");
-						return true;
+						theEscrow = dbEscrow;
 					}
 					else if((theEscrow.feedback[0].nFeedbackUserFrom == FEEDBACKBUYER || theEscrow.feedback[1].nFeedbackUserFrom == FEEDBACKBUYER) && buyeraddy.ToString() != destaddy.ToString() && dbEscrow.vchBuyerAlias != theEscrow.vchBuyerAlias)
 					{
 						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4061 - " + _("Only buyer can leave this feedback");
-						return true;
+						theEscrow = dbEscrow;
 					}
 					else if((theEscrow.feedback[0].nFeedbackUserFrom == FEEDBACKSELLER || theEscrow.feedback[1].nFeedbackUserFrom == FEEDBACKSELLER) && selleraddy.ToString() != destaddy.ToString() && dbEscrow.vchSellerAlias != theEscrow.vchSellerAlias)
 					{
 						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4062 - " + _("Only seller can leave this feedback");
-						return true;
+						theEscrow = dbEscrow;
 					}
 					else if((theEscrow.feedback[0].nFeedbackUserFrom == FEEDBACKARBITER || theEscrow.feedback[0].nFeedbackUserFrom == FEEDBACKARBITER) && arbiteraddy.ToString() != destaddy.ToString() && dbEscrow.vchArbiterAlias != theEscrow.vchArbiterAlias)
 					{
 						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4063 - " + _("Only arbiter can leave this feedback");
-						return true;
+						theEscrow = dbEscrow;
 					}
 					theEscrow.feedback[0].nHeight = nHeight;
 					theEscrow.feedback[0].txHash = tx.GetHash();
@@ -913,17 +913,17 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 					if(feedbackBuyerCount >= 10 && (theEscrow.feedback[0].nFeedbackUserFrom == FEEDBACKBUYER || theEscrow.feedback[1].nFeedbackUserFrom == FEEDBACKBUYER))
 					{
 						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4064 - " + _("Cannot exceed 10 buyer feedbacks");
-						return true;
+						theEscrow = dbEscrow;
 					}
 					else if(feedbackSellerCount >= 10 && (theEscrow.feedback[0].nFeedbackUserFrom == FEEDBACKSELLER || theEscrow.feedback[1].nFeedbackUserFrom == FEEDBACKSELLER))
 					{
 						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4065 - " + _("Cannot exceed 10 seller feedbacks");
-						return true;
+						theEscrow = dbEscrow;
 					}
 					else if(feedbackArbiterCount >= 10 && (theEscrow.feedback[0].nFeedbackUserFrom == FEEDBACKARBITER || theEscrow.feedback[1].nFeedbackUserFrom == FEEDBACKARBITER))
 					{
 						errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4066 - " + _("Cannot exceed 10 arbiter feedbacks");
-						return true;
+						theEscrow = dbEscrow;
 					}
 					if(!dontaddtodb)
 						HandleEscrowFeedback(theEscrow, dbEscrow, vtxPos);	
