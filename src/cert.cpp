@@ -832,7 +832,7 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
 		throw runtime_error("SYSCOIN_CERTIFICATE_CONSENSUS_ERROR ERRCODE: 2507 - " + _("This alias is not in your wallet"));
 
 	if(!GetTxOfAlias(vchViewAlias, viewAlias, viewaliastx, true))
-		vchViewAlias.SetNull();
+		vchViewAlias.clear();
 			
 	CCert copyCert = theCert;
 	theCert.ClearCert();
