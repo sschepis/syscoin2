@@ -148,7 +148,7 @@ public:
 		READWRITE(VARINT(nRatingCountAsArbiter));
 	}
     friend bool operator==(const CAliasIndex &a, const CAliasIndex &b) {
-		return (a.acceptCertTransfers == b.acceptCertTransfers && a.multiSigInfo == b.multiSigInfo && a.vchPrivateKey == b.vchPrivateKey && a.nRenewal == b.nRenewal && a.vchGUID == b.vchGUID && a.vchAlias == b.vchAlias && a.nRatingCountAsArbiter == b.nRatingCountAsArbiter && a.nRatingAsArbiter == b.nRatingAsArbiter && a.nRatingCountAsSeller == b.nRatingCountAsSeller && a.nRatingAsSeller == b.nRatingAsSeller && a.nRatingCountAsBuyer == b.nRatingCountAsBuyer && a.nRatingAsBuyer == b.nRatingAsBuyer && a.safetyLevel == b.safetyLevel && a.safeSearch == b.safeSearch && a.nHeight == b.nHeight && a.txHash == b.txHash && a.vchPublicValue == b.vchPublicValue && a.vchPrivateValue == b.vchPrivateValue && a.vchPubKey == b.vchPubKey);
+		return (a.acceptCertTransfers == b.acceptCertTransfers && a.multiSigInfo == b.multiSigInfo && a.nRenewal == b.nRenewal && a.vchGUID == b.vchGUID && a.vchAlias == b.vchAlias && a.nRatingCountAsArbiter == b.nRatingCountAsArbiter && a.nRatingAsArbiter == b.nRatingAsArbiter && a.nRatingCountAsSeller == b.nRatingCountAsSeller && a.nRatingAsSeller == b.nRatingAsSeller && a.nRatingCountAsBuyer == b.nRatingCountAsBuyer && a.nRatingAsBuyer == b.nRatingAsBuyer && a.safetyLevel == b.safetyLevel && a.safeSearch == b.safeSearch && a.nHeight == b.nHeight && a.txHash == b.txHash && a.vchPublicValue == b.vchPublicValue && a.vchPrivateValue == b.vchPrivateValue && a.vchPubKey == b.vchPubKey);
     }
 
     friend bool operator!=(const CAliasIndex &a, const CAliasIndex &b) {
