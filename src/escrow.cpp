@@ -652,17 +652,17 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				return true;
 			}
 			CAliasIndex buyerAlias, sellerAlias, arbiterAlias;
-			if(!GetTxOfAlias(dbEscrow.vchBuyerAlias, buyerAlias, aliasTx, true))
+			if(!GetTxOfAlias(dbEscrow.vchBuyerAlias, buyerAlias, aliasTx, theEscrow.op != OP_ESCROW_RELEASE))
 			{
 				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4038 - " + _("Cannot find buyer alias");
 				return true;
 			}
-			if(!GetTxOfAlias(dbEscrow.vchSellerAlias, sellerAlias, aliasTx, true))
+			if(!GetTxOfAlias(dbEscrow.vchSellerAlias, sellerAlias, aliasTx, theEscrow.op != OP_ESCROW_RELEASE))
 			{
 				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4039 - " + _("Cannot find seller alias");
 				return true;
 			}	
-			if(!GetTxOfAlias(dbEscrow.vchArbiterAlias, arbiterAlias, aliasTx, true))
+			if(!GetTxOfAlias(dbEscrow.vchArbiterAlias, arbiterAlias, aliasTx, theEscrow.op != OP_ESCROW_RELEASE))
 			{
 				errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4040 - " + _("Cannot find arbiter alias");
 				return true;

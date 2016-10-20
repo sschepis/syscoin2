@@ -1065,20 +1065,20 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1081 - " + _("Could not find offer accept from mempool or disk");
 					return true;
 				}
-				// if feedback is for buyer then we need to ensure attached input alias was from seller
+				// if feedback is from buyer then we need to ensure attached input alias was from buyer
 				if(theOfferAccept.feedback[0].nFeedbackUserFrom == FEEDBACKBUYER)
 				{
-					if(serializedOffer.vchAlias != acceptOffer.vchAlias)
+					if(serializedOffer.vchAlias != offerAccept.vchBuyerAlias)
 					{
-						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1082 - " + _("Only seller can leaver the buyer feedback");
+						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1082 - " + _("Only buyer can leaver the seller feedback");
 						return true;
 					}
 				}
 				else if(theOfferAccept.feedback[0].nFeedbackUserFrom == FEEDBACKSELLER)
 				{
-					if(serializedOffer.vchAlias != offerAccept.vchBuyerAlias)
+					if(serializedOffer.vchAlias != acceptOffer.vchAlias)
 					{
-						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1083 - " + _("Only buyer can leave the seller feedback");
+						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1083 - " + _("Only seller can leave the buyer feedback");
 						return true;
 					}
 				}
