@@ -1846,7 +1846,6 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5506 - " + _("Alias address does not refer to a key"));
 	CKey vchSecret;
 	vector<unsigned char> vchPrivateKey = theAlias.vchPrivateKey;
-	CAmount nAliasBalance = 0;
 	if(vchPubKeyByte.empty())
 	{
 		vchPubKeyByte = theAlias.vchPubKey;
@@ -1863,10 +1862,6 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 			throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5507 - " + _("Could not encrypt alias private key"));
 		}
 		vchPrivateKey = vchFromString(strCipherText);	
-		UniValue balanceParams(UniValue::VARR);
-		balanceParams.push_back(stringFromVch(theAlias.vchAlias));
-		const UniValue &resBalance = tableRPC.execute("aliasbalance", balanceParams);
-		nAliasBalance = AmountFromValue(resBalance);
 	}
 	if(!vchPrivateValue.empty())
 	{
@@ -1933,8 +1928,7 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 
     vector<CRecipient> vecSend;
 	CRecipient recipient;
-	CreateRecipient(scriptPubKey, recipient);
-	recipient.nAmount += nAliasBalance;
+	CreateRecipient(scriptPubKey, recipient); 
 	vecSend.push_back(recipient);
 	CScript scriptData;
 	scriptData << OP_RETURN << data;

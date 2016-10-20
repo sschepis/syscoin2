@@ -28,6 +28,8 @@ class CCert {
 public:
 	std::vector<unsigned char> vchCert;
 	std::vector<unsigned char> vchAlias;
+	// to modify vchAlias in certtransfer
+	std::vector<unsigned char> vchLinkAlias;
     std::vector<unsigned char> vchTitle;
     std::vector<unsigned char> vchData;
 	std::vector<unsigned char> sCategory;
@@ -45,7 +47,7 @@ public:
     }
 	void ClearCert()
 	{
-		vchAlias.clear();
+		vchLinkAlias.clear();
 		vchData.clear();
 		vchTitle.clear();
 		sCategory.clear();
@@ -57,6 +59,7 @@ public:
 		READWRITE(vchData);
 		READWRITE(txHash);
 		READWRITE(VARINT(nHeight));
+		READWRITE(vchLinkAlias);
 		READWRITE(bPrivate);
 		READWRITE(vchCert);
 		READWRITE(safetyLevel);
@@ -71,6 +74,7 @@ public:
         && a.txHash == b.txHash
         && a.nHeight == b.nHeight
 		&& a.vchAlias == b.vchAlias
+		&& a.vchLinkAlias == b.vchLinkAlias
 		&& a.bPrivate == b.bPrivate
 		&& a.safetyLevel == b.safetyLevel
 		&& a.safeSearch == b.safeSearch
@@ -85,6 +89,7 @@ public:
         txHash = b.txHash;
         nHeight = b.nHeight;
 		vchAlias = b.vchAlias;
+		vchLinkAlias = b.vchLinkAlias;
 		bPrivate = b.bPrivate;
 		safetyLevel = b.safetyLevel;
 		safeSearch = b.safeSearch;
@@ -117,8 +122,8 @@ public:
         *this = myCert;
         return true;
     }
-    void SetNull() { sCategory.clear(); vchCert.clear(); safetyLevel = 0; safeSearch = true; nHeight = 0; txHash.SetNull(); vchAlias.clear(); bPrivate = false; vchTitle.clear(); vchData.clear();}
-    bool IsNull() const { return (sCategory.empty() && vchCert.empty() && safetyLevel == 0 && safeSearch && !bPrivate && txHash.IsNull() &&  nHeight == 0 && vchData.empty() && vchTitle.empty() && vchAlias.empty()); }
+    void SetNull() { vchLinkAlias.clear(); sCategory.clear(); vchCert.clear(); safetyLevel = 0; safeSearch = true; nHeight = 0; txHash.SetNull(); vchAlias.clear(); bPrivate = false; vchTitle.clear(); vchData.clear();}
+    bool IsNull() const { return (vchLinkAlias.empty() && sCategory.empty() && vchCert.empty() && safetyLevel == 0 && safeSearch && !bPrivate && txHash.IsNull() &&  nHeight == 0 && vchData.empty() && vchTitle.empty() && vchAlias.empty()); }
     bool UnserializeFromTx(const CTransaction &tx);
 	bool UnserializeFromData(const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash);
 	const std::vector<unsigned char> Serialize();
