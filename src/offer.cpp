@@ -1986,7 +1986,6 @@ UniValue offerremovewhitelist(const UniValue& params, bool fHelp) {
 	CTransaction txCert;
 	CCert theCert;
 	CWalletTx wtx;
-	const CWalletTx* wtxIn = NULL;
 
 	// this is a syscoin txn
 	CScript scriptPubKeyOrig;
