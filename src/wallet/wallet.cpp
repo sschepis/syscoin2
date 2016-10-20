@@ -34,10 +34,7 @@
 
 using namespace std;
 // SYSCOIN services
-extern int IndexOfOfferOutput(const CTransaction& tx);
-extern int IndexOfCertOutput(const CTransaction& tx);
 extern int IndexOfAliasOutput(const CTransaction& tx);
-extern int IndexOfEscrowOutput(const CTransaction& tx);
 extern bool IsSyscoinScript(const CScript& scriptPubKey, int &op, vector<vector<unsigned char> > &vvchArgs);
 extern int GetSyscoinTxVersion();
 extern vector<unsigned char> vchFromString(const string &str);
@@ -2192,34 +2189,12 @@ bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, bool ov
 }
 // SYSCOIN
 bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet,
-                                int& nChangePosInOut, std::string& strFailReason, const CCoinControl* coinControl, bool sign, const CWalletTx* wtxInOffer, const CWalletTx* wtxInCert, const CWalletTx* wtxInAlias, const CWalletTx* wtxInEscrow, bool sysTx)
+                                int& nChangePosInOut, std::string& strFailReason, const CCoinControl* coinControl, bool sign, const CWalletTx* wtxInAlias, bool sysTx)
 {
     CAmount nValue = 0;
 	// SYSCOIN: get output amount of input transactions for syscoin service calls
-	int nTxOutOffer = 0;
-	int nTxOutCert = 0;
 	int nTxOutAlias = 0;
-	int nTxOutEscrow = 0;
-	if(wtxInOffer != NULL)
-	{
-		const CTransaction& txIn = wtxInOffer[0];
-		nTxOutOffer = IndexOfOfferOutput(txIn);
-		if (nTxOutOffer < 0)
-		{
-			strFailReason = _("Can't determine type of offer input into syscoin service transaction");
-            return false;
-		}
-	}
-	if(wtxInCert != NULL)
-	{
-		const CTransaction& txIn = wtxInCert[0];
-		nTxOutCert = IndexOfCertOutput(txIn);
-		if (nTxOutCert < 0)
-		{
-			strFailReason = _("Can't determine type of cert input into syscoin service transaction");
-            return false;
-		}
-	}
+	
 	if(wtxInAlias != NULL)
 	{
 		const CTransaction& txIn = wtxInAlias[0];
@@ -2227,17 +2202,6 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
 		if (nTxOutAlias < 0)
 		{
 			strFailReason = _("Can't determine type of alias input into syscoin service transaction");
-            return false;
-		}
-	}
-	if(wtxInEscrow != NULL)
-	{
-		const CTransaction& txIn = wtxInEscrow[0];
-		// escrow sends multiple outs of same scriptpubkey to arbiter, seller and buyer.. we need the one this wallet owns to sign with it
-		nTxOutEscrow = IndexOfEscrowOutput(txIn);
-		if (nTxOutEscrow < 0)
-		{
-			strFailReason = _("Can't determine type of escrow input into syscoin service transaction");
             return false;
 		}
 	}
@@ -2353,14 +2317,8 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
                 }
 				// SYSCOIN input credit from input tx
 				int64_t nWtxinCredit = 0;
-				if(wtxInOffer != NULL)
-					nWtxinCredit = wtxInOffer->vout[nTxOutOffer].nValue;
-				if(wtxInCert != NULL)
-					nWtxinCredit += wtxInCert->vout[nTxOutCert].nValue;
 				if(wtxInAlias != NULL)
 					nWtxinCredit += wtxInAlias->vout[nTxOutAlias].nValue;
-				if(wtxInEscrow != NULL)
-					nWtxinCredit += wtxInEscrow->vout[nTxOutEscrow].nValue;
                 // Choose coins to use
                 set<pair<const CWalletTx*,unsigned int> > setCoins;
                 CAmount nValueIn = 0;
@@ -2374,14 +2332,8 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
 				nValueIn += nWtxinCredit;
 				vector<pair<const CWalletTx*, unsigned int> > vecCoins(
 					setCoins.begin(), setCoins.end());
-				if(wtxInOffer != NULL)
-					vecCoins.insert(vecCoins.end(), make_pair(wtxInOffer, nTxOutOffer));
-				if(wtxInCert != NULL)
-					vecCoins.insert(vecCoins.end(), make_pair(wtxInCert, nTxOutCert));
 				if(wtxInAlias != NULL)
 					vecCoins.insert(vecCoins.end(), make_pair(wtxInAlias, nTxOutAlias));
-				if(wtxInEscrow != NULL)
-					vecCoins.insert(vecCoins.end(), make_pair(wtxInEscrow, nTxOutEscrow));
 				// SYSCOIN
                 BOOST_FOREACH(PAIRTYPE(const CWalletTx*, unsigned int) pcoin, vecCoins)
                 {

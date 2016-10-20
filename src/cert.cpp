@@ -19,7 +19,7 @@
 #include <boost/thread.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 using namespace std;
-extern void SendMoneySyscoin(const vector<CRecipient> &vecSend, CAmount nValue, bool fSubtractFeeFromAmount, CWalletTx& wtxNew, const CWalletTx* wtxInOffer=NULL, const CWalletTx* wtxInCert=NULL, const CWalletTx* wtxInAlias=NULL, const CWalletTx* wtxInEscrow=NULL, bool syscoinMultiSigTx=false);
+extern void SendMoneySyscoin(const vector<CRecipient> &vecSend, CAmount nValue, bool fSubtractFeeFromAmount, CWalletTx& wtxNew, const CWalletTx* wtxInAlias=NULL, bool syscoinMultiSigTx=false);
 bool EncryptMessage(const vector<unsigned char> &vchPubKey, const vector<unsigned char> &vchMessage, string &strCipherText)
 {
 	CMessageCrypter crypter;
@@ -537,10 +537,6 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 				theCert.vchTitle = dbCert.vchTitle;
 			if(theCert.sCategory.empty())
 				theCert.sCategory = dbCert.sCategory;
-			if(theCert.vchViewAlias.empty())
-				theCert.vchViewAlias = dbCert.vchViewAlias;
-			if(theCert.vchViewData.empty())
-				theCert.vchViewData = dbCert.vchViewData;
 			// user can't update safety level after creation
 			theCert.safetyLevel = dbCert.safetyLevel;
 			theCert.vchCert = dbCert.vchCert;
@@ -735,10 +731,10 @@ UniValue certnew(const UniValue& params, bool fHelp) {
 	CreateFeeRecipient(scriptData, data, fee);
 	vecSend.push_back(fee);
 
-	const CWalletTx * wtxInOffer=NULL;
-	const CWalletTx * wtxInEscrow=NULL;
-	const CWalletTx * wtxInCert=NULL;
-	SendMoneySyscoin(vecSend, recipient.nAmount+fee.nAmount+aliasRecipient.nAmount, false, wtx, wtxInOffer, wtxInCert, wtxAliasIn, wtxInEscrow, theAlias.multiSigInfo.vchAliases.size() > 0);
+	
+	
+	
+	SendMoneySyscoin(vecSend, recipient.nAmount+fee.nAmount+aliasRecipient.nAmount, false, wtx, wtxAliasIn, theAlias.multiSigInfo.vchAliases.size() > 0);
 	UniValue res(UniValue::VARR);
 	if(theAlias.multiSigInfo.vchAliases.size() > 0)
 	{
@@ -836,7 +832,7 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
 		throw runtime_error("SYSCOIN_CERTIFICATE_CONSENSUS_ERROR ERRCODE: 2507 - " + _("This alias is not in your wallet"));
 
 	if(!GetTxOfAlias(vchViewAlias, viewAlias, viewaliastx, true))
-		vchViewAlias = theAlias.vchAlias;
+		vchViewAlias.SetNull();
 			
 	CCert copyCert = theCert;
 	theCert.ClearCert();
@@ -863,14 +859,15 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
 			throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2509 - " + _("Could not encrypt certificate data"));
 		}
 		vector<unsigned char> vchPubKeyViewPrivate = theAlias.vchPubKey;
+		string strCipherViewText = "";
 		if(!viewAlias.IsNull())
 		{
 			vchPubKeyViewPrivate = viewAlias.vchPubKey;
-		}
-		string strCipherViewText = "";
-		if(!EncryptMessage(vchPubKeyViewPrivate, vchData, strCipherViewText))
-		{
-			throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2509 - " + _("Could not encrypt certificate data"));
+			string strCipherViewText = "";
+			if(!EncryptMessage(vchPubKeyViewPrivate, vchData, strCipherViewText))
+			{
+				throw runtime_error("SYSCOIN_CERTIFICATE_RPC_ERROR: ERRCODE: 2509 - " + _("Could not encrypt certificate data"));
+			}
 		}
 		vchData = vchFromString(strCipherText);
 		vchViewData = vchFromString(strCipherViewText);
@@ -880,10 +877,8 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
 		theCert.vchTitle = vchTitle;
 	if(copyCert.vchData != vchData)
 		theCert.vchData = vchData;
-	if(copyCert.vchViewData != vchViewData)
-		theCert.vchViewData = vchViewData;
-	if(copyCert.vchViewAlias != vchViewAlias)
-		theCert.vchViewAlias = vchViewAlias;
+	theCert.vchViewData = vchViewData;
+	theCert.vchViewAlias = vchViewAlias;
 	if(copyCert.sCategory != vchCat)
 		theCert.sCategory = vchCat;
 	theCert.vchAlias = theAlias.vchAlias;
@@ -918,10 +913,10 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
 	CRecipient fee;
 	CreateFeeRecipient(scriptData, data, fee);
 	vecSend.push_back(fee);
-	const CWalletTx * wtxIn=NULL;
-	const CWalletTx * wtxInOffer=NULL;
-	const CWalletTx * wtxInEscrow=NULL;
-	SendMoneySyscoin(vecSend, recipient.nAmount+aliasRecipient.nAmount+fee.nAmount, false, wtx, wtxInOffer, wtxIn, wtxAliasIn, wtxInEscrow, theAlias.multiSigInfo.vchAliases.size() > 0);	
+	
+	
+	
+	SendMoneySyscoin(vecSend, recipient.nAmount+aliasRecipient.nAmount+fee.nAmount, false, wtx, wtxAliasIn, theAlias.multiSigInfo.vchAliases.size() > 0);	
  	UniValue res(UniValue::VARR);
 	if(theAlias.multiSigInfo.vchAliases.size() > 0)
 	{
@@ -1061,10 +1056,10 @@ UniValue certtransfer(const UniValue& params, bool fHelp) {
 	CRecipient fee;
 	CreateFeeRecipient(scriptData, data, fee);
 	vecSend.push_back(fee);
-	const CWalletTx * wtxIn=NULL;
-	const CWalletTx * wtxInOffer=NULL;
-	const CWalletTx * wtxInEscrow=NULL;
-	SendMoneySyscoin(vecSend, recipient.nAmount+aliasRecipient.nAmount+fee.nAmount, false, wtx, wtxInOffer, wtxIn, wtxAliasIn, wtxInEscrow, fromAlias.multiSigInfo.vchAliases.size() > 0);
+	
+	
+	
+	SendMoneySyscoin(vecSend, recipient.nAmount+aliasRecipient.nAmount+fee.nAmount, false, wtx, wtxAliasIn, fromAlias.multiSigInfo.vchAliases.size() > 0);
 
 	UniValue res(UniValue::VARR);
 	if(fromAlias.multiSigInfo.vchAliases.size() > 0)
