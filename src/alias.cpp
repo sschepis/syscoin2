@@ -1815,6 +1815,11 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 	if (!GetTxOfAlias(vchAlias, theAlias, tx, true))
 		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5504 - " + _("Could not find an alias with this name"));
 
+
+	const CWalletTx* wtxIn = pwalletMain->GetWalletTx(tx.GetHash());
+	if (wtxIn == NULL)
+		throw runtime_error("SYSCOIN_ALIAS_RPC_ERROR: ERRCODE: 5505 - " + _("This alias is not in your wallet"));
+
 	CPubKey pubKey(theAlias.vchPubKey);	
 	CSyscoinAddress aliasAddress(pubKey.GetID());
 	CKeyID keyID;
