@@ -631,7 +631,7 @@ UniValue messagereceivelist(const UniValue& params, bool fHelp) {
     CTransaction tx;
 
     vector<unsigned char> vchValue;
-    BOOST_FOREACH(const CAliasIndex &theAlias, vtxPos) {
+    BOOST_FOREACH(const CAliasIndex &theAlias, vtxPos)
     {
 		if(theAlias.vchAlias != vchAlias)
 			continue;
@@ -719,7 +719,7 @@ UniValue messagesentlist(const UniValue& params, bool fHelp) {
     CTransaction tx;
 
     vector<unsigned char> vchValue;
-    BOOST_FOREACH(const CAliasIndex &theAlias, vtxPos) {
+    BOOST_FOREACH(const CAliasIndex &theAlias, vtxPos)
     {
 		if(theAlias.vchAlias != vchAlias)
 			continue;

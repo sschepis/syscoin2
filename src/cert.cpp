@@ -1208,7 +1208,7 @@ UniValue certlist(const UniValue& params, bool fHelp) {
 
     vector<unsigned char> vchValue;
     uint64_t nHeight;
-    BOOST_FOREACH(const CAliasIndex &theAlias, vtxPos) {
+    BOOST_FOREACH(const CAliasIndex &theAlias, vtxPos)
     {
 		if(theAlias.vchAlias != vchAlias)
 			continue;
