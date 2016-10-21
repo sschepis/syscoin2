@@ -137,12 +137,11 @@ static bool CreateSyscoinTransactions(const CWallet *wallet, const CWalletTx& wt
 	TransactionRecord sub(hash, nTime);
 	if(!CreateSyscoinTransactionRecord(sub, op, vvchArgs, wtx, type))
 		return false;
-	bool isFromMyAlias = wallet->IsFromMyAlias(wtx);
 	
 	BOOST_FOREACH(const CTxOut& txout, wtx.vout)
 	{
 		isminetype mine = wallet->IsMine(txout);
-		if(mine || isFromMyAlias)
+		if(mine)
 		{
 			sub.idx = parts.size(); // sequence number
 			if(type == RECV)

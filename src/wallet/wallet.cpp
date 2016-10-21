@@ -36,6 +36,7 @@ using namespace std;
 // SYSCOIN services
 extern int IndexOfAliasOutput(const CTransaction& tx);
 extern bool IsSyscoinScript(const CScript& scriptPubKey, int &op, vector<vector<unsigned char> > &vvchArgs);
+extern bool DecodeAliasScript(const CScript& scriptPubKey, int& op, vector<vector<unsigned char> > &vvchArgs);
 extern int GetSyscoinTxVersion();
 extern vector<unsigned char> vchFromString(const string &str);
 
@@ -921,8 +922,7 @@ bool CWallet::AddToWalletIfInvolvingMe(const CTransaction& tx, const CBlockIndex
 
         bool fExisted = mapWallet.count(tx.GetHash()) != 0;
         if (fExisted && !fUpdate) return false;
-		// SYSCOIN
-        if (fExisted || IsMine(tx) || IsFromMe(tx) || IsFromMyAlias(tx))
+        if (fExisted || IsMine(tx) || IsFromMe(tx))
         {
             CWalletTx wtx(this,tx);
 
@@ -1104,6 +1104,23 @@ CAmount CWallet::GetDebit(const CTxIn &txin, const isminefilter& filter) const
 
 isminetype CWallet::IsMine(const CTxOut& txout) const
 {
+	// SYSCOIN
+	isminetype myAlias;
+	int op;
+	vector<vector<unsigned char> > &vvchArgs
+	if (DecodeAliasScript(txout.scriptPubKey, op, vvchArgs))
+	{
+		CAliasIndex theAlias;
+		CTransaction txAlias;
+		if (GetTxOfAlias(vvchArgs[0], theAlias, txAlias))
+		{
+			int nOut = IndexOfAliasOutput(txAlias);
+			if(nOut > 0)
+				myAlias = ::IsMine(*this, txAlias.vout[nOut].scriptPubKey);
+		}
+	}
+	if(myAlias)
+		return myAlias;
     return ::IsMine(*this, txout.scriptPubKey);
 }
 
@@ -1154,21 +1171,6 @@ bool CWallet::IsMine(const CTransaction& tx) const
 bool CWallet::IsFromMe(const CTransaction& tx) const
 {
     return (GetDebit(tx, ISMINE_ALL) > 0);
-}
-// SYSCOIN
-bool CWallet::IsFromMyAlias(const CTransaction& tx) const
-{
-	vector<unsigned char>  vchAlias;
-    if(GetAliasOfTx(tx, vchAlias))
-	{
-		CAliasIndex theAlias;
-		CTransaction txAlias;
-		if (GetTxOfAlias(vchAlias, theAlias, txAlias))
-		{
-			return IsMine(txAlias);
-		}
-	}
-	return false;
 }
 CAmount CWallet::GetDebit(const CTransaction& tx, const isminefilter& filter) const
 {
