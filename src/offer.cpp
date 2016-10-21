@@ -3101,17 +3101,14 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
     map< vector<unsigned char>, int > vNamesI;
     map< vector<unsigned char>, UniValue > vNamesO;
 
-    if (params.size() == 1)
-        vchAcceptToFind = vchFromValue(params[0]);	
-	CTransaction tx, offerTx, acceptTx, aliasTx, linkTx, linkAliasTx;
+	CTransaction tx, offerTx, acceptTx, aliasTx, linkTx, linkAliasTx, offerTxTmp;
 	COffer theOffer, offerTmp, linkOffer;
-	CAliasIndex alias, linkAlias;
+	CAliasIndex linkAlias;
 	vector<COffer> vtxOfferPos, vtxAcceptPos, vtxLinkPos, vtxAliasLinkPos;
     vector<unsigned char> vchOffer;
     uint256 blockHash;
     uint256 hash;
 	UniValue aoOfferAccepts(UniValue::VARR);
-    CTransaction tx;
     uint64_t nHeight;
     BOOST_FOREACH(const CAliasIndex &theAlias, vtxPos)
     {
@@ -3158,7 +3155,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 			// for buyer (full price) #1
 
 			// NON-LINKED merchant
-			CAmount priceAtTimeOfAccept = theOfferAccept.nPrice;
+			CAmount priceAtTimeOfAccept = theOffer.accept.nPrice;
 			if(theOffer.GetPrice() != priceAtTimeOfAccept)
 				discountApplied = true;
 			// NON-LINKED buyer
@@ -3173,9 +3170,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 				GetTxAndVtxOfOffer( theOffer.vchLinkOffer, linkOffer, linkTx, vtxLinkPos, true);
 				linkOffer.nHeight = nHeight;
 				linkOffer.GetOfferFromList(vtxLinkPos);
-				GetTxOfAlias(linkOffer.vchAlias, alias, linkAliasTx, true);
-				if(theOffer.vchAlias != vchAlias && linkOffer.vchAlias != vchAlias)
-					continue;
+				GetTxOfAlias(linkOffer.vchAlias, linkAlias, linkAliasTx, true);
 				// if you don't own this offer check the linked offer
 				if(!ismine)
 				{
@@ -3184,7 +3179,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 					if(ismine)
 					{
 						commissionPaid = false;
-						priceAtTimeOfAccept = theOfferAccept.nPrice;
+						priceAtTimeOfAccept = theOffer.accept.nPrice;
 						if(linkOffer.GetPrice() != priceAtTimeOfAccept)
 							discountApplied = true;
 					}
@@ -3200,15 +3195,10 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 				else
 				{
 					// full price with commission - discounted merchant price = commission + discount
-					priceAtTimeOfAccept = theOffer.GetPrice() -  theOfferAccept.nPrice;
+					priceAtTimeOfAccept = theOffer.GetPrice() -  theOffer.accept.nPrice;
 					commissionPaid = true;
 					discountApplied = false;
 				}
-			}
-			else
-			{
-				if(theOffer.vchAlias != vchAlias)
-					continue;
 			}
 
 			string sHeight = strprintf("%llu", theOffer.nHeight);
@@ -3225,33 +3215,33 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 			GetFeedback(sellerFeedBacks, avgSellerRating, FEEDBACKSELLER, theOffer.accept.feedback);
 			
 	
-			oOfferAccept.push_back(Pair("id", stringFromVch(vchAcceptRand)));
-			oOfferAccept.push_back(Pair("txid", theOfferAccept.txHash.GetHex()));
+			oOfferAccept.push_back(Pair("id", stringFromVch(theOffer.accept.vchAcceptRand)));
+			oOfferAccept.push_back(Pair("txid", theOffer.accept.txHash.GetHex()));
 			string strBTCId = "";
-			if(!theOfferAccept.txBTCId.IsNull())
-				strBTCId = theOfferAccept.txBTCId.GetHex();
+			if(!theOffer.accept.txBTCId.IsNull())
+				strBTCId = theOffer.accept.txBTCId.GetHex();
 			oOfferAccept.push_back(Pair("btctxid", strBTCId));
 			oOfferAccept.push_back(Pair("height", sHeight));
 			oOfferAccept.push_back(Pair("time", sTime));
-			oOfferAccept.push_back(Pair("quantity", strprintf("%d", theOfferAccept.nQty)));
+			oOfferAccept.push_back(Pair("quantity", strprintf("%d", theOffer.accept.nQty)));
 			oOfferAccept.push_back(Pair("currency", stringFromVch(theOffer.sCurrencyCode)));
 			if(theOffer.GetPrice() > 0)
-				oOfferAccept.push_back(Pair("offer_discount_percentage", strprintf("%.2f%%", 100.0f - 100.0f*((float)theOfferAccept.nPrice/(float)theOffer.nPrice))));		
+				oOfferAccept.push_back(Pair("offer_discount_percentage", strprintf("%.2f%%", 100.0f - 100.0f*((float)theOffer.accept.nPrice/(float)theOffer.nPrice))));		
 			else
 				oOfferAccept.push_back(Pair("offer_discount_percentage", "0%"));		
 
 			int precision = 2;
-			CAmount nPricePerUnit = convertSyscoinToCurrencyCode(theOffer.vchAliasPeg, theOffer.sCurrencyCode, priceAtTimeOfAccept, theOfferAccept.nAcceptHeight, precision);
-			CAmount sysTotal = priceAtTimeOfAccept * theOfferAccept.nQty;
+			CAmount nPricePerUnit = convertSyscoinToCurrencyCode(theOffer.vchAliasPeg, theOffer.sCurrencyCode, priceAtTimeOfAccept, theOffer.accept.nAcceptHeight, precision);
+			CAmount sysTotal = priceAtTimeOfAccept * theOffer.accept.nQty;
 			oOfferAccept.push_back(Pair("systotal", sysTotal));
 			oOfferAccept.push_back(Pair("sysprice", priceAtTimeOfAccept));
 			oOfferAccept.push_back(Pair("price", strprintf("%.*f", precision, ValueFromAmount(nPricePerUnit).get_real()))); 	
-			oOfferAccept.push_back(Pair("total", strprintf("%.*f", precision, ValueFromAmount(nPricePerUnit).get_real() * theOfferAccept.nQty )));
-			oOfferAccept.push_back(Pair("buyer", stringFromVch(theOfferAccept.vchBuyerAlias)));
+			oOfferAccept.push_back(Pair("total", strprintf("%.*f", precision, ValueFromAmount(nPricePerUnit).get_real() * theOffer.accept.nQty )));
+			oOfferAccept.push_back(Pair("buyer", stringFromVch(theOffer.accept.vchBuyerAlias)));
 			oOfferAccept.push_back(Pair("seller", stringFromVch(theOffer.vchAlias)));
 			// this accept is for me(something ive sold) if this offer is mine
 			oOfferAccept.push_back(Pair("ismine", ismine? "true" : "false"));
-			if(!theOfferAccept.txBTCId.IsNull())
+			if(!theOffer.accept.txBTCId.IsNull())
 				oOfferAccept.push_back(Pair("status","Paid (BTC)"));
 			else if(commissionPaid)
 				oOfferAccept.push_back(Pair("status","Paid (Commission)"));
@@ -3304,7 +3294,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 			float totalAvgRating = roundf((avgSellerRating+avgBuyerRating)/(float)ratingCount);
 			oOfferAccept.push_back(Pair("avg_rating", (int)totalAvgRating));	
 			string strMessage = string("");
-			if(!DecryptMessage(alias.vchPubKey, theOfferAccept.vchMessage, strMessage))
+			if(!DecryptMessage(alias.vchPubKey, theOffer.accept.vchMessage, strMessage))
 				strMessage = _("Encrypted for owner of offer");
 			oOfferAccept.push_back(Pair("pay_message", strMessage));
 			aoOfferAccepts.push_back(oOfferAccept);
@@ -3821,6 +3811,24 @@ std::string COffer::GetPaymentOptionsString()
 		return std::string("SYS+BTC");
 	}
 	return "";
+}
+CAmount COffer::GetPrice(const COfferLinkWhitelistEntry& entry=COfferLinkWhitelistEntry()){
+	COfferLinkWhitelistEntry  myentry;
+	CAmount price = nPrice;
+	linkWhitelist.GetLinkEntryByHash(entry.aliasLinkVchRand, myentry);
+	
+	char nDiscount = myentry.nDiscountPct;
+	if(myentry.nDiscountPct > 99)
+		nDiscount = 0;
+	// nMarkup is a percentage, commission minus discount
+	char nMarkup = nCommission - nDiscount;
+	if(nMarkup != 0)
+	{
+		int lMarkup = 1/ (nMarkup/100.0);
+		CAmount priceMarkup = price/lMarkup;
+		price += priceMarkup;
+	}
+	return price;
 }
 void OfferTxToJSON(const int op, const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash, UniValue &entry)
 {
