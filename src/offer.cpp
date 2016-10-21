@@ -3504,7 +3504,6 @@ UniValue offerlist(const UniValue& params, bool fHelp) {
     UniValue oRes(UniValue::VARR);
     map< vector<unsigned char>, int > vNamesI;
     map< vector<unsigned char>, UniValue > vNamesO;
-	vector<unsigned char> vchAlias;
     CTransaction tx;
     uint64_t nHeight;
     BOOST_FOREACH(const CAliasIndex &theAlias, vtxPos)
@@ -3795,7 +3794,7 @@ bool GetAcceptByHash(std::vector<COffer> &offerList, COfferAccept &ca, COffer &o
     }
 	return false;
 }
-std::string COffer::GetPaymentOptionsString()
+std::string COffer::GetPaymentOptionsString() const
 {
 	if(paymentOptions == PAYMENTOPTION_SYS)
 	{
