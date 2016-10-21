@@ -7,6 +7,7 @@
 #include "base58.h"
 #include "rpc/server.h"
 #include <QFont>
+#include <QSettings>
 using namespace std;
 
 
@@ -73,7 +74,7 @@ public:
 			string strMethod = string("certlist");
 	        UniValue params(UniValue::VARR); 
 			QSettings settings;
-			params.push_back(settings.value("defaultAlias", "").toString());
+			params.push_back(settings.value("defaultAlias", "").toString().toStdString());
 			UniValue result;
 			string name_str;
 			string data_str;
