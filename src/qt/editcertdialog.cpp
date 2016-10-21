@@ -37,6 +37,9 @@ EditCertDialog::EditCertDialog(Mode mode, QWidget *parent) :
 	ui->privateBox->addItem(tr("No"));
 	ui->transferDisclaimer->setText(tr("<font color='blue'>Enter the alias of the recipient of this certificate</font>"));
     ui->transferDisclaimer->setVisible(false);
+	ui->viewAliasEdit->setVisible(true);
+	ui->viewAliasDisclaimer->setVisible(true);
+	ui->viewAliasDisclaimer->setText(tr("<font color='blue'>Enter the alias of the recipient that you wish to allow reading your certificate data (only useful if certificate is private)</font>"));
 	
 	loadAliases();
 	loadCategories();
@@ -74,6 +77,8 @@ EditCertDialog::EditCertDialog(Mode mode, QWidget *parent) :
 		ui->transferDisclaimer->setVisible(true);
 		ui->aliasDisclaimer->setVisible(false);
 		ui->aliasEdit->setEnabled(false);
+		ui->viewAliasDisclaimer->setVisible(false);
+		ui->viewAliasEdit->setVisible(false);
         break;
     }
     mapper = new QDataWidgetMapper(this);
@@ -428,6 +433,7 @@ bool EditCertDialog::saveCurrentRow()
 				params.push_back(ui->categoryEdit->itemData(ui->categoryEdit->currentIndex(), Qt::UserRole).toString().toStdString());
 			else
 				params.push_back(ui->categoryEdit->currentText().toStdString());
+			params.push_back(ui->viewAliasEdit->currentText().toStdString());
 			try {
 				UniValue result = tableRPC.execute(strMethod, params);
 				if (result.type() != UniValue::VNULL)
