@@ -3589,8 +3589,8 @@ UniValue offerlist(const UniValue& params, bool fHelp) {
 		
             vNamesI[vchOffer] = nHeight;
             vNamesO[vchOffer] = oName;
-        }
-    }
+	}
+	
 
     BOOST_FOREACH(const PAIRTYPE(vector<unsigned char>, UniValue)& item, vNamesO)
         oRes.push_back(item.second);
