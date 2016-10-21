@@ -94,7 +94,7 @@ bool OfferFeedbackDialog::lookup(const QString &offer, const QString &acceptGuid
 	string strError;
 	strMethod = string("offeracceptlist");
 	UniValue params(UniValue::VARR);
-	params.push_back(seller.toString());
+	params.push_back(seller.toStdString());
 	params.push_back(acceptGuid.toStdString());
 	UniValue offerAcceptsValue;
 	reseller = false;
