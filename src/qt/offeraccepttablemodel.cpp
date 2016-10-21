@@ -73,6 +73,8 @@ public:
         {
 			string strMethod = string("offeracceptlist");
 	        UniValue params(UniValue::VARR); 
+			QSettings settings;
+			params.push_back(settings.value("defaultAlias", "").toString());
 			UniValue result ;
 			string name_str;
 			string value_str;

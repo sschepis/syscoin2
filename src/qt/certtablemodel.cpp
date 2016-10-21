@@ -67,10 +67,12 @@ public:
 
     void refreshCertTable(CertModelType type)
     {
+		
         cachedCertTable.clear();
         {
 			string strMethod = string("certlist");
 	        UniValue params(UniValue::VARR); 
+			QSettings settings;
 			params.push_back(settings.value("defaultAlias", "").toString());
 			UniValue result;
 			string name_str;

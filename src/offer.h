@@ -32,7 +32,6 @@ class COfferAccept {
 public:
 	std::vector<unsigned char> vchAcceptRand;
 	uint256 txHash;
-	uint64_t nHeight;
 	uint64_t nAcceptHeight;
 	unsigned int nQty;
 	CAmount nPrice;
@@ -49,7 +48,6 @@ public:
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
 		READWRITE(vchAcceptRand);
 		READWRITE(txHash);
-		READWRITE(VARINT(nHeight));
 		READWRITE(VARINT(nAcceptHeight));
         READWRITE(VARINT(nQty));
     	READWRITE(nPrice);
@@ -63,7 +61,6 @@ public:
         return (
 		a.vchAcceptRand == b.vchAcceptRand
         && a.txHash == b.txHash
-        && a.nHeight == b.nHeight
 		&& a.nAcceptHeight == b.nAcceptHeight
         && a.nQty == b.nQty
         && a.nPrice == b.nPrice
@@ -77,7 +74,6 @@ public:
     inline COfferAccept operator=(const COfferAccept &b) {
 		vchAcceptRand = b.vchAcceptRand;
         txHash = b.txHash;
-        nHeight = b.nHeight;
 		nAcceptHeight = b.nAcceptHeight;
         nQty = b.nQty;
         nPrice = b.nPrice;
@@ -92,8 +88,8 @@ public:
         return !(a == b);
     }
 
-    inline void SetNull() { vchMessage.clear(); feedback.clear(); vchAcceptRand.clear(); nHeight = nAcceptHeight = nPrice = nQty = 0; txHash.SetNull(); txBTCId.SetNull(); vchBuyerAlias.clear();}
-    inline bool IsNull() const { return (vchMessage.empty() && feedback.empty() && vchAcceptRand.empty() && txHash.IsNull() && nHeight == 0 && nAcceptHeight == 0 && nPrice == 0 && nQty == 0 && txBTCId.IsNull() && vchBuyerAlias.empty()); }
+    inline void SetNull() { vchMessage.clear(); feedback.clear(); vchAcceptRand.clear(); nAcceptHeight = nPrice = nQty = 0; txHash.SetNull(); txBTCId.SetNull(); vchBuyerAlias.clear();}
+    inline bool IsNull() const { return (vchMessage.empty() && feedback.empty() && vchAcceptRand.empty() && txHash.IsNull() && nAcceptHeight == 0 && nPrice == 0 && nQty == 0 && txBTCId.IsNull() && vchBuyerAlias.empty()); }
 
 };
 class COfferLinkWhitelistEntry {
@@ -437,8 +433,6 @@ void GetFeedback(std::vector<CFeedback> &feedback, int &avgRating, const Feedbac
 bool GetAcceptByHash(std::vector<COffer> &offerList,  COfferAccept &ca,  COffer &offer);
 bool GetTxOfOfferAccept(const std::vector<unsigned char> &vchOffer, const std::vector<unsigned char> &vchOfferAccept,
 		COffer &theOffer, COfferAccept &theOfferAccept, CTransaction& tx, bool skipExpiresCheck=false);
-bool GetTxAndVtxOfOfferAccept(const std::vector<unsigned char> &vchOffer, const std::vector<unsigned char> &vchOfferAccept,
-		COffer &theOffer, COfferAccept &theOfferAccept, CTransaction& tx, std::vector<COffer> &vtxPos, bool skipExpiresCheck=false);
 bool GetTxOfOffer(const std::vector<unsigned char> &vchOffer, COffer& txPos, CTransaction& tx, bool skipExpiresCheck=false);
 bool GetTxAndVtxOfOffer(const std::vector<unsigned char> &vchOffer, 
 				  COffer& txPos, CTransaction& tx, std::vector<COffer> &vtxPos, bool skipExpiresCheck=false);

@@ -75,7 +75,7 @@ public:
 
     void refreshMessageTable(MessageModelType type)
     {
-
+		QSettings settings;
         cachedMessageTable.clear();
         {
 			string strMethod;

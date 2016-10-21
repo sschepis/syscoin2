@@ -667,14 +667,14 @@
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout_Pref">
          <item>
-          <widget class="QLabel" name="labelDefaultOffer">
+          <widget class="QLabel" name="labelDefaultAlias">
            <property name="text">
             <string>Default Alias:</string>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QLineEdit" name="defaultOfferAlias"/>
+          <widget class="QLineEdit" name="defaultAlias"/>
          </item>
         </layout>
        </item>

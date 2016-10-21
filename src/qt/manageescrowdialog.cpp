@@ -203,8 +203,10 @@ ManageEscrowDialog::ManageEscrowDialog(WalletModel* model, const QString &escrow
 }
 bool ManageEscrowDialog::loadEscrow(const QString &escrow, QString &buyer, QString &seller, QString &arbiter, QString &status, QString &offertitle, QString &total, QString &btctxid, QString &redeemtxid)
 {
+	QSettings settings;
 	string strMethod = string("escrowlist");
     UniValue params(UniValue::VARR); 
+	params.push_back(settings.value("defaultAlias", "").toString());
 	UniValue result ;
 	string name_str;
 	try {

@@ -1195,9 +1195,8 @@ UniValue certlist(const UniValue& params, bool fHelp) {
 	{
 		throw runtime_error("failed to read alias transaction");
 	}
-	vchCert = vchFromValue(params[1]);
     vector<unsigned char> vchNameUniq;
-    if (params.size() == 1)
+    if (params.size() == 2)
         vchNameUniq = vchFromValue(params[1]);
 
     UniValue oRes(UniValue::VARR);
@@ -1205,13 +1204,9 @@ UniValue certlist(const UniValue& params, bool fHelp) {
     map< vector<unsigned char>, UniValue > vNamesO;
 
     CTransaction tx;
-
-    vector<unsigned char> vchValue;
     uint64_t nHeight;
     BOOST_FOREACH(const CAliasIndex &theAlias, vtxPos)
     {
-		if(theAlias.vchAlias != vchAlias)
-			continue;
 		if(!GetSyscoinTransaction(theAlias.nHeight, theAlias.txHash, tx, Params().GetConsensus()))
 			continue;
 		
@@ -1236,7 +1231,8 @@ UniValue certlist(const UniValue& params, bool fHelp) {
 		if (!pcertdb->ReadCert(vchCert, vtxCertPos) || vtxCertPos.empty())
 			continue;
 		const CCert &cert = vtxCertPos.back();
-		
+		if(cert.vchAlias != vchAlias)
+			continue;		
 		nHeight = cert.nHeight;
 		// get last active name only
 		if (vNamesI.find(vchCert) != vNamesI.end() && (nHeight <= vNamesI[vchCert] || vNamesI[vchCert] < 0))

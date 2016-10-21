@@ -625,7 +625,9 @@ UniValue messagereceivelist(const UniValue& params, bool fHelp) {
 	{
 		throw runtime_error("failed to read alias transaction");
 	}
-	vchMessage = vchFromValue(params[1]);
+	vector<unsigned char> vchNameUniq;
+    if (params.size() == 2)
+        vchNameUniq = vchFromValue(params[1]);
 
     UniValue oRes(UniValue::VARR);
     CTransaction tx;
@@ -633,8 +635,6 @@ UniValue messagereceivelist(const UniValue& params, bool fHelp) {
     vector<unsigned char> vchValue;
     BOOST_FOREACH(const CAliasIndex &theAlias, vtxPos)
     {
-		if(theAlias.vchAlias != vchAlias)
-			continue;
 		if(!GetSyscoinTransaction(theAlias.nHeight, theAlias.txHash, tx, Params().GetConsensus()))
 			continue;
 
@@ -644,6 +644,8 @@ UniValue messagereceivelist(const UniValue& params, bool fHelp) {
 		if (!DecodeMessageTx(tx, op, nOut, vvch) || !IsMessageOp(op))
 			continue;
 		vchMessage = vvch[0];
+		if (vchNameUniq.size() > 0 && vchNameUniq != vchMessage)
+			continue;
 		vector<CMessage> vtxMessagePos;
 		if (!pmessagedb->ReadMessage(vchMessage, vtxMessagePos) || vtxMessagePos.empty())
 			continue;
@@ -713,16 +715,15 @@ UniValue messagesentlist(const UniValue& params, bool fHelp) {
 	{
 		throw runtime_error("failed to read alias transaction");
 	}
-	vchMessage = vchFromValue(params[1]);
-
+	vector<unsigned char> vchNameUniq;
+    if (params.size() == 2)
+        vchNameUniq = vchFromValue(params[1]);
     UniValue oRes(UniValue::VARR);
     CTransaction tx;
 
     vector<unsigned char> vchValue;
     BOOST_FOREACH(const CAliasIndex &theAlias, vtxPos)
     {
-		if(theAlias.vchAlias != vchAlias)
-			continue;
 		if(!GetSyscoinTransaction(theAlias.nHeight, theAlias.txHash, tx, Params().GetConsensus()))
 			continue;
 
@@ -732,6 +733,8 @@ UniValue messagesentlist(const UniValue& params, bool fHelp) {
 		if (!DecodeMessageTx(tx, op, nOut, vvch) || !IsMessageOp(op))
 			continue;
 		vchMessage = vvch[0];
+		if (vchNameUniq.size() > 0 && vchNameUniq != vchMessage)
+			continue;
 		vector<CMessage> vtxMessagePos;
 		if (!pmessagedb->ReadMessage(vchMessage, vtxMessagePos) || vtxMessagePos.empty())
 			continue;

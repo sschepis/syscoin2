@@ -3274,94 +3274,86 @@ UniValue escrowinfo(const UniValue& params, bool fHelp) {
 }
 
 UniValue escrowlist(const UniValue& params, bool fHelp) {
-    if (fHelp || 1 < params.size())
-        throw runtime_error("escrowlist [<escrow>]\n"
-                "list my own escrows");
+   if (fHelp || 2 < params.size() || params.size() < 1)
+        throw runtime_error("escrowlist <alias> [<escrow>]\n"
+                "list escrows that an alias owns");
 	vector<unsigned char> vchEscrow;
-
-	if (params.size() == 1)
-		vchEscrow = vchFromValue(params[0]);
+	vector<unsigned char> vchAlias = vchFromValue(params[0]);
+	string name = stringFromVch(vchAlias);
+	vector<CAliasIndex> vtxPos;
+	if (!paliasdb->ReadAlias(vchAlias, vtxPos) || vtxPos.empty())
+		throw runtime_error("failed to read from alias DB");
+	const CAliasIndex &alias = vtxPos.back();
+	CTransaction aliastx;
+	uint256 txHash;
+	if (!GetSyscoinTransaction(alias.nHeight, alias.txHash, aliastx, Params().GetConsensus()))
+	{
+		throw runtime_error("failed to read alias transaction");
+	}
     vector<unsigned char> vchNameUniq;
-    if (params.size() == 1)
-        vchNameUniq = vchFromValue(params[0]);
+    if (params.size() == 2)
+        vchNameUniq = vchFromValue(params[1]);
 
     UniValue oRes(UniValue::VARR);
     map< vector<unsigned char>, int > vNamesI;
     map< vector<unsigned char>, UniValue > vNamesO;
 
-    uint256 hash;
-    CTransaction tx, dbtx;
+    CTransaction tx;
 
     vector<unsigned char> vchValue;
-	int pending = 0;
-    BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet)
+    uint64_t nHeight;
+    BOOST_FOREACH(const CAliasIndex &theAlias, vtxPos)
     {
-		int expired_block;
+		if(!GetSyscoinTransaction(theAlias.nHeight, theAlias.txHash, tx, Params().GetConsensus()))
+			continue;
+		
 		int expired = 0;
-		pending = 0;
-        // get txn hash, read txn index
-        hash = item.second.GetHash();
-		const CWalletTx &wtx = item.second;        // skip non-syscoin txns
+		int expires_in = 0;
+		int expired_block = 0;
 		CTransaction tx;
-        if (wtx.nVersion != SYSCOIN_TX_VERSION)
-            continue;
+
 		vector<vector<unsigned char> > vvch;
 		int op, nOut;
-		if (!DecodeEscrowTx(wtx, op, nOut, vvch) || !IsEscrowOp(op))
+		if (!DecodeEscrowTx(tx, op, nOut, vvch) || !IsEscrowOp(op))
 			continue;
 		vchEscrow = vvch[0];
+		// skip this escrow if it doesn't match the given filter value
+		if (vchNameUniq.size() > 0 && vchNameUniq != vchEscrow)
+			continue;
 		vector<CEscrow> vtxPos;
 		CEscrow escrow;
 		bool escrowRelease = false;
 		bool escrowRefund = false;
-		if (!pescrowdb->ReadEscrow(vchEscrow, vtxPos) || vtxPos.empty())
+	    vector<CEscrow> vtxEscrowPos;
+        if (!pescrowdb->ReadEscrow(vchEscrow, vtxEscrowPos) || vtxEscrowPos.empty())
+            continue;
+		if(escrow.op == OP_ESCROW_COMPLETE)
 		{
-			pending = 1;
-			escrow = CEscrow(wtx);
-		}
-		else
-		{
-			escrow = vtxPos.back();
-			CTransaction tx;
-			if (!GetSyscoinTransaction(escrow.nHeight, escrow.txHash, tx, Params().GetConsensus()))
+			for(unsigned int i = vtxEscrowPos.size() - 1; i >= 0;i--)
 			{
-				pending = 1;
-			}
-			else{
-				if (!DecodeEscrowTx(tx, op, nOut, vvch) || !IsEscrowOp(op))
-					continue;
-			}
-			if(escrow.op == OP_ESCROW_COMPLETE)
-			{
-				for(int i = vtxPos.size() - 1; i >= 0;i--)
+				if(vtxEscrowPos[i].op == OP_ESCROW_RELEASE)
 				{
-					if(vtxPos[i].op == OP_ESCROW_RELEASE)
-					{
-						escrowRelease = true;
-						break;
-					}
-					else if(vtxPos[i].op == OP_ESCROW_REFUND)
-					{
-						escrowRefund = true;
-						break;
-					}
+					escrowRelease = true;
+					break;
+				}
+				else if(vtxEscrowPos[i].op == OP_ESCROW_REFUND)
+				{
+					escrowRefund = true;
+					break;
 				}
 			}
 		}
+		
 		int nHeight;
 		COffer offer;
 		CTransaction offertx;
 		vector<COffer> offerVtxPos;
 		GetTxAndVtxOfOffer(escrow.vchOffer, offer, offertx, offerVtxPos, true);
-		if(vtxPos.empty())
-			nHeight = escrow.nAcceptHeight;
-		else
-			nHeight = vtxPos.front().nAcceptHeight;
+		
+		nHeight = vtxEscrowPos.front().nAcceptHeight;
 		offer.nHeight = nHeight;
 		offer.GetOfferFromList(offerVtxPos);
-		// skip this escrow if it doesn't match the given filter value
-		if (vchNameUniq.size() > 0 && vchNameUniq != vchEscrow)
-			continue;
+
 		// get last active name only
 		if (vNamesI.find(vchEscrow) != vNamesI.end() && (escrow.nHeight <= vNamesI[vchEscrow] || vNamesI[vchEscrow] < 0))
 			continue;
@@ -3430,23 +3422,21 @@ UniValue escrowlist(const UniValue& params, bool fHelp) {
 		} 
 	
 		string status = "unknown";
-		if(pending == 0)
-		{
-			if(op == OP_ESCROW_ACTIVATE)
-				status = "in escrow";
-			else if(op == OP_ESCROW_RELEASE && vvch[1] == vchFromString("0"))
-				status = "escrow released";
-			else if(op == OP_ESCROW_RELEASE && vvch[1] == vchFromString("1"))
-				status = "escrow release complete";
-			else if(op == OP_ESCROW_COMPLETE && escrowRelease)
-				status = "escrow release complete";
-			else if(op == OP_ESCROW_REFUND && vvch[1] == vchFromString("0"))
-				status = "escrow refunded";
-			else if(op == OP_ESCROW_REFUND && vvch[1] == vchFromString("1"))
-				status = "escrow refund complete";
-			else if(op == OP_ESCROW_COMPLETE && escrowRefund)
-				status = "escrow refund complete";
-		}
+		if(op == OP_ESCROW_ACTIVATE)
+			status = "in escrow";
+		else if(op == OP_ESCROW_RELEASE && vvch[1] == vchFromString("0"))
+			status = "escrow released";
+		else if(op == OP_ESCROW_RELEASE && vvch[1] == vchFromString("1"))
+			status = "escrow release complete";
+		else if(op == OP_ESCROW_COMPLETE && escrowRelease)
+			status = "escrow release complete";
+		else if(op == OP_ESCROW_REFUND && vvch[1] == vchFromString("0"))
+			status = "escrow refunded";
+		else if(op == OP_ESCROW_REFUND && vvch[1] == vchFromString("1"))
+			status = "escrow refund complete";
+		else if(op == OP_ESCROW_COMPLETE && escrowRefund)
+			status = "escrow refund complete";
+		
 
 		UniValue oBuyerFeedBack(UniValue::VARR);
 		for(unsigned int i =0;i<buyerFeedBacks.size();i++)
@@ -3516,6 +3506,7 @@ UniValue escrowlist(const UniValue& params, bool fHelp) {
 		oName.push_back(Pair("avg_rating", (int)totalAvgRating));	
 		oName.push_back(Pair("status", status));
 		oName.push_back(Pair("expired", expired));
+		oName.push_back(Pair("ismine", IsSyscoinTxMine(aliastx, "alias") ? "true" : "false"));
  
 		vNamesI[vchEscrow] = escrow.nHeight;
 		vNamesO[vchEscrow] = oName;	

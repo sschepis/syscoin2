@@ -84,11 +84,12 @@ public:
 
     void refreshEscrowTable(EscrowModelType type)
     {
-
+		QSettings settings;
         cachedEscrowTable.clear();
         {
 			string strMethod = string("escrowlist");
 	        UniValue params(UniValue::VARR); 
+			params.push_back(settings.value("defaultAlias", "").toString());
 			UniValue result ;
 			string name_str;
 			string time_str;

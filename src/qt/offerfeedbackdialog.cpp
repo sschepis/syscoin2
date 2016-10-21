@@ -59,9 +59,42 @@ OfferFeedbackDialog::OfferFeedbackDialog(WalletModel* model, const QString &offe
 }
 bool OfferFeedbackDialog::lookup(const QString &offer, const QString &acceptGuid, QString &buyer, QString &seller, QString &offertitle, QString &currency, QString &total, QString &systotal, bool &reseller, QString &reselleralias, QString &resellerguid)
 {
+	UniValue result(UniValue::VOBJ);
+	string strMethod = string("offerinfo");
+	UniValue params1(UniValue::VARR);
+	params1.push_back(offer.toStdString());
+    try {
+        result = tableRPC.execute(strMethod, params1);
+
+		if (result.type() == UniValue::VOBJ)
+		{
+			seller = QString::fromStdString(find_value(result.get_obj(), "alias").get_str());
+			offertitle = QString::fromStdString(find_value(result.get_obj(), "title").get_str());
+			string offerlinkStr = find_value(result.get_obj(), "offerlink").get_str();
+			if(offerlinkStr == "true")
+			{
+				reseller = true;
+				reselleralias = QString::fromStdString(find_value(result.get_obj(), "offerlink_seller").get_str());
+				resellerguid = QString::fromStdString(find_value(result.get_obj(), "offerlink_guid").get_str());
+			}
+			return true;
+		}
+		 
+
+	}
+	catch (UniValue& objError)
+	{
+		return false;
+	}
+	catch(std::exception& e)
+	{
+		return false;
+	}
+
 	string strError;
-	string strMethod = string("offeracceptlist");
+	strMethod = string("offeracceptlist");
 	UniValue params(UniValue::VARR);
+	params.push_back(seller.toString());
 	params.push_back(acceptGuid.toStdString());
 	UniValue offerAcceptsValue;
 	reseller = false;
@@ -82,37 +115,6 @@ bool OfferFeedbackDialog::lookup(const QString &offer, const QString &acceptGuid
 				systotal = QString::number(ValueFromAmount(find_value(acceptObj.get_obj(), "systotal").get_int64()).get_real());
 				break;
 			}
-		}
-		 
-
-	}
-	catch (UniValue& objError)
-	{
-		return false;
-	}
-	catch(std::exception& e)
-	{
-		return false;
-	}
-	UniValue result(UniValue::VOBJ);
-	strMethod = string("offerinfo");
-	UniValue params1(UniValue::VARR);
-	params1.push_back(offer.toStdString());
-    try {
-        result = tableRPC.execute(strMethod, params1);
-
-		if (result.type() == UniValue::VOBJ)
-		{
-			seller = QString::fromStdString(find_value(result.get_obj(), "alias").get_str());
-			offertitle = QString::fromStdString(find_value(result.get_obj(), "title").get_str());
-			string offerlinkStr = find_value(result.get_obj(), "offerlink").get_str();
-			if(offerlinkStr == "true")
-			{
-				reseller = true;
-				reselleralias = QString::fromStdString(find_value(result.get_obj(), "offerlink_seller").get_str());
-				resellerguid = QString::fromStdString(find_value(result.get_obj(), "offerlink_guid").get_str());
-			}
-			return true;
 		}
 		 
 

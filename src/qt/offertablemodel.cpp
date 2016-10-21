@@ -79,6 +79,8 @@ public:
         {
 			string strMethod = string("offerlist");
 	        UniValue params(UniValue::VARR); 
+			QSettings settings;
+			params.push_back(settings.value("defaultAlias", "").toString());
 			UniValue result ;
 			string name_str;
 			string value_str;
@@ -196,10 +198,6 @@ public:
 						const UniValue& alias_peg_value = find_value(o, "alias_peg");
 						if (alias_peg_value.type() == UniValue::VSTR)
 							alias_peg_str = alias_peg_value.get_str();
-						const UniValue& pending_value = find_value(o, "pending");
-						int pending = 0;
-						if (pending_value.type() == UniValue::VNUM)
-							pending = pending_value.get_int();
 						const UniValue& safesearch_value = find_value(o, "safesearch");
 						if (safesearch_value.type() == UniValue::VSTR)
 							safesearch_str = safesearch_value.get_str();
@@ -210,10 +208,6 @@ public:
 						if(expired == 1)
 						{
 							expired_str = "Expired";
-						}
-						else if(pending == 1)
-						{
-							expired_str = "Pending";
 						}
 						else
 						{

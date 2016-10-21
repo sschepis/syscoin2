@@ -93,9 +93,12 @@ MyAcceptedOfferListPage::MyAcceptedOfferListPage(const PlatformStyle *platformSt
 	
 bool MyAcceptedOfferListPage::lookup(const QString &lookupid, const QString &acceptid, QString& address, QString& price, QString& btcTxId)
 {
+	
 	string strError;
 	string strMethod = string("offeracceptlist");
 	UniValue params(UniValue::VARR);
+	QSettings settings;
+	params.push_back(settings.value("defaultAlias", "").toString());
 	UniValue offerAcceptsValue;
 	QString offerAcceptHash;
 	params.push_back(acceptid.toStdString());
