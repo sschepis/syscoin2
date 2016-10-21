@@ -9,6 +9,7 @@
 
 #include <QFont>
 #include <QDateTime>
+#include <QSettings>
 #include "rpc/server.h"
 using namespace std;
 
