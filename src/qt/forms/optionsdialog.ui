@@ -505,17 +505,17 @@
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_Window">
        <item>
-         <widget class="QCheckBox" name="hideTrayIcon">
-           <property name="toolTip">
-             <string>&amp;Hide the icon from the system tray.</string>
-           </property>
-           <property name="text">
-             <string>Hide tray icon</string>
-           </property>
-         </widget>
+        <widget class="QCheckBox" name="hideTrayIcon">
+         <property name="toolTip">
+          <string>&amp;Hide the icon from the system tray.</string>
+         </property>
+         <property name="text">
+          <string>Hide tray icon</string>
+         </property>
+        </widget>
        </item>
        <item>
-         <widget class="QCheckBox" name="minimizeToTray">
+        <widget class="QCheckBox" name="minimizeToTray">
          <property name="toolTip">
           <string>Show only a tray icon after minimizing the window.</string>
          </property>
@@ -669,40 +669,12 @@
          <item>
           <widget class="QLabel" name="labelDefaultOffer">
            <property name="text">
-            <string>Default Offer Alias:</string>
+            <string>Default Alias:</string>
            </property>
           </widget>
          </item>
          <item>
           <widget class="QLineEdit" name="defaultOfferAlias"/>
-         </item>
-        </layout>
-       </item>
-       <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_2_Pref">
-         <item>
-          <widget class="QLabel" name="labelDefaultMessage">
-           <property name="text">
-            <string>Default Message Alias:</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QLineEdit" name="defaultMessageAlias"/>
-         </item>
-        </layout>
-       </item>
-       <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_3_Pref">
-         <item>
-          <widget class="QLabel" name="labelDefaultCert">
-           <property name="text">
-            <string>Default Cert Alias:</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QLineEdit" name="defaultCertAlias"/>
          </item>
         </layout>
        </item>

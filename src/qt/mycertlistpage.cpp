@@ -95,13 +95,6 @@ void MyCertListPage::on_sellCertButton_clicked()
 	QString certGUID = indexes.at(0).data(CertTableModel::NameRole).toString();
 	QString status = indexes.at(0).data(CertTableModel::ExpiredRole).toString();
 	QString category = indexes.at(0).data(CertTableModel::CategoryRole).toString();
-	if(status == QString("pending"))
-	{
-           QMessageBox::information(this, windowTitle(),
-           tr("This certificate is still pending, click the refresh button once the certificate confirms and try again"),
-               QMessageBox::Ok, QMessageBox::Ok);
-		   return;
-	}
 	if(status == QString("expired"))
 	{
            QMessageBox::information(this, windowTitle(),
@@ -191,13 +184,6 @@ void MyCertListPage::on_editButton_clicked()
     if(indexes.isEmpty())
         return;
 	QString status = indexes.at(0).data(CertTableModel::ExpiredRole).toString();
-	if(status == QString("pending"))
-	{
-           QMessageBox::information(this, windowTitle(),
-           tr("This certificate is still pending, click the refresh button once the certificate confirms and try again"),
-               QMessageBox::Ok, QMessageBox::Ok);
-		   return;
-	}
 	if(status == QString("expired"))
 	{
            QMessageBox::information(this, windowTitle(),
@@ -220,13 +206,6 @@ void MyCertListPage::on_transferButton_clicked()
     if(indexes.isEmpty())
         return;
 	QString status = indexes.at(0).data(CertTableModel::ExpiredRole).toString();
-	if(status == QString("pending"))
-	{
-           QMessageBox::information(this, windowTitle(),
-           tr("This certificate is still pending, click the refresh button once the certificate confirms and try again"),
-               QMessageBox::Ok, QMessageBox::Ok);
-		   return;
-	}
 	if(status == QString("expired"))
 	{
            QMessageBox::information(this, windowTitle(),

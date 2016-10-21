@@ -1160,7 +1160,7 @@ UniValue certinfo(const UniValue& params, bool fHelp) {
 	oCert.push_back(Pair("private", ca.bPrivate? "Yes": "No"));
 	oCert.push_back(Pair("safesearch", ca.safeSearch ? "Yes" : "No"));
 	oCert.push_back(Pair("safetylevel", ca.safetyLevel));
-    oCert.push_back(Pair("ismine", IsSyscoinTxMine(tx, "cert") && IsSyscoinTxMine(aliastx, "alias") ? "true" : "false"));
+    oCert.push_back(Pair("ismine", IsSyscoinTxMine(aliastx, "alias") ? "true" : "false"));
 
     uint64_t nHeight;
 	nHeight = ca.nHeight;
@@ -1179,46 +1179,50 @@ UniValue certinfo(const UniValue& params, bool fHelp) {
 }
 
 UniValue certlist(const UniValue& params, bool fHelp) {
-    if (fHelp || 1 < params.size())
-        throw runtime_error("certlist [<cert>]\n"
-                "list my own Certificates");
+    if (fHelp || 2 < params.size() || params.size() < 1)
+        throw runtime_error("certlist <alias> [<cert>]\n"
+                "list certificates that an alias owns");
 	vector<unsigned char> vchCert;
-
-	if (params.size() == 1)
-		vchCert = vchFromValue(params[0]);
+	vector<unsigned char> vchAlias = vchFromValue(params[0]);
+	string name = stringFromVch(vchAlias);
+	vector<CAliasIndex> vtxPos;
+	if (!paliasdb->ReadAlias(vchAlias, vtxPos) || vtxPos.empty())
+		throw runtime_error("failed to read from alias DB");
+	const CAliasIndex &alias = vtxPos.back();
+	CTransaction aliastx;
+	uint256 txHash;
+	if (!GetSyscoinTransaction(alias.nHeight, alias.txHash, aliastx, Params().GetConsensus()))
+	{
+		throw runtime_error("failed to read alias transaction");
+	}
+	vchCert = vchFromValue(params[1]);
     vector<unsigned char> vchNameUniq;
     if (params.size() == 1)
-        vchNameUniq = vchFromValue(params[0]);
+        vchNameUniq = vchFromValue(params[1]);
 
     UniValue oRes(UniValue::VARR);
     map< vector<unsigned char>, int > vNamesI;
     map< vector<unsigned char>, UniValue > vNamesO;
 
-    uint256 hash;
     CTransaction tx;
 
     vector<unsigned char> vchValue;
     uint64_t nHeight;
-	int pending = 0;
-    BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet)
+    BOOST_FOREACH(const CAliasIndex &theAlias, vtxPos) {
     {
-		CAliasIndex theAlias;
-		CTransaction aliastx;
-		const CWalletTx &wtx = item.second;
+		if(theAlias.vchAlias != vchAlias)
+			continue;
+		if(!GetSyscoinTransaction(theAlias.nHeight, theAlias.txHash, tx, Params().GetConsensus()))
+			continue;
+		
 		int expired = 0;
-		pending = 0;
 		int expires_in = 0;
-		int expired_block = 0;
-		// get txn hash, read txn index
-        hash = item.second.GetHash();       
+		int expired_block = 0;  
 
-        // skip non-syscoin txns
-        if (wtx.nVersion != SYSCOIN_TX_VERSION)
-            continue;
 		// decode txn, skip non-cert txns
 		vector<vector<unsigned char> > vvch;
 		int op, nOut;
-		if (!DecodeCertTx(wtx, op, nOut, vvch))
+		if (!DecodeCertTx(tx, op, nOut, vvch))
 			continue;
 
 		vchCert = vvch[0];
@@ -1228,32 +1232,11 @@ UniValue certlist(const UniValue& params, bool fHelp) {
 		if (vchNameUniq.size() > 0 && vchNameUniq != vchCert)
 			continue;
 			
-		vector<CCert> vtxPos;
-		CCert cert;
-		if (!pcertdb->ReadCert(vchCert, vtxPos) || vtxPos.empty())
-		{
-			pending = 1;
-			cert = CCert(wtx);
-			if(!IsSyscoinTxMine(wtx, "cert"))
-				continue;
-		}
-		else
-		{
-			cert = vtxPos.back();
-			CTransaction tx;
-			if (!GetSyscoinTransaction(cert.nHeight, cert.txHash, tx, Params().GetConsensus()))
-			{
-				pending = 1;
-				if(!IsSyscoinTxMine(wtx, "cert"))
-					continue;
-			}
-			else{
-				if (!DecodeCertTx(tx, op, nOut, vvch) || !IsCertOp(op))
-					continue;
-				if(!IsSyscoinTxMine(tx, "cert"))
-					continue;
-			}
-		}
+		vector<CCert> vtxCertPos;
+		if (!pcertdb->ReadCert(vchCert, vtxCertPos) || vtxCertPos.empty())
+			continue;
+		const CCert &cert = vtxCertPos.back();
+		
 		nHeight = cert.nHeight;
 		// get last active name only
 		if (vNamesI.find(vchCert) != vNamesI.end() && (nHeight <= vNamesI[vchCert] || vNamesI[vchCert] < 0))
@@ -1267,14 +1250,6 @@ UniValue certlist(const UniValue& params, bool fHelp) {
 		
 		string strData = stringFromVch(cert.vchData);
 		bool isExpired = false;
-		vector<CAliasIndex> aliasVtxPos;
-		if(GetTxAndVtxOfAlias(cert.vchAlias, theAlias, aliastx, aliasVtxPos, isExpired, true))
-		{
-			theAlias.nHeight = cert.nHeight;
-			theAlias.GetAliasFromList(aliasVtxPos);
-		}
-		if(!IsSyscoinTxMine(aliastx, "alias"))
-			continue;
 		string strDecrypted = "";
 		if(cert.bPrivate)
 		{
@@ -1301,6 +1276,7 @@ UniValue certlist(const UniValue& params, bool fHelp) {
 		oName.push_back(Pair("category", stringFromVch(cert.sCategory)));
 		oName.push_back(Pair("alias", stringFromVch(cert.vchAlias)));
 		oName.push_back(Pair("viewalias", stringFromVch(cert.vchViewAlias)));
+		oName.push_back(Pair("ismine", IsSyscoinTxMine(aliastx, "alias") ? "true" : "false"));
 		expired_block = nHeight + GetCertExpirationDepth();
         if(expired_block < chainActive.Tip()->nHeight)
 		{
@@ -1310,7 +1286,6 @@ UniValue certlist(const UniValue& params, bool fHelp) {
 		oName.push_back(Pair("expires_in", expires_in));
 		oName.push_back(Pair("expires_on", expired_block));
 		oName.push_back(Pair("expired", expired));
-		oName.push_back(Pair("pending", pending));
  
 		vNamesI[vchCert] = nHeight;
 		vNamesO[vchCert] = oName;	

@@ -85,6 +85,7 @@ public:
 			else if(type == InMessage)
 				strMethod = string("messagelist");
 	        UniValue params(UniValue::VARR); 
+			params.push_back(settings.value("defaultAlias", "").toString());
 			UniValue result ;
 			string guid_str;
 			string time_str;

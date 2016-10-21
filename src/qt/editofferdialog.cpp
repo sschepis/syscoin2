@@ -269,6 +269,7 @@ void EditOfferDialog::aliasChanged(const QString& alias)
 		resetSafeSearch();
 		ui->aliasDisclaimer->setText(tr("<font color='blue'>Select an alias to own this offer</font>"));	
 	}  
+	loadCerts();
 }
 void EditOfferDialog::certChanged(int index)
 {
@@ -361,6 +362,7 @@ void EditOfferDialog::loadCerts()
 {
 	string strMethod = string("certlist");
     UniValue params(UniValue::VARR); 
+	params.push_back(ui->aliasEdit->currentText().toStdString());
 	UniValue result;
 	string name_str;
 	string title_str;

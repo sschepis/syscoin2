@@ -195,13 +195,6 @@ void MyOfferListPage::on_editButton_clicked()
 	QString offerGUID = indexes.at(0).data(OfferTableModel::NameRole).toString();
 	QString certGUID = indexes.at(0).data(OfferTableModel::CertRole).toString();
 	QString status = indexes.at(0).data(OfferTableModel::ExpiredRole).toString();
-	if(status == QString("pending"))
-	{
-           QMessageBox::information(this, windowTitle(),
-           tr("This offer is still pending, click the refresh button once the offer confirms and try again"),
-               QMessageBox::Ok, QMessageBox::Ok);
-		   return;
-	}
 	if(status == QString("expired"))
 	{
            QMessageBox::information(this, windowTitle(),

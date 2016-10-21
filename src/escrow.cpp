@@ -3447,8 +3447,7 @@ UniValue escrowlist(const UniValue& params, bool fHelp) {
 			else if(op == OP_ESCROW_COMPLETE && escrowRefund)
 				status = "escrow refund complete";
 		}
-		else
-			status = "pending";
+
 		UniValue oBuyerFeedBack(UniValue::VARR);
 		for(unsigned int i =0;i<buyerFeedBacks.size();i++)
 		{

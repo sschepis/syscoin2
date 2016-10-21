@@ -71,6 +71,7 @@ public:
         {
 			string strMethod = string("certlist");
 	        UniValue params(UniValue::VARR); 
+			params.push_back(settings.value("defaultAlias", "").toString());
 			UniValue result;
 			string name_str;
 			string data_str;
@@ -152,20 +153,12 @@ public:
 						const UniValue& expired_value = find_value(o, "expired");
 						if (expired_value.type() == UniValue::VNUM)
 							expired = expired_value.get_int();
-						const UniValue& pending_value = find_value(o, "pending");
-						int pending = 0;
-						if (pending_value.type() == UniValue::VNUM)
-							pending = pending_value.get_int();
 						const UniValue& safesearch_value = find_value(o, "safesearch");
 						if (safesearch_value.type() == UniValue::VSTR)
 							safesearch_str = safesearch_value.get_str();
 						if(expired == 1)
 						{
 							expired_str = "Expired";
-						}
-						else if(pending == 1)
-						{
-							expired_str = "Pending";
 						}
 						else
 						{

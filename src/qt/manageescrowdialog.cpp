@@ -194,12 +194,6 @@ ManageEscrowDialog::ManageEscrowDialog(WalletModel* model, const QString &escrow
 		}
 
 	}
-	else if(status == "pending")
-	{		
-		ui->manageInfo2->setText(tr("The escrow is still pending a confirmation by the network. Please try again later."));
-		ui->refundButton->setEnabled(false);
-		ui->releaseButton->setEnabled(false);
-	}
 	else
 	{
 		ui->manageInfo2->setText(tr("The escrow status was not recognized. Please contact the Syscoin team."));

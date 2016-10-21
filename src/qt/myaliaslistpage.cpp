@@ -162,13 +162,6 @@ void MyAliasListPage::on_editButton_clicked()
     if(indexes.isEmpty())
         return;
 	QString status = indexes.at(0).data(AliasTableModel::ExpiredRole).toString();
-	if(status == QString("pending"))
-	{
-           QMessageBox::information(this, windowTitle(),
-           tr("This alias is still pending, click the refresh button once the alias confirms and try again"),
-               QMessageBox::Ok, QMessageBox::Ok);
-		   return;
-	}
 	if(status == QString("expired"))
 	{
            QMessageBox::information(this, windowTitle(),

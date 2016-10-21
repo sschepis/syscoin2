@@ -42,9 +42,7 @@ public:
         ThirdPartyTxUrls,       // QString
 		// SYSCOIN
 		Theme,                  // QString
-		DefaultOfferAlias,		// QString
-		DefaultMessageAlias,	// QString
-		DefaultCertAlias,		// QString
+		DefaultAlias,			// QString
 		DefaultPegAlias,		// QString
 		DefaultBuyOfferAlias,	// QString
 		SafeSearch,				// QString

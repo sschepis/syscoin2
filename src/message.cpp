@@ -608,46 +608,49 @@ UniValue messageinfo(const UniValue& params, bool fHelp) {
     return oMessage;
 }
 
-UniValue messagelist(const UniValue& params, bool fHelp) {
-    if (fHelp || 1 < params.size())
-        throw runtime_error("messagelist [<message>]\n"
-                "list my own messages");
+UniValue messagereceivelist(const UniValue& params, bool fHelp) {
+    if (fHelp || 2 < params.size() || params.size() < 1)
+        throw runtime_error("messagereceivelist <alias> [<message>]\n"
+                "list received messages that an alias owns");
 	vector<unsigned char> vchMessage;
-
-	if (params.size() == 1)
-		vchMessage = vchFromValue(params[0]);
+	vector<unsigned char> vchAlias = vchFromValue(params[0]);
+	string name = stringFromVch(vchAlias);
+	vector<CAliasIndex> vtxPos;
+	if (!paliasdb->ReadAlias(vchAlias, vtxPos) || vtxPos.empty())
+		throw runtime_error("failed to read from alias DB");
+	const CAliasIndex &alias = vtxPos.back();
+	CTransaction aliastx;
+	uint256 txHash;
+	if (!GetSyscoinTransaction(alias.nHeight, alias.txHash, aliastx, Params().GetConsensus()))
+	{
+		throw runtime_error("failed to read alias transaction");
+	}
+	vchMessage = vchFromValue(params[1]);
 
     UniValue oRes(UniValue::VARR);
-    uint256 hash;
-    CTransaction tx, dbtx;
+    CTransaction tx;
 
     vector<unsigned char> vchValue;
-    BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet)
+    BOOST_FOREACH(const CAliasIndex &theAlias, vtxPos) {
     {
-        // get txn hash, read txn index
-        hash = item.second.GetHash();
-		const CWalletTx &wtx = item.second;
+		if(theAlias.vchAlias != vchAlias)
+			continue;
+		if(!GetSyscoinTransaction(theAlias.nHeight, theAlias.txHash, tx, Params().GetConsensus()))
+			continue;
 
-        // skip non-syscoin txns
-        if (wtx.nVersion != SYSCOIN_TX_VERSION)
-            continue;
 		// decode txn, skip non-alias txns
 		vector<vector<unsigned char> > vvch;
 		int op, nOut;
-		if (!DecodeMessageTx(wtx, op, nOut, vvch) || !IsMessageOp(op))
+		if (!DecodeMessageTx(tx, op, nOut, vvch) || !IsMessageOp(op))
 			continue;
 		vchMessage = vvch[0];
-		vector<CMessage> vtxPos;
-		CMessage message;
-		int pending = 0;
-		if (!pmessagedb->ReadMessage(vchMessage, vtxPos) || vtxPos.empty())
-		{
-			pending = 1;
-		}
-		message = CMessage(wtx);
-		if(!IsSyscoinTxMine(wtx, "message"))
+		vector<CMessage> vtxMessagePos;
+		if (!pmessagedb->ReadMessage(vchMessage, vtxMessagePos) || vtxMessagePos.empty())
 			continue;
+		const CMessage& message = vtxMessagePos.back();
 
+		if(message.vchAliasTo != vchAlias)
+			continue;
         // build the output
         UniValue oName(UniValue::VOBJ);
         oName.push_back(Pair("GUID", stringFromVch(vchMessage)));
@@ -674,8 +677,6 @@ UniValue messagelist(const UniValue& params, bool fHelp) {
 			aliasTo.nHeight = message.nHeight;
 			aliasTo.GetAliasFromList(aliasVtxPos);
 		}
-		if(!IsSyscoinTxMine(aliastx, "alias"))
-			continue;
 		oName.push_back(Pair("from", stringFromVch(message.vchAliasFrom)));
 		oName.push_back(Pair("to", stringFromVch(message.vchAliasTo)));
 
@@ -687,6 +688,7 @@ UniValue messagelist(const UniValue& params, bool fHelp) {
 		else if(DecryptMessage(aliasFrom.vchPubKey, message.vchMessageFrom, strDecrypted))
 			strData = strDecrypted;
 		oName.push_back(Pair("message", strData));
+		oName.push_back(Pair("ismine", IsSyscoinTxMine(aliastx, "alias") ? "true" : "false"));
 		oRes.push_back(oName);
 	}
 
@@ -695,61 +697,48 @@ UniValue messagelist(const UniValue& params, bool fHelp) {
 
 
 UniValue messagesentlist(const UniValue& params, bool fHelp) {
-    if (fHelp || 1 < params.size())
-        throw runtime_error("messagesentlist [<message>]\n"
-                "list my sent messages");
+    if (fHelp || 2 < params.size() || params.size() < 1)
+        throw runtime_error("messagesentlist <alias> [<message>]\n"
+                "list sent messages that an alias owns");
 	vector<unsigned char> vchMessage;
-
-	if (params.size() == 1)
-		vchMessage = vchFromValue(params[0]);
+	vector<unsigned char> vchAlias = vchFromValue(params[0]);
+	string name = stringFromVch(vchAlias);
+	vector<CAliasIndex> vtxPos;
+	if (!paliasdb->ReadAlias(vchAlias, vtxPos) || vtxPos.empty())
+		throw runtime_error("failed to read from alias DB");
+	const CAliasIndex &alias = vtxPos.back();
+	CTransaction aliastx;
+	uint256 txHash;
+	if (!GetSyscoinTransaction(alias.nHeight, alias.txHash, aliastx, Params().GetConsensus()))
+	{
+		throw runtime_error("failed to read alias transaction");
+	}
+	vchMessage = vchFromValue(params[1]);
 
     UniValue oRes(UniValue::VARR);
-    uint256 hash;
-    CTransaction tx, dbtx;
+    CTransaction tx;
 
     vector<unsigned char> vchValue;
-    BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet)
+    BOOST_FOREACH(const CAliasIndex &theAlias, vtxPos) {
     {
-        // get txn hash, read txn index
-        hash = item.second.GetHash();
-		const CWalletTx &wtx = item.second;        // skip non-syscoin txns
-        if (wtx.nVersion != SYSCOIN_TX_VERSION)
-            continue;
+		if(theAlias.vchAlias != vchAlias)
+			continue;
+		if(!GetSyscoinTransaction(theAlias.nHeight, theAlias.txHash, tx, Params().GetConsensus()))
+			continue;
+
 		// decode txn, skip non-alias txns
 		vector<vector<unsigned char> > vvch;
 		int op, nOut;
-		if (!DecodeMessageTx(wtx, op, nOut, vvch) || !IsMessageOp(op))
+		if (!DecodeMessageTx(tx, op, nOut, vvch) || !IsMessageOp(op))
 			continue;
 		vchMessage = vvch[0];
+		vector<CMessage> vtxMessagePos;
+		if (!pmessagedb->ReadMessage(vchMessage, vtxMessagePos) || vtxMessagePos.empty())
+			continue;
+		const CMessage& message = vtxMessagePos.back();
 
-		vector<CMessage> vtxPos;
-		CMessage message;
-		int pending = 0;
-		if (!pmessagedb->ReadMessage(vchMessage, vtxPos) || vtxPos.empty())
-		{
-			pending = 1;
-			message = CMessage(wtx);
-			if(IsSyscoinTxMine(wtx, "message"))
-				continue;
-		}
-		else
-		{
-			message = vtxPos.back();
-			CTransaction tx;
-			if (!GetSyscoinTransaction(message.nHeight, message.txHash, tx, Params().GetConsensus()))
-			{
-				pending = 1;
-				if(IsSyscoinTxMine(wtx, "message"))
-					continue;
-			}
-			else
-			{
-				if (!DecodeMessageTx(tx, op, nOut, vvch) || !IsMessageOp(op))
-					continue;
-				if(IsSyscoinTxMine(tx, "message"))
-					continue;
-			}
-		}
+		if(message.vchAliasFrom != vchAlias)
+			continue;
         // build the output
         UniValue oName(UniValue::VOBJ);
         oName.push_back(Pair("GUID", stringFromVch(vchMessage)));
@@ -776,8 +765,6 @@ UniValue messagesentlist(const UniValue& params, bool fHelp) {
 			aliasTo.nHeight = message.nHeight;
 			aliasTo.GetAliasFromList(aliasVtxPos);
 		}
-		if(!IsSyscoinTxMine(aliastx, "alias"))
-			continue;
 		oName.push_back(Pair("from", stringFromVch(message.vchAliasFrom)));
 		oName.push_back(Pair("to", stringFromVch(message.vchAliasTo)));
 
@@ -789,6 +776,7 @@ UniValue messagesentlist(const UniValue& params, bool fHelp) {
 		else if(DecryptMessage(aliasFrom.vchPubKey, message.vchMessageFrom, strDecrypted))
 			strData = strDecrypted;
 		oName.push_back(Pair("message", strData));
+		oName.push_back(Pair("ismine", IsSyscoinTxMine(aliastx, "alias") ? "true" : "false"));
 		oRes.push_back(oName);
 	}
 

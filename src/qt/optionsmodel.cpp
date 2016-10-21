@@ -146,12 +146,8 @@ void OptionsModel::Init(bool resetSettings)
 	// SYSCOIN
     if (!settings.contains("theme"))
         settings.setValue("theme", "");
-    if (!settings.contains("defaultOfferAlias"))
-        settings.setValue("defaultOfferAlias", "");
-    if (!settings.contains("defaultMessageAlias"))
-        settings.setValue("defaultMessageAlias", "");
-    if (!settings.contains("defaultCertAlias"))
-        settings.setValue("defaultCertAlias", "");
+    if (!settings.contains("defaultAlias"))
+        settings.setValue("defaultAlias", "");
     if (!settings.contains("defaultPegAlias"))
         settings.setValue("defaultPegAlias", "sysrates.peg");
     if (!settings.contains("defaultBuyOfferAlias"))
@@ -266,11 +262,7 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
 		case Theme:
             return settings.value("theme");  
         case DefaultOfferAlias:
-            return settings.value("defaultOfferAlias");   
-        case DefaultCertAlias:
-            return settings.value("defaultCertAlias");  
-        case DefaultMessageAlias:
-            return settings.value("defaultMessageAlias");
+            return settings.value("defaultAlias");   
         case DefaultPegAlias:
             return settings.value("defaultPegAlias");
         case DefaultBuyOfferAlias:
@@ -409,20 +401,11 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
                 setRestartRequired(true);
             }
             break; 
-        case DefaultOfferAlias:
-            if (settings.value("defaultOfferAlias") != value) {
-                settings.setValue("defaultOfferAlias", value);
+        case DefaultAlias:
+            if (settings.value("defaultAlias") != value) {
+                settings.setValue("defaultAlias", value);
             }
             break; 
-        case DefaultCertAlias:
-            if (settings.value("defaultCertAlias") != value) {
-                settings.setValue("defaultCertAlias", value);
-            }
-            break; 
-        case DefaultMessageAlias:
-            if (settings.value("defaultMessageAlias") != value) {
-                settings.setValue("defaultMessageAlias", value);
-            }
             break;
         case DefaultPegAlias:
             if (settings.value("defaultPegAlias") != value) {

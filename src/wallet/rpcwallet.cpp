@@ -2786,7 +2786,7 @@ extern UniValue escrowfeedback(const UniValue& params, bool fHelp);
 
 extern UniValue messagenew(const UniValue& params, bool fHelp);
 extern UniValue messageinfo(const UniValue& params, bool fHelp);
-extern UniValue messagelist(const UniValue& params, bool fHelp);
+extern UniValue messagereceivelist(const UniValue& params, bool fHelp);
 extern UniValue messagesentlist(const UniValue& params, bool fHelp);
 extern UniValue messagehistory(const UniValue& params, bool fHelp);
 static const CRPCCommand commands[] =
@@ -2896,7 +2896,7 @@ static const CRPCCommand commands[] =
 
 	// use the blockchain for encrypted messaging
 	{ "wallet", "messagenew",         &messagenew,     false },
-	{ "wallet", "messagelist",              &messagelist,          false },
+	{ "wallet", "messagereceivelist",              &messagereceivelist,          false },
 	{ "wallet", "messagesentlist",              &messagesentlist,          false },
 	{ "wallet", "messageinfo",              &messageinfo,          false },
 	{ "wallet", "messagehistory",     &messagehistory, false },

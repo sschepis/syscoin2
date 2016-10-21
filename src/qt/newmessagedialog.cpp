@@ -38,7 +38,7 @@ NewMessageDialog::NewMessageDialog(Mode mode, const QString &to, const QString &
 		ui->replyEdit->setVisible(false);
 		ui->replyLabel->setVisible(false);
 		ui->fromDisclaimer->setText(tr("<font color='blue'>Select an Alias</font>"));
-		defaultMessageAlias = settings.value("defaultMessageAlias", "").toString();
+		defaultMessageAlias = settings.value("defaultAlias", "").toString();
 		aliasIndex = ui->aliasEdit->findText(defaultMessageAlias);
 		if(aliasIndex >= 0)
 			ui->aliasEdit->setCurrentIndex(aliasIndex);

@@ -214,10 +214,7 @@ void OptionsDialog::setMapper()
    /* Display */
 	// SYSCOIN
 	mapper->addMapping(ui->theme, OptionsModel::Theme);
-	mapper->addMapping(ui->defaultOfferAlias, OptionsModel::DefaultOfferAlias);
-	mapper->addMapping(ui->defaultMessageAlias, OptionsModel::DefaultMessageAlias);
-	mapper->addMapping(ui->defaultCertAlias, OptionsModel::DefaultCertAlias);
-	mapper->addMapping(ui->defaultPegAlias, OptionsModel::DefaultPegAlias);
+	mapper->addMapping(ui->defaultAlias, OptionsModel::DefaultAlias);
 	mapper->addMapping(ui->defaultBuyOfferAlias, OptionsModel::DefaultBuyOfferAlias);
 	mapper->addMapping(ui->safeSearch, OptionsModel::SafeSearch);
     mapper->addMapping(ui->lang, OptionsModel::Language);
