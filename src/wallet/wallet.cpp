@@ -1116,7 +1116,7 @@ isminetype CWallet::IsMine(const CTxOut& txout) const
 		{
 			for (unsigned int i = 0; i < txAlias.vout.size(); i++) {
 				const CTxOut& out = txAlias.vout[i];
-				if (DecodeAliasScript(out.scriptPubKey, op, vvch)) {
+				if (DecodeAliasScript(out.scriptPubKey, op, vvchArgs)) {
 					myAlias = ::IsMine(*this, out.scriptPubKey);
 					break;
 				}
