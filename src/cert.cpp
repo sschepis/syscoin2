@@ -1137,11 +1137,23 @@ UniValue certinfo(const UniValue& params, bool fHelp) {
     oCert.push_back(Pair("title", stringFromVch(ca.vchTitle)));
 	string strData = stringFromVch(ca.vchData);
 	string strDecrypted = "";
-	if(ca.bPrivate && !ca.vchData.empty())
+	if(ca.bPrivate)
 	{
 		strData = _("Encrypted for owner of certificate private data");
-		if(DecryptMessage(alias.vchPubKey, ca.vchData, strDecrypted))
-			strData = strDecrypted;		
+		if(!ca.vchViewData.empty() && !ca.vchViewAlias.empty())	
+		{
+			CAliasIndex aliasView;
+			CTransaction aliasviewtx;
+			if (!GetTxOfAlias(ca.vchViewAlias, aliasView, aliasviewtx, true))
+				throw runtime_error("failed to read xfer alias from alias DB");
+			if(DecryptMessage(aliasView.vchPubKey, ca.vchViewData, strDecrypted))
+				strData = strDecrypted;	
+		}
+		if(!ca.vchData.empty() && strDecrypted == "")
+		{
+			if(DecryptMessage(alias.vchPubKey, ca.vchData, strDecrypted))
+				strData = strDecrypted;		
+		}
 	}
     oCert.push_back(Pair("data", strData));
 	oCert.push_back(Pair("category", stringFromVch(ca.sCategory)));
@@ -1263,11 +1275,23 @@ UniValue certlist(const UniValue& params, bool fHelp) {
 		if(!IsSyscoinTxMine(aliastx, "alias"))
 			continue;
 		string strDecrypted = "";
-		if(cert.bPrivate && !cert.vchData.empty())
+		if(cert.bPrivate)
 		{
 			strData = _("Encrypted for owner of certificate private data");
-			if(DecryptMessage(theAlias.vchPubKey, cert.vchData, strDecrypted))
-				strData = strDecrypted;	
+			if(!cert.vchViewData.empty() && !cert.vchViewAlias.empty())	
+			{
+				CAliasIndex aliasView;
+				CTransaction aliasviewtx;
+				if (!GetTxOfAlias(cert.vchViewAlias, aliasView, aliasviewtx, true))
+					throw runtime_error("failed to read xfer alias from alias DB");
+				if(DecryptMessage(aliasView.vchPubKey, cert.vchViewData, strDecrypted))
+					strData = strDecrypted;	
+			}
+			if(!cert.vchData.empty() && strDecrypted == "")
+			{
+				if(DecryptMessage(alias.vchPubKey, cert.vchData, strDecrypted))
+					strData = strDecrypted;		
+			}
 		}
 		oName.push_back(Pair("private", cert.bPrivate? "Yes": "No"));
 		oName.push_back(Pair("safesearch", cert.safeSearch ? "Yes" : "No"));
@@ -1347,12 +1371,23 @@ UniValue certhistory(const UniValue& params, bool fHelp) {
 				theAlias.nHeight = txPos2.nHeight;
 				theAlias.GetAliasFromList(aliasVtxPos);
 			}
-			if(txPos2.bPrivate && !txPos2.vchData.empty())
+			if(txPos2.bPrivate)
 			{
 				strData = _("Encrypted for owner of certificate private data");
-				if(DecryptMessage(theAlias.vchPubKey, txPos2.vchData, strDecrypted))
-					strData = strDecrypted;
-
+				if(!txPos2.vchViewData.empty() && !txPos2.vchViewAlias.empty())	
+				{
+					CAliasIndex aliasView;
+					CTransaction aliasviewtx;
+					if (!GetTxOfAlias(txPos2.vchViewAlias, aliasView, aliasviewtx, true))
+						throw runtime_error("failed to read xfer alias from alias DB");
+					if(DecryptMessage(aliasView.vchPubKey, txPos2.vchViewData, strDecrypted))
+						strData = strDecrypted;	
+				}
+				if(!txPos2.vchData.empty() && strDecrypted == "")
+				{
+					if(DecryptMessage(alias.vchPubKey, txPos2.vchData, strDecrypted))
+						strData = strDecrypted;		
+				}
 			}
 			oCert.push_back(Pair("private", txPos2.bPrivate? "Yes": "No"));
 			oCert.push_back(Pair("data", strData));
@@ -1437,12 +1472,23 @@ UniValue certfilter(const UniValue& params, bool fHelp) {
 			theAlias.nHeight = txCert.nHeight;
 			theAlias.GetAliasFromList(aliasVtxPos);
 		}
-		if(txCert.bPrivate && !txCert.vchData.empty())
+		if(txCert.bPrivate)
 		{
 			strData = _("Encrypted for owner of certificate private data");
-			if(DecryptMessage(theAlias.vchPubKey, txCert.vchData, strDecrypted))
-				strData = strDecrypted;
-			
+			if(!txCert.vchViewData.empty() && !txCert.vchViewAlias.empty())	
+			{
+				CAliasIndex aliasView;
+				CTransaction aliasviewtx;
+				if (!GetTxOfAlias(txCert.vchViewAlias, aliasView, aliasviewtx, true))
+					throw runtime_error("failed to read xfer alias from alias DB");
+				if(DecryptMessage(aliasView.vchPubKey, txCert.vchViewData, strDecrypted))
+					strData = strDecrypted;	
+			}
+			if(!txCert.vchData.empty() && strDecrypted == "")
+			{
+				if(DecryptMessage(alias.vchPubKey, txCert.vchData, strDecrypted))
+					strData = strDecrypted;		
+			}
 		}
 
 		oCert.push_back(Pair("data", strData));
