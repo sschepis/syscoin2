@@ -1289,7 +1289,7 @@ UniValue certlist(const UniValue& params, bool fHelp) {
 			}
 			if(!cert.vchData.empty() && strDecrypted == "")
 			{
-				if(DecryptMessage(alias.vchPubKey, cert.vchData, strDecrypted))
+				if(DecryptMessage(theAlias.vchPubKey, cert.vchData, strDecrypted))
 					strData = strDecrypted;		
 			}
 		}
@@ -1385,7 +1385,7 @@ UniValue certhistory(const UniValue& params, bool fHelp) {
 				}
 				if(!txPos2.vchData.empty() && strDecrypted == "")
 				{
-					if(DecryptMessage(alias.vchPubKey, txPos2.vchData, strDecrypted))
+					if(DecryptMessage(theAlias.vchPubKey, txPos2.vchData, strDecrypted))
 						strData = strDecrypted;		
 				}
 			}
@@ -1486,7 +1486,7 @@ UniValue certfilter(const UniValue& params, bool fHelp) {
 			}
 			if(!txCert.vchData.empty() && strDecrypted == "")
 			{
-				if(DecryptMessage(alias.vchPubKey, txCert.vchData, strDecrypted))
+				if(DecryptMessage(theAlias.vchPubKey, txCert.vchData, strDecrypted))
 					strData = strDecrypted;		
 			}
 		}
