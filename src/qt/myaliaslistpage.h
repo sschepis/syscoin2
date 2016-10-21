@@ -59,7 +59,6 @@ private Q_SLOTS:
     void on_editButton_clicked();
     /** Export button clicked */
     void on_exportButton_clicked();
-	void on_importButton_clicked();
     /** transfer the alias to a syscoin address  */
     void on_transferButton_clicked();
 	void on_refreshButton_clicked();

@@ -2635,39 +2635,6 @@ UniValue generatepublickey(const UniValue& params, bool fHelp) {
 	res.push_back(HexStr(vchPubKey));
 	return res;
 }
-UniValue importalias(const UniValue& params, bool fHelp) {
-	vector<unsigned char> vchAlias = vchFromValue(params[0]);
-	if(!pwalletMain)
-		throw runtime_error("No wallet defined!");
-	int count = 0;
-	vector<CAliasIndex> vtxPos;
-	CAliasIndex theAlias;
-	CTransaction aliastx;
-	bool isExpired;
-	if(!GetTxAndVtxOfAlias(vchAlias, theAlias, aliastx, vtxPos, isExpired))
-	{
-		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid or expired alias");
-	}
-	CWalletDB walletdb(pwalletMain->strWalletFile);
-	BOOST_FOREACH(theAlias, vtxPos) {
-		CTransaction tx;
-		if (GetSyscoinTransaction(theAlias.nHeight, theAlias.txHash, tx, Params().GetConsensus()))
-		{
-			CBlock block;
-            ReadBlockFromDisk(block, chainActive[theAlias.nHeight], Params().GetConsensus());
-			int posInBlock;
-			for (posInBlock = 0; posInBlock < (int)block.vtx.size(); posInBlock++)
-			{
-				pwalletMain->SyncTransaction(tx, chainActive[theAlias.nHeight], posInBlock);
-			}	
-		}
-	}
-	
-	UniValue res(UniValue::VARR);
-	res.push_back("Success!");
-	return res;
-}
-
 /**
  * [aliasfilter description]
  * @param  params [description]

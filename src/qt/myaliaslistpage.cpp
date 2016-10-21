@@ -14,7 +14,6 @@
 #include "mywhitelistofferdialog.h"
 #include "csvmodelwriter.h"
 #include "guiutil.h"
-#include "aliasimportdialog.h"
 #include <QSortFilterProxyModel>
 #include <QClipboard>
 #include <QMessageBox>
@@ -157,17 +156,6 @@ void MyAliasListPage::on_copyAlias_clicked()
     GUIUtil::copyEntryData(ui->tableView, AliasTableModel::Name);
 }
 
-void MyAliasListPage::on_importButton_clicked()
-{
-    if(!ui->tableView->selectionModel())
-        return;
-    QModelIndexList selection = ui->tableView->selectionModel()->selectedRows();
-    if(!selection.isEmpty())
-    {
-        AliasImportDialog dlg(platformStyle, selection.at(0));
-        dlg.exec();
-    }
-}
 void MyAliasListPage::on_editButton_clicked()
 {
     if(!ui->tableView->selectionModel())
