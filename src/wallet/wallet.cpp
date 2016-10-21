@@ -1107,7 +1107,7 @@ isminetype CWallet::IsMine(const CTxOut& txout) const
 	// SYSCOIN
 	isminetype myAlias;
 	int op;
-	vector<vector<unsigned char> > &vvchArgs
+	vector<vector<unsigned char> > vvchArgs;
 	if (DecodeAliasScript(txout.scriptPubKey, op, vvchArgs))
 	{
 		CAliasIndex theAlias;
