@@ -17,6 +17,7 @@ using namespace std;
 #include <QNetworkAccessManager>
 #include <QNetworkRequest>
 #include <QNetworkReply>
+#include <QSettings>
 extern CRPCTable tableRPC;
 ManageEscrowDialog::ManageEscrowDialog(WalletModel* model, const QString &escrow, QWidget *parent) :
     QDialog(parent),
@@ -206,7 +207,7 @@ bool ManageEscrowDialog::loadEscrow(const QString &escrow, QString &buyer, QStri
 	QSettings settings;
 	string strMethod = string("escrowlist");
     UniValue params(UniValue::VARR); 
-	params.push_back(settings.value("defaultAlias", "").toString());
+	params.push_back(settings.value("defaultAlias", "").toString().toStdString());
 	UniValue result ;
 	string name_str;
 	try {

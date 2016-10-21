@@ -28,6 +28,7 @@ extern CRPCTable tableRPC;
 #include <QNetworkAccessManager>
 #include <QNetworkRequest>
 #include <QNetworkReply>
+#include <QSettings>
 MyAcceptedOfferListPage::MyAcceptedOfferListPage(const PlatformStyle *platformStyle, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::MyAcceptedOfferListPage),
@@ -98,7 +99,7 @@ bool MyAcceptedOfferListPage::lookup(const QString &lookupid, const QString &acc
 	string strMethod = string("offeracceptlist");
 	UniValue params(UniValue::VARR);
 	QSettings settings;
-	params.push_back(settings.value("defaultAlias", "").toString());
+	params.push_back(settings.value("defaultAlias", "").toString().toStdString());
 	UniValue offerAcceptsValue;
 	QString offerAcceptHash;
 	params.push_back(acceptid.toStdString());

@@ -7,6 +7,7 @@
 #include "base58.h"
 
 #include <QFont>
+#include <QSettings>
 #include "rpc/server.h"
 #include "starrating.h"
 using namespace std;
@@ -80,7 +81,7 @@ public:
 			string strMethod = string("offerlist");
 	        UniValue params(UniValue::VARR); 
 			QSettings settings;
-			params.push_back(settings.value("defaultAlias", "").toString());
+			params.push_back(settings.value("defaultAlias", "").toString().toStdString());
 			UniValue result ;
 			string name_str;
 			string value_str;
