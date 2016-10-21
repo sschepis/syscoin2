@@ -433,7 +433,7 @@ bool EditCertDialog::saveCurrentRow()
 				params.push_back(ui->categoryEdit->itemData(ui->categoryEdit->currentIndex(), Qt::UserRole).toString().toStdString());
 			else
 				params.push_back(ui->categoryEdit->currentText().toStdString());
-			params.push_back(ui->viewAliasEdit->currentText().toStdString());
+			params.push_back(ui->viewAliasEdit->text().toStdString());
 			try {
 				UniValue result = tableRPC.execute(strMethod, params);
 				if (result.type() != UniValue::VNULL)
