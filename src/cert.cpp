@@ -1165,6 +1165,7 @@ UniValue certinfo(const UniValue& params, bool fHelp) {
     uint64_t nHeight;
 	nHeight = ca.nHeight;
 	oCert.push_back(Pair("alias", stringFromVch(ca.vchAlias)));
+	oCert.push_back(Pair("viewalias", stringFromVch(ca.vchViewAlias)));
 	expired_block = nHeight + GetCertExpirationDepth();
     if(expired_block < chainActive.Tip()->nHeight)
 	{
@@ -1299,6 +1300,7 @@ UniValue certlist(const UniValue& params, bool fHelp) {
 		oName.push_back(Pair("data", strData));
 		oName.push_back(Pair("category", stringFromVch(cert.sCategory)));
 		oName.push_back(Pair("alias", stringFromVch(cert.vchAlias)));
+		oName.push_back(Pair("viewalias", stringFromVch(cert.vchViewAlias)));
 		expired_block = nHeight + GetCertExpirationDepth();
         if(expired_block < chainActive.Tip()->nHeight)
 		{
@@ -1394,6 +1396,7 @@ UniValue certhistory(const UniValue& params, bool fHelp) {
 			oCert.push_back(Pair("category", stringFromVch(txPos2.sCategory)));
             oCert.push_back(Pair("txid", tx.GetHash().GetHex()));
 			oCert.push_back(Pair("alias", stringFromVch(txPos2.vchAlias)));
+			oCert.push_back(Pair("viewalias", stringFromVch(txPos2.vchViewAlias)));
 			expired_block = nHeight + GetCertExpirationDepth();
             if(expired_block < chainActive.Tip()->nHeight)
 			{
@@ -1504,6 +1507,7 @@ UniValue certfilter(const UniValue& params, bool fHelp) {
 		oCert.push_back(Pair("expires_on", expired_block));
 		oCert.push_back(Pair("expired", expired));
 		oCert.push_back(Pair("alias", stringFromVch(txCert.vchAlias)));
+		oCert.push_back(Pair("viewalias", stringFromVch(txCert.vchViewAlias)));
         oRes.push_back(oCert);
 	}
 
