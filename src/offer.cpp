@@ -3111,7 +3111,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 	UniValue aoOfferAccepts(UniValue::VARR);
     uint64_t nHeight;
     BOOST_FOREACH(const CAliasIndex &theAlias, vtxPos)
-    {
+	{
 		if(!GetSyscoinTransaction(theAlias.nHeight, theAlias.txHash, tx, Params().GetConsensus()))
 			continue;
 		vector<vector<unsigned char> > vvch;
@@ -3124,7 +3124,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 		int expires_in = 0;
 		int expired_block = 0;  
 		for(unsigned int i=vtxOfferPos.size()-1;i>=0;i--) {
-			const COffer &theOffer = vtxOfferPos[i];
+			COffer theOffer = vtxOfferPos[i];
 			if(theOffer.accept.IsNull())
 				continue;
 			if (vchNameUniq.size() > 0 && vchNameUniq != theOffer.accept.vchAcceptRand)
@@ -3385,10 +3385,10 @@ UniValue offeracceptinfo(const UniValue& params, bool fHelp) {
 			continue;
 
 		string offer = stringFromVch(vchOffer);
-		string sHeight = strprintf("%llu", theOfferAccept.nHeight);
+		string sHeight = strprintf("%llu", theOffer.nHeight);
 		oOfferAccept.push_back(Pair("offer", offer));		
 		string sTime;
-		CBlockIndex *pindex = chainActive[theOfferAccept.nHeight];
+		CBlockIndex *pindex = chainActive[theOffer.nHeight];
 		if (pindex) {
 			sTime = strprintf("%llu", pindex->nTime);
 		}
@@ -3485,7 +3485,7 @@ UniValue offerlist(const UniValue& params, bool fHelp) {
         throw runtime_error("offerlist <alias> [<offer>]\n"
                 "list offers that an alias owns");
 
-    vector<unsigned char> vchOffer;
+    vector<unsigned char> vchAlias;
 	string name = stringFromVch(vchAlias);
 	vector<CAliasIndex> vtxPos;
 	if (!paliasdb->ReadAlias(vchAlias, vtxPos) || vtxPos.empty())
@@ -3535,7 +3535,6 @@ UniValue offerlist(const UniValue& params, bool fHelp) {
 			if (!pofferdb->ReadOffer(vchOffer, vtxOfferPos) || vtxOfferPos.empty())
 				continue;
 			const COffer &theOffer = vtxOfferPos.back();	
-			nQty = theOffer.nQty;
 				
 			// get last active name only
 			if (vNamesI.find(vchOffer) != vNamesI.end() && (theOffer.nHeight <= vNamesI[vchOffer] || vNamesI[vchOffer] < 0))
@@ -3557,10 +3556,10 @@ UniValue offerlist(const UniValue& params, bool fHelp) {
 
 			oName.push_back(Pair("currency", stringFromVch(theOffer.sCurrencyCode) ) );
 			oName.push_back(Pair("commission", strprintf("%d", theOffer.nCommission)));
-			if(nQty == -1)
+			if(theOffer.nQty == -1)
 				oName.push_back(Pair("quantity", "unlimited"));
 			else
-				oName.push_back(Pair("quantity", strprintf("%d", nQty)));
+				oName.push_back(Pair("quantity", strprintf("%d", theOffer.nQty)));
 				
 			oName.push_back(Pair("exclusive_resell", theOffer.linkWhitelist.bExclusiveResell ? "ON" : "OFF"));
 			oName.push_back(Pair("paymentoptions", theOffer.paymentOptions));
@@ -3811,24 +3810,6 @@ std::string COffer::GetPaymentOptionsString()
 		return std::string("SYS+BTC");
 	}
 	return "";
-}
-CAmount COffer::GetPrice(const COfferLinkWhitelistEntry& entry=COfferLinkWhitelistEntry()){
-	COfferLinkWhitelistEntry  myentry;
-	CAmount price = nPrice;
-	linkWhitelist.GetLinkEntryByHash(entry.aliasLinkVchRand, myentry);
-	
-	char nDiscount = myentry.nDiscountPct;
-	if(myentry.nDiscountPct > 99)
-		nDiscount = 0;
-	// nMarkup is a percentage, commission minus discount
-	char nMarkup = nCommission - nDiscount;
-	if(nMarkup != 0)
-	{
-		int lMarkup = 1/ (nMarkup/100.0);
-		CAmount priceMarkup = price/lMarkup;
-		price += priceMarkup;
-	}
-	return price;
 }
 void OfferTxToJSON(const int op, const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash, UniValue &entry)
 {
