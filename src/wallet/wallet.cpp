@@ -36,7 +36,6 @@ using namespace std;
 // SYSCOIN services
 extern int IndexOfAliasOutput(const CTransaction& tx);
 extern bool IsSyscoinScript(const CScript& scriptPubKey, int &op, vector<vector<unsigned char> > &vvchArgs);
-extern bool DecodeAliasScript(const CScript& scriptPubKey, int& op, vector<vector<unsigned char> > &vvchArgs);
 extern int GetSyscoinTxVersion();
 extern vector<unsigned char> vchFromString(const string &str);
 
@@ -1104,27 +1103,6 @@ CAmount CWallet::GetDebit(const CTxIn &txin, const isminefilter& filter) const
 
 isminetype CWallet::IsMine(const CTxOut& txout) const
 {
-	// SYSCOIN
-	isminetype myAlias;
-	int op;
-	vector<vector<unsigned char> > vvchArgs;
-	if (DecodeAliasScript(txout.scriptPubKey, op, vvchArgs))
-	{
-		CAliasIndex theAlias;
-		CTransaction txAlias;
-		if (GetTxOfAlias(vvchArgs[0], theAlias, txAlias))
-		{
-			for (unsigned int i = 0; i < txAlias.vout.size(); i++) {
-				const CTxOut& out = txAlias.vout[i];
-				if (DecodeAliasScript(out.scriptPubKey, op, vvchArgs)) {
-					myAlias = ::IsMine(*this, out.scriptPubKey);
-					break;
-				}
-			}
-		}
-	}
-	if(myAlias)
-		return myAlias;
     return ::IsMine(*this, txout.scriptPubKey);
 }
 
