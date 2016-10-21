@@ -143,7 +143,7 @@ public:
 		READWRITE(bExclusiveResell);
 
 	}
-    inline bool GetLinkEntryByHash(const std::vector<unsigned char> &ahash, COfferLinkWhitelistEntry &entry) {
+    inline bool GetLinkEntryByHash(const std::vector<unsigned char> &ahash, COfferLinkWhitelistEntry &entry) const {
     	entry.SetNull();
 		for(unsigned int i=0;i<entries.size();i++) {
     		if(entries[i].aliasLinkVchRand == ahash) {
@@ -275,7 +275,7 @@ public:
 	
 				
 	}
-	inline CAmount GetPrice(const COfferLinkWhitelistEntry& entry=COfferLinkWhitelistEntry()){
+	inline CAmount GetPrice(const COfferLinkWhitelistEntry& entry=COfferLinkWhitelistEntry()) const{
 		COfferLinkWhitelistEntry  myentry;
 		CAmount price = nPrice;
 		linkWhitelist.GetLinkEntryByHash(entry.aliasLinkVchRand, myentry);

@@ -3124,7 +3124,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 		int expires_in = 0;
 		int expired_block = 0;  
 		for(unsigned int i=vtxOfferPos.size()-1;i>=0;i--) {
-			COffer theOffer = vtxOfferPos[i];
+			const COffer &theOffer = vtxOfferPos[i];
 			if(theOffer.accept.IsNull())
 				continue;
 			if (vchNameUniq.size() > 0 && vchNameUniq != theOffer.accept.vchAcceptRand)
@@ -3200,7 +3200,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 					discountApplied = false;
 				}
 			}
-
+			UniValue oOfferAccept(UniValue::VOBJ);
 			string sHeight = strprintf("%llu", theOffer.nHeight);
 			oOfferAccept.push_back(Pair("offer", stringFromVch(theOffer.vchOffer)));
 			string sTime;
@@ -3504,7 +3504,7 @@ UniValue offerlist(const UniValue& params, bool fHelp) {
     UniValue oRes(UniValue::VARR);
     map< vector<unsigned char>, int > vNamesI;
     map< vector<unsigned char>, UniValue > vNamesO;
-
+	vector<unsigned char> vchAlias;
     CTransaction tx;
     uint64_t nHeight;
     BOOST_FOREACH(const CAliasIndex &theAlias, vtxPos)
@@ -3525,7 +3525,7 @@ UniValue offerlist(const UniValue& params, bool fHelp) {
 			if(vvch[2] == vchFromString("1"))
 				continue;
             // get the txn name
-            vchOffer = vvch[0];
+            const vector<unsigned char> &vchOffer = vvch[0];
 
 			// skip this offer if it doesn't match the given filter value
 			if (vchNameUniq.size() > 0 && vchNameUniq != vchOffer)
