@@ -328,7 +328,7 @@ public:
         *this = myOffer;
         return true;
     }
-	std::string GetPaymentOptionsString();
+	std::string GetPaymentOptionsString() const;
     inline friend bool operator==(const COffer &a, const COffer &b) {
         return (
          a.sCategory==b.sCategory
