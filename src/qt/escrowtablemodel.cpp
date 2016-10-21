@@ -90,7 +90,7 @@ public:
         {
 			string strMethod = string("escrowlist");
 	        UniValue params(UniValue::VARR); 
-			params.push_back(settings.value("defaultAlias", "").toString());
+			params.push_back(settings.value("defaultAlias", "").toStdString());
 			UniValue result ;
 			string name_str;
 			string time_str;
