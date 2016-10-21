@@ -261,7 +261,7 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
         // SYSCOIN
 		case Theme:
             return settings.value("theme");  
-        case DefaultOfferAlias:
+        case DefaultAlias:
             return settings.value("defaultAlias");   
         case DefaultPegAlias:
             return settings.value("defaultPegAlias");

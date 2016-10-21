@@ -228,7 +228,7 @@ void AcceptandPayOfferListPage::loadAliases()
 				QMessageBox::Ok, QMessageBox::Ok);
 	}       
 	QSettings settings;
- 	QString defaultOfferAlias = settings.value("defaultOfferAlias", "").toString();
+ 	QString defaultOfferAlias = settings.value("defaultAlias", "").toString();
 	int aliasIndex = ui->aliasEdit->findText(defaultOfferAlias);
 	if(aliasIndex >= 0)
 		ui->aliasEdit->setCurrentIndex(aliasIndex);

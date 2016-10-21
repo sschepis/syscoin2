@@ -71,7 +71,7 @@ EditOfferDialog::EditOfferDialog(Mode mode,  const QString &strOffer,  const QSt
 		ui->offerEdit->setVisible(false);
 		defaultPegAlias = settings.value("defaultPegAlias", "").toString();
 		ui->aliasPegEdit->setText(defaultPegAlias);
-		defaultOfferAlias = settings.value("defaultOfferAlias", "").toString();
+		defaultOfferAlias = settings.value("defaultAlias", "").toString();
 		aliasIndex = ui->aliasEdit->findText(defaultOfferAlias);
 		if(aliasIndex >= 0)
 			ui->aliasEdit->setCurrentIndex(aliasIndex);
