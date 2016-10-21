@@ -200,7 +200,7 @@ bool OfferAcceptInfoDialog::lookup()
 
 	strMethod = string("offeracceptlist");
 	UniValue params1(UniValue::VARR);
-	params1.push_back(sellerStr.toString());
+	params1.push_back(sellerStr.toStdString());
 	params1.push_back(offerAcceptGUID.toStdString());
 	UniValue offerAcceptsValue;
 
