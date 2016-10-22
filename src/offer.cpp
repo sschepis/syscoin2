@@ -3123,7 +3123,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 		int expired = 0;
 		int expires_in = 0;
 		int expired_block = 0;  
-		for(unsigned int i=vtxOfferPos.size()-1;i>=0;i--) {
+		for(int i=vtxOfferPos.size()-1;i>=0;i--) {
 			const COffer &theOffer = vtxOfferPos[i];
 			if(theOffer.accept.IsNull())
 				continue;
