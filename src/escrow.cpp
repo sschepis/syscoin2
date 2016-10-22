@@ -424,6 +424,11 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 			errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4009 - " + _("Escrow guid in data output doesn't match guid in transaction");
 			return error(errorMessage.c_str());
 		}
+		if(!IsAliasOp(prevAliasOp) || theEscrow.vchLinkAlias != vvchPrevAliasArgs[0] )
+		{
+			errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4024 - " + _("Alias input mismatch");
+			return error(errorMessage.c_str());
+		}
 		switch (op) {
 			case OP_ESCROW_ACTIVATE:
 				if(theEscrow.op != OP_ESCROW_ACTIVATE)
@@ -446,18 +451,13 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4013 - " + _("Cannot leave feedback in escrow activation");
 					return error(errorMessage.c_str());
 				}
-				if(IsAliasOp(prevAliasOp) && vvchPrevAliasArgs[0] != theEscrow.vchBuyerAlias)
+				if(theEscrow.vchLinkAlias != theEscrow.vchBuyerAlias)
 				{
-					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4014 - " + _("Whitelist guid mismatch");
+					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4014 - " + _("Only the person who owns the buyer alias can create an escrow");
 					return error(errorMessage.c_str());
 				}
 				break;
 			case OP_ESCROW_RELEASE:
-				if(!IsAliasOp(prevAliasOp) || theEscrow.vchLinkAlias != vvchPrevAliasArgs[0] )
-				{
-					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4015 - " + _("Alias input mismatch");
-					return error(errorMessage.c_str());
-				}	
 				if (vvchArgs.size() <= 1 || vvchArgs[1].size() > 1)
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4018 - " + _("Escrow release status too large");
@@ -488,12 +488,6 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 
 				break;
 			case OP_ESCROW_COMPLETE:
-				if(!IsAliasOp(prevAliasOp) || theEscrow.vchLinkAlias != vvchPrevAliasArgs[0] )
-				{
-					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4024 - " + _("Alias input mismatch");
-					return error(errorMessage.c_str());
-				}
-				
 				if (theEscrow.op != OP_ESCROW_COMPLETE)
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4025 - " + _("Invalid op, should be escrow complete");
@@ -512,11 +506,6 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 				}
 				break;			
 			case OP_ESCROW_REFUND:
-				if(!IsAliasOp(prevAliasOp) || theEscrow.vchLinkAlias != vvchPrevAliasArgs[0] )
-				{
-					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4028 - " + _("Alias input missing");
-					return error(errorMessage.c_str());
-				}
 				if (vvchArgs.size() <= 1 || vvchArgs[1].size() > 1)
 				{
 					errorMessage = "SYSCOIN_ESCROW_CONSENSUS_ERROR: ERRCODE: 4029 - " + _("Escrow refund status too large");
@@ -1224,29 +1213,15 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4517 - " + _("Could not find an alias with this identifier"));
 		if(linkedOffer.sCategory.size() > 0 && boost::algorithm::starts_with(stringFromVch(linkedOffer.sCategory), "wanted"))
 			throw runtime_error("SYSCOIN_ESCROW_RPC_ERROR: ERRCODE: 4518 - " + _("Cannot purchase a wanted offer"));
-	
 		
 		selleralias = theLinkedAlias;
 	}
-	else
-	{
-		// if offer is not linked, look for a discount for the buyer
-		theOffer.linkWhitelist.GetLinkEntryByHash(buyeralias.vchAlias, foundEntry);
-
-		if(!foundEntry.IsNull())
-		{
-			// make sure its in your wallet (you control this alias)
-			if (IsSyscoinTxMine(buyeraliastx, "alias")) 
-			{
-				wtxAliasIn = pwalletMain->GetWalletTx(buyeraliastx.GetHash());		
-				scriptPubKeyAliasOrig = GetScriptForDestination(buyerKey.GetID());
-				if(buyeralias.multiSigInfo.vchAliases.size() > 0)
-					scriptPubKeyAliasOrig = CScript(buyeralias.multiSigInfo.vchRedeemScript.begin(), buyeralias.multiSigInfo.vchRedeemScript.end());
-				scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << buyeralias.vchAlias  << buyeralias.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
-				scriptPubKeyAlias += scriptPubKeyAliasOrig;
-			}			
-		}
-	}
+	wtxAliasIn = pwalletMain->GetWalletTx(buyeraliastx.GetHash());		
+	scriptPubKeyAliasOrig = GetScriptForDestination(buyerKey.GetID());
+	if(buyeralias.multiSigInfo.vchAliases.size() > 0)
+		scriptPubKeyAliasOrig = CScript(buyeralias.multiSigInfo.vchRedeemScript.begin(), buyeralias.multiSigInfo.vchRedeemScript.end());
+	scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << buyeralias.vchAlias  << buyeralias.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
+	scriptPubKeyAlias += scriptPubKeyAliasOrig;
 
 	
     // gather inputs
@@ -1366,9 +1341,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 
 	CRecipient aliasRecipient;
 	CreateRecipient(scriptPubKeyAlias, aliasRecipient);
-	// if we use an alias as input to this escrow tx, we need another utxo for further alias transactions on this alias, so we create one here
-	if(wtxAliasIn != NULL)
-		vecSend.push_back(aliasRecipient);
+	vecSend.push_back(aliasRecipient);
 
 
 	CScript scriptData;
@@ -1380,9 +1353,9 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	
 	
 	
-	SendMoneySyscoin(vecSend,recipientBuyer.nAmount+recipientArbiter.nAmount+recipientSeller.nAmount+aliasRecipient.nAmount+recipientEscrow.nAmount+fee.nAmount, false, wtx, wtxAliasIn, wtxAliasIn != NULL && buyeralias.multiSigInfo.vchAliases.size() > 0);
+	SendMoneySyscoin(vecSend,recipientBuyer.nAmount+recipientArbiter.nAmount+recipientSeller.nAmount+aliasRecipient.nAmount+recipientEscrow.nAmount+fee.nAmount, false, wtx, wtxAliasIn, buyeralias.multiSigInfo.vchAliases.size() > 0);
 	UniValue res(UniValue::VARR);
-	if(wtxAliasIn != NULL && buyeralias.multiSigInfo.vchAliases.size() > 0)
+	if(buyeralias.multiSigInfo.vchAliases.size() > 0)
 	{
 		UniValue signParams(UniValue::VARR);
 		signParams.push_back(EncodeHexTx(wtx));

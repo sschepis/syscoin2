@@ -557,6 +557,11 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		}
 		switch (op) {
 		case OP_OFFER_ACTIVATE:
+			if(!IsAliasOp(prevAliasOp) || theOffer.vchAlias != vvchPrevAliasArgs[0])
+			{
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1021 - " + _("Alias input mismatch");
+				return error(errorMessage.c_str());
+			}
 			if(theOffer.paymentOptions != PAYMENTOPTION_BTC && theOffer.paymentOptions != PAYMENTOPTION_SYS && theOffer.paymentOptions != PAYMENTOPTION_SYSBTC)
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1018 - " + _("Invalid payment option");
@@ -570,11 +575,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			if ( theOffer.vchOffer != vvchArgs[0])
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1020 - " + _("Offer input and offer guid mismatch");
-				return error(errorMessage.c_str());
-			}
-			if(!IsAliasOp(prevAliasOp) || theOffer.vchAlias != vvchPrevAliasArgs[0])
-			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1021 - " + _("Alias input mismatch");
 				return error(errorMessage.c_str());
 			}
 			if(!theOffer.vchLinkOffer.empty())
@@ -622,6 +622,11 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 
 			break;
 		case OP_OFFER_UPDATE:
+			if(!IsAliasOp(prevAliasOp) || theOffer.vchAlias != vvchPrevAliasArgs[0])
+			{
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1021 - " + _("Alias input mismatch");
+				return error(errorMessage.c_str());
+			}
 			if(theOffer.paymentOptions > 0 && theOffer.paymentOptions != PAYMENTOPTION_BTC && theOffer.paymentOptions != PAYMENTOPTION_SYS && theOffer.paymentOptions != PAYMENTOPTION_SYSBTC)
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1029 - " + _("Invalid payment option");
@@ -663,29 +668,19 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1039 - " + _("Commission must between -90 and 100");
 				return error(errorMessage.c_str());
 			}
-			if(!IsAliasOp(prevAliasOp) || theOffer.vchAlias != vvchPrevAliasArgs[0])
-			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1040 - " + _("Alias input mismatch");
-				return error(errorMessage.c_str());
-			}	
 			break;
 		case OP_OFFER_ACCEPT:
 			theOfferAccept = theOffer.accept;
+			if(!IsAliasOp(prevAliasOp) || theOfferAccept.vchBuyerAlias != vvchPrevAliasArgs[0])
+			{
+				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1021 - " + _("Alias input mismatch");
+				return error(errorMessage.c_str());
+			}
 			if(!theOfferAccept.feedback.empty())
 			{
 				if(vvchArgs.size() <= 2 || vvchArgs[2] != vchFromString("1"))
 				{
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1041 - " + _("Invalid feedback transaction");
-					return error(errorMessage.c_str());
-				}
-				if(!IsAliasOp(prevAliasOp))
-				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1042 - " + _("Must use alias as input to an accept feedback");
-					return error(errorMessage.c_str());
-				}
-				if (theOffer.vchLinkAlias != vvchPrevAliasArgs[0])
-				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1043 - " + _("Alias input guid mismatch");
 					return error(errorMessage.c_str());
 				}
 				if(theOfferAccept.feedback[0].vchFeedback.empty())
@@ -709,11 +704,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			if (!IsValidAliasName(theOfferAccept.vchBuyerAlias))
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1047 - " + _("Invalid offer buyer alias");
-				return error(errorMessage.c_str());
-			}
-			if (IsAliasOp(prevAliasOp) && theOffer.vchLinkAlias != vvchPrevAliasArgs[0])
-			{
-				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1048 - " + _("Whitelist alias input guid mismatch");
 				return error(errorMessage.c_str());
 			}
 			if (vvchArgs.size() <= 1 || vvchArgs[1].size() > MAX_GUID_LENGTH)
@@ -1011,7 +1001,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				// if feedback is for buyer then we need to ensure attached input alias was from seller
 				if(theOfferAccept.feedback[0].nFeedbackUserFrom == FEEDBACKBUYER)
 				{
-					if(serializedOffer.vchLinkAlias != offerAccept.vchBuyerAlias)
+					if(serializedOffer.vchAlias != offerAccept.vchBuyerAlias)
 					{
 						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1082 - " + _("Only seller can leaver the buyer feedback");
 						return true;
@@ -1019,7 +1009,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				}
 				else if(theOfferAccept.feedback[0].nFeedbackUserFrom == FEEDBACKSELLER)
 				{
-					if(serializedOffer.vchLinkAlias != acceptOffer.vchAlias)
+					if(serializedOffer.vchAlias != acceptOffer.vchAlias)
 					{
 						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1083 - " + _("Only buyer can leave the seller feedback");
 						return true;
@@ -1136,11 +1126,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1099 - " + _("Cannot purchase a wanted offer");
 					return true;
 				}
-				else if(!serializedOffer.vchLinkAlias.empty())
-				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1100 - " + _("Purchase discounts can only be applied to non-linked offers");
-					return true;
-				}
 				
 				// make sure that linked offer exists in root offerlinks (offers that are linked to the root offer)
 				else if(std::find(linkOffer.offerLinks.begin(), linkOffer.offerLinks.end(), stringFromVch(vvchArgs[0])) == linkOffer.offerLinks.end())
@@ -1161,15 +1146,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				return true;
 			}
 
-			// if the buyer uses an alias for a discount or a exclusive whitelist buy, then get the guid
-			if(!serializedOffer.vchLinkAlias.empty())
-			{
-				if (!GetTxOfAlias(serializedOffer.vchLinkAlias, theAlias, aliasTx))
-				{
-					errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1104 - " + _("Cannot find the alias you are trying to use for an offer discount. It may be expired");
-					return true;
-				}
-			}
 
 			// decrease qty + increase # sold
 			if(theOfferAccept.nQty <= 0)
@@ -1194,15 +1170,12 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				// try to get the whitelist entry here from the sellers whitelist, apply the discount with GetPrice()
 				if(myPriceOffer.vchLinkOffer.empty())
 				{
-					if(!serializedOffer.vchLinkAlias.empty())
+					myPriceOffer.linkWhitelist.GetLinkEntryByHash(theOfferAccept.vchBuyerAlias, entry);
+					if(entry.IsNull() && myPriceOffer.linkWhitelist.bExclusiveResell)
 					{
-						myPriceOffer.linkWhitelist.GetLinkEntryByHash(serializedOffer.vchLinkAlias, entry);
-						if(entry.IsNull())
-						{
-							errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1106 - " + _("Cannot find the alias entry in the offer's affiliate list");
-							return true;
-						}	
-					}
+						errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1106 - " + _("Cannot find the alias entry in the offer's affiliate list");
+						return true;
+					}	
 					nPrice = myPriceOffer.GetPrice(entry);
 					nCommission = 0;
 				}
@@ -2475,16 +2448,6 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	if(theOffer.vchLinkOffer.empty())
 	{
 		theOffer.linkWhitelist.GetLinkEntryByHash(buyerAlias.vchAlias, foundEntry);
-		if(!foundEntry.IsNull() && IsSyscoinTxMine(buyeraliastx, "alias"))
-		{
-			wtxAliasIn = pwalletMain->GetWalletTx(buyeraliastx.GetHash());		
-			CPubKey currentKey(buyerAlias.vchPubKey);
-			scriptPubKeyAliasOrig = GetScriptForDestination(currentKey.GetID());
-			if(buyerAlias.multiSigInfo.vchAliases.size() > 0)
-				scriptPubKeyAliasOrig = CScript(buyerAlias.multiSigInfo.vchRedeemScript.begin(), buyerAlias.multiSigInfo.vchRedeemScript.end());
-			scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << buyerAlias.vchAlias  << buyerAlias.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
-			scriptPubKeyAlias += scriptPubKeyAliasOrig;
-		}
 		nPrice = theOffer.GetPrice(foundEntry);
 		nCommission = 0;
 	}
@@ -2494,6 +2457,14 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 		nPrice = linkOffer.GetPrice(foundEntry);
 		nCommission = theOffer.GetPrice() - nPrice;
 	}
+	wtxAliasIn = pwalletMain->GetWalletTx(buyeraliastx.GetHash());		
+	CPubKey currentKey(buyerAlias.vchPubKey);
+	scriptPubKeyAliasOrig = GetScriptForDestination(currentKey.GetID());
+	if(buyerAlias.multiSigInfo.vchAliases.size() > 0)
+		scriptPubKeyAliasOrig = CScript(buyerAlias.multiSigInfo.vchRedeemScript.begin(), buyerAlias.multiSigInfo.vchRedeemScript.end());
+	scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << buyerAlias.vchAlias  << buyerAlias.vchGUID << vchFromString("") << OP_2DROP << OP_2DROP;
+	scriptPubKeyAlias += scriptPubKeyAliasOrig;
+
 	unsigned int memPoolQty = QtyOfPendingAcceptsInMempool(vchOffer);
 	if(vtxPos.back().nQty != -1 && vtxPos.back().nQty < (nQty+memPoolQty))
 		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1538 - " + _("Not enough remaining quantity to fulfill this order"));
@@ -2541,9 +2512,6 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	COffer copyOffer = theOffer;
 	theOffer.ClearOffer();
 	theOffer.accept = txAccept;
-	// use the linkalias in offer for our whitelist alias inputs check
-	if(wtxAliasIn != NULL)
-		theOffer.vchLinkAlias = vchAlias;
 	theOffer.nHeight = chainActive.Tip()->nHeight;
 
 	const vector<unsigned char> &data = theOffer.Serialize();
@@ -2552,7 +2520,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
     vector<unsigned char> vchHashOffer = vchFromValue(HexStr(vchHash));
 
     CScript scriptPayment, scriptPubKeyCommission, scriptPubKeyOrig, scriptPubLinkKeyOrig, scriptPaymentCommission;
-	CPubKey currentKey(theAlias.vchPubKey);
+	currentKey = CPubKey(theAlias.vchPubKey);
 	CSyscoinAddress currentAddress(currentKey.GetID());
 	scriptPubKeyOrig = 	 GetScriptForDestination(currentAddress.Get());
 	if(theAlias.multiSigInfo.vchAliases.size() > 0)
@@ -2590,14 +2558,8 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	CRecipient paymentCommissionRecipient = {scriptPubKeyCommission, nTotalCommission, false};
 	CRecipient aliasRecipient;
 	CreateRecipient(scriptPubKeyAlias, aliasRecipient);
-
-
-
-	// if we use a alias as input to this offer tx, we need another utxo for further alias transactions on this alias, so we create one here
-	if(wtxAliasIn != NULL)
-	{
-		vecSend.push_back(aliasRecipient);
-	}
+	vecSend.push_back(aliasRecipient);
+	
 
 	if(vchBTCTxId.empty())
 	{
@@ -2616,14 +2578,10 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	CreateFeeRecipient(scriptData, data, fee);
 	vecSend.push_back(fee);
 	
-	
-	
-
-	// if making a purchase and we are using an alias from the whitelist of the offer, we may need to prove that we own that alias so in that case we attach an input from the alias
-	SendMoneySyscoin(vecSend, acceptRecipient.nAmount+paymentRecipient.nAmount+fee.nAmount+aliasRecipient.nAmount, false, wtx, wtxAliasIn, wtxAliasIn != NULL && theAlias.multiSigInfo.vchAliases.size() > 0);
+	SendMoneySyscoin(vecSend, acceptRecipient.nAmount+paymentRecipient.nAmount+fee.nAmount+aliasRecipient.nAmount, false, wtx, wtxAliasIn, theAlias.multiSigInfo.vchAliases.size() > 0);
 	
 	UniValue res(UniValue::VARR);
-	if(wtxAliasIn != NULL && theAlias.multiSigInfo.vchAliases.size() > 0)
+	if(theAlias.multiSigInfo.vchAliases.size() > 0)
 	{
 		UniValue signParams(UniValue::VARR);
 		signParams.push_back(EncodeHexTx(wtx));
@@ -2854,7 +2812,7 @@ UniValue offeracceptfeedback(const UniValue& params, bool fHelp) {
 	
 	offer.ClearOffer();
 	offer.accept = theOfferAccept;
-	offer.vchLinkAlias = vchLinkAlias;
+	offer.vchAlias = vchLinkAlias;
 	offer.nHeight = chainActive.Tip()->nHeight;
 	// buyer
 	if(foundBuyerKey)
@@ -3139,9 +3097,6 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 			if(vvch[2] == vchFromString("1"))
 				continue;
 
-			bool ismine = false;
-			
-			ismine = IsSyscoinTxMine(aliastx, "alias");
 			int nHeight = theOffer.accept.nAcceptHeight;	
 			bool commissionPaid = false;
 			bool discountApplied = false;
@@ -3154,45 +3109,41 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 			// for merchant (discounted) #3
 			// for buyer (full price) #1
 
-			// NON-LINKED merchant
-			CAmount priceAtTimeOfAccept = theOffer.accept.nPrice;
-			if(theOffer.GetPrice() != priceAtTimeOfAccept)
-				discountApplied = true;
-			// NON-LINKED buyer
-			if(!ismine)
+			
+			CAmount priceAtTimeOfAccept;
+			if(theOffer.vchLinkOffer.empty())
 			{
-				priceAtTimeOfAccept = theOffer.GetPrice();
-				commissionPaid = false;
-				discountApplied = false;
+				// NON-LINKED merchant
+				if(vchAlias == theOffer.vchAlias)
+				{
+					priceAtTimeOfAccept = theOffer.accept.nPrice;
+					if(theOffer.GetPrice() != priceAtTimeOfAccept)
+						discountApplied = true;
+				}
+				// NON-LINKED buyer
+				else if((vchAlias == theOffer.accept.vchBuyerAlias)
+				{
+					priceAtTimeOfAccept = theOffer.GetPrice();
+					commissionPaid = false;
+					discountApplied = false;
+				}
 			}
-			if( !theOffer.vchLinkOffer.empty())
+			// linked offer
+			else
 			{	
 				GetTxAndVtxOfOffer( theOffer.vchLinkOffer, linkOffer, linkTx, vtxLinkPos, true);
 				linkOffer.nHeight = nHeight;
 				linkOffer.GetOfferFromList(vtxLinkPos);
-				GetTxOfAlias(linkOffer.vchAlias, linkAlias, linkAliasTx, true);
-				// if you don't own this offer check the linked offer
-				if(!ismine)
+				// You are the merchant
+				if(vchAlias == linkOffer.vchAlias)
 				{
-					ismine = IsSyscoinTxMine(linkAliasTx, "alias");
-					// You are the merchant
-					if(ismine)
-					{
-						commissionPaid = false;
-						priceAtTimeOfAccept = theOffer.accept.nPrice;
-						if(linkOffer.GetPrice() != priceAtTimeOfAccept)
-							discountApplied = true;
-					}
-					// You are the buyer
-					else
-					{
-						commissionPaid = false;
-						discountApplied = false;
-						priceAtTimeOfAccept = theOffer.GetPrice();
-					}
+					commissionPaid = false;
+					priceAtTimeOfAccept = theOffer.accept.nPrice;
+					if(linkOffer.GetPrice() != priceAtTimeOfAccept)
+						discountApplied = true;
 				}
 				// You are the affiliate
-				else
+				else if(vchAlias == theOffer.vchAlias)
 				{
 					// full price with commission - discounted merchant price = commission + discount
 					priceAtTimeOfAccept = theOffer.GetPrice() -  theOffer.accept.nPrice;
@@ -3239,8 +3190,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 			oOfferAccept.push_back(Pair("total", strprintf("%.*f", precision, ValueFromAmount(nPricePerUnit).get_real() * theOffer.accept.nQty )));
 			oOfferAccept.push_back(Pair("buyer", stringFromVch(theOffer.accept.vchBuyerAlias)));
 			oOfferAccept.push_back(Pair("seller", stringFromVch(theOffer.vchAlias)));
-			// this accept is for me(something ive sold) if this offer is mine
-			oOfferAccept.push_back(Pair("ismine", ismine? "true" : "false"));
+			oOfferAccept.push_back(Pair("ismine", IsSyscoinTxMine(aliastx, "alias")? "true" : "false"));
 			if(!theOffer.accept.txBTCId.IsNull())
 				oOfferAccept.push_back(Pair("status","Paid (BTC)"));
 			else if(commissionPaid)

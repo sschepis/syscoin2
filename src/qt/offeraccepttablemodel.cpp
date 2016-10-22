@@ -75,7 +75,8 @@ public:
 			string strMethod = string("offeracceptlist");
 	        UniValue params(UniValue::VARR); 
 			QSettings settings;
-			params.push_back(settings.value("defaultAlias", "").toString().toStdString());
+			string alias_str = settings.value("defaultAlias", "").toString().toStdString();
+			params.push_back(alias_str);
 			UniValue result ;
 			string name_str;
 			string value_str;
@@ -87,7 +88,7 @@ public:
 			string total_str;
 			string status_str;
 			string ismine_str;
-			string alias_str;
+			string seller_str;
 			string buyer_str;
 			try {
 				result = tableRPC.execute(strMethod, params);		
@@ -137,11 +138,11 @@ public:
 						const UniValue& buyer_value = find_value(o, "buyer");
 						if (buyer_value.type() == UniValue::VSTR)
 							buyer_str = buyer_value.get_str();
-						const UniValue& alias_value = find_value(o, "seller");
-						if (alias_value.type() == UniValue::VSTR)
-							alias_str = alias_value.get_str();
+						const UniValue& seller_value = find_value(o, "seller");
+						if (seller_value.type() == UniValue::VSTR)
+							seller_str = seller_value.get_str();
 
-						if((ismine_str == "false" && type == Accept) || (ismine_str == "true" && type == MyAccept))
+						if((buyer_str == alias_str && type == Accept) || (seller_str == alias_str && type == MyAccept))
 							updateEntry(QString::fromStdString(name_str), QString::fromStdString(value_str), QString::fromStdString(title_str), QString::fromStdString(height_str), QString::fromStdString(price_str), QString::fromStdString(currency_str), QString::fromStdString(qty_str), QString::fromStdString(total_str), QString::fromStdString(alias_str),QString::fromStdString(status_str), QString::fromStdString(buyer_str),type, CT_NEW); 
 					}
 				}
