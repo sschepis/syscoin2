@@ -935,8 +935,8 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				}
 				else if(!theOffer.vchLinkOffer.empty())
 				{
-					// max links are 100 per offer
-					if(linkOffer.offerLinks.size() < 100)
+					// max links are 10 per offer
+					if(linkOffer.offerLinks.size() < 10)
 					{
 						// if creating a linked offer we set some mandatory fields to the parent
 						theOffer.nQty = linkOffer.nQty;
