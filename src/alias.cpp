@@ -1002,7 +1002,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					theAlias.vchAlias = dbAlias.vchAlias;
 					if(!theAlias.multiSigInfo.IsNull())
 					{
-						if(theAlias.multiSigInfo.vchAliases.size() > 5 || theAlias.multiSigInfo.nRequiredSigs > 5)
+						if(theAlias.multiSigInfo.vchAliases.size() > 6 || theAlias.multiSigInfo.nRequiredSigs > 6)
 						{
 							theAlias.multiSigInfo.SetNull();
 							errorMessage = "SYSCOIN_ALIAS_CONSENSUS_ERROR: ERRCODE: 5020 - " + _("Alias multisig too big, reduce the number of signatures required for this alias and try again");
