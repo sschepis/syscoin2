@@ -3080,14 +3080,14 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 		// get last active name only
 		if (vNamesI.find(vvch[0]) != vNamesI.end() && (offerTmp.nHeight <= vNamesI[vvch[0]] || vNamesI[vvch[0]] < 0))
 			continue;
-		vNamesI[vvch[0]] = offerTmp.nHeigh;
+		vNamesI[vvch[0]] = offerTmp.nHeight;
 		for(unsigned int j=0;j<=offerTmp.offerLinks.size();j++)
 		{
 
 			if(j > 0)
 			{
 				COffer offerLinkTmp;
-				if(!GetTxAndVtxOfOffer( offerTmp.offerLinks[j-1], offerLinkTmp, offerTx, vtxOfferPos, true))
+				if(!GetTxAndVtxOfOffer( vchFromString(offerTmp.offerLinks[j-1]), offerLinkTmp, offerTx, vtxOfferPos, true))
 					continue;
 			}
 
