@@ -3087,7 +3087,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 			if(j > 0)
 			{
 				COffer offerLinkTmp;
-				if(!GetTxAndVtxOfOffer( offerTmp.offerLink[j-1], offerLinkTmp, offerTx, vtxOfferPos, true))
+				if(!GetTxAndVtxOfOffer( offerTmp.offerLinks[j-1], offerLinkTmp, offerTx, vtxOfferPos, true))
 					continue;
 			}
 
