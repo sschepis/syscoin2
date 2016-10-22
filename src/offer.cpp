@@ -3121,7 +3121,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 						discountApplied = true;
 				}
 				// NON-LINKED buyer
-				else if((vchAlias == theOffer.accept.vchBuyerAlias)
+				else if(vchAlias == theOffer.accept.vchBuyerAlias)
 				{
 					priceAtTimeOfAccept = theOffer.GetPrice();
 					commissionPaid = false;
