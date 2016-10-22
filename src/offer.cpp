@@ -3485,7 +3485,7 @@ UniValue offerlist(const UniValue& params, bool fHelp) {
         throw runtime_error("offerlist <alias> [<offer>]\n"
                 "list offers that an alias owns");
 
-    vector<unsigned char> vchAlias;
+    vector<unsigned char> vchAlias = vchFromValue(params[0]);
 	string name = stringFromVch(vchAlias);
 	vector<CAliasIndex> vtxPos;
 	if (!paliasdb->ReadAlias(vchAlias, vtxPos) || vtxPos.empty())
