@@ -3520,9 +3520,7 @@ UniValue offerlist(const UniValue& params, bool fHelp) {
             if (!DecodeOfferTx(tx, op, nOut, vvch) 
             	|| (op == OP_OFFER_ACCEPT))
                 continue;
-			// dont show feedback outputs as accepts
-			if(vvch[2] == vchFromString("1"))
-				continue;
+
             // get the txn name
             const vector<unsigned char> &vchOffer = vvch[0];
 
