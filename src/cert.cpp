@@ -1205,8 +1205,8 @@ UniValue certlist(const UniValue& params, bool fHelp) {
 
     CTransaction tx;
     uint64_t nHeight;
-    BOOST_FOREACH(const CAliasIndex &theAlias, vtxPos)
-    {
+	for(std::vector<CAliasIndex>::reverse_iterator it = vtxPos.rbegin(); it != vtxPos.rend(); ++it) {
+		const CAliasIndex& theAlias = *it;
 		if(!GetSyscoinTransaction(theAlias.nHeight, theAlias.txHash, tx, Params().GetConsensus()))
 			continue;
 		
