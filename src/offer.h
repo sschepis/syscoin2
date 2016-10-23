@@ -24,9 +24,16 @@ int GetOfferExpirationDepth();
 std::string offerFromOp(int op);
 void OfferTxToJSON(const int op, const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash, UniValue &entry);
 CScript RemoveOfferScriptPrefix(const CScript& scriptIn);
+
 #define PAYMENTOPTION_SYS 0x01
 #define PAYMENTOPTION_BTC 0x02
 #define PAYMENTOPTION_SYSBTC 0x03
+#define PAYMENTOPTION_ZEC 0x04
+
+bool ValidatePaymentOptionsString(std::string &paymentOptionsString);
+uint32_t GetPaymentOptionsMaskFromString(std::string &paymentOptionsString);
+bool IsPaymentOptionInMask(uint32_t mask, uint32_t paymentOption); 
+
 extern bool IsSys21Fork(const uint64_t& nHeight);
 class COfferAccept {
 public:

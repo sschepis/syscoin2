@@ -32,6 +32,40 @@ bool IsOfferOp(int op) {
         || op == OP_OFFER_ACCEPT;
 }
 
+bool ValidatePaymentOptionsString(std::string &paymentOptionsString) {
+	bool retval = true;
+	vector<string> strs;
+	boost::split(strs, paymentOptionsString, boost::is_any_of("|"));
+	for (size_t i = 0; i < strs.size(); i++) {
+		if(strs[i].compare("BTC") != 0 && strs[i].compare("SYS") != 0 && strs[i].compare("ZEC") != 0)
+			retval = false;
+	}
+	return retval;
+}
+
+uint32_t GetPaymentOptionsMaskFromString(std::string &paymentOptionsString) {
+	vector<string> strs;
+	uint32 retval = 0;
+	boost::split(strs, paymentOptionsString, boost::is_any_of("|"));
+	for (size_t i = 0; i < strs.size(); i++) {
+		if(strs[i].compare("BTC") != 0 && strs[i].compare("SYS") != 0 && strs[i].compare("ZEC") != 0)
+			return 0;
+		if(!strs[i].compare("SYS")) {
+			retval |= PAYMENTOPTION_SYS;
+		}
+		if(!strs[i].compare("BTC")) {
+			retval |= PAYMENTOPTION_BTC;
+		}		
+		if(!strs[i].compare("ZEC")) {
+			retval |= PAYMENTOPTION_ZEC;
+		}	
+	}
+	return retval;
+}
+
+bool IsPaymentOptionInMask(uint32_t mask, uint32_t paymentOption) {
+    return mask & paymentOption == paymentOption;
+}
 
 int GetOfferExpirationDepth() {
 	#ifdef ENABLE_DEBUGRPC
