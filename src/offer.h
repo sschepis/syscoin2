@@ -30,9 +30,10 @@ CScript RemoveOfferScriptPrefix(const CScript& scriptIn);
 #define PAYMENTOPTION_SYSBTC 0x03
 #define PAYMENTOPTION_ZEC 0x04
 
-bool ValidatePaymentOptionsString(std::string &paymentOptionsString);
-uint32_t GetPaymentOptionsMaskFromString(std::string &paymentOptionsString);
-bool IsPaymentOptionInMask(uint32_t mask, uint32_t paymentOption); 
+bool ValidatePaymentOptionsMask(const uint32_t paymentOptionsMask);
+bool ValidatePaymentOptionsString(const std::string &paymentOptionsString);
+uint32_t GetPaymentOptionsMaskFromString(const std::string &paymentOptionsString);
+bool IsPaymentOptionInMask(const uint32_t mask, const uint32_t paymentOption); 
 
 extern bool IsSys21Fork(const uint64_t& nHeight);
 class COfferAccept {
