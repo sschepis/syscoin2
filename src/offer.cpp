@@ -15,11 +15,13 @@
 #include "chainparams.h"
 #include <boost/algorithm/string/case_conv.hpp> // for to_lower()
 #include <boost/algorithm/string/join.hpp>
+#include <boost/algorithm/string/split.hpp>
+#include <boost/algorithm/string/classification.hpp>
+#include <boost/algorithm/string/predicate.hpp>
 #include <boost/xpressive/xpressive_dynamic.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/foreach.hpp>
 #include <boost/thread.hpp>
-#include <boost/algorithm/string/predicate.hpp>
 using namespace std;
 extern void SendMoneySyscoin(const vector<CRecipient> &vecSend, CAmount nValue, bool fSubtractFeeFromAmount, CWalletTx& wtxNew, const CWalletTx* wtxInAlias=NULL, bool syscoinMultiSigTx=false);
 bool DisconnectAlias(const CBlockIndex *pindex, const CTransaction &tx, int op, vector<vector<unsigned char> > &vvchArgs );
@@ -54,7 +56,7 @@ bool ValidatePaymentOptionsString(const std::string &paymentOptionsString) {
 
 uint32_t GetPaymentOptionsMaskFromString(const std::string &paymentOptionsString) {
 	vector<string> strs;
-	uint32 retval = 0;
+	uint32_t retval = 0;
 	boost::split(strs, paymentOptionsString, boost::is_any_of("|"));
 	for (size_t i = 0; i < strs.size(); i++) {
 		if(!strs[i].compare("SYS")) {
