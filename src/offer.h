@@ -27,7 +27,6 @@ CScript RemoveOfferScriptPrefix(const CScript& scriptIn);
 
 #define PAYMENTOPTION_SYS 0x01
 #define PAYMENTOPTION_BTC 0x02
-#define PAYMENTOPTION_SYSBTC 0x03
 #define PAYMENTOPTION_ZEC 0x04
 
 bool ValidatePaymentOptionsMask(const uint32_t paymentOptionsMask);

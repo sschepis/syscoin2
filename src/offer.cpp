@@ -44,7 +44,7 @@ bool ValidatePaymentOptionsMask(const uint32_t paymentOptionsMask) {
 bool ValidatePaymentOptionsString(const std::string &paymentOptionsString) {
 	bool retval = true;
 	vector<string> strs;
-	boost::split(strs, paymentOptionsString, boost::is_any_of("|"));
+	boost::split(strs, paymentOptionsString, boost::is_any_of("+"));
 	for (size_t i = 0; i < strs.size(); i++) {
 		if(strs[i].compare("BTC") != 0 && strs[i].compare("SYS") != 0 && strs[i].compare("ZEC") != 0) {
 			retval = false;
@@ -57,7 +57,7 @@ bool ValidatePaymentOptionsString(const std::string &paymentOptionsString) {
 uint32_t GetPaymentOptionsMaskFromString(const std::string &paymentOptionsString) {
 	vector<string> strs;
 	uint32_t retval = 0;
-	boost::split(strs, paymentOptionsString, boost::is_any_of("|"));
+	boost::split(strs, paymentOptionsString, boost::is_any_of("+"));
 	for (size_t i = 0; i < strs.size(); i++) {
 		if(!strs[i].compare("SYS")) {
 			retval |= PAYMENTOPTION_SYS;
@@ -74,7 +74,7 @@ uint32_t GetPaymentOptionsMaskFromString(const std::string &paymentOptionsString
 }
 
 bool IsPaymentOptionInMask(const uint32_t mask, const uint32_t paymentOption) {
-  return mask & paymentOption == paymentOption;
+  return mask & paymentOption ? true : false;
 }
 
 int GetOfferExpirationDepth() {
