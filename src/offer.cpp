@@ -14,11 +14,14 @@
 #include "consensus/validation.h"
 #include "chainparams.h"
 #include <boost/algorithm/string/case_conv.hpp> // for to_lower()
+#include <boost/algorithm/string/join.hpp>
+#include <boost/algorithm/string/split.hpp>
+#include <boost/algorithm/string/classification.hpp>
+#include <boost/algorithm/string/predicate.hpp>
 #include <boost/xpressive/xpressive_dynamic.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/foreach.hpp>
 #include <boost/thread.hpp>
-#include <boost/algorithm/string/predicate.hpp>
 using namespace std;
 extern void SendMoneySyscoin(const vector<CRecipient> &vecSend, CAmount nValue, bool fSubtractFeeFromAmount, CWalletTx& wtxNew, const CWalletTx* wtxInAlias=NULL, bool syscoinMultiSigTx=false);
 bool DisconnectAlias(const CBlockIndex *pindex, const CTransaction &tx, int op, vector<vector<unsigned char> > &vvchArgs );
@@ -32,6 +35,47 @@ bool IsOfferOp(int op) {
         || op == OP_OFFER_ACCEPT;
 }
 
+bool ValidatePaymentOptionsMask(const uint32_t paymentOptionsMask) {
+	uint32_t maxVal = PAYMENTOPTION_SYS | PAYMENTOPTION_BTC | PAYMENTOPTION_ZEC;
+	return !(paymentOptionsMask < 1 || paymentOptionsMask > maxVal);
+}
+
+
+bool ValidatePaymentOptionsString(const std::string &paymentOptionsString) {
+	bool retval = true;
+	vector<string> strs;
+	boost::split(strs, paymentOptionsString, boost::is_any_of("+"));
+	for (size_t i = 0; i < strs.size(); i++) {
+		if(strs[i].compare("BTC") != 0 && strs[i].compare("SYS") != 0 && strs[i].compare("ZEC") != 0) {
+			retval = false;
+			break;
+		}
+	}
+	return retval;
+}
+
+uint32_t GetPaymentOptionsMaskFromString(const std::string &paymentOptionsString) {
+	vector<string> strs;
+	uint32_t retval = 0;
+	boost::split(strs, paymentOptionsString, boost::is_any_of("+"));
+	for (size_t i = 0; i < strs.size(); i++) {
+		if(!strs[i].compare("SYS")) {
+			retval |= PAYMENTOPTION_SYS;
+		}
+		else if(!strs[i].compare("BTC")) {
+			retval |= PAYMENTOPTION_BTC;
+		}		
+		else if(!strs[i].compare("ZEC")) {
+			retval |= PAYMENTOPTION_ZEC;
+		}
+		else return 0;
+	}
+	return retval;
+}
+
+bool IsPaymentOptionInMask(const uint32_t mask, const uint32_t paymentOption) {
+  return mask & paymentOption ? true : false;
+}
 
 int GetOfferExpirationDepth() {
 	#ifdef ENABLE_DEBUGRPC
@@ -562,7 +606,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1021 - " + _("Alias input mismatch");
 				return error(errorMessage.c_str());
 			}
-			if(theOffer.paymentOptions != PAYMENTOPTION_BTC && theOffer.paymentOptions != PAYMENTOPTION_SYS && theOffer.paymentOptions != PAYMENTOPTION_SYSBTC)
+			if(!ValidatePaymentOptionsMask(theOffer.paymentOptions))
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1018 - " + _("Invalid payment option");
 				return error(errorMessage.c_str());
@@ -627,7 +671,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1021 - " + _("Alias input mismatch");
 				return error(errorMessage.c_str());
 			}
-			if(theOffer.paymentOptions > 0 && theOffer.paymentOptions != PAYMENTOPTION_BTC && theOffer.paymentOptions != PAYMENTOPTION_SYS && theOffer.paymentOptions != PAYMENTOPTION_SYSBTC)
+			if(theOffer.paymentOptions > 0 && !ValidatePaymentOptionsMask(theOffer.paymentOptions))
 			{
 				errorMessage = "SYSCOIN_OFFER_CONSENSUS_ERROR: ERRCODE: 1029 - " + _("Invalid payment option");
 				return error(errorMessage.c_str());
@@ -1472,7 +1516,7 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 						"<currency> The currency code that you want your offer to be in ie: USD.\n"
 						"<cert. guid> Set this to the guid of a certificate you wish to sell\n"
 						"<exclusive resell> set to 1 if you only want those who control the affiliate's who are able to resell this offer via offerlink. Defaults to 1.\n"
-						"<paymentOptions> 1 to accept SYS only, 2 for BTC only and 3 to accept BTC or SYS. Levae empty for default. Defaults to 1.\n"
+						"<paymentOptions> 'SYS' to accept SYS only, 'BTC' for BTC only, 'ZEC' for zcash only, or a |-delimited string to accept multiple currencies (e.g. 'BTC|SYS' to accept BTC or SYS). Leave empty for default. Defaults to 'SYS'.\n"
 						"<geolocation> set to your geolocation. Defaults to empty. \n"
 						"<safe search> set to No if this offer should only show in the search when safe search is not selected. Defaults to Yes (offer shows with or without safe search selected in search lists).\n"
 						"<private> set to 1 if this offer should be private not be searchable. Defaults to 0.\n"						
@@ -1501,7 +1545,7 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 	vector<unsigned char> vchCurrency = vchFromValue(params[7]);
 	vector<unsigned char> vchDesc;
 	vector<unsigned char> vchCert;
-	unsigned char paymentOptions = PAYMENTOPTION_SYS;
+
 	int nQty;
 
 	try {
@@ -1525,11 +1569,23 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 	{
 		bExclusiveResell = boost::lexical_cast<int>(params[9].get_str()) == 1? true: false;
 	}
+	
+	// payment options - get payment options string if specified otherwise default to SYS
+	string paymentOptions = "SYS";
 	if(params.size() >= 11 && !params[10].get_str().empty() && params[10].get_str() != "NONE")
 	{
-		paymentOptions = boost::lexical_cast<int>(params[10].get_str());
-
+		paymentOptions = params[10].get_str();
 	}	
+	// payment options - validate payment options string
+	if(!ValidatePaymentOptionsString(paymentOptions)) 
+	{
+		// TODO change error number to something unique
+		string err = "SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1504 - " + _("Could not validate the payment options value");
+		throw runtime_error(err.c_str());		
+	}
+	// payment options - and convert payment options string to a bitmask for the txn
+	unsigned char paymentOptionsMask = (unsigned char) GetPaymentOptionsMaskFromString(paymentOptions);
+
 	string strGeoLocation = "";
 	if(params.size() >= 12)
 	{
@@ -1574,7 +1630,7 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 	newOffer.linkWhitelist.bExclusiveResell = bExclusiveResell;
 	newOffer.sCurrencyCode = vchCurrency;
 	newOffer.bPrivate = bPrivate;
-	newOffer.paymentOptions = paymentOptions;
+	newOffer.paymentOptions = paymentOptionsMask;
 	newOffer.vchAliasPeg = vchAliasPeg;
 	newOffer.safetyLevel = 0;
 	newOffer.safeSearch = strSafeSearch == "Yes"? true: false;
@@ -2215,12 +2271,19 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	{
 		nCommission = boost::lexical_cast<int>(params[14].get_str());
 	}
-	unsigned char paymentOptions = PAYMENTOPTION_SYS;
+
+	string paymentOptions = "SYS";
 	if(params.size() >= 16 && !params[15].get_str().empty() && params[15].get_str() != "NONE")
 	{
-		paymentOptions = boost::lexical_cast<int>(params[15].get_str());
-
+		paymentOptions = params[15].get_str();
 	}
+	if(!ValidatePaymentOptionsString(paymentOptions)) 
+	{
+		//TODO change the errcode to something unique
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR ERRCODE: 1527 - " + _("Could not validate payment options string"));
+	}
+	unsigned char paymentOptionsMask = (unsigned char) GetPaymentOptionsMaskFromString(paymentOptions);
+
 	try {
 		nQty = boost::lexical_cast<int>(params[5].get_str());
 		fPrice = boost::lexical_cast<float>(params[6].get_str());
@@ -2297,7 +2360,7 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	}
 
 	if(params.size() >= 15 && params[14].get_str() != "NONE")
-		theOffer.paymentOptions = paymentOptions;
+		theOffer.paymentOptions = paymentOptionsMask;
 	if(params.size() >= 16 && params[15].get_str() != "NONE")
 		theOffer.nCommission = nCommission;
 	theOffer.vchAlias = alias.vchAlias;
@@ -3758,26 +3821,24 @@ bool GetAcceptByHash(std::vector<COffer> &offerList, COfferAccept &ca, COffer &o
 }
 std::string COffer::GetPaymentOptionsString() const
 {
-	if(paymentOptions == PAYMENTOPTION_SYS)
-	{
-		return std::string("SYS");
+	vector<std::string> currencies;
+	if(IsPaymentOptionInMask(paymentOptions, PAYMENTOPTION_SYS)) {
+		currencies.push_back(std::string("SYS"));
 	}
-	else if(paymentOptions  == PAYMENTOPTION_BTC)
-	{
-		return std::string("BTC");
+	if(IsPaymentOptionInMask(paymentOptions, PAYMENTOPTION_BTC)) {
+		currencies.push_back(std::string("BTC"));
 	}
-	else if(paymentOptions == PAYMENTOPTION_SYSBTC)
-	{
-		return std::string("SYS+BTC");
+	if(IsPaymentOptionInMask(paymentOptions, PAYMENTOPTION_ZEC)) {
+		currencies.push_back(std::string("ZEC"));
 	}
-	return "";
+	return boost::algorithm::join(currencies, "+");
 }
 void OfferTxToJSON(const int op, const std::vector<unsigned char> &vchData, const std::vector<unsigned char> &vchHash, UniValue &entry)
 {
 	string opName = offerFromOp(op);
 	COffer offer;
 	if(!offer.UnserializeFromData(vchData, vchHash))
-		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR: ERRCODE: 1553 - " + _("Could not decoding syscoin transaction"));
+		throw runtime_error("SYSCOIN_OFFER_RPC_ERROR: ERRCODE: 1553 - " + _("Could not decode syscoin transaction"));
 
 
 	bool isExpired = false;

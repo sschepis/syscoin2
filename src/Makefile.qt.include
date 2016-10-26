@@ -354,7 +354,6 @@ SYSCOIN_QT_H = \
   qt/stardelegate.h \
   qt/stareditor.h \
   qt/starrating.h
-
 RES_ICONS = \
   qt/res/icons/syscoin.ico \
   qt/res/icons/syscoin_testnet.ico \

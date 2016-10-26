@@ -14,6 +14,7 @@
 #include "qcomboboxdelegate.h"
 #include <QSettings>
 #include <QStandardItemModel>
+#include <QCheckBox>
 #include <boost/algorithm/string.hpp>
 using namespace std;
 
@@ -45,11 +46,26 @@ EditOfferDialog::EditOfferDialog(Mode mode,  const QString &strOffer,  const QSt
 	ui->privateEdit->addItem(tr("No"));
 	ui->privateEdit->addItem(tr("Yes"));
 	ui->currencyEdit->addItem(QString("USD"));
-	ui->paymentOptionsEdit->clear();
-	ui->paymentOptionsEdit->addItem(QString("SYS"), "1");
-	ui->paymentOptionsEdit->addItem(QString("BTC"), "2");
-	ui->paymentOptionsEdit->addItem(QString("SYS+BTC"), "3");
-	ui->geolocationDisclaimer->setText(tr("<font color='blue'>If you wish you may enter your merchant geolocation (lattitude and longitude coordinates) to help track shipping rates and other logistics information.</font>)"));
+
+	// pmmodel = new QStandardItemModel(3, 1);
+	// QStandardItem* item = new QStandardItem(QString("SYS"));
+	// item->setFlags(Qt::ItemIsUserCheckable | Qt::ItemIsEnabled);
+ //    item->setData(Qt::Unchecked, Qt::CheckStateRole);
+ //    pmmodel->setItem(0, 0, item);
+	// item = new QStandardItem(QString("BTC"));
+	// item->setFlags(Qt::ItemIsUserCheckable | Qt::ItemIsEnabled);
+ //    item->setData(Qt::Unchecked, Qt::CheckStateRole);
+ //    pmmodel->setItem(1, 0, item);
+	// item = new QStandardItem(QString("ZEC"));
+	// item->setFlags(Qt::ItemIsUserCheckable | Qt::ItemIsEnabled);
+ //    item->setData(Qt::Unchecked, Qt::CheckStateRole);
+ //    pmmodel->setItem(2, 0, item);
+ //    ui->paymentOptionsEdit->setModel(pmmodel);
+
+	// QCheckBox *x = new QCheckBox;
+	// x->setText(QString("SYS"));
+
+	ui->geolocationDisclaimer->setText(tr("<font color='blue'>If you wish you may enter your merchant geolocation (latitude and longitude coordinates) to help track shipping rates and other logistics information.</font>)"));
 	ui->currencyDisclaimer->setText(tr("<font color='blue'>You will receive payment in Syscoin equivalent to the Market-value of the currency you have selected.</font>"));
 	ui->paymentOptionsDisclaimer->setText(tr("<font color='blue'>Choose which crypto-currency you want to allow as a payment method for this offer. Your choices are SYS, BTC and SYS or BTC.</font>"));
 	cert = strCert;
@@ -667,7 +683,7 @@ bool EditOfferDialog::saveCurrentRow()
 			params.push_back("nocert");
 		}
 		params.push_back("1");
-		params.push_back(ui->paymentOptionsEdit->itemData(ui->paymentOptionsEdit->currentIndex()).toString().toStdString());
+		params.push_back(ui->paymentOptionsEdit->text().toStdString());
 		params.push_back(ui->geoLocationEdit->text().toStdString());
 		params.push_back(ui->safeSearchEdit->currentText().toStdString());
 		params.push_back(ui->privateEdit->currentText() == QString("Yes")? "1": "0");
@@ -765,7 +781,7 @@ bool EditOfferDialog::saveCurrentRow()
 			params.push_back(ui->geoLocationEdit->text().toStdString());
 			params.push_back(ui->safeSearchEdit->currentText().toStdString());
 			params.push_back(ui->commissionEdit->text().toStdString());
-			params.push_back(ui->paymentOptionsEdit->itemData(ui->paymentOptionsEdit->currentIndex()).toString().toStdString());
+			params.push_back(ui->paymentOptionsEdit->text().toStdString());
 
 
 			try {

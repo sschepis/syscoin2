@@ -7,6 +7,9 @@ src/syscoin-cli
 src/syscoin-tx
 src/test/test_syscoin
 src/qt/test/test_syscoin-qt
+src/test/node1
+src/test/node2
+src/test/node3
 
 # autoreconf
 Makefile.in

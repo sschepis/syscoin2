@@ -46,6 +46,8 @@ BOOST_AUTO_TEST_CASE (generate_offernew)
 
 	// should fail: generate an offer with invalid currency
 	BOOST_CHECK_THROW(r = CallRPC("node1", "offernew sysrates.peg selleralias1 category title 100 0.05 description ZZZ"), runtime_error);
+
+	// TODO test payment options
 }
 
 BOOST_AUTO_TEST_CASE (generate_certoffernew)
@@ -84,9 +86,10 @@ BOOST_AUTO_TEST_CASE (generate_certoffernew)
 	BOOST_CHECK_THROW(r = CallRPC("node1", "offernew node1alias category title 1 0.05 description USD " + certguid2), runtime_error);	
 
 	// generate a cert offer if accepting only BTC
-	OfferNew("node1", "node1aalias", "category", "title", "1", "0.05", "description", "USD", certguid1a, false, "2");
+	OfferNew("node1", "node1aalias", "category", "title", "1", "0.05", "description", "USD", certguid1a, false, "BTC");
+	
 	// generate a cert offer if accepting BTC OR SYS
-	OfferNew("node1", "node1aalias", "category", "title", "1", "0.05", "description", "USD", certguid1a, false, "3");
+	OfferNew("node1", "node1aalias", "category", "title", "1", "0.05", "description", "USD", certguid1a, false, "SYS");
 
 	// should fail: generate a cert offer using different alias for cert and offer
 	BOOST_CHECK_THROW(r = CallRPC("node1", "offernew sysrates.peg node1alias category title 1 0.05 description USD " + certguid1a), runtime_error);

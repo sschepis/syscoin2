@@ -334,6 +334,9 @@ void AcceptandPayOfferListPage::acceptOffer()
 	ui->labelExplanation->setText(tr("Waiting for confirmation on the purchase of this offer"));
 	if(paymentOptions == PAYMENTOPTION_BTC)
 		OpenBTCPayDialog();
+	else if(paymentOptions == PAYMENTOPTION_ZEC) {
+		//TODO Add ZEC pay dialog
+	}
 	else
 		OpenPayDialog();
 }
